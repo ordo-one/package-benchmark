@@ -1,3 +1,7 @@
+[![Swift version](https://img.shields.io/badge/Swift-5.6-orange?style=flat-square)](https://img.shields.io/badge/Swift-5.6-orange?style=flat-square)
+[![Swift build and test](https://github.com/ordo-one/package-benchmark/actions/workflows/swift-build.yml/badge.svg)](https://github.com/ordo-one/package-benchmark/actions/workflows/swift-build.yml)
+[![Swift address sanitizer](https://github.com/ordo-one/package-benchmark/actions/workflows/swift-address-sanitizer.yml/badge.svg)](https://github.com/ordo-one/package-benchmark/actions/workflows/swift-address-sanitizer.yml)
+
 # Benchmark 
 
 ## Introduction
