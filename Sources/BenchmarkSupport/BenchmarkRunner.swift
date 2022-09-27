@@ -350,7 +350,7 @@ public struct BenchmarkRunner: AsyncParsableCommand {
 
                     // Minimal output for debugging
                     if debug {
-                        print("Debug result: \(results)")
+                        print("Debug result: [\(results)]")
                     }
                 } else {
                     print("Internal error: Couldn't find specified benchmark '\(benchmarkToRun.name)' to run.")
