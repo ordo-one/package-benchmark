@@ -8,14 +8,18 @@ on:
 jobs:
   analyze-api-breakage:
 
-    runs-on: [swift-latest, ubuntu-latest]
+    runs-on: [macos-12, ubuntu-latest]
 
     steps:
     - uses: actions/checkout@v3
       with:
         fetch-depth: 0
     - name: Install jemalloc Linux
+      if: matrix.os == 'ubuntu-latest'
       run: sudo apt-get install -y libjemalloc-dev
+    - name: Install jemalloc macOS
+      if: matrix.os == 'macos-12'
+      run: brew install jemalloc
     - name: Extract default SPM library target
       id: spm_target
       run: |
