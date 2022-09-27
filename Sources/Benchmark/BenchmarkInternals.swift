@@ -25,7 +25,6 @@ public enum BenchmarkCommandRequest: Codable {
 // Replies from benchmark under measure to benchmark runner
 public enum BenchmarkCommandReply: Codable {
     case list(benchmark: Benchmark)
-    case ready
     case result(benchmark: Benchmark, results: [BenchmarkResult]) // receives results from built-in metric collectors
     case run
     case end // end of query for list/result
