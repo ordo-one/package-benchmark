@@ -176,7 +176,7 @@ public struct BenchmarkRunner: AsyncParsableCommand {
                             accummulatedWallclockMeasurements += 1
 
                             let throughput = Int(benchmark.throughputScalingFactor.rawValue * 1_000_000_000
-                                                 / Int(runningTime))
+                                / Int(runningTime))
                             if throughput > 0 {
                                 statistics[.throughput]?.add(throughput)
                             }

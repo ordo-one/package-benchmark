@@ -135,7 +135,7 @@ public class Benchmark: Codable, Hashable {
         self.thresholds?.forEach { thresholdMetric, _ in
             if self.metrics.contains(thresholdMetric) == false {
                 print("Warning: Custom threshold defined for metric `\(thresholdMetric)` " +
-                      "which isn't used by benchmark `\(name)`")
+                    "which isn't used by benchmark `\(name)`")
             }
         }
 

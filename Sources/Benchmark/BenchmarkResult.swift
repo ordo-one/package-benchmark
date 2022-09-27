@@ -162,7 +162,7 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
                 if reverseComparison ? relativeDifference > threshold : -relativeDifference > threshold {
                     if printOutput {
                         print("`\(metric.description)` failed relative threshold check, [\(percentile)] result" +
-                              " (\(roundToDecimalplaces(abs(relativeDifference), 1))) > threshold (\(threshold))")
+                            " (\(roundToDecimalplaces(abs(relativeDifference), 1))) > threshold (\(threshold))")
                     }
                     thresholdViolated = true
                 }
@@ -172,7 +172,7 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
                 if reverseComparison ? -absoluteDifference > threshold : absoluteDifference > threshold {
                     if printOutput {
                         print("`\(metric.description)` failed absolute threshold check, [\(percentile)] result" +
-                              " (\(abs(absoluteDifference))) > threshold (\(threshold))")
+                            " (\(abs(absoluteDifference))) > threshold (\(threshold))")
                     }
                     thresholdViolated = true
                 }
