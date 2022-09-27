@@ -38,6 +38,9 @@ The focus for measurements are percentiles (`p0` (min), `p25`, `p50` (median), `
 
 <img width="876" alt="image" src="https://user-images.githubusercontent.com/8501048/192494857-c39c478c-62fe-4795-9458-b317db59893c.png">
 
+### Source and file format stability 
+The source and file format of baselines are not officially stable yet until release `1.0.0`, even though no majors changes are planned currently, there might be source and file format breaking changes in minor releases (not patch releases) until then.
+
 ## Contents
 
 - [Getting started and initial setup](Documentation/GettingStarted.md)
