@@ -10,6 +10,26 @@ Benchmark supports both local usage with baseline comparisons for an iterative w
 
 The focus for measurements are percentiles (`p0` (min), `p25`, `p50` (median), `p75`, `p90`, `p99` and `p100` (max)) to support analysis of the actual distribution of benchmark measurements. A given benchmark is typically run for a minimum amount of time and/or a given number of iterations, see details in the Benchmark documentation below.
 
+### Sample benchmark
+
+```swift
+...
+    Benchmark("All metrics, full concurrency, async",
+              metrics: BenchmarkMetric.all,
+              desiredDuration: .seconds(10)) { benchmark in
+        let _ = await withTaskGroup(of: Void.self, returning: Void.self, body: { taskGroup in
+            for _ in 0..< 80  {
+                taskGroup.addTask {
+                    dummyCounter(defaultCounter()*1000)
+                }
+            }
+            for await _ in taskGroup {
+            }
+        })
+    }
+...
+```
+
 ### Sample output
 
 <img width="877" alt="image" src="https://user-images.githubusercontent.com/8501048/192326477-c5fc5ec8-e77a-469e-a1b3-2f5d40754cb4.png">
