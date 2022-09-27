@@ -30,9 +30,13 @@ The focus for measurements are percentiles (`p0` (min), `p25`, `p50` (median), `
 ...
 ```
 
-### Sample output
+### Sample output benchmark run
 
 <img width="877" alt="image" src="https://user-images.githubusercontent.com/8501048/192326477-c5fc5ec8-e77a-469e-a1b3-2f5d40754cb4.png">
+
+### Sample output delta comparison
+
+<img width="876" alt="image" src="https://user-images.githubusercontent.com/8501048/192494857-c39c478c-62fe-4795-9458-b317db59893c.png">
 
 ## Contents
 
