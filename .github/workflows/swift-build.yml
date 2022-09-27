@@ -1,0 +1,27 @@
+name: Swift build and test
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  
+jobs:
+  build-benchmark:
+
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        # , macos-12] disabled until we get jemalloc on the runner
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Install jemalloc Linux
+      run: sudo apt-get install -y libjemalloc-dev
+    - name: Build
+      run: swift build
+    - name: Run tests
+      run: swift test --parallel

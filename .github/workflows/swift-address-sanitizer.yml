@@ -1,0 +1,33 @@
+name: Swift address sanitizer
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  address-sanitizer-linux:
+
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        # , macos-12]
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Install jemalloc Linux
+      run: sudo apt-get install -y libjemalloc-dev
+
+    - name: Run address sanitizer
+      run: swift test --sanitize=address | swift demangle
+      
+    - name: Clean before release build address sanitizier
+      run: swift package clean
+      
+    - name: Run address sanitizer on release build
+      run: swift test --sanitize=address -c release -Xswiftc -enable-testing | swift demangle
