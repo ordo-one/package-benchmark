@@ -106,6 +106,7 @@ public class Benchmark: Codable, Hashable {
     ///   - skip: Set to true if the benchmark should be excluded from benchmark runs
     ///   - thresholds: Defines custom threshold per metric for failing the benchmark in CI for in `benchmark compare`
     ///   - closure: The actual benchmark closure that will be measured
+/*
     @discardableResult
     public init?(_ name: String,
                  metrics: [BenchmarkMetric] = BenchmarkMetric.default,
@@ -142,7 +143,7 @@ public class Benchmark: Codable, Hashable {
         pthread_mutex_init(&lock, nil)
         pthread_cond_init(&condition, nil)
     }
-
+*/
     /// Definition of a Benchmark
     /// - Parameters:
     ///   - name: The name used for display purposes of the benchmark (also used for
