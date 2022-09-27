@@ -1,0 +1,29 @@
+name: Code coverage
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-test-and-upload-test-coverage:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Run tests
+      run: swift test --enable-code-coverage
+    - name: Set path
+      run: echo "/usr/lib/llvm-9/bin" >> $GITHUB_PATH
+    - name: Install LLVM and Clang
+      uses: KyleMayes/install-llvm-action@v1
+      with:
+        version: "13"
+    - name: Export code coverage
+      run: llvm-cov export -format="lcov" .build/debug/${{ github.event.repository.name }}PackageTests.xctest -instr-profile .build/debug/codecov/default.profdata > info.lcov
+    - name: Upload codecov
+      uses: codecov/codecov-action@v2
+      with: 
+        files: info.lcov
