@@ -7,13 +7,13 @@ on:
     
 jobs:
   spm-dep-check:
-    runs-on: [ubuntu-latest]
+    runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v3
     - name: Check Swift package dependencies
       id: spm-dep-check
-      uses: MarcoEidinger/swift-package-dependencies-check@2.1.0
+      uses: MarcoEidinger/swift-package-dependencies-check@2.1.4
       with:
          isMutating: true
          failWhenOutdated: false
