@@ -12,6 +12,9 @@
 // the allowed deviation from the comparison baseline to a benchmark
 // comparison to succeed, both in relative and absolute terms.
 
+// swiftlint:disable discouraged_none_name
+// swiftlint:disable identifier_name
+
 public extension BenchmarkResult {
     typealias PercentileRelativeThresholds = [BenchmarkResult.Percentile: Double]
     typealias PercentileAbsoluteThresholds = [BenchmarkResult.Percentile: Int]

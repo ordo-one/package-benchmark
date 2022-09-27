@@ -48,7 +48,8 @@ public class Benchmark: Codable, Hashable {
     public var desiredIterations: Int?
     /// The reason for a benchmark failure, not set if successful
     public var failureReason: String?
-    /// The current benchmark iteration (also includes warmup iterations), can be useful when e.g. unique keys will be needed for different iterations
+    /// The current benchmark iteration (also includes warmup iterations), can be useful when
+    /// e.g. unique keys will be needed for different iterations
     public var currentIteration: Int = 0
     /// Customized CI failure thresholds for a given metric for the Benchmark
     public var thresholds: [BenchmarkMetric: BenchmarkResult.PercentileThresholds]?
@@ -132,8 +133,9 @@ public class Benchmark: Codable, Hashable {
         Self.benchmarks.append(self)
 
         self.thresholds?.forEach { thresholdMetric, _ in
-            if self.metrics.first(where: { $0 == thresholdMetric }) == nil {
-                print("Warning: Custom threshold defined for metric `\(thresholdMetric)` which isn't used by benchmark `\(name)`")
+            if self.metrics.contains(thresholdMetric) == false {
+                print("Warning: Custom threshold defined for metric `\(thresholdMetric)` " +
+                      "which isn't used by benchmark `\(name)`")
             }
         }
 
