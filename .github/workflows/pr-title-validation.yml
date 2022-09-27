@@ -42,9 +42,8 @@ jobs:
             release
           # Configure additional validation for the subject based on a regex.
           # This example ensures the subject doesn't start with an uppercase character.
-          subjectPattern: ^.*\[sc-[0-9]+\].*$
-          subjectPatternError: |
-            The pull request title should contain Shortcut case number like '[sc-123]'
+          subjectPattern: 
+          subjectPatternError: 
           # If the PR contains one of these labels, the validation is skipped.
           # Multiple labels can be separated by newlines.
           # If you want to rerun the validation when labels change, you might want
