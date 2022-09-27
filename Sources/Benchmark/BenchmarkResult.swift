@@ -37,13 +37,12 @@ public enum BenchmarkTimeUnits: Int, Codable, CustomStringConvertible {
 }
 
 public struct BenchmarkResult: Codable, Comparable, Equatable {
-
     public init(metric: BenchmarkMetric,
                 timeUnits: BenchmarkTimeUnits,
                 measurements: Int,
                 warmupIterations: Int,
                 thresholds: PercentileThresholds? = nil,
-                percentiles: [BenchmarkResult.Percentile : Int]) {
+                percentiles: [BenchmarkResult.Percentile: Int]) {
         self.metric = metric
         self.timeUnits = timeUnits
         self.measurements = measurements
@@ -57,7 +56,7 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
     public var measurements: Int
     public var warmupIterations: Int
     public var thresholds: PercentileThresholds?
-    public var percentiles: [BenchmarkResult.Percentile : Int]
+    public var percentiles: [BenchmarkResult.Percentile: Int]
 
     public mutating func scaleResults(to otherResult: BenchmarkResult) {
         guard timeUnits != otherResult.timeUnits else {
@@ -65,7 +64,7 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
         }
         let ratio = Double(otherResult.timeUnits.rawValue) / Double(timeUnits.rawValue)
 
-        self.percentiles.forEach {percentile, value in
+        percentiles.forEach { percentile, value in
             self.percentiles[percentile] = Int(ratio * Double(value))
         }
 
@@ -100,8 +99,8 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
         rhs.scaleResults(to: lhs)
 
         return lhs.metric == rhs.metric &&
-        lhs.timeUnits == rhs.timeUnits &&
-        lhs.percentiles == rhs.percentiles
+            lhs.timeUnits == rhs.timeUnits &&
+            lhs.percentiles == rhs.percentiles
     }
 
     public static func < (lhs: BenchmarkResult, rhsRaw: BenchmarkResult) -> Bool {
@@ -138,7 +137,6 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
     public func betterResultsOrEqual(than otherResult: BenchmarkResult,
                                      thresholds: BenchmarkResult.PercentileThresholds = .default,
                                      printOutput: Bool = false) -> Bool {
-
         var rhs: BenchmarkResult
         var lhs: BenchmarkResult
 
@@ -158,14 +156,14 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
                          _ printOutput: Bool) -> Bool {
             let relativeDifference = (100 - (100.0 * Double(lhs) / Double(rhs)))
             let absoluteDifference = lhs - rhs
-            let reverseComparison = self.metric.polarity() == .prefersLarger
+            let reverseComparison = metric.polarity() == .prefersLarger
 
-            var thresholdViolated: Bool = false
+            var thresholdViolated = false
 
             if let threshold = thresholds.relative[percentile] {
                 if reverseComparison ? relativeDifference > threshold : -relativeDifference > threshold {
                     if printOutput {
-                        print("`\(self.metric.description)` failed relative threshold check, [\(percentile)] result (\(roundToDecimalplaces(abs(relativeDifference), 1))) > threshold (\(threshold))")
+                        print("`\(metric.description)` failed relative threshold check, [\(percentile)] result (\(roundToDecimalplaces(abs(relativeDifference), 1))) > threshold (\(threshold))")
                     }
                     thresholdViolated = true
                 }
@@ -174,7 +172,7 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
             if let threshold = thresholds.absolute[percentile] {
                 if reverseComparison ? -absoluteDifference > threshold : absoluteDifference > threshold {
                     if printOutput {
-                        print("`\(self.metric.description)` failed absolute threshold check, [\(percentile)] result (\(abs(absoluteDifference))) > threshold (\(threshold))")
+                        print("`\(metric.description)` failed absolute threshold check, [\(percentile)] result (\(abs(absoluteDifference))) > threshold (\(threshold))")
                     }
                     thresholdViolated = true
                 }
@@ -182,7 +180,7 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
             return thresholdViolated
         }
 
-        var worse: Bool = false
+        var worse = false
 
         lhs.percentiles.forEach { percentile, lhsPercentile in
             if let rhsPercentile = rhs.percentiles[percentile] {

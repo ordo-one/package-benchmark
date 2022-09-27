@@ -51,7 +51,7 @@ public class Benchmark: Codable, Hashable {
     /// The current benchmark iteration (also includes warmup iterations), can be useful when e.g. unique keys will be needed for different iterations
     public var currentIteration: Int = 0
     /// Customized CI failure thresholds for a given metric for the Benchmark
-    public var thresholds: [BenchmarkMetric : BenchmarkResult.PercentileThresholds]?
+    public var thresholds: [BenchmarkMetric: BenchmarkResult.PercentileThresholds]?
 
     ///   - closure: The actual benchmark closure that will be measured
     var closure: BenchmarkClosure? // The actual benchmark to run
@@ -114,7 +114,7 @@ public class Benchmark: Codable, Hashable {
                  desiredDuration: TimeDuration? = nil,
                  desiredIterations: Int? = nil,
                  skip: Bool = false,
-                 thresholds: [BenchmarkMetric : BenchmarkResult.PercentileThresholds]? = nil,
+                 thresholds: [BenchmarkMetric: BenchmarkResult.PercentileThresholds]? = nil,
                  closure: @escaping BenchmarkClosure) {
         if skip {
             return nil
@@ -132,7 +132,7 @@ public class Benchmark: Codable, Hashable {
         Self.benchmarks.append(self)
 
         self.thresholds?.forEach { thresholdMetric, _ in
-            if self.metrics.first(where: { $0 == thresholdMetric}) == nil {
+            if self.metrics.first(where: { $0 == thresholdMetric }) == nil {
                 print("Warning: Custom threshold defined for metric `\(thresholdMetric)` which isn't used by benchmark `\(name)`")
             }
         }
@@ -168,7 +168,7 @@ public class Benchmark: Codable, Hashable {
                  desiredDuration: TimeDuration? = nil,
                  desiredIterations: Int? = nil,
                  skip: Bool = false,
-                 thresholds: [BenchmarkMetric : BenchmarkResult.PercentileThresholds]? = nil,
+                 thresholds: [BenchmarkMetric: BenchmarkResult.PercentileThresholds]? = nil,
                  closure: @escaping BenchmarkAsyncClosure) {
         if skip {
             return nil
@@ -181,14 +181,13 @@ public class Benchmark: Codable, Hashable {
         self.desiredDuration = desiredDuration
         self.desiredIterations = desiredIterations
         self.thresholds = thresholds
-        self.asyncClosure = closure
+        asyncClosure = closure
 
         Self.benchmarks.append(self)
 
         pthread_mutex_init(&lock, nil)
         pthread_cond_init(&condition, nil)
     }
-
 
     /// `measurement` registers custom metric measurements
     ///
@@ -234,7 +233,7 @@ public class Benchmark: Codable, Hashable {
     /// Used to signfy that a given benchmark have failed for some reason
     /// - Parameter description: An explanation why a given benchmark failed which will be reported to the end user.
     public func error(_ description: String) {
-        self.failureReason = description
+        failureReason = description
     }
 
     // The rest is intenral supporting infrastructure that should only

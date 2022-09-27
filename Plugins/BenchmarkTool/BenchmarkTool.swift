@@ -96,11 +96,9 @@ struct BenchmarkTool: AsyncParsableCommand {
 
             if let currentBaseline = currentBaseline {
                 if let baselineNameSecond = baselineNameSecond { // we compare with another known baseline instead of running
-
                     let otherBaseline = try read(baselineIdentifier: baselineNameSecond)
 
                     if let otherBaseline = otherBaseline {
-
                         prettyPrintDelta(otherBaseline)
 
                         if otherBaseline.betterResultsOrEqual(than: currentBaseline, printOutput: true) {
@@ -127,7 +125,10 @@ struct BenchmarkTool: AsyncParsableCommand {
         case "run":
             try runChild(benchmarkExecutablePath) { [self] result in
                 if result != 0 {
-                    print("Failed to run '\(command)', result [\(result)]")
+                    print("Failed to run '\(command)' for \(benchmarkExecutablePath), result [\(result)]")
+                    print("Likely your benchmark crahed, try running the tool in the debugger, e.g.")
+                    print("lldb \(benchmarkExecutablePath)")
+                    print("Or check Console.app for a backtrace if on macOS.")
                 }
             }
         default:
@@ -135,11 +136,11 @@ struct BenchmarkTool: AsyncParsableCommand {
         }
 
         if benchmarkFailure {
-#if canImport(Darwin)
-            Darwin.exit(EXIT_FAILURE)
-#elseif canImport(Glibc)
-            Glibc.exit(EXIT_FAILURE)
-#endif
+            #if canImport(Darwin)
+                Darwin.exit(EXIT_FAILURE)
+            #elseif canImport(Glibc)
+                Glibc.exit(EXIT_FAILURE)
+            #endif
         }
     }
 

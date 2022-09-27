@@ -142,7 +142,7 @@ public struct BenchmarkRunner: AsyncParsableCommand {
                     var accummulatedRuntime: TimeDuration = 0
                     // accummulatedWallclock may be less than total runtime as it skips 0 measurements
                     var accummulatedWallclock: TimeDuration = 0
-                    var accummulatedWallclockMeasurements: Int = 0
+                    var accummulatedWallclockMeasurements = 0
                     var startMallocStats = MallocStats()
                     var stopMallocStats = MallocStats()
                     var startOperatingSystemStats = OperatingSystemStats()
@@ -267,25 +267,22 @@ public struct BenchmarkRunner: AsyncParsableCommand {
                     // Run the benchmark at a minimum the desired iterations/runtime --
                     while iterations <= desiredIterations ||
                         accummulatedRuntime <= desiredDuration {
-
                         // and at a maximum the same...
-                        if benchmark.desiredIterations != nil && iterations >= desiredIterations {
+                        if benchmark.desiredIterations != nil, iterations >= desiredIterations {
                             break
                         }
 
-                        if benchmark.desiredDuration != nil && accummulatedRuntime >= desiredDuration {
+                        if benchmark.desiredDuration != nil, accummulatedRuntime >= desiredDuration {
                             break
                         }
 
-                        if benchmark.desiredDuration == nil &&
-                            benchmark.desiredIterations == nil {
-
+                        if benchmark.desiredDuration == nil,
+                           benchmark.desiredIterations == nil {
                             guard accummulatedRuntime < desiredDuration,
                                   iterations < desiredIterations
                             else {
                                 break
                             }
-
                         }
                         guard benchmark.failureReason == nil else {
                             try write(.error(benchmark.failureReason!))
@@ -313,22 +310,22 @@ public struct BenchmarkRunner: AsyncParsableCommand {
                     var results: [BenchmarkResult] = []
                     statistics.forEach { key, value in
                         if value.measurementCount > 0 {
-                            var percentiles: [BenchmarkResult.Percentile : Int] = [:]
+                            var percentiles: [BenchmarkResult.Percentile: Int] = [:]
 
                             if key.polarity() == .prefersLarger {
-                                percentiles = [.p0  : value.percentileResults[6]!,
-                                               .p25 : value.percentileResults[3]!,
-                                               .p50 : value.percentileResults[2]!,
-                                               .p75 : value.percentileResults[1]!,
-                                               .p100 : value.percentileResults[0]!]
+                                percentiles = [.p0: value.percentileResults[6]!,
+                                               .p25: value.percentileResults[3]!,
+                                               .p50: value.percentileResults[2]!,
+                                               .p75: value.percentileResults[1]!,
+                                               .p100: value.percentileResults[0]!]
                             } else {
-                                percentiles = [.p0  : value.percentileResults[0]!,
-                                               .p25 : value.percentileResults[1]!,
-                                               .p50 : value.percentileResults[2]!,
-                                               .p75 : value.percentileResults[3]!,
-                                               .p90 : value.percentileResults[4]!,
-                                               .p99 : value.percentileResults[5]!,
-                                               .p100 : value.percentileResults[6]!]
+                                percentiles = [.p0: value.percentileResults[0]!,
+                                               .p25: value.percentileResults[1]!,
+                                               .p50: value.percentileResults[2]!,
+                                               .p75: value.percentileResults[3]!,
+                                               .p90: value.percentileResults[4]!,
+                                               .p99: value.percentileResults[5]!,
+                                               .p100: value.percentileResults[6]!]
                             }
                             let result = BenchmarkResult(metric: key,
                                                          timeUnits: BenchmarkTimeUnits(value.timeUnits),

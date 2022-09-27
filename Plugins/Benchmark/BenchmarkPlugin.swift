@@ -191,6 +191,7 @@ import PackagePlugin
             throw MyError.benchmarkDeviationOrBenchmarkFailed
         }
     }
+
     enum MyError: Error {
         case benchmarkDeviationOrBenchmarkFailed
     }

@@ -15,11 +15,11 @@ import ExtrasJSON
 import SystemPackage
 
 #if canImport(Darwin)
-import Darwin
+    import Darwin
 #elseif canImport(Glibc)
-import Glibc
+    import Glibc
 #else
-#error("Unsupported Platform")
+    #error("Unsupported Platform")
 #endif
 
 struct BenchmarkMachine: Codable, Equatable {
@@ -39,8 +39,8 @@ struct BenchmarkMachine: Codable, Equatable {
 
     public static func == (lhs: BenchmarkMachine, rhs: BenchmarkMachine) -> Bool {
         lhs.processors == rhs.processors &&
-        lhs.processorType == rhs.processorType &&
-        lhs.memory == rhs.memory
+            lhs.processorType == rhs.processorType &&
+            lhs.memory == rhs.memory
     }
 }
 
@@ -222,11 +222,7 @@ extension BenchmarkTool {
     }
 }
 
-
-
-
 extension BenchmarkBaseline: Equatable {
-
     public func betterResultsOrEqual(than otherBaseline: BenchmarkBaseline,
                                      thresholds: BenchmarkResult.PercentileThresholds = .default,
                                      printOutput: Bool = false) -> Bool {
@@ -238,9 +234,8 @@ extension BenchmarkBaseline: Equatable {
 
         for (lhsBenchmarkIdentifier, lhsBenchmarkResults) in lhs.results {
             for lhsBenchmarkResult in lhsBenchmarkResults {
-                if let rhsResults = rhs.results.first(where: { $0.key == lhsBenchmarkIdentifier}) {
-                    if let rhsBenchmarkResult = rhsResults.value.first(where: { $0.metric == lhsBenchmarkResult.metric}) {
-
+                if let rhsResults = rhs.results.first(where: { $0.key == lhsBenchmarkIdentifier }) {
+                    if let rhsBenchmarkResult = rhsResults.value.first(where: { $0.metric == lhsBenchmarkResult.metric }) {
                         if lhsBenchmarkResult.betterResultsOrEqual(than: rhsBenchmarkResult,
                                                                    thresholds: lhsBenchmarkResult.thresholds ?? thresholds,
                                                                    printOutput: printOutput) == false {
@@ -260,12 +255,11 @@ extension BenchmarkBaseline: Equatable {
                 }
             }
         }
-        
+
         return betterOrEqual
     }
 
     static func == (lhs: BenchmarkBaseline, rhs: BenchmarkBaseline) -> Bool {
-
         if lhs.machine.memory != rhs.machine.memory ||
             lhs.machine.processors != rhs.machine.processors ||
             lhs.machine.processorType != rhs.machine.processorType {
@@ -274,9 +268,8 @@ extension BenchmarkBaseline: Equatable {
 
         for (lhsBenchmarkIdentifier, lhsBenchmarkResults) in lhs.results {
             for lhsBenchmarkResult in lhsBenchmarkResults {
-                if let rhsResults = rhs.results.first(where: { $0.key == lhsBenchmarkIdentifier}) {
-                    if let rhsBenchmarkResult = rhsResults.value.first(where: { $0.metric == lhsBenchmarkResult.metric}) {
-
+                if let rhsResults = rhs.results.first(where: { $0.key == lhsBenchmarkIdentifier }) {
+                    if let rhsBenchmarkResult = rhsResults.value.first(where: { $0.metric == lhsBenchmarkResult.metric }) {
                         if lhsBenchmarkResult != rhsBenchmarkResult {
                             return false
                         }

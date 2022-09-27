@@ -92,7 +92,7 @@ public extension BenchmarkMetric {
         switch self {
         case .throughput:
             return .prefersLarger
-        case .custom(_, let polarity):
+        case let .custom(_, polarity):
             return polarity
         default:
             return .prefersSmaller

@@ -13,9 +13,8 @@
 // comparison to succeed, both in relative and absolute terms.
 
 public extension BenchmarkResult {
-
-    typealias PercentileRelativeThresholds = [BenchmarkResult.Percentile : Double]
-    typealias PercentileAbsoluteThresholds = [BenchmarkResult.Percentile : Int]
+    typealias PercentileRelativeThresholds = [BenchmarkResult.Percentile: Double]
+    typealias PercentileAbsoluteThresholds = [BenchmarkResult.Percentile: Int]
 
     struct PercentileThresholds: Codable {
         public init(relative: BenchmarkResult.PercentileRelativeThresholds = .none,
@@ -42,21 +41,21 @@ public extension BenchmarkResult {
 public extension BenchmarkResult.PercentileRelativeThresholds {
     // The allowed regression per percentile in percent (e.g. '0.2% regression ok for .p25')
     static var strict: BenchmarkResult.PercentileRelativeThresholds {
-        [  .p25 : 0.0,
-           .p50 : 0.0,
-           .p75 : 0.0,
-           .p90 : 0.0,
-           .p99 : 0.0]
+        [.p25: 0.0,
+         .p50: 0.0,
+         .p75: 0.0,
+         .p90: 0.0,
+         .p99: 0.0]
+    }
 
-    }
     static var `default`: BenchmarkResult.PercentileRelativeThresholds {
-        [ .p25: 5.0,
-          .p50 : 5.0,
-          .p75 : 5.0]
+        [.p25: 5.0,
+         .p50: 5.0,
+         .p75: 5.0]
     }
-    
+
     static var relaxed: BenchmarkResult.PercentileRelativeThresholds {
-        [.p50 : 25.0]
+        [.p50: 25.0]
     }
 
     static var none: BenchmarkResult.PercentileRelativeThresholds {
@@ -68,13 +67,12 @@ public extension BenchmarkResult.PercentileAbsoluteThresholds {
     // The allowed regression for a given percentile in absolute numbers (e.g. '25 regression ok for .p25')
     // Useful for e.g. malloc counters
     static var strict: BenchmarkResult.PercentileAbsoluteThresholds {
-        [  .p0 : 0,
-           .p25 : 0,
-           .p50 : 0,
-           .p75 : 0,
-           .p90 : 0,
-           .p99 : 0]
-
+        [.p0: 0,
+         .p25: 0,
+         .p50: 0,
+         .p75: 0,
+         .p90: 0,
+         .p99: 0]
     }
 
     static var `default`: BenchmarkResult.PercentileAbsoluteThresholds {
@@ -82,13 +80,13 @@ public extension BenchmarkResult.PercentileAbsoluteThresholds {
     }
 
     static var relaxed: BenchmarkResult.PercentileAbsoluteThresholds {
-        [  .p0 : 10_000,
-           .p25 : 10_000,
-           .p50 : 10_000,
-           .p75 : 10_000,
-           .p90 : 10_000,
-           .p99 : 10_000,
-           .p100 : 10_000]
+        [.p0: 10_000,
+         .p25: 10_000,
+         .p50: 10_000,
+         .p75: 10_000,
+         .p90: 10_000,
+         .p99: 10_000,
+         .p100: 10_000]
     }
 
     static var none: BenchmarkResult.PercentileAbsoluteThresholds {
@@ -98,23 +96,21 @@ public extension BenchmarkResult.PercentileAbsoluteThresholds {
 
 public extension BenchmarkResult.PercentileThresholds {
     static var strict: BenchmarkResult.PercentileThresholds {
-        return BenchmarkResult.PercentileThresholds(relative: BenchmarkResult.PercentileRelativeThresholds.strict,
-                                                    absolute: BenchmarkResult.PercentileAbsoluteThresholds.strict)
+        BenchmarkResult.PercentileThresholds(relative: BenchmarkResult.PercentileRelativeThresholds.strict,
+                                             absolute: BenchmarkResult.PercentileAbsoluteThresholds.strict)
     }
 
     static var `default`: BenchmarkResult.PercentileThresholds {
-        return BenchmarkResult.PercentileThresholds(relative: BenchmarkResult.PercentileRelativeThresholds.default,
-                                                    absolute: BenchmarkResult.PercentileAbsoluteThresholds.default)
+        BenchmarkResult.PercentileThresholds(relative: BenchmarkResult.PercentileRelativeThresholds.default,
+                                             absolute: BenchmarkResult.PercentileAbsoluteThresholds.default)
     }
 
     static var relaxed: BenchmarkResult.PercentileThresholds {
-        return BenchmarkResult.PercentileThresholds(relative: BenchmarkResult.PercentileRelativeThresholds.relaxed,
-                                                    absolute: BenchmarkResult.PercentileAbsoluteThresholds.relaxed)
+        BenchmarkResult.PercentileThresholds(relative: BenchmarkResult.PercentileRelativeThresholds.relaxed,
+                                             absolute: BenchmarkResult.PercentileAbsoluteThresholds.relaxed)
     }
 
     static var none: BenchmarkResult.PercentileThresholds {
-        return BenchmarkResult.PercentileThresholds()
+        BenchmarkResult.PercentileThresholds()
     }
 }
-
-

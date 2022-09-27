@@ -217,7 +217,7 @@ extension BenchmarkTool {
         keys.forEach { key in
             if let value = baseline.results[key] {
                 guard let baselineComparison = currentBaseline.results[key] else {
-             //       print("No baseline to compare with for `\(key.target):\(key.name)`.")
+                    //       print("No baseline to compare with for `\(key.target):\(key.name)`.")
                     return
                 }
 
@@ -235,28 +235,28 @@ extension BenchmarkTool {
                             print("")
                         } else {
                             /*
-                            var p25Diff = 100 - 100 * (Double(result.percentiles[.p25]) / Double(base.percentiles[.p25]))
-                            var p50Diff = 100 - 100 * (Double(result.percentiles[.p50]) / Double(base.percentiles[.p50]))
-                            var p75Diff = 100 - 100 * (Double(result.percentiles[.p75]) / Double(base.percentiles[.p75]))
+                             var p25Diff = 100 - 100 * (Double(result.percentiles[.p25]) / Double(base.percentiles[.p25]))
+                             var p50Diff = 100 - 100 * (Double(result.percentiles[.p50]) / Double(base.percentiles[.p50]))
+                             var p75Diff = 100 - 100 * (Double(result.percentiles[.p75]) / Double(base.percentiles[.p75]))
 
-                            if p25Diff.isNaN || p25Diff.isInfinite {
-                                p25Diff = 0.0
-                            }
+                             if p25Diff.isNaN || p25Diff.isInfinite {
+                                 p25Diff = 0.0
+                             }
 
-                            if p50Diff.isNaN || p50Diff.isInfinite {
-                                p50Diff = 0.0
-                            }
+                             if p50Diff.isNaN || p50Diff.isInfinite {
+                                 p50Diff = 0.0
+                             }
 
-                            if p75Diff.isNaN || p75Diff.isInfinite {
-                                p75Diff = 0.0
-                            }
+                             if p75Diff.isNaN || p75Diff.isInfinite {
+                                 p75Diff = 0.0
+                             }
 
-                            if result.metric.polarity() == .prefersLarger {
-                                p25Diff *= -1
-                                p50Diff *= -1
-                                p75Diff *= -1
-                            }
-*/
+                             if result.metric.polarity() == .prefersLarger {
+                                 p25Diff *= -1
+                                 p50Diff *= -1
+                                 p75Diff *= -1
+                             }
+                             */
                             var hideResults: Bool = true
 
                             if result.betterResultsOrEqual(than: base, thresholds: result.thresholds ?? BenchmarkResult.PercentileThresholds.default) {
@@ -268,7 +268,7 @@ extension BenchmarkTool {
                             if format == .markdown {
                                 if hideResults {
                                     print("<details><summary>\(result.metric): results within specified thresholds, fold down for details.</summary>")
-  //                                  print("<details><summary>\(result.metric): fold down for details, results within specified thresholds, % improvement: p25 = \(Int(round(p25Diff))), p50 = \(Int(round(p50Diff))), p75 = \(Int(round(p75Diff)))</summary>")
+                                    //                                  print("<details><summary>\(result.metric): fold down for details, results within specified thresholds, % improvement: p25 = \(Int(round(p25Diff))), p50 = \(Int(round(p50Diff))), p75 = \(Int(round(p75Diff)))</summary>")
                                     print("<p>")
                                     print("")
                                 }
@@ -289,8 +289,7 @@ extension BenchmarkTool {
                             // Rescale result to base if needed
                             result.scaleResults(to: base)
 
-
-                            var percentiles: [BenchmarkResult.Percentile : Int] = [:]
+                            var percentiles: [BenchmarkResult.Percentile: Int] = [:]
 
                             result.percentiles.forEach { percentile, value in
                                 if let basePercentile = base.percentiles[percentile] {
