@@ -30,7 +30,7 @@ public struct BenchmarkRunner: AsyncParsableCommand {
     @Option(name: .shortAndLong, help: "The input pipe filedescriptor used for communication with host process.")
     var inputFD: Int32?
 
-    @Option(name: .shortAndLong, help: "The output pipe filedescriptor used for communication with host process.")
+    @Option(name: .shortAndLong, help: "The output pipe filedescriptor used for communication with host process. ")
     var outputFD: Int32?
 
     var debug = false
