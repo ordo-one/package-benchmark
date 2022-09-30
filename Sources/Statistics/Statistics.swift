@@ -58,6 +58,8 @@ public struct Statistics {
     public var measurementCount = 0
     public var timeUnits: StatisticsUnits = .automatic
 
+    public var onlyZeroMeasurements = true
+
     public init(bucketCount: Int = 10_000,
                 timeUnits: StatisticsUnits = .automatic,
                 percentiles: [Double] = defaultPercentilesToCalculate) {
@@ -80,7 +82,11 @@ public struct Statistics {
 //            fatalError()
         }
 
-        if measurementCount == 0, timeUnits == .automatic { // deduce timeunit range from first sample if .automatic
+        if timeUnits == .automatic &&
+           onlyZeroMeasurements &&
+            measurement != 0 { // deduce timeunit range from first non-zero sample if .automatic
+
+            onlyZeroMeasurements = false
             switch log10(Double(measurement)) {
             case ..<4.0:
                 timeUnits = .count
@@ -95,7 +101,8 @@ public struct Statistics {
             }
         }
 
-        measurement = measurement / timeUnits.rawValue // we'll crash if we get .automatic here, should not happen
+        let scaling = timeUnits == .automatic ? 1 : timeUnits.rawValue
+        measurement = measurement / scaling
 
         let validBucketRangePowerOfTwo = 0 ..< bucketCountPowerOfTwo
         let bucket = measurement > 0 ? Int(ceil(log2(Double(measurement)))) : 0
@@ -146,6 +153,11 @@ public struct Statistics {
                     }
                 }
             }
+        }
+
+        // Set timeUnits to .count if we only had zero samples and had automatic setting of scale
+        if timeUnits == .automatic && onlyZeroMeasurements {
+                timeUnits = .count
         }
 
         let totalSamples = measurementBucketsPowerOfTwo.reduce(0, +) + bucketOverflowPowerOfTwo
