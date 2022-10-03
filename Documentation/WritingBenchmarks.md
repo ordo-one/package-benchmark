@@ -32,7 +32,7 @@ func benchmarks() {
               metrics: [.throughput, .wallClock],
               throughputScalingFactor: .mega,
               thresholds: [.throughput : customThreshold, .wallClock : customThreshold]) { benchmark in
-        for _ in 0..<benchmark.throughputScalingFactor.rawValue {
+        for _ in benchmark.throughputIterations {
             blackHole(Date())
         }
     }
@@ -93,7 +93,7 @@ An example would be:
     Benchmark("Foundation Date()",
               metrics: [.throughput],
               throughputScalingFactor: .mega) { benchmark in
-        for _ in 0..<benchmark.throughputScalingFactor.rawValue { // will loop 1_000_000 times
+        for _ in benchmark.throughputIterations { // will loop 1_000_000 times
             blackHole(Date())
         }
     }
@@ -114,7 +114,7 @@ Metrics can be specified both explicitly, e.g. `[.throughput, .wallClock]` but a
               metrics: [.throughput, .wallClock],
               throughputScalingFactor: .mega,
               thresholds: [.throughput : customThreshold, .wallClock : customThreshold]) { benchmark in
-        for _ in 0..<benchmark.throughputScalingFactor.rawValue {
+        for _ in benchmark.throughputIterations {
             blackHole(Date())
         }
     }

@@ -30,11 +30,12 @@ Add a dependency on the plugin:
         .package(url: "https://github.com/ordo-one/package-benchmark", .upToNextMajor(from: "0.2.0")),
 ```
 
-## Add exectuable targets with a `Benchmark` suffix
+## Add exectuable targets
 
 To add targets for benchmarking, you create an executable target for each benchmark suite that should be measured.
+The source must reside as a subdirectory to a `Benchmarks` directory.
 
-Each benchmark suite to be run *must have an executable target with the `Benchmark` suffix* that depends on `BenchmarkSupport`, e.g.
+Each benchmark suite to be run *must have its source path in the Benchmarks folder* and depend on `BenchmarkSupport`, e.g.
 ```
             .executableTarget(
                 name: "My-Benchmark",
