@@ -97,7 +97,9 @@ let package = Package(
         ),
         .testTarget(
             name: "BenchmarkTests",
-            dependencies: []
+            dependencies: [
+                "BenchmarkSupport"
+                          ]
         ),
     ]
 )

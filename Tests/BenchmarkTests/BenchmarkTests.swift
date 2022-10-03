@@ -9,9 +9,13 @@
 //
 
 import XCTest
+@testable import BenchmarkSupport
 
 final class BenchmarkTests: XCTestCase {
     func testBaselineComparison() throws {
-        print("Not empty.")
+
+        let x = BenchmarkMetric.cpuSystem
+        let y = BenchmarkMetric.cpuUser
+        print("Not empty. \(x) \(y)")
     }
 }
