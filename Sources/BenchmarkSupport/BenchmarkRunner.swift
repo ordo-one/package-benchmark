@@ -22,7 +22,6 @@ import SystemPackage
     #error("Unsupported Platform")
 #endif
 
-// swiftlint:disable type_body_length
 // @main must be done in actual benchmark to avoid linker errors unfortunately
 public struct BenchmarkRunner: AsyncParsableCommand {
     public init() {}
@@ -134,7 +133,8 @@ public struct BenchmarkRunner: AsyncParsableCommand {
                             statistics[.wallClock] = Statistics(timeUnits: StatisticsUnits(benchmark.timeUnits))
                         default:
                             if operatingSystemStatsProducer.metricSupported(metric) == true {
-                                statistics[metric] = Statistics(timeUnits: .automatic)
+                                statistics[metric] = Statistics(timeUnits: .automatic,
+                                                                prefersLarger: metric.polarity() == .prefersLarger)
                             }
                         }
                     }
@@ -175,8 +175,10 @@ public struct BenchmarkRunner: AsyncParsableCommand {
                             accummulatedWallclock += runningTime
                             accummulatedWallclockMeasurements += 1
 
-                            let throughput = Int(benchmark.throughputScalingFactor.rawValue * 1_000_000_000
-                                / Int(runningTime))
+                            let throughput = Int(
+                                round(Double(benchmark.throughputScalingFactor.rawValue * 1_000_000_000)
+                                    / Double(runningTime)))
+
                             if throughput > 0 {
                                 statistics[.throughput]?.add(throughput)
                             }
@@ -314,21 +316,14 @@ public struct BenchmarkRunner: AsyncParsableCommand {
                         if value.measurementCount > 0 {
                             var percentiles: [BenchmarkResult.Percentile: Int] = [:]
 
-                            if key.polarity() == .prefersLarger {
-                                percentiles = [.p0: value.percentileResults[6]!,
-                                               .p25: value.percentileResults[3]!,
-                                               .p50: value.percentileResults[2]!,
-                                               .p75: value.percentileResults[1]!,
-                                               .p100: value.percentileResults[0]!]
-                            } else {
-                                percentiles = [.p0: value.percentileResults[0]!,
-                                               .p25: value.percentileResults[1]!,
-                                               .p50: value.percentileResults[2]!,
-                                               .p75: value.percentileResults[3]!,
-                                               .p90: value.percentileResults[4]!,
-                                               .p99: value.percentileResults[5]!,
-                                               .p100: value.percentileResults[6]!]
-                            }
+                            percentiles = [.p0: value.percentileResults[0] ?? 0,
+                                           .p25: value.percentileResults[1] ?? 0,
+                                           .p50: value.percentileResults[2] ?? 0,
+                                           .p75: value.percentileResults[3] ?? 0,
+                                           .p90: value.percentileResults[4] ?? 0,
+                                           .p99: value.percentileResults[5] ?? 0,
+                                           .p100: value.percentileResults[6] ?? 0]
+
                             let result = BenchmarkResult(metric: key,
                                                          timeUnits: BenchmarkTimeUnits(value.timeUnits),
                                                          measurements: value.measurementCount,
