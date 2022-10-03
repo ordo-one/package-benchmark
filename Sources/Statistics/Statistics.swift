@@ -59,12 +59,15 @@ public struct Statistics {
     public var timeUnits: StatisticsUnits = .automatic
 
     public var onlyZeroMeasurements = true
+    var prefersLarger = true
 
     public init(bucketCount: Int = 10_000,
                 timeUnits: StatisticsUnits = .automatic,
-                percentiles: [Double] = defaultPercentilesToCalculate) {
+                percentiles: [Double] = defaultPercentilesToCalculate,
+                prefersLarger: Bool = false) {
         bucketCountLinear = bucketCount < 1 ? 1 : bucketCount + 1 // we don't use the zero bucket, so add one
         percentilesToCalculate = percentiles
+        self.prefersLarger = prefersLarger
         measurementBucketsPowerOfTwo = [Int](repeating: 0, count: bucketCountPowerOfTwo)
         measurementBucketsLinear = [Int](repeating: 0, count: bucketCountLinear)
         percentileResults = [Int?](repeating: nil, count: percentilesToCalculate.count)
@@ -102,7 +105,7 @@ public struct Statistics {
         }
 
         let scaling = timeUnits == .automatic ? 1 : timeUnits.rawValue
-        measurement = measurement / scaling
+        measurement = Int(round(Double(measurement) / Double(scaling)))
 
         let validBucketRangePowerOfTwo = 0 ..< bucketCountPowerOfTwo
         let bucket = measurement > 0 ? Int(ceil(log2(Double(measurement)))) : 0
@@ -139,17 +142,48 @@ public struct Statistics {
 
     /// Perform percentile calculations based on the accumulated statistics
     public mutating func calculateStatistics() {
-        func calculatePercentiles(for measurementBuckets: [Int], totalSamples: Int, powerOfTwo: Bool) {
-            var accumulatedSamples = 0 // current accumulation of sample during processing
 
-            for currentBucket in 0 ..< measurementBuckets.count {
-                accumulatedSamples += Int(measurementBuckets[currentBucket])
+        // Unfortunate code duplication, but it's a bit messy with reversed ranges
+        // in Swift, couldn't find any clean way to parameterize it
+        func calculatePercentiles(for measurementBuckets: [Int],
+                                  startSamples:Int,
+                                  stopSamples:Int,
+                                  powerOfTwo: Bool) {
+            var accumulatedSamples = startSamples // current accumulation of sample during processing
+
+            accumulatedSamples = 0
+            for (bucketIndex, currentBucket) in measurementBuckets.enumerated() {
+                accumulatedSamples += currentBucket
 
                 for percentile in 0 ..< percentilesToCalculate.count {
                     if percentileResults[percentile] == nil,
                        Double(accumulatedSamples) / Double(totalSamples) >= (percentilesToCalculate[percentile] / 100)
                     {
-                        percentileResults[percentile] = powerOfTwo ? 1 << currentBucket : currentBucket
+                        percentileResults[percentile] = powerOfTwo ? 1 << bucketIndex : bucketIndex
+                    }
+                }
+            }
+        }
+
+        func calculateReversedPercentiles(for measurementBuckets: [Int],
+                                          startSamples:Int,
+                                          stopSamples:Int,
+                                          powerOfTwo: Bool) {
+            var accumulatedSamples = startSamples // current accumulation of sample during processing
+
+            for (bucketIndex, currentBucket) in measurementBuckets.enumerated().reversed() {
+
+                if accumulatedSamples >= stopSamples {
+                    return
+                }
+
+                accumulatedSamples += currentBucket
+
+                for percentile in 0 ..< percentilesToCalculate.count {
+                    if percentileResults[percentile] == nil,
+                       Double(accumulatedSamples) / Double(totalSamples) >= (percentilesToCalculate[percentile] / 100)
+                    {
+                        percentileResults[percentile] = powerOfTwo ? 1 << bucketIndex : bucketIndex
                     }
                 }
             }
@@ -160,11 +194,30 @@ public struct Statistics {
                 timeUnits = .count
         }
 
-        let totalSamples = measurementBucketsPowerOfTwo.reduce(0, +) + bucketOverflowPowerOfTwo
+        let linearSamples = measurementBucketsLinear.reduce(0, +)
+        let powerOfTwoSamples = measurementBucketsPowerOfTwo.reduce(0, +)
+        let totalSamples = powerOfTwoSamples + bucketOverflowPowerOfTwo
 
-        // Let's do percentiles for out linear buckets as far as possible, then fall back to power of two
-        calculatePercentiles(for: measurementBucketsLinear, totalSamples: totalSamples, powerOfTwo: false)
-        calculatePercentiles(for: measurementBucketsPowerOfTwo, totalSamples: totalSamples, powerOfTwo: true)
+        // We use linear buckets primarily but fill outliers with power of two
+        if self.prefersLarger {
+            calculateReversedPercentiles(for: measurementBucketsPowerOfTwo,
+                                         startSamples:0,
+                                         stopSamples:totalSamples - linearSamples,
+                                         powerOfTwo: true)
+            calculateReversedPercentiles(for: measurementBucketsLinear,
+                                         startSamples:totalSamples - linearSamples,
+                                         stopSamples:totalSamples,
+                                         powerOfTwo: false)
+        } else {
+            calculatePercentiles(for: measurementBucketsLinear,
+                                 startSamples: 0,
+                                 stopSamples: linearSamples,
+                                 powerOfTwo: false)
+            calculatePercentiles(for: measurementBucketsPowerOfTwo,
+                                 startSamples: 0,
+                                 stopSamples: totalSamples,
+                                 powerOfTwo: true)
+        }
     }
 
     // We currently don't expose the histograms, maybe in the future
