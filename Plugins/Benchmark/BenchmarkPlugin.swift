@@ -104,17 +104,24 @@ import PackagePlugin
             swiftSourceModuleTargets = specifiedTargets
         }
 
+        let filteredTargets = swiftSourceModuleTargets
+            .filter { $0.kind == .executable }
+            .filter { benchmark in
+                let path = benchmark.directory.removingLastComponent()
+                return path.lastComponent == "Benchmarks" ? true : false
+            }
+            .filter { benchmark in
+                swiftSourceModuleTargets.first(where: { $0.name == benchmark.name }) != nil ? true : false
+            }
+            .filter { benchmark in
+                skipTargets.first(where: { $0.name == benchmark.name }) == nil ? true : false
+            }
+
         // Filter out all executable products which are Benchmarks we should run
         let benchmarks = buildResult.builtArtifacts
-            .filter { $0.kind == .executable }
-            .filter { $0.path.lastComponent.hasSuffix("Benchmark") }
             .filter { benchmark in
-                swiftSourceModuleTargets.first(where: { $0.name == benchmark.path.lastComponent }) != nil ? true : false
+                filteredTargets.first(where: { $0.name == benchmark.path.lastComponent }) != nil ? true : false
             }
-            .filter { benchmark in
-                skipTargets.first(where: { $0.name == benchmark.path.lastComponent }) == nil ? true : false
-            }
-            .sorted(by: { $0.path.lastComponent <= $1.path.lastComponent })
 
         // Remaining positional arguments are various action verbs for the plugin
         var positionalArguments = argumentExtractor.remainingArguments
