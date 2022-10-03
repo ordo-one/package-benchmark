@@ -22,7 +22,6 @@ import SystemPackage
     #error("Unsupported Platform")
 #endif
 
-// swiftlint:disable type_body_length
 // @main must be done in actual benchmark to avoid linker errors unfortunately
 public struct BenchmarkRunner: AsyncParsableCommand {
     public init() {}
@@ -176,8 +175,9 @@ public struct BenchmarkRunner: AsyncParsableCommand {
                             accummulatedWallclock += runningTime
                             accummulatedWallclockMeasurements += 1
 
-                            let throughput = Int(round(Double(benchmark.throughputScalingFactor.rawValue * 1_000_000_000)
-                                                 / Double(runningTime)))
+                            let throughput = Int(
+                                round(Double(benchmark.throughputScalingFactor.rawValue * 1_000_000_000)
+                                    / Double(runningTime)))
 
                             if throughput > 0 {
                                 statistics[.throughput]?.add(throughput)
