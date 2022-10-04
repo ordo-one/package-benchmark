@@ -87,10 +87,9 @@ public struct Statistics {
 //            fatalError()
         }
 
-        if timeUnits == .automatic &&
-           onlyZeroMeasurements &&
-            measurement != 0 { // deduce timeunit range from first non-zero sample if .automatic
-
+        if timeUnits == .automatic,
+           onlyZeroMeasurements,
+           measurement != 0 { // deduce timeunit range from first non-zero sample if .automatic
             onlyZeroMeasurements = false
             switch log10(Double(measurement)) {
             case ..<4.0:
@@ -148,12 +147,11 @@ public struct Statistics {
 
     /// Perform percentile calculations based on the accumulated statistics
     public mutating func calculateStatistics() {
-
         // Unfortunate code duplication, but it's a bit messy with reversed ranges
         // in Swift, couldn't find any clean way to parameterize it
         func calculatePercentiles(for measurementBuckets: [Int],
-                                  startSamples:Int,
-                                  stopSamples:Int,
+                                  startSamples: Int,
+                                  stopSamples _: Int,
                                   powerOfTwo: Bool) {
             var accumulatedSamples = startSamples // current accumulation of sample during processing
 
@@ -172,13 +170,12 @@ public struct Statistics {
         }
 
         func calculateReversedPercentiles(for measurementBuckets: [Int],
-                                          startSamples:Int,
-                                          stopSamples:Int,
+                                          startSamples: Int,
+                                          stopSamples: Int,
                                           powerOfTwo: Bool) {
             var accumulatedSamples = startSamples // current accumulation of sample during processing
 
             for (bucketIndex, currentBucket) in measurementBuckets.enumerated().reversed() {
-
                 if accumulatedSamples >= stopSamples {
                     return
                 }
@@ -196,8 +193,8 @@ public struct Statistics {
         }
 
         // Set timeUnits to .count if we only had zero samples and had automatic setting of scale
-        if timeUnits == .automatic && onlyZeroMeasurements {
-                timeUnits = .count
+        if timeUnits == .automatic, onlyZeroMeasurements {
+            timeUnits = .count
         }
 
         let linearSamples = measurementBucketsLinear.reduce(0, +)
@@ -205,14 +202,14 @@ public struct Statistics {
         let totalSamples = powerOfTwoSamples + bucketOverflowPowerOfTwo
 
         // We use linear buckets primarily but fill outliers with power of two
-        if self.prefersLarger {
+        if prefersLarger {
             calculateReversedPercentiles(for: measurementBucketsPowerOfTwo,
-                                         startSamples:0,
-                                         stopSamples:totalSamples - linearSamples,
+                                         startSamples: 0,
+                                         stopSamples: totalSamples - linearSamples,
                                          powerOfTwo: true)
             calculateReversedPercentiles(for: measurementBucketsLinear,
-                                         startSamples:totalSamples - linearSamples,
-                                         stopSamples:totalSamples,
+                                         startSamples: totalSamples - linearSamples,
+                                         stopSamples: totalSamples,
                                          powerOfTwo: false)
         } else {
             calculatePercentiles(for: measurementBucketsLinear,

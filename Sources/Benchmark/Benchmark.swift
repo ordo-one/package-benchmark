@@ -55,7 +55,7 @@ public class Benchmark: Codable, Hashable {
     public var thresholds: [BenchmarkMetric: BenchmarkResult.PercentileThresholds]?
 
     /// Convenience range to iterate over for benchmarks
-    public var throughputIterations: Range<Int> { 0..<self.throughputScalingFactor.rawValue }
+    public var throughputIterations: Range<Int> { 0 ..< throughputScalingFactor.rawValue }
 
     ///   - closure: The actual benchmark closure that will be measured
     var closure: BenchmarkClosure? // The actual benchmark to run
