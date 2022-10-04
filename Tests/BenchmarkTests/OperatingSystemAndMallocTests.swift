@@ -11,7 +11,6 @@
 import XCTest
 import BenchmarkSupport
 
-final class BenchmarkTests: XCTestCase {
-
+final class OperatingSystemAndMallocTests: XCTestCase {
 
 }

@@ -60,6 +60,7 @@ public struct Statistics {
 
     public var onlyZeroMeasurements = true
     var prefersLarger = true
+    var originalTimeUnitWasAutomatic: Bool
 
     public init(bucketCount: Int = 10_000,
                 timeUnits: StatisticsUnits = .automatic,
@@ -72,6 +73,7 @@ public struct Statistics {
         measurementBucketsLinear = [Int](repeating: 0, count: bucketCountLinear)
         percentileResults = [Int?](repeating: nil, count: percentilesToCalculate.count)
         self.timeUnits = timeUnits
+        originalTimeUnitWasAutomatic = timeUnits == .automatic ? true : false
     }
 
     /// Add a measurement for inclusion in statistics
@@ -135,9 +137,13 @@ public struct Statistics {
         measurementCount = 0
         bucketOverflowLinear = 0
         bucketOverflowPowerOfTwo = 0
-        percentileResults.removeAll(keepingCapacity: true)
-        measurementBucketsPowerOfTwo.removeAll(keepingCapacity: true)
-        measurementBucketsLinear.removeAll(keepingCapacity: true)
+        onlyZeroMeasurements = true
+        if originalTimeUnitWasAutomatic {
+            timeUnits = .automatic
+        }
+        measurementBucketsPowerOfTwo = [Int](repeating: 0, count: bucketCountPowerOfTwo)
+        measurementBucketsLinear = [Int](repeating: 0, count: bucketCountLinear)
+        percentileResults = [Int?](repeating: nil, count: percentilesToCalculate.count)
     }
 
     /// Perform percentile calculations based on the accumulated statistics

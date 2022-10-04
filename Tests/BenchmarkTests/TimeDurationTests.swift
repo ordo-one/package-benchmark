@@ -6,12 +6,12 @@
 //
 // You may obtain a copy of the License at
 // http://www.apache.org/licenses/LICENSE-2.0
-//
+///
 
 import XCTest
 import BenchmarkSupport
 
-final class BenchmarkTests: XCTestCase {
+final class TimeDurationTests: XCTestCase {
 
 
 }
