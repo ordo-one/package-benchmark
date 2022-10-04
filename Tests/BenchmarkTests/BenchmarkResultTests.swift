@@ -11,4 +11,4 @@
 import BenchmarkSupport
 import XCTest
 
-final class BenchmarkTests: XCTestCase {}
+final class BenchmarkResultTests: XCTestCase {}

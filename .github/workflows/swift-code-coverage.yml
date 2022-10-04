@@ -8,7 +8,7 @@ on:
 
 jobs:
   build-test-and-upload-test-coverage:
-
+    # Only on Linux as macOS doesn't support jemalloc interposition when running unit tests
     runs-on: ubuntu-latest
 
     steps:
@@ -24,7 +24,7 @@ jobs:
       with:
         version: "13"
     - name: Export code coverage
-      run: llvm-cov export -format="lcov" .build/debug/${{ github.event.repository.name }}PackageTests.xctest -instr-profile .build/debug/codecov/default.profdata > info.lcov
+      run: llvm-cov export -format="lcov" .build/debug/BenchmarkPackageTests.xctest -instr-profile .build/debug/codecov/default.profdata > info.lcov
     - name: Upload codecov
       uses: codecov/codecov-action@v2
       with: 
