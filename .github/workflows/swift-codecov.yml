@@ -8,7 +8,7 @@ on:
 
 jobs:
   build-test-and-upload-test-coverage:
-
+    # Only on Linux as macOS doesn't support jemalloc interposition when running unit tests
     runs-on: ubuntu-latest
 
     steps:
