@@ -13,6 +13,9 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
+    - name: Install jemalloc Linux
+      if: matrix.os == 'ubuntu-latest'
+      run: sudo apt-get install -y libjemalloc-dev
     - name: Run tests
       run: swift test --enable-code-coverage
     - name: Set path
