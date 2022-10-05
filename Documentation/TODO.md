@@ -3,7 +3,6 @@
 These are a set of known missing features/functionality where help would be highly appreciated with PR:s.
 
 ## Tests & Documentation
-* Currently no tests and only partial documentation are in place, should be added/expanded.
 * Explore moving to DocC for documentation
 
 ## Benchmark plugin
