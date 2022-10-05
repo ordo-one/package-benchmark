@@ -24,7 +24,7 @@
 
 public typealias TimeInstant = UInt64 // should be changed to Instant when macOS 13 lands and is adopted
 
-extension TimeInstant {
+public extension TimeInstant {
     func advanced(by duration: TimeDuration) -> Self {
         self + duration
     }
@@ -33,7 +33,7 @@ extension TimeInstant {
         self - other
     }
 
-    public static var now: TimeInstant {
+    static var now: TimeInstant {
         #if os(macOS)
             return clock_gettime_nsec_np(CLOCK_UPTIME_RAW) // to get ns resolution on macOS
         #elseif os(Linux)
