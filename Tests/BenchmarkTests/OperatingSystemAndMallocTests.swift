@@ -8,26 +8,25 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 //
 
-import XCTest
 @testable import BenchmarkSupport
+import XCTest
 
 #if canImport(Darwin)
-import Darwin
+    import Darwin
 #elseif canImport(Glibc)
-import Glibc
+    import Glibc
 #else
-#error("Unsupported Platform")
+    #error("Unsupported Platform")
 #endif
 
 final class OperatingSystemAndMallocTests: XCTestCase {
-
     func testOperatingSystemStatsProducer() throws {
         let operatingSystemStatsProducer = OperatingSystemStatsProducer()
         operatingSystemStatsProducer.startSampling(1)
         let startOperatingSystemStats = operatingSystemStatsProducer.makeOperatingSystemStats()
-        for i in 0..<100 {
-            for j in 0..<10 {
-                blackHole(i*i*i*i*i*i*j*j)
+        for outerloop in 0 ..< 100 {
+            for innerloop in 0 ..< 10 {
+                blackHole(outerloop * outerloop * outerloop * innerloop * innerloop)
                 usleep(1)
                 blackHole(malloc(1))
             }
@@ -57,13 +56,13 @@ final class OperatingSystemAndMallocTests: XCTestCase {
         let mallocStatsProducer = MallocStatsProducer()
         let startMallocStats = mallocStatsProducer.makeMallocStats()
 
-        for i in 1...100 {
-            blackHole(malloc(i * 1024))
+        for outerloop in 1 ... 100 {
+            blackHole(malloc(outerloop * 1_024))
         }
 
         let stopMallocStats = mallocStatsProducer.makeMallocStats()
 
         XCTAssert(stopMallocStats.mallocCountTotal - startMallocStats.mallocCountTotal >= 100)
-        XCTAssert(stopMallocStats.allocatedResidentMemory - startMallocStats.allocatedResidentMemory >= 100*1024)
+        XCTAssert(stopMallocStats.allocatedResidentMemory - startMallocStats.allocatedResidentMemory >= 100 * 1_024)
     }
 }

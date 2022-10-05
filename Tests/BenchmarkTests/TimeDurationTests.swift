@@ -21,14 +21,14 @@ final class TimeDurationTests: XCTestCase {
 
     func testTimeInstantDuration() throws {
         let start = TimeInstant.now
-        let stop = start + 1234
+        let stop = start + 1_234
         let duration = stop.duration(to: start)
-        XCTAssert(duration == 1234)
+        XCTAssert(duration == 1_234)
     }
 
     func testTimeInstantAdvance() throws {
         let start = TimeInstant.now
-        let duration = start.advanced(by: 1234)
-        XCTAssert(duration == start + 1234)
+        let duration = start.advanced(by: 1_234)
+        XCTAssert(duration == start + 1_234)
     }
 }

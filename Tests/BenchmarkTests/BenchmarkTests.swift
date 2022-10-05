@@ -8,23 +8,21 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 //
 
-import XCTest
 @testable import Benchmark
 @testable import BenchmarkSupport
+import XCTest
 
 final class BenchmarkTests: XCTestCase {
-
     func testBenchmarkRun() throws {
-        let benchmark = Benchmark("Minimal benchmark") { benchmark in
+        let benchmark = Benchmark("Minimal benchmark") { _ in
         }
         XCTAssertNotNil(benchmark)
         benchmark?.run()
     }
 
     func testBenchmarkRunAsync() throws {
-        func asyncFunc() async {
-        }
-        let benchmark = Benchmark("Minimal async benchmark") { benchmark in
+        func asyncFunc() async {}
+        let benchmark = Benchmark("Minimal async benchmark") { _ in
             await asyncFunc()
         }
         XCTAssertNotNil(benchmark)
@@ -33,7 +31,7 @@ final class BenchmarkTests: XCTestCase {
 
     func testBenchmarkRunCustomMetric() throws {
         let benchmark = Benchmark("Minimal benchmark", metrics: [.custom("customMetric")]) { benchmark in
-            for measurement in 1...100 {
+            for measurement in 1 ... 100 {
                 benchmark.measurement(.custom("customMetric"), measurement)
             }
         }
@@ -42,14 +40,13 @@ final class BenchmarkTests: XCTestCase {
     }
 
     func testBenchmarkEqualityAndDifference() throws {
-        let benchmark = Benchmark("Minimal benchmark") { benchmark in
+        let benchmark = Benchmark("Minimal benchmark") { _ in
         }
-        let benchmark2 = Benchmark("Another minimal benchmark") { benchmark in
+        let benchmark2 = Benchmark("Another minimal benchmark") { _ in
         }
-        let benchmark3 = Benchmark("Minimal benchmark") { benchmark in
+        let benchmark3 = Benchmark("Minimal benchmark") { _ in
         }
         XCTAssert(benchmark != benchmark2)
-        XCTAssert(benchmark == benchmark)
         XCTAssert(benchmark == benchmark3)
     }
 
@@ -69,12 +66,11 @@ final class BenchmarkTests: XCTestCase {
                                   timeUnits: .milliseconds,
                                   warmup: false,
                                   throughputScalingFactor: .mega) { benchmark in
-            for i in benchmark.throughputIterations {
-                blackHole(i)
+            for outerloop in benchmark.throughputIterations {
+                blackHole(outerloop)
             }
         }
         XCTAssertNotNil(benchmark)
         benchmark?.run()
     }
-
 }
