@@ -68,6 +68,9 @@ public class Benchmark: Codable, Hashable {
     // Hook for custom metrics capturing
     public var customMetricMeasurement: BenchmarkCustomMetricMeasurement?
 
+    public static var defaultBenchmarkTimeUnits: BenchmarkTimeUnits = .automatic
+    internal static var testSkipBenchmarkRegistrations = false // true in test to avoid bench registration fail
+
     var lock: pthread_mutex_t = .init()
     var condition: pthread_cond_t = .init()
     var shutdown = false
@@ -112,7 +115,7 @@ public class Benchmark: Codable, Hashable {
     @discardableResult
     public init?(_ name: String,
                  metrics: [BenchmarkMetric] = BenchmarkMetric.default,
-                 timeUnits: BenchmarkTimeUnits? = .automatic,
+                 timeUnits: BenchmarkTimeUnits? = defaultBenchmarkTimeUnits,
                  warmup: Bool = true,
                  throughputScalingFactor: StatisticsUnits = .count,
                  desiredDuration: TimeDuration? = nil,
@@ -133,7 +136,13 @@ public class Benchmark: Codable, Hashable {
         self.thresholds = thresholds
         self.closure = closure
 
-        Self.benchmarks.append(self)
+        if Self.testSkipBenchmarkRegistrations == false {
+            guard Self.benchmarks.contains(self) == false else {
+                fatalError("Duplicate registration of benchmark '\(self.name)', name must be unique.")
+            }
+
+            Self.benchmarks.append(self)
+        }
 
         self.thresholds?.forEach { thresholdMetric, _ in
             if self.metrics.contains(thresholdMetric) == false {
@@ -167,7 +176,7 @@ public class Benchmark: Codable, Hashable {
     @discardableResult
     public init?(_ name: String,
                  metrics: [BenchmarkMetric] = BenchmarkMetric.default,
-                 timeUnits: BenchmarkTimeUnits? = .automatic,
+                 timeUnits: BenchmarkTimeUnits? = defaultBenchmarkTimeUnits,
                  warmup: Bool = true,
                  throughputScalingFactor: StatisticsUnits = .count,
                  desiredDuration: TimeDuration? = nil,

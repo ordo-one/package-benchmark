@@ -36,6 +36,7 @@ final class BenchmarkRunnerTests: XCTestCase, BenchmarkRunnerReadWrite {
 
     internal func read() throws -> BenchmarkCommandRequest {
         //      print("read request")
+        Benchmark.testSkipBenchmarkRegistrations = true
         let benchmark = Benchmark("Minimal benchmark") { _ in
         }
         let benchmark2 = Benchmark("Minimal benchmark 2") { _ in

@@ -14,7 +14,7 @@ import XCTest
 
 final class BenchmarkTests: XCTestCase {
     func testBenchmarkRun() throws {
-        let benchmark = Benchmark("Minimal benchmark") { _ in
+        let benchmark = Benchmark("testBenchmarkRun benchmark") { _ in
         }
         XCTAssertNotNil(benchmark)
         benchmark?.run()
@@ -22,7 +22,7 @@ final class BenchmarkTests: XCTestCase {
 
     func testBenchmarkRunAsync() throws {
         func asyncFunc() async {}
-        let benchmark = Benchmark("Minimal async benchmark") { _ in
+        let benchmark = Benchmark("testBenchmarkRunAsync benchmark") { _ in
             await asyncFunc()
         }
         XCTAssertNotNil(benchmark)
@@ -30,7 +30,8 @@ final class BenchmarkTests: XCTestCase {
     }
 
     func testBenchmarkRunCustomMetric() throws {
-        let benchmark = Benchmark("Minimal benchmark", metrics: [.custom("customMetric")]) { benchmark in
+        let benchmark = Benchmark("testBenchmarkRunCustomMetric benchmark",
+                                  metrics: [.custom("customMetric")]) { benchmark in
             for measurement in 1 ... 100 {
                 benchmark.measurement(.custom("customMetric"), measurement)
             }
@@ -40,18 +41,16 @@ final class BenchmarkTests: XCTestCase {
     }
 
     func testBenchmarkEqualityAndDifference() throws {
-        let benchmark = Benchmark("Minimal benchmark") { _ in
+        let benchmark = Benchmark("testBenchmarkEqualityAndDifference benchmark") { _ in
         }
-        let benchmark2 = Benchmark("Another minimal benchmark") { _ in
-        }
-        let benchmark3 = Benchmark("Minimal benchmark") { _ in
+        let benchmark2 = Benchmark("testBenchmarkEqualityAndDifference benchmark 2") { _ in
         }
         XCTAssert(benchmark != benchmark2)
-        XCTAssert(benchmark == benchmark3)
     }
 
     func testBenchmarkRunFailure() throws {
-        let benchmark = Benchmark("Minimal benchmark", metrics: [.custom("customMetric")]) { benchmark in
+        let benchmark = Benchmark("testBenchmarkRunFailure benchmark",
+                                  metrics: [.custom("customMetric")]) { benchmark in
             benchmark.error("Benchmark failed")
         }
         XCTAssertNotNil(benchmark)
@@ -61,7 +60,7 @@ final class BenchmarkTests: XCTestCase {
     }
 
     func testBenchmarkRunMoreParameters() throws {
-        let benchmark = Benchmark("Minimal benchmark",
+        let benchmark = Benchmark("testBenchmarkRunMoreParameters benchmark",
                                   metrics: BenchmarkMetric.all,
                                   timeUnits: .milliseconds,
                                   warmup: false,
