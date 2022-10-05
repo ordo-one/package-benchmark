@@ -68,8 +68,8 @@ public class Benchmark: Codable, Hashable {
     // Hook for custom metrics capturing
     public var customMetricMeasurement: BenchmarkCustomMetricMeasurement?
 
-    static public var defaultBenchmarkTimeUnits: BenchmarkTimeUnits = .automatic
-    static internal var testSkipBenchmarkRegistrations: Bool = false // true during test to avoid bench registration fail
+    public static var defaultBenchmarkTimeUnits: BenchmarkTimeUnits = .automatic
+    internal static var testSkipBenchmarkRegistrations = false // true in test to avoid bench registration fail
 
     var lock: pthread_mutex_t = .init()
     var condition: pthread_cond_t = .init()
@@ -135,7 +135,6 @@ public class Benchmark: Codable, Hashable {
         self.desiredIterations = desiredIterations
         self.thresholds = thresholds
         self.closure = closure
-
 
         if Self.testSkipBenchmarkRegistrations == false {
             guard Self.benchmarks.contains(self) == false else {

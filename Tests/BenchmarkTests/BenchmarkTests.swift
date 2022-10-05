@@ -30,7 +30,8 @@ final class BenchmarkTests: XCTestCase {
     }
 
     func testBenchmarkRunCustomMetric() throws {
-        let benchmark = Benchmark("testBenchmarkRunCustomMetric benchmark", metrics: [.custom("customMetric")]) { benchmark in
+        let benchmark = Benchmark("testBenchmarkRunCustomMetric benchmark",
+                                  metrics: [.custom("customMetric")]) { benchmark in
             for measurement in 1 ... 100 {
                 benchmark.measurement(.custom("customMetric"), measurement)
             }
@@ -48,7 +49,8 @@ final class BenchmarkTests: XCTestCase {
     }
 
     func testBenchmarkRunFailure() throws {
-        let benchmark = Benchmark("testBenchmarkRunFailure benchmark", metrics: [.custom("customMetric")]) { benchmark in
+        let benchmark = Benchmark("testBenchmarkRunFailure benchmark",
+                                  metrics: [.custom("customMetric")]) { benchmark in
             benchmark.error("Benchmark failed")
         }
         XCTAssertNotNil(benchmark)
