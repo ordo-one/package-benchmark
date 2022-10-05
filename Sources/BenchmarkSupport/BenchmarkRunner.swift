@@ -22,8 +22,16 @@ import SystemPackage
     #error("Unsupported Platform")
 #endif
 
+// For test dependency injection
+protocol BenchmarkRunnerReadWrite {
+    func write(_ reply: BenchmarkCommandReply) throws
+    func read() throws -> BenchmarkCommandRequest
+}
+
 // @main must be done in actual benchmark to avoid linker errors unfortunately
-public struct BenchmarkRunner: AsyncParsableCommand {
+public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
+    static var testReadWrite: BenchmarkRunnerReadWrite?
+
     public init() {}
 
     @Option(name: .shortAndLong, help: "The input pipe filedescriptor used for communication with host process.")
@@ -82,6 +90,8 @@ public struct BenchmarkRunner: AsyncParsableCommand {
             debug = true
         }
 
+        let channel = Self.testReadWrite ?? self
+
         registerBenchmarks()
         var debugIterator = Benchmark.benchmarks.makeIterator()
         var benchmarkCommand: BenchmarkCommandRequest
@@ -96,16 +106,16 @@ public struct BenchmarkRunner: AsyncParsableCommand {
                     return
                 }
             } else {
-                benchmarkCommand = try read()
+                benchmarkCommand = try channel.read()
             }
 
             switch benchmarkCommand {
             case .list:
                 try Benchmark.benchmarks.forEach { benchmark in
-                    try write(.list(benchmark: benchmark))
+                    try channel.write(.list(benchmark: benchmark))
                 }
 
-                try write(.end)
+                try channel.write(.end)
             case let .run(benchmarkToRun):
                 let benchmark = Benchmark.benchmarks.first { $0.name == benchmarkToRun.name }
 
@@ -289,7 +299,7 @@ public struct BenchmarkRunner: AsyncParsableCommand {
                             }
                         }
                         guard benchmark.failureReason == nil else {
-                            try write(.error(benchmark.failureReason!))
+                            try channel.write(.error(benchmark.failureReason!))
                             return
                         }
 
@@ -340,7 +350,7 @@ public struct BenchmarkRunner: AsyncParsableCommand {
                     // If we didn't capture any results for the desired metrics (e.g. an empty metric list), skip
                     // reporting results back
                     if results.isEmpty == false {
-                        try write(.result(benchmark: benchmark, results: results))
+                        try channel.write(.result(benchmark: benchmark, results: results))
                     }
 
                     // Minimal output for debugging
@@ -350,7 +360,7 @@ public struct BenchmarkRunner: AsyncParsableCommand {
                 } else {
                     print("Internal error: Couldn't find specified benchmark '\(benchmarkToRun.name)' to run.")
                 }
-                try write(.end)
+                try channel.write(.end)
             case .end:
                 return
             }
