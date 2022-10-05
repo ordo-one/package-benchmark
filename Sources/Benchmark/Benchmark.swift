@@ -68,6 +68,8 @@ public class Benchmark: Codable, Hashable {
     // Hook for custom metrics capturing
     public var customMetricMeasurement: BenchmarkCustomMetricMeasurement?
 
+    static public var defaultBenchmarkTimeUnits: BenchmarkTimeUnits = .automatic
+
     var lock: pthread_mutex_t = .init()
     var condition: pthread_cond_t = .init()
     var shutdown = false
@@ -112,7 +114,7 @@ public class Benchmark: Codable, Hashable {
     @discardableResult
     public init?(_ name: String,
                  metrics: [BenchmarkMetric] = BenchmarkMetric.default,
-                 timeUnits: BenchmarkTimeUnits? = .automatic,
+                 timeUnits: BenchmarkTimeUnits? = defaultBenchmarkTimeUnits,
                  warmup: Bool = true,
                  throughputScalingFactor: StatisticsUnits = .count,
                  desiredDuration: TimeDuration? = nil,
@@ -171,7 +173,7 @@ public class Benchmark: Codable, Hashable {
     @discardableResult
     public init?(_ name: String,
                  metrics: [BenchmarkMetric] = BenchmarkMetric.default,
-                 timeUnits: BenchmarkTimeUnits? = .automatic,
+                 timeUnits: BenchmarkTimeUnits? = defaultBenchmarkTimeUnits,
                  warmup: Bool = true,
                  throughputScalingFactor: StatisticsUnits = .count,
                  desiredDuration: TimeDuration? = nil,
