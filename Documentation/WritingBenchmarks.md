@@ -104,6 +104,20 @@ An example would be:
 Metrics can be specified both explicitly, e.g. `[.throughput, .wallClock]` but also with a number of convenience methods in  
 `BenchmarkMetric+Defaults.swift`, like e.g. `BenchmarkMetric.memory` or `BenchmarkMetric.all`.
 
+### Overriding default time units
+It's possible to set the desired time units for a whole benchmark suite easily by setting `Benchmark.defaultBenchmarkTimeUnits`
+```swift
+@_dynamicReplacement(for: registerBenchmarks)
+func benchmarks() {
+
+    Benchmark.defaultBenchmarkTimeUnits = .nanoseconds
+
+    Benchmark("Foundation Date()") {
+...
+    }
+```
+    
+
 ### Custom thresholds
 
 ```swift
