@@ -133,6 +133,10 @@ public class Benchmark: Codable, Hashable {
         self.thresholds = thresholds
         self.closure = closure
 
+        guard Self.benchmarks.contains(self) == false else {
+            fatalError("Duplicate registration of benchmark '\(self.name)', name must be unique.")
+        }
+
         Self.benchmarks.append(self)
 
         self.thresholds?.forEach { thresholdMetric, _ in
