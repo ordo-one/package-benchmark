@@ -235,7 +235,7 @@ public class Benchmark: Codable, Hashable {
         }
     }
 
-    /// Used to signfy that a given benchmark have failed for some reason
+    /// Used to signify that a given benchmark have failed for some reason
     /// - Parameter description: An explanation why a given benchmark failed which will be reported to the end user.
     public func error(_ description: String) {
         failureReason = description

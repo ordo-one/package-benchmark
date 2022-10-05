@@ -11,4 +11,24 @@
 import BenchmarkSupport
 import XCTest
 
-final class TimeDurationTests: XCTestCase {}
+final class TimeDurationTests: XCTestCase {
+    func testTimeInstantNow() throws {
+        let start = TimeInstant.now
+        usleep(100_000) // ~0.1s
+        let stop = TimeInstant.now
+        XCTAssert(stop - start > 90_000)
+    }
+
+    func testTimeInstantDuration() throws {
+        let start = TimeInstant.now
+        let stop = start + 1_234
+        let duration = stop.duration(to: start)
+        XCTAssert(duration == 1_234)
+    }
+
+    func testTimeInstantAdvance() throws {
+        let start = TimeInstant.now
+        let duration = start.advanced(by: 1_234)
+        XCTAssert(duration == start + 1_234)
+    }
+}
