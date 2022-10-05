@@ -95,7 +95,7 @@ extension BenchmarkTool {
     func listBenchmarks() throws {
         print("Target '\(FilePath(benchmarkExecutablePath).lastComponent!)' available benchmarks:")
         benchmarks.forEach { benchmark in
-            print("\(benchmark.name) \(benchmark.metrics)")
+            print("\(benchmark.name)")
         }
         print("")
     }
