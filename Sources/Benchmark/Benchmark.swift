@@ -69,6 +69,7 @@ public class Benchmark: Codable, Hashable {
     public var customMetricMeasurement: BenchmarkCustomMetricMeasurement?
 
     static public var defaultBenchmarkTimeUnits: BenchmarkTimeUnits = .automatic
+    static internal var testSkipBenchmarkRegistrations: Bool = false // true during test to avoid bench registration fail
 
     var lock: pthread_mutex_t = .init()
     var condition: pthread_cond_t = .init()
@@ -135,11 +136,14 @@ public class Benchmark: Codable, Hashable {
         self.thresholds = thresholds
         self.closure = closure
 
-        guard Self.benchmarks.contains(self) == false else {
-            fatalError("Duplicate registration of benchmark '\(self.name)', name must be unique.")
-        }
 
-        Self.benchmarks.append(self)
+        if Self.testSkipBenchmarkRegistrations == false {
+            guard Self.benchmarks.contains(self) == false else {
+                fatalError("Duplicate registration of benchmark '\(self.name)', name must be unique.")
+            }
+
+            Self.benchmarks.append(self)
+        }
 
         self.thresholds?.forEach { thresholdMetric, _ in
             if self.metrics.contains(thresholdMetric) == false {

@@ -44,10 +44,7 @@ final class BenchmarkTests: XCTestCase {
         }
         let benchmark2 = Benchmark("testBenchmarkEqualityAndDifference benchmark 2") { _ in
         }
-        let benchmark3 = Benchmark("testBenchmarkEqualityAndDifference benchmark 3") { _ in
-        }
         XCTAssert(benchmark != benchmark2)
-        XCTAssert(benchmark == benchmark3)
     }
 
     func testBenchmarkRunFailure() throws {
