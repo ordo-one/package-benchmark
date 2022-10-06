@@ -102,10 +102,10 @@ struct BenchmarkTool: AsyncParsableCommand {
                         prettyPrintDelta(otherBaseline)
 
                         if otherBaseline.betterResultsOrEqual(than: currentBaseline, printOutput: true) {
-                            print("New baseline '\(baselineNameSecond)' is BETTER (or equal) than the '\(baselineName ?? "default")' baseline thresholds.")
+                            print("New baseline '\(baselineNameSecond)' for '\(target)' is BETTER (or equal) than the '\(baselineName ?? "default")' baseline thresholds.")
                             print("")
                         } else {
-                            print("New baseline '\(baselineNameSecond)' is WORSE than the '\(baselineName ?? "default")' baseline thresholds.")
+                            print("New baseline '\(baselineNameSecond)' for '\(target)' is WORSE than the '\(baselineName ?? "default")' baseline thresholds.")
                             print("")
                             benchmarkFailure = true
                         }

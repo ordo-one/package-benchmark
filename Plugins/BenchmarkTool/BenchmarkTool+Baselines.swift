@@ -230,16 +230,21 @@ extension BenchmarkBaseline: Equatable {
         let rhs = otherBaseline
         var warningPrintedForMetric: Set<BenchmarkMetric> = []
         var warningPrinted = false
-        var betterOrEqual = true
+        var betterOrEqualForAll = true
+        var betterOrEqualForIdentifier = true
 
         for (lhsBenchmarkIdentifier, lhsBenchmarkResults) in lhs.results {
+            if printOutput {
+                print("Checking for threshold violations for `\(lhsBenchmarkIdentifier.target):\(lhsBenchmarkIdentifier.name)`.")
+            }
+
             for lhsBenchmarkResult in lhsBenchmarkResults {
                 if let rhsResults = rhs.results.first(where: { $0.key == lhsBenchmarkIdentifier }) {
                     if let rhsBenchmarkResult = rhsResults.value.first(where: { $0.metric == lhsBenchmarkResult.metric }) {
                         if lhsBenchmarkResult.betterResultsOrEqual(than: rhsBenchmarkResult,
                                                                    thresholds: lhsBenchmarkResult.thresholds ?? thresholds,
                                                                    printOutput: printOutput) == false {
-                            betterOrEqual = false
+                            betterOrEqualForIdentifier = false
                         }
                     } else {
                         if warningPrintedForMetric.contains(lhsBenchmarkResult.metric) == false {
@@ -254,9 +259,15 @@ extension BenchmarkBaseline: Equatable {
                     }
                 }
             }
+            if betterOrEqualForIdentifier == false && printOutput {
+                print("`\(lhsBenchmarkIdentifier.target):\(lhsBenchmarkIdentifier.name)` had threshold violations.")
+            }
+
+            betterOrEqualForAll = betterOrEqualForAll || betterOrEqualForIdentifier
+            betterOrEqualForIdentifier = true
         }
 
-        return betterOrEqual
+        return betterOrEqualForAll
     }
 
     static func == (lhs: BenchmarkBaseline, rhs: BenchmarkBaseline) -> Bool {
