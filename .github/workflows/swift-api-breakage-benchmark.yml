@@ -1,0 +1,37 @@
+name: Swift check API breaks
+
+on:
+  workflow_dispatch:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  analyze-api-breakage:
+
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+    - name: Install jemalloc Linux
+      if: matrix.os == 'ubuntu-latest'
+      run: sudo apt-get install -y libjemalloc-dev
+    - name: Install jemalloc macOS
+      if: matrix.os == 'macos-12'
+      run: brew install jemalloc
+    - name: Use hardcoded SPM library target 'Benchmark'
+      id: spm_target
+      run: |
+        SPM_DEFAULT_TARGET="Benchmark"
+        echo "::set-output name=spmlibrarytarget::$SPM_DEFAULT_TARGET"
+    - name: Build
+      if: ${{ steps.spm_target.outputs.spmlibrarytarget }}
+      run: swift build
+    - name: Analyze API breakage
+      if: ${{ steps.spm_target.outputs.spmlibrarytarget }}
+      run: swift package diagnose-api-breaking-changes origin/main --targets ${{ steps.spm_target.outputs.spmlibrarytarget }}
