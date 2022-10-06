@@ -61,7 +61,7 @@ The `Benchmark` initializer has a wide range of options that allows tuning for h
     ///   - metrics: Defines the metrics that should be measured for the benchmark
     ///   - timeUnits: Override the automatic detection of timeunits for metrics related to time
     ///   to a specific one (auto should work for most use cases)
-    ///   - warmup: Specifies if a number of warmup iterations should be performed before the
+    ///   - warmupIterations: Specifies  a number of warmup iterations should be performed before the
     ///   measurement to reduce outliers due to e.g. cache population, currently 3 warmup iterations will be run.
     ///   - throughputScalingFactor: Specifies the number of logical subiterations being done, scaling
     ///   throughput measurements accordingly. E.g. `.kilo`
@@ -72,16 +72,17 @@ The `Benchmark` initializer has a wide range of options that allows tuning for h
     ///   - skip: Set to true if the benchmark should be excluded from benchmark runs
     ///   - thresholds: Defines custom threshold per metric for failing the benchmark in CI for in `benchmark compare`
     ///   - closure: The actual benchmark closure that will be measured
+    @discardableResult
     public init?(_ name: String,
-                 metrics: [BenchmarkMetric] = BenchmarkMetric.default,
-                 timeUnits: BenchmarkTimeUnits? = .automatic,
-                 warmup: Bool = true,
-                 throughputScalingFactor: StatisticsUnits = .count,
-                 desiredDuration: TimeDuration? = nil,
-                 desiredIterations: Int? = nil,
-                 skip: Bool = false,
-                 thresholds: [BenchmarkMetric : BenchmarkResult.PercentileThresholds]? = nil,
-                 closure: @escaping BenchmarkClosure) 
+                 metrics: [BenchmarkMetric] = Benchmark.defaultMetrics,
+                 timeUnits: BenchmarkTimeUnits = Benchmark.defaultTimeUnits,
+                 warmupIterations: Int = Benchmark.defaultWarmupIterations,
+                 throughputScalingFactor: StatisticsUnits = Benchmark.defaultThroughputScalingFactor,
+                 desiredDuration: TimeDuration = Benchmark.defaultDesiredDuration,
+                 desiredIterations: Int = Benchmark.defaultDesiredIterations,
+                 skip: Bool = Benchmark.defaultSkip,
+                 thresholds: [BenchmarkMetric: BenchmarkResult.PercentileThresholds]? = Benchmark.defaultThresholds,
+                 closure: @escaping BenchmarkClosure) {
 ```
 
 ### throughputScalingFactor
@@ -117,7 +118,7 @@ func benchmarks() {
     }
 ```
 
-Similar defaults can be for all benchmark settings using:
+Similar defaults can be set for all benchmark settings using the class variables:
 ```
 Benchmark.defaultMetrics
 Benchmark.defaultTimeUnits
