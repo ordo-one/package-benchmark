@@ -75,9 +75,9 @@ extension BenchmarkTool {
             if BenchmarkBaseline(machine: benchmarkMachine,
                                  results: benchmarkResults).betterResultsOrEqual(than: currentBaseline,
                                                                                  printOutput: true) {
-                print("Current run is BETTER (or equal) than the '\(baselineName ?? "default")' baseline thresholds.")
+                print("Current run of \(target) is BETTER (or equal) than the '\(baselineName ?? "default")' baseline thresholds.")
             } else {
-                print("Current run is WORSE than the '\(baselineName ?? "default")' baseline thresholds.")
+                print("Current run is \(target) WORSE than the '\(baselineName ?? "default")' baseline thresholds.")
                 benchmarkFailure = true
             }
 

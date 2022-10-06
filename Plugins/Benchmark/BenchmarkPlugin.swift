@@ -195,6 +195,7 @@ import PackagePlugin
             firstBenchmarkTool = false
         }
         if benchmarkFailure {
+            print("One or more benchmark suites had a threshold violation or crashed during runtime.")
             throw MyError.benchmarkDeviationOrBenchmarkFailed
         }
     }
