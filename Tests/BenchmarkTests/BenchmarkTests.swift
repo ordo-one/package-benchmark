@@ -63,7 +63,7 @@ final class BenchmarkTests: XCTestCase {
         let benchmark = Benchmark("testBenchmarkRunMoreParameters benchmark",
                                   metrics: BenchmarkMetric.all,
                                   timeUnits: .milliseconds,
-                                  warmup: false,
+                                  warmupIterations: 0,
                                   throughputScalingFactor: .mega) { benchmark in
             for outerloop in benchmark.throughputIterations {
                 blackHole(outerloop)

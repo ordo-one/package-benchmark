@@ -120,16 +120,11 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
                 let benchmark = Benchmark.benchmarks.first { $0.name == benchmarkToRun.name }
 
                 if let benchmark = benchmark {
-                    // run a few warmup iterations by default to clean out outliers due to cacheing etc.
-                    var warmupIterations = 0
+                    // optionally run a few warmup iterations by default to clean out outliers due to cacheing etc.
 
-                    if benchmark.warmup {
-                        warmupIterations = 3
-
-                        for iterations in 0 ..< warmupIterations {
-                            benchmark.currentIteration = iterations
-                            benchmark.run()
-                        }
+                    for iterations in 0 ..< benchmark.warmupIterations {
+                        benchmark.currentIteration = iterations
+                        benchmark.run()
                     }
 
                     // Could make an array with raw value indexing on enum for
@@ -266,44 +261,22 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
                         operatingSystemStatsProducer.startSampling(5_000) // ~5 ms
                     }
 
-                    // Default values if none specified
-                    var desiredIterations = 100_000
-                    var desiredDuration: TimeDuration = .seconds(1)
-
-                    if let iterations = benchmark.desiredIterations {
-                        desiredIterations = iterations
-                    }
-
-                    if let duration = benchmark.desiredDuration {
-                        desiredDuration = duration
-                    }
-
                     // Run the benchmark at a minimum the desired iterations/runtime --
-                    while iterations <= desiredIterations ||
-                        accummulatedRuntime <= desiredDuration {
+                    while iterations <= benchmark.desiredIterations ||
+                        accummulatedRuntime <= benchmark.desiredDuration {
                         // and at a maximum the same...
-                        if benchmark.desiredIterations != nil, iterations >= desiredIterations {
+                        guard accummulatedRuntime < benchmark.desiredDuration,
+                              iterations < benchmark.desiredIterations
+                        else {
                             break
                         }
 
-                        if benchmark.desiredDuration != nil, accummulatedRuntime >= desiredDuration {
-                            break
-                        }
-
-                        if benchmark.desiredDuration == nil,
-                           benchmark.desiredIterations == nil {
-                            guard accummulatedRuntime < desiredDuration,
-                                  iterations < desiredIterations
-                            else {
-                                break
-                            }
-                        }
                         guard benchmark.failureReason == nil else {
                             try channel.write(.error(benchmark.failureReason!))
                             return
                         }
 
-                        benchmark.currentIteration = iterations + warmupIterations
+                        benchmark.currentIteration = iterations + benchmark.warmupIterations
 
                         benchmark.run()
 
@@ -337,7 +310,7 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
                             let result = BenchmarkResult(metric: key,
                                                          timeUnits: BenchmarkTimeUnits(value.timeUnits),
                                                          measurements: value.measurementCount,
-                                                         warmupIterations: warmupIterations,
+                                                         warmupIterations: benchmark.warmupIterations,
                                                          thresholds: benchmark.thresholds?[key],
                                                          percentiles: percentiles)
                             results.append(result)

@@ -20,7 +20,7 @@ import Dispatch
 import Statistics // For TimeInstant/TimeDuration until we can migrate to 5.7 Instant/Duration
 
 /// Defines a benchmark
-public class Benchmark: Codable, Hashable {
+public final class Benchmark: Codable, Hashable {
     public typealias BenchmarkClosure = (_ benchmark: Benchmark) -> Void
     public typealias BenchmarkAsyncClosure = (_ benchmark: Benchmark) async -> Void
     public typealias BenchmarkMeasurementSynchronization = () -> Void
@@ -34,18 +34,18 @@ public class Benchmark: Codable, Hashable {
     public var metrics: [BenchmarkMetric]
     /// Override the automatic detection of timeunits for metrics related to time to a specific
     /// one (auto should work for most use cases)
-    public var timeUnits: BenchmarkTimeUnits?
-    /// Specifies if a number of warmup iterations should be performed before the measurement to
+    public var timeUnits: BenchmarkTimeUnits
+    /// Specifies a number of warmup iterations should be performed before the measurement to
     /// reduce outliers due to e.g. cache population
-    public var warmup: Bool
+    public var warmupIterations: Int
     /// Specifies the number of logical subiterations being done, scaling throughput measurements accordingly.
     /// E.g. `.kilo`will scale results with 1000. Any iteration done in the benchmark should use
     /// `benchmark.throughputScalingFactor.rawvalue` for the number of iterations.
     public var throughputScalingFactor: StatisticsUnits
     /// The target wall clock runtime for the benchmark, currenty defaults to `.seconds(1)` if not set
-    public var desiredDuration: TimeDuration?
+    public var desiredDuration: TimeDuration
     /// The target number of iterations for the benchmark., currently defaults to 100K iterations if not set
-    public var desiredIterations: Int?
+    public var desiredIterations: Int
     /// The reason for a benchmark failure, not set if successful
     public var failureReason: String?
     /// The current benchmark iteration (also includes warmup iterations), can be useful when
@@ -68,9 +68,14 @@ public class Benchmark: Codable, Hashable {
     // Hook for custom metrics capturing
     public var customMetricMeasurement: BenchmarkCustomMetricMeasurement?
 
-    /// Hook for setting the time units to use for a whole benchmark suite
+    /// Hooks for setting defaults for a whole benchmark suite
+    public static var defaultMetrics: [BenchmarkMetric] = BenchmarkMetric.default
     public static var defaultTimeUnits: BenchmarkTimeUnits = .automatic
-    /// Hook for setting thresholds for a whole benchmark suite
+    public static var defaultWarmupIterations = 3
+    public static var defaultThroughputScalingFactor: StatisticsUnits = .count
+    public static var defaultDesiredDuration: TimeDuration = .seconds(1)
+    public static var defaultDesiredIterations: Int = 100_000
+    public static var defaultSkip = false
     public static var defaultThresholds: [BenchmarkMetric: BenchmarkResult.PercentileThresholds]?
 
     internal static var testSkipBenchmarkRegistrations = false // true in test to avoid bench registration fail
@@ -83,10 +88,12 @@ public class Benchmark: Codable, Hashable {
     enum CodingKeys: String, CodingKey {
         case name
         case metrics
-        case warmup
-        case throughputScalingFactor
-        case thresholds
         case timeUnits
+        case warmupIterations
+        case throughputScalingFactor
+        case desiredDuration
+        case desiredIterations
+        case thresholds
         case failureReason
     }
 
@@ -105,7 +112,7 @@ public class Benchmark: Codable, Hashable {
     ///   - metrics: Defines the metrics that should be measured for the benchmark
     ///   - timeUnits: Override the automatic detection of timeunits for metrics related to time
     ///   to a specific one (auto should work for most use cases)
-    ///   - warmup: Specifies if a number of warmup iterations should be performed before the
+    ///   - warmupIterations: Specifies  a number of warmup iterations should be performed before the
     ///   measurement to reduce outliers due to e.g. cache population, currently 3 warmup iterations will be run.
     ///   - throughputScalingFactor: Specifies the number of logical subiterations being done, scaling
     ///   throughput measurements accordingly. E.g. `.kilo`
@@ -118,14 +125,14 @@ public class Benchmark: Codable, Hashable {
     ///   - closure: The actual benchmark closure that will be measured
     @discardableResult
     public init?(_ name: String,
-                 metrics: [BenchmarkMetric] = BenchmarkMetric.default,
-                 timeUnits: BenchmarkTimeUnits? = defaultTimeUnits,
-                 warmup: Bool = true,
-                 throughputScalingFactor: StatisticsUnits = .count,
-                 desiredDuration: TimeDuration? = nil,
-                 desiredIterations: Int? = nil,
-                 skip: Bool = false,
-                 thresholds: [BenchmarkMetric: BenchmarkResult.PercentileThresholds]? = defaultThresholds,
+                 metrics: [BenchmarkMetric] = Benchmark.defaultMetrics,
+                 timeUnits: BenchmarkTimeUnits = Benchmark.defaultTimeUnits,
+                 warmupIterations: Int = Benchmark.defaultWarmupIterations,
+                 throughputScalingFactor: StatisticsUnits = Benchmark.defaultThroughputScalingFactor,
+                 desiredDuration: TimeDuration = Benchmark.defaultDesiredDuration,
+                 desiredIterations: Int = Benchmark.defaultDesiredIterations,
+                 skip: Bool = Benchmark.defaultSkip,
+                 thresholds: [BenchmarkMetric: BenchmarkResult.PercentileThresholds]? = Benchmark.defaultThresholds,
                  closure: @escaping BenchmarkClosure) {
         if skip {
             return nil
@@ -133,7 +140,7 @@ public class Benchmark: Codable, Hashable {
         self.name = name
         self.metrics = metrics
         self.timeUnits = timeUnits
-        self.warmup = warmup
+        self.warmupIterations = warmupIterations
         self.throughputScalingFactor = throughputScalingFactor
         self.desiredDuration = desiredDuration
         self.desiredIterations = desiredIterations
@@ -166,7 +173,7 @@ public class Benchmark: Codable, Hashable {
     ///   - metrics: Defines the metrics that should be measured for the benchmark
     ///   - timeUnits: Override the automatic detection of timeunits for metrics related to time
     ///   to a specific one (auto should work for most use cases)
-    ///   - warmup: Specifies if a number of warmup iterations should be performed before the
+    ///   - warmupIterations: Specifies a number of warmup iterations should be performed before the
     ///   measurement to reduce outliers due to e.g. cache population
     ///   - throughputScalingFactor: Specifies the number of logical subiterations being done, scaling
     ///   throughput measurements accordingly. E.g. `.kilo`
@@ -179,14 +186,14 @@ public class Benchmark: Codable, Hashable {
     ///   - closure: The actual `async` benchmark closure that will be measured
     @discardableResult
     public init?(_ name: String,
-                 metrics: [BenchmarkMetric] = BenchmarkMetric.default,
-                 timeUnits: BenchmarkTimeUnits? = defaultTimeUnits,
-                 warmup: Bool = true,
-                 throughputScalingFactor: StatisticsUnits = .count,
-                 desiredDuration: TimeDuration? = nil,
-                 desiredIterations: Int? = nil,
-                 skip: Bool = false,
-                 thresholds: [BenchmarkMetric: BenchmarkResult.PercentileThresholds]? = defaultThresholds,
+                 metrics: [BenchmarkMetric] = Benchmark.defaultMetrics,
+                 timeUnits: BenchmarkTimeUnits = Benchmark.defaultTimeUnits,
+                 warmupIterations: Int = Benchmark.defaultWarmupIterations,
+                 throughputScalingFactor: StatisticsUnits = Benchmark.defaultThroughputScalingFactor,
+                 desiredDuration: TimeDuration = Benchmark.defaultDesiredDuration,
+                 desiredIterations: Int = Benchmark.defaultDesiredIterations,
+                 skip: Bool = Benchmark.defaultSkip,
+                 thresholds: [BenchmarkMetric: BenchmarkResult.PercentileThresholds]? = Benchmark.defaultThresholds,
                  closure: @escaping BenchmarkAsyncClosure) {
         if skip {
             return nil
@@ -194,7 +201,7 @@ public class Benchmark: Codable, Hashable {
         self.name = name
         self.metrics = metrics
         self.timeUnits = timeUnits
-        self.warmup = warmup
+        self.warmupIterations = warmupIterations
         self.throughputScalingFactor = throughputScalingFactor
         self.desiredDuration = desiredDuration
         self.desiredIterations = desiredIterations
