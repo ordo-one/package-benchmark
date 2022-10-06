@@ -68,7 +68,11 @@ public class Benchmark: Codable, Hashable {
     // Hook for custom metrics capturing
     public var customMetricMeasurement: BenchmarkCustomMetricMeasurement?
 
-    public static var defaultBenchmarkTimeUnits: BenchmarkTimeUnits = .automatic
+    /// Hook for setting the time units to use for a whole benchmark suite
+    public static var defaultTimeUnits: BenchmarkTimeUnits = .automatic
+    /// Hook for setting thresholds for a whole benchmark suite
+    public static var defaultThresholds: [BenchmarkMetric: BenchmarkResult.PercentileThresholds]?
+
     internal static var testSkipBenchmarkRegistrations = false // true in test to avoid bench registration fail
 
     var lock: pthread_mutex_t = .init()
@@ -115,13 +119,13 @@ public class Benchmark: Codable, Hashable {
     @discardableResult
     public init?(_ name: String,
                  metrics: [BenchmarkMetric] = BenchmarkMetric.default,
-                 timeUnits: BenchmarkTimeUnits? = defaultBenchmarkTimeUnits,
+                 timeUnits: BenchmarkTimeUnits? = defaultTimeUnits,
                  warmup: Bool = true,
                  throughputScalingFactor: StatisticsUnits = .count,
                  desiredDuration: TimeDuration? = nil,
                  desiredIterations: Int? = nil,
                  skip: Bool = false,
-                 thresholds: [BenchmarkMetric: BenchmarkResult.PercentileThresholds]? = nil,
+                 thresholds: [BenchmarkMetric: BenchmarkResult.PercentileThresholds]? = defaultThresholds,
                  closure: @escaping BenchmarkClosure) {
         if skip {
             return nil
@@ -176,13 +180,13 @@ public class Benchmark: Codable, Hashable {
     @discardableResult
     public init?(_ name: String,
                  metrics: [BenchmarkMetric] = BenchmarkMetric.default,
-                 timeUnits: BenchmarkTimeUnits? = defaultBenchmarkTimeUnits,
+                 timeUnits: BenchmarkTimeUnits? = defaultTimeUnits,
                  warmup: Bool = true,
                  throughputScalingFactor: StatisticsUnits = .count,
                  desiredDuration: TimeDuration? = nil,
                  desiredIterations: Int? = nil,
                  skip: Bool = false,
-                 thresholds: [BenchmarkMetric: BenchmarkResult.PercentileThresholds]? = nil,
+                 thresholds: [BenchmarkMetric: BenchmarkResult.PercentileThresholds]? = defaultThresholds,
                  closure: @escaping BenchmarkAsyncClosure) {
         if skip {
             return nil
