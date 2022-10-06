@@ -231,32 +231,9 @@ extension BenchmarkTool {
                     var result = currentResult
                     if let base = baselineComparison.first(where: { $0.metric == result.metric }) {
                         if result == base {
-                            print(" \(result.metric) results were identical.")
-                            print("")
+//                            print(" \(result.metric) results were identical.")
+//                            print("")
                         } else {
-                            /*
-                             var p25Diff = 100 - 100 * (Double(result.percentiles[.p25]) / Double(base.percentiles[.p25]))
-                             var p50Diff = 100 - 100 * (Double(result.percentiles[.p50]) / Double(base.percentiles[.p50]))
-                             var p75Diff = 100 - 100 * (Double(result.percentiles[.p75]) / Double(base.percentiles[.p75]))
-
-                             if p25Diff.isNaN || p25Diff.isInfinite {
-                                 p25Diff = 0.0
-                             }
-
-                             if p50Diff.isNaN || p50Diff.isInfinite {
-                                 p50Diff = 0.0
-                             }
-
-                             if p75Diff.isNaN || p75Diff.isInfinite {
-                                 p75Diff = 0.0
-                             }
-
-                             if result.metric.polarity() == .prefersLarger {
-                                 p25Diff *= -1
-                                 p50Diff *= -1
-                                 p75Diff *= -1
-                             }
-                             */
                             var hideResults: Bool = true
 
                             if result.betterResultsOrEqual(than: base, thresholds: result.thresholds ?? BenchmarkResult.PercentileThresholds.default) {
@@ -268,7 +245,6 @@ extension BenchmarkTool {
                             if format == .markdown {
                                 if hideResults {
                                     print("<details><summary>\(result.metric): results within specified thresholds, fold down for details.</summary>")
-                                    //                                  print("<details><summary>\(result.metric): fold down for details, results within specified thresholds, % improvement: p25 = \(Int(round(p25Diff))), p50 = \(Int(round(p50Diff))), p75 = \(Int(round(p75Diff)))</summary>")
                                     print("<p>")
                                     print("")
                                 }
