@@ -18,7 +18,7 @@ import XCTest
 func benchmarks() {
     Benchmark("Minimal benchmark", metrics: BenchmarkMetric.all, desiredIterations: 1) { _ in
     }
-    Benchmark("Minimal benchmark 2", warmup: false, desiredIterations: 2) { _ in
+    Benchmark("Minimal benchmark 2", warmupIterations: 0, desiredIterations: 2) { _ in
     }
     Benchmark("Minimal benchmark 3", timeUnits: .seconds, desiredIterations: 3) { _ in
     }
