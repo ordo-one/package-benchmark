@@ -16,8 +16,10 @@
 // swiftlint:disable identifier_name
 
 public extension BenchmarkResult {
-    typealias PercentileRelativeThresholds = [BenchmarkResult.Percentile: Double]
-    typealias PercentileAbsoluteThresholds = [BenchmarkResult.Percentile: Int]
+    typealias PercentileRelativeThreshold = Double
+    typealias PercentileAbsoluteThreshold = Int
+    typealias PercentileRelativeThresholds = [BenchmarkResult.Percentile: PercentileRelativeThreshold]
+    typealias PercentileAbsoluteThresholds = [BenchmarkResult.Percentile: PercentileAbsoluteThreshold]
 
     struct PercentileThresholds: Codable {
         public init(relative: BenchmarkResult.PercentileRelativeThresholds = .none,
@@ -116,4 +118,58 @@ public extension BenchmarkResult.PercentileThresholds {
     static var none: BenchmarkResult.PercentileThresholds {
         BenchmarkResult.PercentileThresholds()
     }
+}
+
+// Convenience functions for defining absolute thresholds
+public extension BenchmarkResult.PercentileAbsoluteThreshold {
+    static func hours(_ hours: Int) -> BenchmarkResult.PercentileAbsoluteThreshold {
+        hours * 1_000_000_000 * 60 * 60
+    }
+
+    static func minutes(_ minutes: Int) -> BenchmarkResult.PercentileAbsoluteThreshold {
+        minutes * 1_000_000_000 * 60
+    }
+
+    static func seconds(_ seconds: Int) -> BenchmarkResult.PercentileAbsoluteThreshold {
+        seconds * 1_000_000_000
+    }
+
+    static func milliseconds(_ milliseconds: Int) -> BenchmarkResult.PercentileAbsoluteThreshold {
+        milliseconds * 1_000_000
+    }
+
+    static func microseconds(_ microseconds: Int) -> BenchmarkResult.PercentileAbsoluteThreshold {
+        microseconds * 1_000
+    }
+
+    static func nanoseconds(_ value: Int) -> BenchmarkResult.PercentileAbsoluteThreshold {
+        value
+    }
+
+    static func nanoseconds(_ value: UInt) -> BenchmarkResult.PercentileAbsoluteThreshold {
+        Int(value)
+    }
+
+    static func giga(_ value: Int) -> BenchmarkResult.PercentileAbsoluteThreshold {
+        value * 1_000_000_000
+    }
+
+    static func mega(_ value: Int) -> BenchmarkResult.PercentileAbsoluteThreshold {
+        value * 1_000_000
+    }
+
+    static func kilo(_ value: Int) -> BenchmarkResult.PercentileAbsoluteThreshold {
+        value * 1_000
+    }
+
+    static func count(_ value: Int) -> BenchmarkResult.PercentileAbsoluteThreshold {
+        value
+    }
+
+    static func count(_ value: UInt) -> BenchmarkResult.PercentileAbsoluteThreshold {
+        Int(value)
+    }
+
+
+
 }
