@@ -169,7 +169,4 @@ public extension BenchmarkResult.PercentileAbsoluteThreshold {
     static func count(_ value: UInt) -> BenchmarkResult.PercentileAbsoluteThreshold {
         Int(value)
     }
-
-
-
 }

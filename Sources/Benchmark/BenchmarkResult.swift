@@ -57,7 +57,7 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
     public var percentiles: [BenchmarkResult.Percentile: Int]
 
     public func scalingFactor(to otherResult: BenchmarkResult) -> Int {
-        return otherResult.timeUnits.rawValue / timeUnits.rawValue
+        otherResult.timeUnits.rawValue / timeUnits.rawValue
     }
 
     public mutating func scaleResults(to otherResult: BenchmarkResult) {
@@ -134,7 +134,7 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
 
         return allIsLess
     }
-
+// swiftlint:disable function_body_length
     public func betterResultsOrEqual(than otherResult: BenchmarkResult,
                                      thresholds: BenchmarkResult.PercentileThresholds = .default,
                                      printOutput: Bool = false) -> Bool {
@@ -149,7 +149,7 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
         }
 
         rhs.scaleResults(to: lhs)
-
+        // swiftlint:disable function_parameter_count
         func worseResult(_ lhs: Int,
                          _ rhs: Int,
                          _ percentile: BenchmarkResult.Percentile,
@@ -177,7 +177,7 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
                 if reverseComparison ? -absoluteDifference > threshold : absoluteDifference > threshold {
                     if printOutput {
                         print("`\(metric.description)` absolute threshold violated, [\(percentile)] result" +
-                              " (\(abs(absoluteDifference))) > threshold (\(threshold))")
+                            " (\(abs(absoluteDifference))) > threshold (\(threshold))")
                     }
                     thresholdViolated = true
                 }
@@ -189,7 +189,6 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
 
         lhs.percentiles.forEach { percentile, lhsPercentile in
             if let rhsPercentile = rhs.percentiles[percentile] {
-
                 worse = worseResult(lhsPercentile,
                                     rhsPercentile,
                                     percentile,

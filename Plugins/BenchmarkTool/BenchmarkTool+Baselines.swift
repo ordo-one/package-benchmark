@@ -234,10 +234,10 @@ extension BenchmarkBaseline: Equatable {
         var betterOrEqualForIdentifier = true
 
         for (lhsBenchmarkIdentifier, lhsBenchmarkResults) in lhs.results {
-/*            if printOutput {
-                print("Checking for threshold violations for `\(lhsBenchmarkIdentifier.target):\(lhsBenchmarkIdentifier.name)`.")
-            }
-*/
+            /*            if printOutput {
+                 print("Checking for threshold violations for `\(lhsBenchmarkIdentifier.target):\(lhsBenchmarkIdentifier.name)`.")
+             }
+             */
             for lhsBenchmarkResult in lhsBenchmarkResults {
                 if let rhsResults = rhs.results.first(where: { $0.key == lhsBenchmarkIdentifier }) {
                     if let rhsBenchmarkResult = rhsResults.value.first(where: { $0.metric == lhsBenchmarkResult.metric }) {

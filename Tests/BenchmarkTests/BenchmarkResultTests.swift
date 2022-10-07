@@ -11,7 +11,7 @@
 @testable import BenchmarkSupport
 import XCTest
 
-// swiftlint: disable function_body_length
+// swiftlint:disable function_body_length
 final class BenchmarkResultTests: XCTestCase {
     func testBenchmarkResultEquality() throws {
         let measurementCount = 100
