@@ -56,17 +56,14 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
     public var thresholds: PercentileThresholds?
     public var percentiles: [BenchmarkResult.Percentile: Int]
 
-    public func scalingFactor(to otherResult: BenchmarkResult) -> Int {
-        otherResult.timeUnits.rawValue / timeUnits.rawValue
-    }
-
     public mutating func scaleResults(to otherResult: BenchmarkResult) {
         guard timeUnits != otherResult.timeUnits else {
             return
         }
+        let ratio = Double(otherResult.timeUnits.rawValue) / Double(timeUnits.rawValue)
 
         percentiles.forEach { percentile, value in
-            self.percentiles[percentile] = value * scalingFactor(to: otherResult)
+            self.percentiles[percentile] = Int(ratio * Double(value))
         }
 
         timeUnits = otherResult.timeUnits
