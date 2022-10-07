@@ -131,7 +131,7 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
 
         return allIsLess
     }
-
+// swiftlint:disable function_body_length
     public func betterResultsOrEqual(than otherResult: BenchmarkResult,
                                      thresholds: BenchmarkResult.PercentileThresholds = .default,
                                      printOutput: Bool = false) -> Bool {
@@ -146,11 +146,12 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
         }
 
         rhs.scaleResults(to: lhs)
-
+        // swiftlint:disable function_parameter_count
         func worseResult(_ lhs: Int,
                          _ rhs: Int,
                          _ percentile: BenchmarkResult.Percentile,
                          _ thresholds: BenchmarkResult.PercentileThresholds,
+                         _ scalingFactor: Int,
                          _ printOutput: Bool) -> Bool {
             let relativeDifference = (100 - (100.0 * Double(lhs) / Double(rhs)))
             let absoluteDifference = lhs - rhs
@@ -161,17 +162,18 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
             if let threshold = thresholds.relative[percentile] {
                 if reverseComparison ? relativeDifference > threshold : -relativeDifference > threshold {
                     if printOutput {
-                        print("`\(metric.description)` failed relative threshold check, [\(percentile)] result" +
+                        print("`\(metric.description)` relative threshold violated, [\(percentile)] result" +
                             " (\(roundToDecimalplaces(abs(relativeDifference), 1))) > threshold (\(threshold))")
                     }
                     thresholdViolated = true
                 }
             }
 
-            if let threshold = thresholds.absolute[percentile] {
+            if var threshold = thresholds.absolute[percentile] {
+                threshold = threshold / (1_000_000_000 / scalingFactor)
                 if reverseComparison ? -absoluteDifference > threshold : absoluteDifference > threshold {
                     if printOutput {
-                        print("`\(metric.description)` failed absolute threshold check, [\(percentile)] result" +
+                        print("`\(metric.description)` absolute threshold violated, [\(percentile)] result" +
                             " (\(abs(absoluteDifference))) > threshold (\(threshold))")
                     }
                     thresholdViolated = true
@@ -184,7 +186,12 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
 
         lhs.percentiles.forEach { percentile, lhsPercentile in
             if let rhsPercentile = rhs.percentiles[percentile] {
-                worse = worseResult(lhsPercentile, rhsPercentile, percentile, thresholds, printOutput) || worse
+                worse = worseResult(lhsPercentile,
+                                    rhsPercentile,
+                                    percentile,
+                                    thresholds,
+                                    lhs.timeUnits.rawValue,
+                                    printOutput) || worse
             } else {
                 print("\(rhs.metric) missing value for percentile \(percentile), skipping it.")
             }

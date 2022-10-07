@@ -28,7 +28,7 @@ final class BenchmarkRunnerTests: XCTestCase, BenchmarkRunnerReadWrite {
     private var readMessage: Int = 0
     private var writeCount: Int = 0
 
-    // swiftlint: disable test_case_accessibility
+    // swiftlint:disable test_case_accessibility
     internal func write(_: BenchmarkCommandReply) throws {
         writeCount += 1
 //        print("write \(reply)")
