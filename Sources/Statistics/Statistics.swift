@@ -10,14 +10,6 @@
 
 import Numerics
 
-#if canImport(Darwin)
-    import Darwin
-#elseif canImport(Glibc)
-    import Glibc
-#else
-    #error("Unsupported Platform")
-#endif
-
 public let defaultPercentilesToCalculate = [0.000001, 25.0, 50.0, 75.0, 90.0, 99.0, 100.0]
 private let numberPadding = 10
 
@@ -91,7 +83,9 @@ public struct Statistics {
            onlyZeroMeasurements,
            measurement != 0 { // deduce timeunit range from first non-zero sample if .automatic
             onlyZeroMeasurements = false
-            switch log10(Double(measurement)) {
+
+            let doubleMeasurement: Double = .log10(Double(measurement))
+            switch doubleMeasurement {
             case ..<4.0:
                 timeUnits = .count
             case 4.0 ..< 7.0:
@@ -106,10 +100,13 @@ public struct Statistics {
         }
 
         let scaling = timeUnits == .automatic ? 1 : timeUnits.rawValue
-        measurement = Int(round(Double(measurement) / Double(scaling)))
+        var roundedMeasurement = Double(measurement) / Double(scaling)
+        roundedMeasurement.round(.toNearestOrAwayFromZero)
+        measurement = Int(roundedMeasurement)
 
         let validBucketRangePowerOfTwo = 0 ..< bucketCountPowerOfTwo
-        let bucket = measurement > 0 ? Int(ceil(log2(Double(measurement)))) : 0
+        let log2Measurement: Double = .log2(Double(measurement)).rounded(.up)
+        let bucket = measurement > 0 ? Int(log2Measurement) : 0
 
         averageMeasurement = (Double(measurementCount) * averageMeasurement + Double(measurement))
             / Double(measurementCount + 1)
@@ -381,6 +378,8 @@ extension Double {
 
 // Rounds decimals for display
 public func roundToDecimalplaces(_ original: Double, _ decimals: Int = 2) -> Double {
-    let factor = pow(10.0, Double(decimals))
-    return Double(round(factor * original) / factor)
+    let factor: Double = .pow(10.0, Double(decimals))
+    var original: Double = original * factor
+    original.round(.toNearestOrEven)
+    return original / factor
 }

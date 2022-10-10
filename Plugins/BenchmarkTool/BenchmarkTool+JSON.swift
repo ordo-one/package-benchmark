@@ -14,14 +14,6 @@ import Benchmark
 import ExtrasJSON
 import SystemPackage
 
-#if canImport(Darwin)
-    import Darwin
-#elseif canImport(Glibc)
-    import Glibc
-#else
-    #error("Unsupported Platform")
-#endif
-
 extension BenchmarkTool {
     func write(_ reply: BenchmarkCommandRequest) throws {
         let bytesArray = try XJSONEncoder().encode(reply)

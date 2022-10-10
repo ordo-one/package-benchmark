@@ -14,14 +14,6 @@ import ExtrasJSON
 @_exported import Statistics
 import SystemPackage
 
-#if canImport(Darwin)
-    import Darwin
-#elseif canImport(Glibc)
-    import Glibc
-#else
-    #error("Unsupported Platform")
-#endif
-
 // For test dependency injection
 protocol BenchmarkRunnerReadWrite {
     func write(_ reply: BenchmarkCommandReply) throws
@@ -180,9 +172,11 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
                             accummulatedWallclock += runningTime
                             accummulatedWallclockMeasurements += 1
 
-                            let throughput = Int(
-                                round(Double(benchmark.throughputScalingFactor.rawValue * 1_000_000_000)
-                                    / Double(runningTime)))
+                            var roundedThroughput = Double(benchmark.throughputScalingFactor.rawValue * 1_000_000_000)
+                                                    / Double(runningTime)
+                            roundedThroughput.round(.toNearestOrAwayFromZero)
+
+                            let throughput = Int(roundedThroughput)
 
                             if throughput > 0 {
                                 statistics[.throughput]?.add(throughput)
