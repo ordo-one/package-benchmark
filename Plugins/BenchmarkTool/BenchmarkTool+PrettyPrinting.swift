@@ -12,14 +12,6 @@ import Benchmark
 import SystemPackage
 import TextTable
 
-#if canImport(Darwin)
-    import Darwin
-#elseif canImport(Glibc)
-    import Glibc
-#else
-    #error("Unsupported Platform")
-#endif
-
 extension BenchmarkTool {
     func printMarkdown(_ markdown: String, terminator: String = "\n") {
         if format == .markdown {
@@ -33,15 +25,13 @@ extension BenchmarkTool {
         }
     }
 
-    func printTableEntry(_ label: String, _ base: Int, _ comparison: Int) {
-        print("| \(label) | \(base) | \(comparison) | \(base - comparison) | \(round(100 * Double(base) / Double(comparison))) |")
-    }
-
     func formatTableEntry(_ base: Int, _ comparison: Int, _ reversePolarity: Bool = false) -> Int {
         guard comparison != 0, base != 0 else {
             return 0
         }
-        let diff = Int(round(100.0 - (100.0 * Double(comparison) / Double(base))))
+        var roundedDiff = 100.0 - (100.0 * Double(comparison) / Double(base))
+        roundedDiff.round(.toNearestOrAwayFromZero)
+        let diff = Int(roundedDiff)
 
         if reversePolarity {
             return -1 * diff
@@ -315,11 +305,5 @@ extension BenchmarkTool {
                 }
             }
         }
-    }
-
-    // Rounds decimals for display
-    public func roundToDecimalplaces(_ original: Double, _ decimals: Int = 2) -> Double {
-        let factor = pow(10.0, Double(decimals))
-        return Double(round(factor * original) / factor)
     }
 }

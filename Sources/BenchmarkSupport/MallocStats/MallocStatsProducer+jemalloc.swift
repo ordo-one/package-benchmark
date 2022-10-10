@@ -11,14 +11,6 @@
 import ExtrasJSON
 import jemalloc
 
-#if os(macOS) || os(iOS) || os(watchOS) || os(tvOS)
-    import Darwin
-#elseif os(Linux) || os(FreeBSD) || os(Android)
-    import Glibc
-#else
-    #error("Unsupported Platform")
-#endif
-
 // We currently register a number of MIB:s that aren't in use that
 // was used during development to figure out most relevant stats,
 // Keeping them around as we may want to expand malloc statistics
