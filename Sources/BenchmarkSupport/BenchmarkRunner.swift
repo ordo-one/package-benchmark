@@ -14,12 +14,6 @@ import ExtrasJSON
 @_exported import Statistics
 import SystemPackage
 
-// For test dependency injection
-protocol BenchmarkRunnerReadWrite {
-    func write(_ reply: BenchmarkCommandReply) throws
-    func read() throws -> BenchmarkCommandRequest
-}
-
 // @main must be done in actual benchmark to avoid linker errors unfortunately
 public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
     static var testReadWrite: BenchmarkRunnerReadWrite?
@@ -33,47 +27,6 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
     var outputFD: Int32?
 
     var debug = false
-
-    func write(_ reply: BenchmarkCommandReply) throws {
-        guard outputFD != nil else {
-            return
-        }
-        let bytesArray = try XJSONEncoder().encode(reply)
-        let count: Int = bytesArray.count
-        let output = FileDescriptor(rawValue: outputFD!)
-
-        // Length header
-        try withUnsafeBytes(of: count) { (intPtr: UnsafeRawBufferPointer) in
-            _ = try output.write(intPtr)
-        }
-
-        // JSON serialization
-        try bytesArray.withUnsafeBufferPointer {
-            _ = try output.write(UnsafeRawBufferPointer($0))
-        }
-    }
-
-    func read() throws -> BenchmarkCommandRequest {
-        guard inputFD != nil else {
-            return .end
-        }
-        let input = FileDescriptor(rawValue: inputFD!)
-        var bufferLength = 0
-
-        // Length header
-        try withUnsafeMutableBytes(of: &bufferLength) { (intPtr: UnsafeMutableRawBufferPointer) in
-            _ = try input.read(into: intPtr)
-        }
-
-        // JSON serialization
-        let readBytes = try [UInt8](unsafeUninitializedCapacity: bufferLength) { buf, count in
-            count = try input.read(into: UnsafeMutableRawBufferPointer(buf))
-        }
-
-        let request = try XJSONDecoder().decode(BenchmarkCommandRequest.self, from: readBytes)
-
-        return request
-    }
 
     // swiftlint:disable cyclomatic_complexity function_body_length
     public mutating func run() async throws {
@@ -253,17 +206,20 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
                             delta = stopOperatingSystemStats.writeSyscalls - startOperatingSystemStats.writeSyscalls
                             statistics[.writeSyscalls]?.add(Int(delta))
 
-                            delta = stopOperatingSystemStats.readBytesLogical - startOperatingSystemStats.readBytesLogical
+                            delta = stopOperatingSystemStats.readBytesLogical -
+                                startOperatingSystemStats.readBytesLogical
                             statistics[.readBytesLogical]?.add(Int(delta))
 
-                            delta = stopOperatingSystemStats.writeBytesLogical - startOperatingSystemStats.writeBytesLogical
+                            delta = stopOperatingSystemStats.writeBytesLogical -
+                                startOperatingSystemStats.writeBytesLogical
                             statistics[.writeBytesLogical]?.add(Int(delta))
 
-                            delta = stopOperatingSystemStats.readBytesPhysical - startOperatingSystemStats.readBytesPhysical
+                            delta = stopOperatingSystemStats.readBytesPhysical -
+                                startOperatingSystemStats.readBytesPhysical
                             statistics[.readBytesPhysical]?.add(Int(delta))
 
-                            delta =
-                            stopOperatingSystemStats.writeBytesPhysical - startOperatingSystemStats.writeBytesPhysical
+                            delta = stopOperatingSystemStats.writeBytesPhysical -
+                                startOperatingSystemStats.writeBytesPhysical
                             statistics[.writeBytesPhysical]?.add(Int(delta))
                         }
                     }
