@@ -183,7 +183,6 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
                         }
 
                         var delta = 0
-
                         let runningTime: TimeDuration = stopTime - startTime
 
                         if runningTime > 0 { // macOS sometimes gives us identical timestamps in ns so let's skip those.
@@ -200,69 +199,73 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
                             if throughput > 0 {
                                 statistics[.throughput]?.add(throughput)
                             }
+
+                            accummulatedRuntime += runningTime
                         }
 
-                        delta = stopMallocStats.mallocCountTotal - startMallocStats.mallocCountTotal
-                        statistics[.mallocCountTotal]?.add(Int(delta))
+                        if mallocStatsRequested {
+                            delta = stopMallocStats.mallocCountTotal - startMallocStats.mallocCountTotal
+                            statistics[.mallocCountTotal]?.add(Int(delta))
 
-                        delta = stopMallocStats.mallocCountSmall - startMallocStats.mallocCountSmall
-                        statistics[.mallocCountSmall]?.add(Int(delta))
+                            delta = stopMallocStats.mallocCountSmall - startMallocStats.mallocCountSmall
+                            statistics[.mallocCountSmall]?.add(Int(delta))
 
-                        delta = stopMallocStats.mallocCountLarge - startMallocStats.mallocCountLarge
-                        statistics[.mallocCountLarge]?.add(Int(delta))
+                            delta = stopMallocStats.mallocCountLarge - startMallocStats.mallocCountLarge
+                            statistics[.mallocCountLarge]?.add(Int(delta))
 
-                        delta = stopMallocStats.allocatedResidentMemory - startMallocStats.allocatedResidentMemory
-                        statistics[.memoryLeaked]?.add(Int(delta))
+                            delta = stopMallocStats.allocatedResidentMemory - startMallocStats.allocatedResidentMemory
+                            statistics[.memoryLeaked]?.add(Int(delta))
 
-                        delta = stopOperatingSystemStats.cpuUser - startOperatingSystemStats.cpuUser
-                        statistics[.cpuUser]?.add(Int(delta))
+                            statistics[.allocatedResidentMemory]?.add(Int(stopMallocStats.allocatedResidentMemory))
+                        }
 
-                        delta = stopOperatingSystemStats.cpuSystem - startOperatingSystemStats.cpuSystem
-                        statistics[.cpuSystem]?.add(Int(delta))
+                        if operatingSystemStatsRequested {
+                            delta = stopOperatingSystemStats.cpuUser - startOperatingSystemStats.cpuUser
+                            statistics[.cpuUser]?.add(Int(delta))
 
-                        delta = stopOperatingSystemStats.cpuTotal - startOperatingSystemStats.cpuTotal
-                        statistics[.cpuTotal]?.add(Int(delta))
+                            delta = stopOperatingSystemStats.cpuSystem - startOperatingSystemStats.cpuSystem
+                            statistics[.cpuSystem]?.add(Int(delta))
 
-                        delta = stopOperatingSystemStats.peakMemoryResident
-                        statistics[.peakMemoryResident]?.add(Int(delta))
+                            delta = stopOperatingSystemStats.cpuTotal - startOperatingSystemStats.cpuTotal
+                            statistics[.cpuTotal]?.add(Int(delta))
 
-                        delta = stopOperatingSystemStats.peakMemoryVirtual
-                        statistics[.peakMemoryVirtual]?.add(Int(delta))
+                            delta = stopOperatingSystemStats.peakMemoryResident
+                            statistics[.peakMemoryResident]?.add(Int(delta))
 
-                        delta = stopOperatingSystemStats.syscalls - startOperatingSystemStats.syscalls
-                        statistics[.syscalls]?.add(Int(delta))
+                            delta = stopOperatingSystemStats.peakMemoryVirtual
+                            statistics[.peakMemoryVirtual]?.add(Int(delta))
 
-                        delta = stopOperatingSystemStats.contextSwitches - startOperatingSystemStats.contextSwitches
-                        statistics[.contextSwitches]?.add(Int(delta))
+                            delta = stopOperatingSystemStats.syscalls - startOperatingSystemStats.syscalls
+                            statistics[.syscalls]?.add(Int(delta))
 
-                        delta = stopOperatingSystemStats.threads
-                        statistics[.threads]?.add(Int(delta))
+                            delta = stopOperatingSystemStats.contextSwitches - startOperatingSystemStats.contextSwitches
+                            statistics[.contextSwitches]?.add(Int(delta))
 
-                        delta = stopOperatingSystemStats.threadsRunning
-                        statistics[.threadsRunning]?.add(Int(delta))
+                            delta = stopOperatingSystemStats.threads
+                            statistics[.threads]?.add(Int(delta))
 
-                        delta = stopOperatingSystemStats.readSyscalls - startOperatingSystemStats.readSyscalls
-                        statistics[.readSyscalls]?.add(Int(delta))
+                            delta = stopOperatingSystemStats.threadsRunning
+                            statistics[.threadsRunning]?.add(Int(delta))
 
-                        delta = stopOperatingSystemStats.writeSyscalls - startOperatingSystemStats.writeSyscalls
-                        statistics[.writeSyscalls]?.add(Int(delta))
+                            delta = stopOperatingSystemStats.readSyscalls - startOperatingSystemStats.readSyscalls
+                            statistics[.readSyscalls]?.add(Int(delta))
 
-                        delta = stopOperatingSystemStats.readBytesLogical - startOperatingSystemStats.readBytesLogical
-                        statistics[.readBytesLogical]?.add(Int(delta))
+                            delta = stopOperatingSystemStats.writeSyscalls - startOperatingSystemStats.writeSyscalls
+                            statistics[.writeSyscalls]?.add(Int(delta))
 
-                        delta = stopOperatingSystemStats.writeBytesLogical - startOperatingSystemStats.writeBytesLogical
-                        statistics[.writeBytesLogical]?.add(Int(delta))
+                            delta = stopOperatingSystemStats.readBytesLogical - startOperatingSystemStats.readBytesLogical
+                            statistics[.readBytesLogical]?.add(Int(delta))
 
-                        delta = stopOperatingSystemStats.readBytesPhysical - startOperatingSystemStats.readBytesPhysical
-                        statistics[.readBytesPhysical]?.add(Int(delta))
+                            delta = stopOperatingSystemStats.writeBytesLogical - startOperatingSystemStats.writeBytesLogical
+                            statistics[.writeBytesLogical]?.add(Int(delta))
 
-                        delta =
+                            delta = stopOperatingSystemStats.readBytesPhysical - startOperatingSystemStats.readBytesPhysical
+                            statistics[.readBytesPhysical]?.add(Int(delta))
+
+                            delta =
                             stopOperatingSystemStats.writeBytesPhysical - startOperatingSystemStats.writeBytesPhysical
-                        statistics[.writeBytesPhysical]?.add(Int(delta))
-
-                        statistics[.allocatedResidentMemory]?.add(Int(stopMallocStats.allocatedResidentMemory))
-
-                        accummulatedRuntime += runningTime
+                            statistics[.writeBytesPhysical]?.add(Int(delta))
+                        }
                     }
 
                     benchmark.customMetricMeasurement = { metric, value in
