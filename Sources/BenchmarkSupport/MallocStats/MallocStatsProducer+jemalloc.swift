@@ -52,8 +52,6 @@ public class MallocStatsProducer {
         return epoch
     }
 
-    // swiftlint:disable function_body_length cyclomatic_complexity
-
     // Basically just set up a number of cached MIB structures for
     // more efficient queries later of malloc statistics.
     public init() {
