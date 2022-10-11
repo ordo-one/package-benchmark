@@ -173,7 +173,7 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
                             accummulatedWallclockMeasurements += 1
 
                             var roundedThroughput = Double(benchmark.throughputScalingFactor.rawValue * 1_000_000_000)
-                                                    / Double(runningTime)
+                                / Double(runningTime)
                             roundedThroughput.round(.toNearestOrAwayFromZero)
 
                             let throughput = Int(roundedThroughput)

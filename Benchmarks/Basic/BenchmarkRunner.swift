@@ -11,20 +11,19 @@ import BenchmarkSupport
 
 @main extension BenchmarkRunner {}
 
+// swiftlint disable: attributes
 @_dynamicReplacement(for: registerBenchmarks)
 func benchmarks() {
-
     Benchmark.defaultDesiredDuration = .milliseconds(10)
     Benchmark.defaultDesiredIterations = .giga(1)
 
     Benchmark("Basic", // 8s runtime w/ current measurement overhead
               metrics: [.wallClock, .throughput],
-              skip: true) { benchmark in
+              skip: true) { _ in
     }
 
     Benchmark("All metrics", // 10.92 secs
               metrics: BenchmarkMetric.all,
-              skip: false) { benchmark in
+              skip: false) { _ in
     }
-
 }

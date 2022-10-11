@@ -131,7 +131,8 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
 
         return allIsLess
     }
-// swiftlint:disable function_body_length
+
+    // swiftlint:disable function_body_length
     public func betterResultsOrEqual(than otherResult: BenchmarkResult,
                                      thresholds: BenchmarkResult.PercentileThresholds = .default,
                                      printOutput: Bool = false) -> Bool {
