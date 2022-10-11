@@ -15,10 +15,18 @@ Benchmark supports both local usage with baseline comparisons for an iterative w
 
 The focus for measurements are percentiles (`p0` (min), `p25`, `p50` (median), `p75`, `p90`, `p99` and `p100` (max)) to support analysis of the actual distribution of benchmark measurements. A given benchmark is typically run for a minimum amount of time and/or a given number of iterations, see details in the Benchmark documentation below.
 
-### Sample benchmark
-
+### Minimal benchmark + benchmark using async / Swift Concurrency
 ```swift
-...
+import BenchmarkSupport
+@main extension BenchmarkRunner {}
+@_dynamicReplacement(for: registerBenchmarks)
+
+func benchmarks() {
+
+    Benchmark("Minimal benchmark") { benchmark in
+      // measure something here
+    }
+
     Benchmark("All metrics, full concurrency, async",
               metrics: BenchmarkMetric.all,
               desiredDuration: .seconds(10)) { benchmark in
@@ -32,8 +40,16 @@ The focus for measurements are percentiles (`p0` (min), `p25`, `p50` (median), `
             }
         })
     }
-...
+}
 ```
+
+### Running benchmarks
+
+To execute all defined benchmarks, simply run:
+
+```swift package benchmark```
+
+See the detailed documentation links below for extended usage including delta comparisons and baseline storage etc.
 
 ### Sample output benchmark run
 
