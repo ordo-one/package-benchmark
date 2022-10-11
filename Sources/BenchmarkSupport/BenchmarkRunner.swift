@@ -122,6 +122,8 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
                     // Could make an array with raw value indexing on enum for
                     // performance if needed instead of dictionary
                     var statistics: [BenchmarkMetric: Statistics] = [:]
+                    var operatingSystemStatsRequested = false
+                    var mallocStatsRequested = false
 
                     // Create metric statistics as needed
                     benchmark.metrics.forEach { metric in
@@ -133,6 +135,13 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
                                 statistics[metric] = Statistics(timeUnits: .automatic,
                                                                 prefersLarger: metric.polarity() == .prefersLarger)
                             }
+                        }
+                        if mallocStatsProducerNeeded(metric) {
+                            mallocStatsRequested = true
+                        }
+
+                        if operatingSystemsStatsProducerNeeded(metric) {
+                            operatingSystemStatsRequested = true
                         }
                     }
 
@@ -150,8 +159,14 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
 
                     // Hook that is called before the actual benchmark closure run, so we can capture metrics here
                     benchmark.measurementPreSynchronization = {
-                        startMallocStats = mallocStatsProducer.makeMallocStats()
-                        startOperatingSystemStats = operatingSystemStatsProducer.makeOperatingSystemStats()
+                        if mallocStatsRequested {
+                            startMallocStats = mallocStatsProducer.makeMallocStats()
+                        }
+
+                        if operatingSystemStatsRequested {
+                            startOperatingSystemStats = operatingSystemStatsProducer.makeOperatingSystemStats()
+                        }
+
                         startTime = TimeInstant.now // must be last in closure
                     }
 
@@ -159,9 +174,13 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
                     benchmark.measurementPostSynchronization = {
                         stopTime = TimeInstant.now // must be first in closure
 
-                        stopOperatingSystemStats = operatingSystemStatsProducer.makeOperatingSystemStats()
+                        if operatingSystemStatsRequested {
+                            stopOperatingSystemStats = operatingSystemStatsProducer.makeOperatingSystemStats()
+                        }
 
-                        stopMallocStats = mallocStatsProducer.makeMallocStats()
+                        if mallocStatsRequested {
+                            stopMallocStats = mallocStatsProducer.makeMallocStats()
+                        }
 
                         var delta = 0
 
@@ -331,6 +350,64 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
             case .end:
                 return
             }
+        }
+    }
+}
+
+extension BenchmarkRunner {
+    func mallocStatsProducerNeeded(_ metric: BenchmarkMetric) -> Bool {
+        switch metric {
+        case .mallocCountLarge:
+            return true
+        case .memoryLeaked:
+            return true
+        case .mallocCountSmall:
+            return true
+        case .mallocCountTotal:
+            return true
+        case .allocatedResidentMemory:
+            return true
+        default:
+            return false
+        }
+    }
+}
+
+extension BenchmarkRunner {
+    func operatingSystemsStatsProducerNeeded(_ metric: BenchmarkMetric) -> Bool {
+        switch metric {
+        case .cpuUser:
+            return true
+        case .cpuSystem:
+            return true
+        case .cpuTotal:
+            return true
+        case .peakMemoryResident:
+            return true
+        case .peakMemoryVirtual:
+            return true
+        case .syscalls:
+            return true
+        case .contextSwitches:
+            return true
+        case .threads:
+            return true
+        case .threadsRunning:
+            return true
+        case .readSyscalls:
+            return true
+        case .writeSyscalls:
+            return true
+        case .readBytesLogical:
+            return true
+        case .writeBytesLogical:
+            return true
+        case .readBytesPhysical:
+            return true
+        case .writeBytesPhysical:
+            return true
+        default:
+            return false
         }
     }
 }
