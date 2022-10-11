@@ -81,6 +81,15 @@ let package = Package(
             path: "Platform/CLinuxOperatingSystemStats"
         ),
 
+        // Benchmark of the benchmark package
+        .executableTarget(
+            name: "Basic",
+            dependencies: [
+                "BenchmarkSupport"
+            ],
+            path: "Benchmarks/Basic"
+        ),
+
         // Scaffolding to support benchmarks under the hood
         .target(
             name: "BenchmarkSupport",
