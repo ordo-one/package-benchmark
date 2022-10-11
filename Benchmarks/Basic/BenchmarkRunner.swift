@@ -17,13 +17,13 @@ func benchmarks() {
     Benchmark.defaultDesiredDuration = .milliseconds(10)
     Benchmark.defaultDesiredIterations = .giga(1)
 
-    Benchmark("Basic", // 8s runtime w/ current measurement overhead
+    Benchmark("Basic",
               metrics: [.wallClock, .throughput],
-              skip: true) { _ in
+              skip: false) { _ in
     }
 
-    Benchmark("All metrics", // 10.92 secs
+    Benchmark("All metrics",
               metrics: BenchmarkMetric.all,
-              skip: false) { _ in
+              skip: true) { _ in
     }
 }
