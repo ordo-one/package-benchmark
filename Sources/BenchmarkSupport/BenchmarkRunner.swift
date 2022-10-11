@@ -312,4 +312,3 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
         }
     }
 }
-
