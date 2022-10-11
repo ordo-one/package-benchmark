@@ -19,11 +19,11 @@ func benchmarks() {
 
     Benchmark("Basic",
               metrics: [.wallClock, .throughput],
-              skip: true) { _ in
+              skip: false) { _ in
     }
 
     Benchmark("All metrics",
-              metrics: BenchmarkMetric.memory,
-              skip: false) { _ in
+              metrics: BenchmarkMetric.all,
+              skip: true) { _ in
     }
 }
