@@ -22,6 +22,15 @@ swift package benchmark
 * `--format` - `text` or `markdown` - specifes textual output format (markdown useful for e.g. GitHub CI), default `text`
 * `--quiet` - suppress output (e.g. tables)
 
+## Disk write permissions failures
+We've seen one instance of strange permissioning failures for disk writes for tests that use LMDB (where only the lock file can be created, but the actual data file fails - even when specifying `--allow-writing-to-package-directory`).
+
+To workaround such issues if needed, disable running in the sandbox with:
+
+```
+swift package --disable-sandbox benchmark
+```
+
 ## Sample usage
 
 ### Run all benchmark targets:
