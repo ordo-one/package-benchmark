@@ -18,9 +18,8 @@
         var nsPerSchedulerTick: Int
         var pageSize: Int
 
-        var thread: pthread_t = .init()
-        var lock: pthread_mutex_t = .init()
-        var condition: pthread_cond_t = .init()
+        let lock = NIOLock()
+        let semaphore = DispatchSemaphore(value: 0)
         var peakThreads: Int = 0
         var sampleRate: Int = 10_000
         var runState: RunState = .running
@@ -36,9 +35,6 @@
 
             nsPerSchedulerTick = 1_000_000_000 / schedulerTicksPerSecond
             pageSize = sysconf(Int32(_SC_PAGESIZE))
-
-            pthread_mutex_init(&lock, nil)
-            pthread_cond_init(&condition, nil)
         }
 
         deinit {}
@@ -131,16 +127,18 @@
 
         func startSampling(_: Int = 10_000) { // sample rate in microseconds
             DispatchQueue.global(qos: .userInitiated).async {
-                pthread_mutex_lock(&self.lock)
+                self.lock.lock()
+
                 let rate = self.sampleRate
                 self.peakThreads = 0
                 self.runState = .running
-                pthread_mutex_unlock(&self.lock)
+
+                self.lock.unlock()
 
                 while true {
                     let processStats = self.readProcessStats()
 
-                    pthread_mutex_lock(&self.lock)
+                    self.lock.lock()
 
                     if processStats.threads > self.peakThreads {
                         self.peakThreads = processStats.threads
@@ -148,12 +146,12 @@
 
                     if self.runState == .shuttingDown {
                         self.runState = .done
-                        pthread_cond_signal(&self.condition)
+                        self.semaphore.signal()
                     }
 
                     let quit = self.runState
 
-                    pthread_mutex_unlock(&self.lock)
+                    self.lock.unlock()
 
                     if quit == .done {
                         return
@@ -167,15 +165,11 @@
         }
 
         func stopSampling() {
-            pthread_mutex_lock(&lock)
+            lock.lock()
             runState = .shuttingDown
+            lock.unlock()
 
-            while pthread_cond_wait(&condition, &lock) == 0 {
-                if runState == .done {
-                    pthread_mutex_unlock(&lock)
-                    return
-                }
-            }
+            semaphore.wait()
         }
     }
 
