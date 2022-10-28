@@ -24,7 +24,6 @@ for tests that reports VSIZE/RSIZE to get comparable numbers by default)
 * Add support for printing the distribution graphs (linear and power-of-two) that we have instead of tables.
 * Add support to Linux for using perf\_events to capture context switches, cache hit rate, IPC, instructions, ... (need physical machine for most, only context switches are available from virtualized hosts)
 * Validate why some measurements provides 0 to Statistics (enable fatalError() and troubleshoot - likely malloc and time)
-* Consider moving from raw pthread locks/conditions to Dispatch primitives.
 
 ## Blocked waiting for Swift 5.7 migration
 * Move Instant & Duration for timestamps 

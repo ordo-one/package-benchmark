@@ -8,14 +8,6 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 //
 
-#if os(macOS) || os(iOS) || os(watchOS) || os(tvOS)
-    import Darwin
-#elseif os(Linux) || os(FreeBSD) || os(Android)
-    import Glibc
-#else
-    #error("Unsupported Platform")
-#endif
-
 import Dispatch
 import Statistics // For TimeInstant/TimeDuration until we can migrate to 5.7 Instant/Duration
 
@@ -80,9 +72,6 @@ public final class Benchmark: Codable, Hashable {
 
     internal static var testSkipBenchmarkRegistrations = false // true in test to avoid bench registration fail
 
-    var lock: pthread_mutex_t = .init()
-    var condition: pthread_cond_t = .init()
-    var shutdown = false
     var measurementCompleted = false // Keep track so we skip multiple 'end of measurement'
 
     enum CodingKeys: String, CodingKey {
@@ -161,9 +150,6 @@ public final class Benchmark: Codable, Hashable {
                     "which isn't used by benchmark `\(name)`")
             }
         }
-
-        pthread_mutex_init(&lock, nil)
-        pthread_cond_init(&condition, nil)
     }
 
     /// Definition of a Benchmark
@@ -209,9 +195,6 @@ public final class Benchmark: Codable, Hashable {
         asyncClosure = closure
 
         Self.benchmarks.append(self)
-
-        pthread_mutex_init(&lock, nil)
-        pthread_cond_init(&condition, nil)
     }
 
     /// `measurement` registers custom metric measurements
@@ -267,6 +250,8 @@ public final class Benchmark: Codable, Hashable {
     // https://forums.swift.org/t/actually-waiting-for-a-task/56230
     // Async closures can possibly show false memory leaks possibly due to Swift runtime allocations
     internal func runAsync() {
+        let semaphore = DispatchSemaphore(value: 0)
+
         // Must do this in a separate thread, otherwise we block the concurrent thread pool
         DispatchQueue.global(qos: .userInitiated).async {
             Task {
@@ -274,19 +259,10 @@ public final class Benchmark: Codable, Hashable {
                 await self.asyncClosure?(self)
                 self.stopMeasurement()
 
-                pthread_mutex_lock(&self.lock)
-                self.shutdown = true
-                pthread_cond_signal(&self.condition)
-                pthread_mutex_unlock(&self.lock)
+                semaphore.signal()
             }
         }
-
-        while pthread_cond_wait(&condition, &lock) == 0 {
-            if shutdown {
-                pthread_mutex_unlock(&lock)
-                return
-            }
-        }
+        semaphore.wait()
     }
 
     // Public but should only be used by BenchmarkRunner

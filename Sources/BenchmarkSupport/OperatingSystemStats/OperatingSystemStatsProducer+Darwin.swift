@@ -17,8 +17,8 @@
         var nsPerMachTick: Double
         var nsPerSchedulerTick: Int
 
-        var lock: pthread_mutex_t = .init()
-        var condition: pthread_cond_t = .init()
+        let lock = NIOLock()
+        let semaphore = DispatchSemaphore(value: 0)
         var peakThreads: Int = 0
         var peakThreadsRunning: Int = 0
         var runState: RunState = .running
@@ -49,9 +49,6 @@
             let schedulerTicksPerSecond = sysconf(_SC_CLK_TCK)
 
             nsPerSchedulerTick = 1_000_000_000 / schedulerTicksPerSecond
-
-            pthread_mutex_init(&lock, nil)
-            pthread_cond_init(&condition, nil)
         }
 
         fileprivate
@@ -69,18 +66,17 @@
 
         func startSampling(_: Int = 10_000) { // sample rate in microseconds
             DispatchQueue.global(qos: .userInitiated).async {
-                pthread_mutex_lock(&self.lock)
+                self.lock.lock()
                 let rate = self.sampleRate
                 self.peakThreads = 0
                 self.peakThreadsRunning = 0
                 self.runState = .running
-                pthread_mutex_unlock(&self.lock)
+                self.lock.unlock()
 
                 while true {
                     let procTaskInfo = self.getProcInfo()
 
-                    pthread_mutex_lock(&self.lock)
-
+                    self.lock.lock()
                     if procTaskInfo.pti_threadnum > self.peakThreads {
                         self.peakThreads = Int(procTaskInfo.pti_threadnum)
                     }
@@ -91,12 +87,11 @@
 
                     if self.runState == .shuttingDown {
                         self.runState = .done
-                        pthread_cond_signal(&self.condition)
+                        self.semaphore.signal()
                     }
 
                     let quit = self.runState
-
-                    pthread_mutex_unlock(&self.lock)
+                    self.lock.unlock()
 
                     if quit == .done {
                         return
@@ -110,15 +105,10 @@
         }
 
         func stopSampling() {
-            pthread_mutex_lock(&lock)
-            runState = .shuttingDown
-
-            while pthread_cond_wait(&condition, &lock) == 0 {
-                if runState == .done {
-                    pthread_mutex_unlock(&lock)
-                    return
-                }
+            lock.withLock {
+                runState = .shuttingDown
             }
+            semaphore.wait()
         }
 
         func makeOperatingSystemStats() -> OperatingSystemStats {
@@ -127,10 +117,10 @@
             let systemTime = Int(nsPerMachTick * Double(procTaskInfo.pti_total_system))
             let totalTime = userTime + systemTime
 
-            pthread_mutex_lock(&lock)
+            lock.lock()
             let threads = peakThreads
             let threadsRunning = peakThreadsRunning
-            pthread_mutex_unlock(&lock)
+            lock.unlock()
 
             let stats = OperatingSystemStats(cpuUser: userTime,
                                              cpuSystem: systemTime,

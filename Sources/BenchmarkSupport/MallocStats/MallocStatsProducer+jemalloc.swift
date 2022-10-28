@@ -82,27 +82,27 @@ public class MallocStatsProducer {
                 print("mallctlnametomib epochMIB returned \(result)")
             }
         }
-/*
-        mibSize = smallNMallocMIB.count
-        smallNMallocMIB.withUnsafeMutableBufferPointer { pointer in
-            let result = mallctlnametomib("stats.arenas.\(MALLCTL_ARENAS_ALL).small.nmalloc",
-                                          pointer.baseAddress,
-                                          &mibSize)
-            if result != 0 {
-                print("mallctlnametomib smallNMallocMIB returned \(result)")
-            }
-        }
+        /*
+         mibSize = smallNMallocMIB.count
+         smallNMallocMIB.withUnsafeMutableBufferPointer { pointer in
+             let result = mallctlnametomib("stats.arenas.\(MALLCTL_ARENAS_ALL).small.nmalloc",
+                                           pointer.baseAddress,
+                                           &mibSize)
+             if result != 0 {
+                 print("mallctlnametomib smallNMallocMIB returned \(result)")
+             }
+         }
 
-        mibSize = largeNMallocMIB.count
-        largeNMallocMIB.withUnsafeMutableBufferPointer { pointer in
-            let result = mallctlnametomib("stats.arenas.\(MALLCTL_ARENAS_ALL).large.nmalloc",
-                                          pointer.baseAddress,
-                                          &mibSize)
-            if result != 0 {
-                print("mallctlnametomib largeNMallocMIB returned \(result)")
-            }
-        }
-*/
+         mibSize = largeNMallocMIB.count
+         largeNMallocMIB.withUnsafeMutableBufferPointer { pointer in
+             let result = mallctlnametomib("stats.arenas.\(MALLCTL_ARENAS_ALL).large.nmalloc",
+                                           pointer.baseAddress,
+                                           &mibSize)
+             if result != 0 {
+                 print("mallctlnametomib largeNMallocMIB returned \(result)")
+             }
+         }
+         */
         // tcaches
         mibSize = smallTMallocMIB.count
         smallTMallocMIB.withUnsafeMutableBufferPointer { pointer in
@@ -123,47 +123,47 @@ public class MallocStatsProducer {
                 print("mallctlnametomib largeTMallocMIB returned \(result)")
             }
         }
-/*
-        mibSize = smallNDallocMIB.count
-        smallNDallocMIB.withUnsafeMutableBufferPointer { pointer in
-            let result = mallctlnametomib("stats.arenas.\(MALLCTL_ARENAS_ALL).small.ndalloc",
-                                          pointer.baseAddress,
-                                          &mibSize)
-            if result != 0 {
-                print("mallctlnametomib smallNDallocMIB returned \(result)")
-            }
-        }
+        /*
+                mibSize = smallNDallocMIB.count
+                smallNDallocMIB.withUnsafeMutableBufferPointer { pointer in
+                    let result = mallctlnametomib("stats.arenas.\(MALLCTL_ARENAS_ALL).small.ndalloc",
+                                                  pointer.baseAddress,
+                                                  &mibSize)
+                    if result != 0 {
+                        print("mallctlnametomib smallNDallocMIB returned \(result)")
+                    }
+                }
 
-        mibSize = largeNDallocMIB.count
-        largeNDallocMIB.withUnsafeMutableBufferPointer { pointer in
-            let result = mallctlnametomib("stats.arenas.\(MALLCTL_ARENAS_ALL).large.ndalloc",
-                                          pointer.baseAddress,
-                                          &mibSize)
-            if result != 0 {
-                print("mallctlnametomib largeNDallocMIB returned \(result)")
-            }
-        }
+                mibSize = largeNDallocMIB.count
+                largeNDallocMIB.withUnsafeMutableBufferPointer { pointer in
+                    let result = mallctlnametomib("stats.arenas.\(MALLCTL_ARENAS_ALL).large.ndalloc",
+                                                  pointer.baseAddress,
+                                                  &mibSize)
+                    if result != 0 {
+                        print("mallctlnametomib largeNDallocMIB returned \(result)")
+                    }
+                }
 
-        mibSize = smallAlloctedMIB.count
-        smallAlloctedMIB.withUnsafeMutableBufferPointer { pointer in
-            let result = mallctlnametomib("stats.arenas.\(MALLCTL_ARENAS_ALL).small.allocated",
-                                          pointer.baseAddress,
-                                          &mibSize)
-            if result != 0 {
-                print("mallctlnametomib rsmallAlloctedMIB eturned \(result)")
-            }
-        }
+                mibSize = smallAlloctedMIB.count
+                smallAlloctedMIB.withUnsafeMutableBufferPointer { pointer in
+                    let result = mallctlnametomib("stats.arenas.\(MALLCTL_ARENAS_ALL).small.allocated",
+                                                  pointer.baseAddress,
+                                                  &mibSize)
+                    if result != 0 {
+                        print("mallctlnametomib rsmallAlloctedMIB eturned \(result)")
+                    }
+                }
 
-        mibSize = largeAllocatedMIB.count
-        largeAllocatedMIB.withUnsafeMutableBufferPointer { pointer in
-            let result = mallctlnametomib("stats.arenas.\(MALLCTL_ARENAS_ALL).large.allocated",
-                                          pointer.baseAddress,
-                                          &mibSize)
-            if result != 0 {
-                print("mallctlnametomib largeAllocatedMIB returned \(result)")
-            }
-        }
- */
+                mibSize = largeAllocatedMIB.count
+                largeAllocatedMIB.withUnsafeMutableBufferPointer { pointer in
+                    let result = mallctlnametomib("stats.arenas.\(MALLCTL_ARENAS_ALL).large.allocated",
+                                                  pointer.baseAddress,
+                                                  &mibSize)
+                    if result != 0 {
+                        print("mallctlnametomib largeAllocatedMIB returned \(result)")
+                    }
+                }
+         */
         mibSize = totalAllocatedMIB.count
         totalAllocatedMIB.withUnsafeMutableBufferPointer { pointer in
             let result = mallctlnametomib("stats.resident", pointer.baseAddress, &mibSize)
