@@ -146,7 +146,7 @@
 
                     if self.runState == .shuttingDown {
                         self.runState = .done
-                        semaphore.signal()
+                        self.semaphore.signal()
                     }
 
                     let quit = self.runState
