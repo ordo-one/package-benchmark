@@ -1,10 +1,10 @@
-// swift-tools-version: 5.6
+// swift-tools-version: 5.7
 
 import PackageDescription
 
 let package = Package(
     name: "Benchmark",
-    platforms: [.macOS(.v12)],
+    platforms: [.macOS(.v13)],
     products: [
         .plugin(name: "Benchmark-Plugin", targets: ["Benchmark-Plugin"]),
         .library(
@@ -19,6 +19,7 @@ let package = Package(
         .package(url: "https://github.com/swift-extras/swift-extras-json", .upToNextMajor(from: "0.6.0")),
         .package(url: "https://github.com/ordo-one/TextTable", .upToNextMajor(from: "0.0.1")),
         .package(url: "https://github.com/ordo-one/package-jemalloc", .upToNextMajor(from: "1.0.0")),
+        .package(url: "https://github.com/ordo-one/package-datetime", .upToNextMajor(from: "0.0.0")),
     ],
     targets: [
         // Plugin used by users of the package
@@ -54,6 +55,7 @@ let package = Package(
             name: "Statistics",
             dependencies: [
                 .product(name: "Numerics", package: "swift-numerics"),
+                .product(name: "DateTime", package: "package-datetime")
             ]
         ),
 
@@ -98,6 +100,7 @@ let package = Package(
                 .product(name: "ExtrasJSON", package: "swift-extras-json"),
                 .product(name: "SystemPackage", package: "swift-system"),
                 .product(name: "jemalloc", package: "package-jemalloc"),
+                .product(name: "DateTime", package: "package-datetime"),
                 "Statistics",
                 "Benchmark",
                 .byNameItem(name: "CDarwinOperatingSystemStats", condition: .when(platforms: [.macOS])),

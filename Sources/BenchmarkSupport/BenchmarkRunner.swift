@@ -99,16 +99,16 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
                     }
 
                     var iterations = 0
-                    var accummulatedRuntime: TimeDuration = 0
+                    var accummulatedRuntime: Duration = .zero
                     // accummulatedWallclock may be less than total runtime as it skips 0 measurements
-                    var accummulatedWallclock: TimeDuration = 0
+                    var accummulatedWallclock: Duration = .zero
                     var accummulatedWallclockMeasurements = 0
                     var startMallocStats = MallocStats()
                     var stopMallocStats = MallocStats()
                     var startOperatingSystemStats = OperatingSystemStats()
                     var stopOperatingSystemStats = OperatingSystemStats()
-                    var startTime: TimeInstant = 0
-                    var stopTime: TimeInstant = 0
+                    var startTime = BenchmarkClock.now
+                    var stopTime = BenchmarkClock.now
 
                     // Hook that is called before the actual benchmark closure run, so we can capture metrics here
                     benchmark.measurementPreSynchronization = {
@@ -120,12 +120,12 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
                             startOperatingSystemStats = operatingSystemStatsProducer.makeOperatingSystemStats()
                         }
 
-                        startTime = TimeInstant.now // must be last in closure
+                        startTime = BenchmarkClock.now // must be last in closure
                     }
 
                     // And corresponding hook for then the benchmark has finished and capture finishing metrics here
                     benchmark.measurementPostSynchronization = {
-                        stopTime = TimeInstant.now // must be first in closure
+                        stopTime = BenchmarkClock.now // must be first in closure
 
                         if operatingSystemStatsRequested {
                             stopOperatingSystemStats = operatingSystemStatsProducer.makeOperatingSystemStats()
@@ -136,15 +136,15 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
                         }
 
                         var delta = 0
-                        let runningTime: TimeDuration = stopTime - startTime
+                        let runningTime: Duration = startTime.duration(to: stopTime)
 
-                        if runningTime > 0 { // macOS sometimes gives us identical timestamps in ns so let's skip those.
-                            statistics[.wallClock]?.add(Int(runningTime))
+                        if runningTime > .zero { // macOS sometimes gives us identical timestamps so let's skip those.
+                            statistics[.wallClock]?.add(Int(runningTime.nanoseconds()))
                             accummulatedWallclock += runningTime
                             accummulatedWallclockMeasurements += 1
 
                             var roundedThroughput = Double(benchmark.throughputScalingFactor.rawValue * 1_000_000_000)
-                                / Double(runningTime)
+                            / Double(runningTime.nanoseconds())
                             roundedThroughput.round(.toNearestOrAwayFromZero)
 
                             let throughput = Int(roundedThroughput)
