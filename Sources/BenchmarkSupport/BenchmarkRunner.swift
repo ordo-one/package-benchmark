@@ -10,10 +10,10 @@
 
 import ArgumentParser
 @_exported import Benchmark
+import DateTime
 import ExtrasJSON
 @_exported import Statistics
 import SystemPackage
-import DateTime
 
 // @main must be done in actual benchmark to avoid linker errors unfortunately
 public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
@@ -145,7 +145,7 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
                             accummulatedWallclockMeasurements += 1
 
                             var roundedThroughput = Double(benchmark.throughputScalingFactor.rawValue * 1_000_000_000)
-                            / Double(runningTime.nanoseconds())
+                                / Double(runningTime.nanoseconds())
                             roundedThroughput.round(.toNearestOrAwayFromZero)
 
                             let throughput = Int(roundedThroughput)
