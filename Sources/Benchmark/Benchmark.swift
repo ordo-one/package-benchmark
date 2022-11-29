@@ -35,7 +35,7 @@ public final class Benchmark: Codable, Hashable {
     /// `benchmark.throughputScalingFactor.rawvalue` for the number of iterations.
     public var throughputScalingFactor: StatisticsUnits
     /// The target wall clock runtime for the benchmark, currenty defaults to `.seconds(1)` if not set
-    public var desiredDuration: TimeDuration
+    public var desiredDuration: Duration
     /// The target number of iterations for the benchmark., currently defaults to 100K iterations if not set
     public var desiredIterations: Int
     /// The reason for a benchmark failure, not set if successful
@@ -65,7 +65,7 @@ public final class Benchmark: Codable, Hashable {
     public static var defaultTimeUnits: BenchmarkTimeUnits = .automatic
     public static var defaultWarmupIterations = 3
     public static var defaultThroughputScalingFactor: StatisticsUnits = .count
-    public static var defaultDesiredDuration: TimeDuration = .seconds(1)
+    public static var defaultDesiredDuration: Duration = .seconds(1)
     public static var defaultDesiredIterations: Int = 100_000
     public static var defaultSkip = false
     public static var defaultThresholds: [BenchmarkMetric: BenchmarkResult.PercentileThresholds]?
@@ -118,7 +118,7 @@ public final class Benchmark: Codable, Hashable {
                  timeUnits: BenchmarkTimeUnits = Benchmark.defaultTimeUnits,
                  warmupIterations: Int = Benchmark.defaultWarmupIterations,
                  throughputScalingFactor: StatisticsUnits = Benchmark.defaultThroughputScalingFactor,
-                 desiredDuration: TimeDuration = Benchmark.defaultDesiredDuration,
+                 desiredDuration: Duration = Benchmark.defaultDesiredDuration,
                  desiredIterations: Int = Benchmark.defaultDesiredIterations,
                  skip: Bool = Benchmark.defaultSkip,
                  thresholds: [BenchmarkMetric: BenchmarkResult.PercentileThresholds]? = Benchmark.defaultThresholds,
@@ -176,7 +176,7 @@ public final class Benchmark: Codable, Hashable {
                  timeUnits: BenchmarkTimeUnits = Benchmark.defaultTimeUnits,
                  warmupIterations: Int = Benchmark.defaultWarmupIterations,
                  throughputScalingFactor: StatisticsUnits = Benchmark.defaultThroughputScalingFactor,
-                 desiredDuration: TimeDuration = Benchmark.defaultDesiredDuration,
+                 desiredDuration: Duration = Benchmark.defaultDesiredDuration,
                  desiredIterations: Int = Benchmark.defaultDesiredIterations,
                  skip: Bool = Benchmark.defaultSkip,
                  thresholds: [BenchmarkMetric: BenchmarkResult.PercentileThresholds]? = Benchmark.defaultThresholds,

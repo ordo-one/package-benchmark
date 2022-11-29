@@ -171,7 +171,7 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
             }
 
             if var threshold = thresholds.absolute[percentile] {
-                threshold = threshold / (1_000_000_000 / scalingFactor)
+                threshold /= (1_000_000_000 / scalingFactor)
                 if reverseComparison ? -absoluteDifference > threshold : absoluteDifference > threshold {
                     if printOutput {
                         print("`\(metric.description)` absolute threshold violated, [\(percentile)] result" +
