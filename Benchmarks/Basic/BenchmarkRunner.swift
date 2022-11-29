@@ -9,7 +9,8 @@
 //
 import BenchmarkSupport
 
-@main extension BenchmarkRunner {}
+@main
+extension BenchmarkRunner {}
 
 // swiftlint disable: attributes
 @_dynamicReplacement(for: registerBenchmarks)
