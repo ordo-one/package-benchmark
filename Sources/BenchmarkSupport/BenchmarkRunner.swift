@@ -13,6 +13,7 @@ import ArgumentParser
 import ExtrasJSON
 @_exported import Statistics
 import SystemPackage
+import DateTime
 
 // @main must be done in actual benchmark to avoid linker errors unfortunately
 public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
