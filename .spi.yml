@@ -1,0 +1,9 @@
+version: 1
+builder:
+  configs:
+  - platform: linux
+    swift_version: '5.7'
+    image: registry.gitlab.com/finestructure/spi-images:basic-5.7-latest
+  - documentation_targets: [BenchmarkSupport]
+    platform: linux
+
