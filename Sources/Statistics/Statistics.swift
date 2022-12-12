@@ -1,3 +1,4 @@
+// swiftlint:disable all
 //
 // Copyright (c) 2022 Ordo One AB.
 //
