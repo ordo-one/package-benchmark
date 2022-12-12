@@ -1,6 +1,9 @@
-[![Swift version](https://img.shields.io/badge/Swift-5.6-orange?style=flat-square)](https://img.shields.io/badge/Swift-5.6-orange?style=flat-square)
-[![Swift build and test](https://github.com/ordo-one/package-benchmark/actions/workflows/swift-build.yml/badge.svg)](https://github.com/ordo-one/package-benchmark/actions/workflows/swift-build.yml)
-[![Swift address sanitizer](https://github.com/ordo-one/package-benchmark/actions/workflows/swift-address-sanitizer.yml/badge.svg)](https://github.com/ordo-one/package-benchmark/actions/workflows/swift-address-sanitizer.yml)
+[![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fordo-one%2Fpackage-benchmark%2Fbadge%3Ftype%3Dswift-versions)](https://swiftpackageindex.com/ordo-one/package-benchmark)
+[![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fordo-one%2Fpackage-benchmark%2Fbadge%3Ftype%3Dplatforms)](https://swiftpackageindex.com/ordo-one/package-benchmark)
+[![Swift Linux build](https://github.com/ordo-one/package-benchmark/actions/workflows/swift-linux-build.yml/badge.svg)](https://github.com/ordo-one/package-benchmark/actions/workflows/swift-linux-build.yml)
+[![Swift macOS build](https://github.com/ordo-one/package-benchmark/actions/workflows/swift-macos-build.yml/badge.svg)](https://github.com/ordo-one/package-benchmark/actions/workflows/swift-macos-build.yml)
+[![Swift address sanitizer](https://github.com/ordo-one/package-benchmark/actions/workflows/swift-sanitizer-address.yml/badge.svg)](https://github.com/ordo-one/package-benchmark/actions/workflows/swift-sanitizer-address.yml)
+[![Swift thread sanitizer](https://github.com/ordo-one/package-benchmark/actions/workflows/swift-sanitizer-thread.yml/badge.svg)](https://github.com/ordo-one/package-benchmark/actions/workflows/swift-sanitizer-thread.yml)
 [![codecov](https://codecov.io/gh/ordo-one/package-benchmark/branch/main/graph/badge.svg?token=hXHmhEG1iF)](https://codecov.io/gh/ordo-one/package-benchmark)
 
 # Benchmark 
@@ -14,6 +17,9 @@ It's intended to be suitable for both ad-hoc smaller benchmarks primarily caring
 Benchmark supports both local usage with baseline comparisons for an iterative workflow for the individual developer, but more importantly has good support for integration with GitHub CI with provided sample workflows for automated comparisons between `main` and a pull request branch to support enforced performance validation for pull requests with customizable thresholds - this is the primary intended use case for the package.
 
 The focus for measurements are percentiles (`p0` (min), `p25`, `p50` (median), `p75`, `p90`, `p99` and `p100` (max)) to support analysis of the actual distribution of benchmark measurements. A given benchmark is typically run for a minimum amount of time and/or a given number of iterations, see details in the Benchmark documentation below.
+
+### CI build note
+macOS builds are failing on the CI as GitHub still haven't provided runners for macOS 13 Ventura, it works in practice.
 
 ### Minimal benchmark + benchmark using async / Swift Concurrency
 ```swift
