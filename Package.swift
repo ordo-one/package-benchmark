@@ -17,6 +17,7 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-argument-parser", .upToNextMajor(from: "1.0.0")),
         .package(url: "https://github.com/apple/swift-numerics", from: "1.0.0"),
         .package(url: "https://github.com/swift-extras/swift-extras-json", .upToNextMajor(from: "0.6.0")),
+        .package(url: "https://github.com/SwiftPackageIndex/SPIManifest", from: "0.12.0"),
         .package(url: "https://github.com/ordo-one/TextTable", .upToNextMajor(from: "0.0.1")),
         .package(url: "https://github.com/ordo-one/package-jemalloc", .upToNextMajor(from: "1.0.0")),
         .package(url: "https://github.com/ordo-one/package-datetime", .upToNextMajor(from: "0.0.0")),
