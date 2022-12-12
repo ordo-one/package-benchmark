@@ -1,0 +1,28 @@
+name: Swift outdated dependencies 
+
+on: 
+  workflow_dispatch:
+  schedule:
+    - cron: '0 8 * * 1' # every monday AM 8:00
+    
+jobs:
+  spm-dep-check:
+    runs-on: [ubuntu-latest]
+    timeout-minutes: 60
+    steps:
+    - uses: actions/checkout@v3
+    - name: Check Swift package dependencies
+      id: spm-dep-check
+      uses: MarcoEidinger/swift-package-dependencies-check@2.1.0
+      with:
+         isMutating: true
+         failWhenOutdated: false
+    - name: Create Pull Request
+      if: steps.spm-dep-check.outputs.outdatedDependencies  == 'true'
+      uses: peter-evans/create-pull-request@v3
+      with:
+        commit-message: 'chore: update package dependencies'
+        branch: updatePackageDepedencies
+        delete-branch: true
+        title: 'chore: update package dependencies'
+        body: ${{ steps.spm-dep-check.outputs.releaseNotes }}
