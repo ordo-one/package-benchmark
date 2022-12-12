@@ -1,0 +1,47 @@
+name: Swift thread sanitizer
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  thread-sanitizer:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    steps:
+    - name: Homebrew Mac
+      if: ${{ runner.os == 'Macos' }}
+      run: |
+        echo "/opt/homebrew/bin:/usr/local/bin" >> $GITHUB_PATH
+        brew install jemalloc
+
+    - name: Ubuntu deps
+      if: ${{ runner.os == 'Linux' }}
+      run: |
+        sudo apt-get install -y libjemalloc-dev
+
+    - uses: actions/checkout@v3
+
+    - name: Swift version
+      run: swift --version
+
+    # Required to clean build directory before sanitizer!
+    - name: Clean before debug build thread sanitizier
+      run: swift package clean
+
+    - name: Run thread sanitizer
+      run: swift test --sanitize=thread | swift demangle
+      
+    - name: Clean before release build sanitizier
+      run: swift package clean
+      
+    - name: Run thread sanitizer on release build
+      run: swift test --sanitize=thread -c release -Xswiftc -enable-testing | swift demangle

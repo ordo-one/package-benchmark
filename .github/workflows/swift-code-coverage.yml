@@ -1,31 +1,42 @@
-name: Code coverage
+name: Swift code coverage
 
 on:
+  workflow_dispatch:
   push:
     branches: [ main ]
   pull_request:
     branches: [ main ]
-
 jobs:
-  build-test-and-upload-test-coverage:
-    # Only on Linux as macOS doesn't support jemalloc interposition when running unit tests
-    runs-on: ubuntu-latest
-
+  test-code-coverage:
+    runs-on: [ubuntu-22.04]
+    timeout-minutes: 60
     steps:
     - uses: actions/checkout@v3
-    - name: Install jemalloc Linux
-      run: sudo apt-get install -y libjemalloc-dev
+
+    - name: Ubuntu deps
+      if: ${{ runner.os == 'Linux' }}
+      run: |
+        sudo apt-get install -y libjemalloc-dev llvm-14
+
     - name: Run tests
-      run: swift test --enable-code-coverage
-    - name: Set path
-      run: echo "/usr/lib/llvm-9/bin" >> $GITHUB_PATH
-    - name: Install LLVM and Clang
-      uses: KyleMayes/install-llvm-action@v1
-      with:
-        version: "13"
+      continue-on-error: true
+      run: |
+        [ -d Tests ] && swift test --parallel --enable-code-coverage
+
     - name: Export code coverage
-      run: llvm-cov export -format="lcov" .build/debug/BenchmarkPackageTests.xctest -instr-profile .build/debug/codecov/default.profdata > info.lcov
+      run: |
+         xctest_binary=".build/debug/${{ github.event.repository.name }}PackageTests.xctest"
+         if [ ! -f ${xctest_binary} ]; then
+             xctest_binary=$(find .build/debug/ -type f -name "*.xctest" | tail -1)
+             echo "Will llvm-cov '${xctest_binary}'"
+         fi
+
+         if [ -f ${xctest_binary} ]; then
+             llvm-cov-14 export -format="lcov" ${xctest_binary} -instr-profile .build/debug/codecov/default.profdata > info.lcov
+         fi
+
     - name: Upload codecov
       uses: codecov/codecov-action@v2
       with: 
+        token: ${{ secrets.CODECOV_REPO_TOKEN }} 
         files: info.lcov
