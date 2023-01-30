@@ -19,19 +19,19 @@ func benchmarks() {
     Benchmark.defaultThroughputScalingFactor = .kilo
 
     Benchmark("InternalUTCClock.now") { benchmark in
-        for _ in 0 ..< benchmark.throughputScalingFactor.rawValue {
+        for _ in benchmark.throughputIterations {
             BenchmarkSupport.blackHole(InternalUTCClock.now)
         }
     }
 
     Benchmark("BenchmarkClock.now") { benchmark in
-        for _ in 0 ..< benchmark.throughputScalingFactor.rawValue {
+        for _ in benchmark.throughputIterations {
             BenchmarkSupport.blackHole(BenchmarkClock.now)
         }
     }
 
     Benchmark("Foundation.Date") { benchmark in
-        for _ in 0 ..< benchmark.throughputScalingFactor.rawValue {
+        for _ in benchmark.throughputIterations  {
             BenchmarkSupport.blackHole(Foundation.Date())
         }
     }
