@@ -93,6 +93,15 @@ let package = Package(
             path: "Benchmarks/Basic"
         ),
 
+        // Benchmark of the DateTime package (which can't depend on Benchmark as we'll get a circular dependency)
+        .executableTarget(
+            name: "BenchmarkDateTime",
+            dependencies: [
+                "BenchmarkSupport"
+            ],
+            path: "Benchmarks/DateTime"
+        ),
+
         // Scaffolding to support benchmarks under the hood
         .target(
             name: "BenchmarkSupport",
