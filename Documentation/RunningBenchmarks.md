@@ -97,3 +97,8 @@ swift package --allow-writing-to-package-directory benchmark update-baseline alp
 ```
 swift package --allow-writing-to-package-directory benchmark update-baseline --target Frostflake-Benchmark
 ```
+
+### Export benchmark data
+```
+swift package --allow-writing-to-package-directory benchmark export-json
+```

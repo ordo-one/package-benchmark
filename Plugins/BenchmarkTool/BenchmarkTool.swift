@@ -122,6 +122,8 @@ struct BenchmarkTool: AsyncParsableCommand {
             fallthrough
         case "update-baseline":
             fallthrough
+        case "export-json":
+            fallthrough
         case "run":
             try runChild(benchmarkExecutablePath) { [self] result in
                 if result != 0 {
@@ -180,6 +182,8 @@ struct BenchmarkTool: AsyncParsableCommand {
 
                 switch command {
                 case "update-baseline":
+                    fallthrough
+                case "export-json":
                     fallthrough
                 case "run":
                     fallthrough

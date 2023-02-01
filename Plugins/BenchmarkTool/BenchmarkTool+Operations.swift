@@ -87,6 +87,8 @@ extension BenchmarkTool {
                             header: "Updating baselines")
             }
             try write(BenchmarkBaseline(machine: benchmarkMachine, results: benchmarkResults))
+        case "export-json":
+            try write(saveExportableResults(BenchmarkBaseline(machine: benchmarkMachine, results: benchmarkResults)))
         default:
             print("Unexpected command \(command)")
         }
