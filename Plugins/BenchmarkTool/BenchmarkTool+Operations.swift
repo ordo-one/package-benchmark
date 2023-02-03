@@ -87,8 +87,15 @@ extension BenchmarkTool {
                             header: "Updating baselines")
             }
             try write(BenchmarkBaseline(machine: benchmarkMachine, results: benchmarkResults))
-        case "export-json":
-            try write(saveExportableResults(BenchmarkBaseline(machine: benchmarkMachine, results: benchmarkResults)))
+        case "export":
+            if self.exportFormat == .influx {
+                let exportStruct = saveExportableResults(BenchmarkBaseline(machine: benchmarkMachine, results: benchmarkResults))
+                let csvString = convertToCSV(exportableBenchmark: exportStruct)
+                try write(csvString)
+            }
+            else {
+                print("Export type not supported.")
+            }
         default:
             print("Unexpected command \(command)")
         }

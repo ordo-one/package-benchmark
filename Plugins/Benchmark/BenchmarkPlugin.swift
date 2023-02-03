@@ -165,8 +165,11 @@ import PackagePlugin
                 if positionalArguments.count > 0 {
                     args.append(contentsOf: ["--baseline-name", positionalArguments[0]])
                 }
-            case "export-json":
-                args.append(contentsOf: ["--command", "export-json"])
+            case "export":
+                args.append(contentsOf: ["--command", "export"])
+                if positionalArguments.count > 0 {
+                    args.append(contentsOf: ["--export-format", positionalArguments[0]])
+                }
             case "baseline":
                 args.append(contentsOf: ["--command", "baseline"])
                 if positionalArguments.count > 0 {

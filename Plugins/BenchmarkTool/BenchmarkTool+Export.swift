@@ -1,6 +1,8 @@
 import Benchmark
 import ExtrasJSON
 import SystemPackage
+import DateTime
+import Foundation
 
 #if canImport(Darwin)
     import Darwin
@@ -34,7 +36,7 @@ struct TestMetricData: Codable {
 let exportablesDirectory: String = ".exportableBenchmarks"
 
 extension BenchmarkTool {
-    func write(_ exportablebenchmark: ExportableBenchmark,
+    func write(_ exportablebenchmark: String,
                hostIdentifier: String? = nil) throws {
         // Set up desired output path and create any intermediate directories for structure as required:
 
@@ -45,7 +47,7 @@ extension BenchmarkTool {
          The 'default' folder is used when no specific named baseline have been specified with the
          command line. Specified 'named' baselines is useful for convenient A/B/C testing and comparisons.
          Unless a host identifier have been specified on the command line (or in an environment variable),
-         we by default store results in 'results.json', otherwise we will use the environment variable
+         we by default store results in 'influx_results.csv', otherwise we will use the environment variable
          or command line to optionally specify a 'hostIdentifier' that allow for separation between
          different hosts if checking in baselines in repos.
 
@@ -53,14 +55,14 @@ extension BenchmarkTool {
          ├── target1
          │   ├── default
          │   │   ├── results.json
-         │   │   ├── hostIdentifier1.results.json
-         │   │   ├── hostIdentifier2.results.json
-         │   │   └── hostIdentifier3.results.json
+         │   │   ├── hostIdentifier1.influx_results.csv
+         │   │   ├── hostIdentifier2.influx_results.csv
+         │   │   └── hostIdentifier3.influx_results.csv
          │   ├── named1
          │   │   ├── results.json
-         │   │   ├── hostIdentifier1.results.json
-         │   │   ├── hostIdentifier2.results.json
-         │   │   └── hostIdentifier3.results.json
+         │   │   ├── hostIdentifier1.influx_results.csv
+         │   │   ├── hostIdentifier2.influx_results.csv
+         │   │   └── hostIdentifier3.influx_results.csv
          │   ├── named2
          │   │   └── ...
          │   └── ...
@@ -86,40 +88,28 @@ extension BenchmarkTool {
 
         outputPath.append(subPath.components)
 
+        var csvFile = FilePath()
         if let hostIdentifier = hostIdentifier {
-            outputPath.append("\(hostIdentifier).results.json")
+            csvFile.append("\(hostIdentifier).influx_results.csv")
         } else {
-            outputPath.append("results.json")
+            csvFile.append("influx_results.csv")
         }
-
-        // Write out exportable benchmarks
+        
+        outputPath.append(csvFile.components)
+        
         do {
-            let fd = try FileDescriptor.open(
-                outputPath, .writeOnly, options: [.truncate, .create], permissions: .ownerReadWrite
-            )
-
-            do {
-                try fd.closeAfter {
-                    do {
-                        let bytesArray = try XJSONEncoder().encode(exportablebenchmark)
-
-                        try bytesArray.withUnsafeBufferPointer {
-                            _ = try fd.write(UnsafeRawBufferPointer($0))
-                        }
-                    } catch {
-                        print("Failed to write to file \(outputPath)")
-                    }
-                }
-            } catch {
-                print("Failed to close fd for \(outputPath) after write.")
+            if FileManager.default.fileExists(atPath: outputPath.description) {
+                try FileManager.default.removeItem(atPath: outputPath.description)
             }
 
+            // Write out exportable benchmarks
+            FileManager.default.createFile(atPath: outputPath.description, contents: exportablebenchmark.data(using: String.Encoding.utf8))
         } catch {
             if errno == EPERM {
                 print("Lacking permissions to write to \(outputPath)")
                 print("Give benchmark plugin permissions by running with e.g.:")
                 print("")
-                print("swift package --allow-writing-to-package-directory benchmark update-baseline")
+                print("swift package --allow-writing-to-package-directory benchmark export influx")
                 print("")
             } else {
                 print("Failed to open file \(outputPath), errno = [\(errno)]")
@@ -184,5 +174,79 @@ extension BenchmarkTool {
                               average: averageValue,
                               metricsdata: testData,
                               percentiles: test.percentiles)
+    }
+    
+    func convertToCSV(exportableBenchmark: ExportableBenchmark) -> String {
+        let formatter = influxCSVFormatter(exportableBenchmark: exportableBenchmark)
+        return formatter.influxCSVFormat()
+    }
+}
+
+
+class influxCSVFormatter {
+    let exportableBenchmark: ExportableBenchmark
+    let timestamp: Int64
+    var finalFileFormat: String
+    
+    init(exportableBenchmark: ExportableBenchmark) {
+        self.exportableBenchmark = exportableBenchmark
+        self.finalFileFormat = ""
+        self.timestamp = Int64(Date().timeIntervalSince1970)
+    }
+    
+    func influxCSVFormat() -> String{
+        let headerConstant = "#constant measurement,\(self.exportableBenchmark.target)\n"
+        self.finalFileFormat.append(headerConstant)
+        
+        self.appendMachineInfo()
+        
+        let dataTypeHeader = "#datatype tag,tag,tag,double,double,long,long,dateTime\n"
+        self.finalFileFormat.append(dataTypeHeader)
+        let headers = "metric,unit,test,value,test_average,iterations,warmup_iterations,time\n"
+        self.finalFileFormat.append(headers)
+        
+        for testData in self.exportableBenchmark.benchmarks {
+            let testName = testData.test
+            let iterations = testData.iterations
+            let warmup_iterations = testData.warmupIterations
+            
+            for granularData in testData.data {
+                let metric = granularData.metric
+                            .replacingOccurrences(of: " ", with: "")
+                let units = granularData.units
+                let average = granularData.average
+                
+                for dataTableValue in granularData.metricsdata {
+                    let time = Date().ISO8601Format()
+                    let dataLine = "\(metric),\(units),\(testName),\(dataTableValue),\(average),\(iterations),\(warmup_iterations),\(time)\n"
+                    self.finalFileFormat.append(dataLine)
+                }
+            }
+        }
+        
+        return self.finalFileFormat
+    }
+    
+    func appendMachineInfo() {
+        let machine = self.exportableBenchmark.benchmarkMachine
+        
+        let hostName = machine.hostname
+                        .replacingOccurrences(of: " ", with: "-")
+        let processorType = machine.processorType
+                        .replacingOccurrences(of: " ", with: "-")
+        let kernelVersion = machine.kernelVersion
+                        .replacingOccurrences(of: " ", with: "-")
+        
+        let hostNameConstant = "#constant tag,hostName,\(hostName)\n"
+        let processorConstant = "#constant tag,processors,\(machine.processors)\n"
+        let processorTypeConstant = "#constant tag,processorType,\(processorType)\n"
+        let memoryConstant = "#constant tag,memory,\(machine.memory)\n"
+        let kernelVersionConstant = "#constant tag,kernelVersion,\(kernelVersion)\n"
+        
+        self.finalFileFormat.append(hostNameConstant)
+        self.finalFileFormat.append(processorConstant)
+        self.finalFileFormat.append(processorTypeConstant)
+        self.finalFileFormat.append(memoryConstant)
+        self.finalFileFormat.append(kernelVersionConstant)
     }
 }

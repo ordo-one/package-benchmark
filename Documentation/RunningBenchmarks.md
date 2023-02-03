@@ -13,7 +13,7 @@ swift package benchmark
 * `compare` - compare a benchmark run with a specified baseline, or compare two different baselines if two are specified
 * `update-baseline` - update either the default unnamed baseline, or a named specific baseline
 * `baseline` - display the contents of either the default unnamed baseline, or a named specific baseline
-* `export-json` - generate JSON file formatted to export into a time series DB
+* `export` - export data into the specified format, currently only `influx` output format is implemented for exporting
 
 ## Options 
 
@@ -101,5 +101,5 @@ swift package --allow-writing-to-package-directory benchmark update-baseline --t
 
 ### Export benchmark data:
 ```
-swift package --allow-writing-to-package-directory benchmark export-json
+swift package --allow-writing-to-package-directory benchmark export <export_format>
 ```
