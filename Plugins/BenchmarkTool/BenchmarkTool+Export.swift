@@ -192,14 +192,19 @@ class influxCSVFormatter {
     }
 
     func influxCSVFormat() -> String {
-        let headerConstant = "#constant measurement,\(exportableBenchmark.target)\n"
-        finalFileFormat.append(headerConstant)
+        let machine = exportableBenchmark.benchmarkMachine
+        let hostName = machine.hostname
+            .replacingOccurrences(of: " ", with: "-")
+        let processorType = machine.processorType
+            .replacingOccurrences(of: " ", with: "-")
+        let kernelVersion = machine.kernelVersion
+            .replacingOccurrences(of: " ", with: "-")
+        let processors = machine.processors
+        let memory = machine.memory
 
-        appendMachineInfo()
-
-        let dataTypeHeader = "#datatype tag,tag,tag,double,double,long,long,dateTime\n"
+        let dataTypeHeader = "#datatype tag,tag,tag,tag,tag,tag,tag,tag,double,double,long,long,dateTime\n"
         finalFileFormat.append(dataTypeHeader)
-        let headers = "metric,unit,test,value,test_average,iterations,warmup_iterations,time\n"
+        let headers = "measurement,hostName,processoryType,processors,memory,kernelVersion,metric,unit,test,value,test_average,iterations,warmup_iterations,time\n"
         finalFileFormat.append(headers)
 
         for testData in exportableBenchmark.benchmarks {
@@ -215,7 +220,7 @@ class influxCSVFormatter {
 
                 for dataTableValue in granularData.metricsdata {
                     let time = ISO8601DateFormatter().string(from: Date())
-                    let dataLine = "\(metric),\(units),\(testName),\(dataTableValue),\(average),\(iterations),\(warmup_iterations),\(time)\n"
+                    let dataLine = "\(exportableBenchmark.target),\(hostName),\(processorType),\(processors),\(memory),\(kernelVersion),\(metric),\(units),\(testName),\(dataTableValue),\(average),\(iterations),\(warmup_iterations),\(time)\n"
                     finalFileFormat.append(dataLine)
                 }
             }
