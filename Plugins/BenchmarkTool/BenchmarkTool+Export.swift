@@ -185,13 +185,11 @@ extension BenchmarkTool {
 
 class influxCSVFormatter {
     let exportableBenchmark: ExportableBenchmark
-    let timestamp: Int64
     var finalFileFormat: String
     
     init(exportableBenchmark: ExportableBenchmark) {
         self.exportableBenchmark = exportableBenchmark
         self.finalFileFormat = ""
-        self.timestamp = Int64(Date().timeIntervalSince1970)
     }
     
     func influxCSVFormat() -> String{
@@ -217,7 +215,7 @@ class influxCSVFormatter {
                 let average = granularData.average
                 
                 for dataTableValue in granularData.metricsdata {
-                    let time = Date().ISO8601Format()
+                    let time = ISO8601DateFormatter().string(from: Date())
                     let dataLine = "\(metric),\(units),\(testName),\(dataTableValue),\(average),\(iterations),\(warmup_iterations),\(time)\n"
                     self.finalFileFormat.append(dataLine)
                 }
