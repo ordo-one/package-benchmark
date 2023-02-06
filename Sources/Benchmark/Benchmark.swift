@@ -204,7 +204,7 @@ public final class Benchmark: Codable, Hashable {
     ///   - metric: A `.custom()` metric to register a value for
     ///   - value: The value to register for the metric.
     public func measurement(_ metric: BenchmarkMetric, _ value: Int) {
-        if let customMetricMeasurement = customMetricMeasurement {
+        if let customMetricMeasurement {
             switch metric {
             case .custom:
                 customMetricMeasurement(metric, value)
@@ -218,7 +218,7 @@ public final class Benchmark: Codable, Hashable {
     /// `startMeasurement` can be called explicitly to define when measurement should begin.
     /// Otherwise the whole benchmark will be measured.
     public func startMeasurement() {
-        if let measurementPreSynchronization = measurementPreSynchronization {
+        if let measurementPreSynchronization {
             measurementPreSynchronization()
         }
         measurementCompleted = false
@@ -232,7 +232,7 @@ public final class Benchmark: Codable, Hashable {
             return
         }
 
-        if let measurementPostSynchronization = measurementPostSynchronization {
+        if let measurementPostSynchronization {
             measurementCompleted = true
             measurementPostSynchronization()
         }

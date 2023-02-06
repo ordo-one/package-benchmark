@@ -67,7 +67,7 @@ extension BenchmarkTool {
         case "compare":
             prettyPrintDelta(BenchmarkBaseline(machine: benchmarkMachine, results: benchmarkResults))
 
-            guard let currentBaseline = currentBaseline else {
+            guard let currentBaseline else {
                 print("No baseline available to compare with.")
                 return
             }
@@ -88,12 +88,11 @@ extension BenchmarkTool {
             }
             try write(BenchmarkBaseline(machine: benchmarkMachine, results: benchmarkResults))
         case "export":
-            if self.exportFormat == .influx {
+            if exportFormat == .influx {
                 let exportStruct = saveExportableResults(BenchmarkBaseline(machine: benchmarkMachine, results: benchmarkResults))
                 let csvString = convertToCSV(exportableBenchmark: exportStruct)
                 try write(csvString)
-            }
-            else {
+            } else {
                 print("Export type not supported.")
             }
         default:

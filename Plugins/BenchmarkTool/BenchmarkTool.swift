@@ -46,7 +46,7 @@ struct BenchmarkTool: AsyncParsableCommand {
 
     @Option(name: .long, help: "The command to perform")
     var command: String
-    
+
     @Option(name: .long, help: "The export file format to use, 'influx'")
     var exportFormat: ExportFormat
 
@@ -93,7 +93,7 @@ struct BenchmarkTool: AsyncParsableCommand {
         switch command {
         case "baseline":
             currentBaseline = try read(baselineIdentifier: baselineName)
-            if let currentBaseline = currentBaseline {
+            if let currentBaseline {
                 prettyPrint(currentBaseline, header: "Current baseline")
             } else {
                 print("No baseline found.")
@@ -101,11 +101,11 @@ struct BenchmarkTool: AsyncParsableCommand {
         case "compare":
             currentBaseline = try read(baselineIdentifier: baselineName)
 
-            if let currentBaseline = currentBaseline {
-                if let baselineNameSecond = baselineNameSecond { // we compare with another known baseline instead of running
+            if let currentBaseline {
+                if let baselineNameSecond { // we compare with another known baseline instead of running
                     let otherBaseline = try read(baselineIdentifier: baselineNameSecond)
 
-                    if let otherBaseline = otherBaseline {
+                    if let otherBaseline {
                         prettyPrintDelta(otherBaseline)
 
                         if otherBaseline.betterResultsOrEqual(than: currentBaseline, printOutput: true) {

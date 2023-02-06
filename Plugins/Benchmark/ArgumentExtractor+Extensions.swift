@@ -48,7 +48,7 @@ extension ArgumentExtractor {
                 target.name == specifiedTarget
             }
 
-            guard let target = target else {
+            guard let target else {
                 throw ArgumentParsingError.unknownTarget(specifiedTarget)
             }
 

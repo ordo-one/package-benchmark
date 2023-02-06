@@ -1,8 +1,8 @@
 import Benchmark
-import ExtrasJSON
-import SystemPackage
 import DateTime
+import ExtrasJSON
 import Foundation
+import SystemPackage
 
 #if canImport(Darwin)
     import Darwin
@@ -30,7 +30,7 @@ struct TestMetricData: Codable {
     var units: String
     var average: Double
     var metricsdata: [Int]
-    var percentiles: [BenchmarkResult.Percentile : Int]
+    var percentiles: [BenchmarkResult.Percentile: Int]
 }
 
 let exportablesDirectory: String = ".exportableBenchmarks"
@@ -89,14 +89,14 @@ extension BenchmarkTool {
         outputPath.append(subPath.components)
 
         var csvFile = FilePath()
-        if let hostIdentifier = hostIdentifier {
+        if let hostIdentifier {
             csvFile.append("\(hostIdentifier).influx_results.csv")
         } else {
             csvFile.append("influx_results.csv")
         }
-        
+
         outputPath.append(csvFile.components)
-        
+
         do {
             if FileManager.default.fileExists(atPath: outputPath.description) {
                 try FileManager.default.removeItem(atPath: outputPath.description)
@@ -116,21 +116,21 @@ extension BenchmarkTool {
             }
         }
     }
-    
+
     func saveExportableResults(
-                    _ benchmarks: BenchmarkBaseline) -> ExportableBenchmark {
+        _ benchmarks: BenchmarkBaseline) -> ExportableBenchmark {
         let keys = benchmarks.results.keys.sorted(by: { $0.name < $1.name })
         var testList: [TestData] = []
-        
+
         keys.forEach { test in
             if let value = benchmarks.results[test] {
                 var allResults: [BenchmarkResult] = []
                 value.forEach { result in
                     allResults.append(result)
                 }
-                
+
                 allResults.sort(by: { $0.metric.description < $1.metric.description })
-                
+
                 var benchmarkResultData: [TestMetricData] = []
                 var iterations = 0
                 var warmupIterations = 0
@@ -139,11 +139,11 @@ extension BenchmarkTool {
                         processBenchmarkResult(test: results,
                                                testName: test.name)
                     )
-                    
+
                     iterations = results.measurements
                     warmupIterations = results.warmupIterations
                 }
-                
+
                 testList.append(
                     TestData(test: test.name,
                              iterations: iterations,
@@ -152,99 +152,98 @@ extension BenchmarkTool {
                 )
             }
         }
-        
+
         return ExportableBenchmark(benchmarkMachine: benchmarks.machine,
-                            target: target,
-                            benchmarks: testList)
+                                   target: target,
+                                   benchmarks: testList)
     }
-    
+
     func processBenchmarkResult(test: BenchmarkResult,
-                                testName: String) -> TestMetricData {
+                                testName _: String) -> TestMetricData {
         var testData: [Int] = []
         test.percentiles.forEach { result in
             testData.append(result.value)
         }
-        
+
         let totalValue = Double(testData.reduce(0, +))
         let totalCount = Double(testData.count)
         let averageValue = (totalValue / totalCount)
-        
+
         return TestMetricData(metric: test.metric.description,
                               units: test.unitDescription,
                               average: averageValue,
                               metricsdata: testData,
                               percentiles: test.percentiles)
     }
-    
+
     func convertToCSV(exportableBenchmark: ExportableBenchmark) -> String {
         let formatter = influxCSVFormatter(exportableBenchmark: exportableBenchmark)
         return formatter.influxCSVFormat()
     }
 }
 
-
 class influxCSVFormatter {
     let exportableBenchmark: ExportableBenchmark
     var finalFileFormat: String
-    
+
     init(exportableBenchmark: ExportableBenchmark) {
         self.exportableBenchmark = exportableBenchmark
-        self.finalFileFormat = ""
+        finalFileFormat = ""
     }
-    
-    func influxCSVFormat() -> String{
-        let headerConstant = "#constant measurement,\(self.exportableBenchmark.target)\n"
-        self.finalFileFormat.append(headerConstant)
-        
-        self.appendMachineInfo()
-        
+
+    func influxCSVFormat() -> String {
+        let headerConstant = "#constant measurement,\(exportableBenchmark.target)\n"
+        finalFileFormat.append(headerConstant)
+
+        appendMachineInfo()
+
         let dataTypeHeader = "#datatype tag,tag,tag,double,double,long,long,dateTime\n"
-        self.finalFileFormat.append(dataTypeHeader)
+        finalFileFormat.append(dataTypeHeader)
         let headers = "metric,unit,test,value,test_average,iterations,warmup_iterations,time\n"
-        self.finalFileFormat.append(headers)
-        
-        for testData in self.exportableBenchmark.benchmarks {
+        finalFileFormat.append(headers)
+
+        for testData in exportableBenchmark.benchmarks {
             let testName = testData.test
             let iterations = testData.iterations
             let warmup_iterations = testData.warmupIterations
-            
+
             for granularData in testData.data {
                 let metric = granularData.metric
-                            .replacingOccurrences(of: " ", with: "")
+                    .replacingOccurrences(of: " ", with: "")
                 let units = granularData.units
                 let average = granularData.average
-                
+
                 for dataTableValue in granularData.metricsdata {
                     let time = ISO8601DateFormatter().string(from: Date())
                     let dataLine = "\(metric),\(units),\(testName),\(dataTableValue),\(average),\(iterations),\(warmup_iterations),\(time)\n"
-                    self.finalFileFormat.append(dataLine)
+                    finalFileFormat.append(dataLine)
                 }
             }
         }
-        
-        return self.finalFileFormat
+
+        return finalFileFormat
     }
-    
+
     func appendMachineInfo() {
-        let machine = self.exportableBenchmark.benchmarkMachine
-        
+        let machine = exportableBenchmark.benchmarkMachine
+
         let hostName = machine.hostname
-                        .replacingOccurrences(of: " ", with: "-")
+            .replacingOccurrences(of: " ", with: "-")
         let processorType = machine.processorType
-                        .replacingOccurrences(of: " ", with: "-")
+            .replacingOccurrences(of: " ", with: "-")
         let kernelVersion = machine.kernelVersion
-                        .replacingOccurrences(of: " ", with: "-")
-        
+            .replacingOccurrences(of: " ", with: "-")
+
         let hostNameConstant = "#constant tag,hostName,\(hostName)\n"
         let processorConstant = "#constant tag,processors,\(machine.processors)\n"
         let processorTypeConstant = "#constant tag,processorType,\(processorType)\n"
         let memoryConstant = "#constant tag,memory,\(machine.memory)\n"
         let kernelVersionConstant = "#constant tag,kernelVersion,\(kernelVersion)\n"
-        
-        self.finalFileFormat.append(hostNameConstant)
-        self.finalFileFormat.append(processorConstant)
-        self.finalFileFormat.append(processorTypeConstant)
-        self.finalFileFormat.append(memoryConstant)
-        self.finalFileFormat.append(kernelVersionConstant)
+
+        finalFileFormat.append(hostNameConstant)
+        finalFileFormat.append(processorConstant)
+        finalFileFormat.append(processorTypeConstant)
+        finalFileFormat.append(memoryConstant)
+        finalFileFormat.append(kernelVersionConstant)
     }
 }

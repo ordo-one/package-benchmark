@@ -167,7 +167,7 @@ extension BenchmarkTool {
 
     func prettyPrintDelta(_ baseline: BenchmarkBaseline,
                           hostIdentifier _: String? = nil) {
-        guard let currentBaseline = currentBaseline else {
+        guard let currentBaseline else {
             print("No baseline available to compare with.")
             return
         }
@@ -191,12 +191,12 @@ extension BenchmarkTool {
 
         var baseBaselineName: String
         var comparisonBaselineName: String
-        if let baselineName = baselineName { // we compare with another known baseline instead of running
+        if let baselineName { // we compare with another known baseline instead of running
             baseBaselineName = "'\(baselineName)'"
         } else {
             baseBaselineName = "Baseline"
         }
-        if let baselineNameSecond = baselineNameSecond { // we compare with another known baseline instead of running
+        if let baselineNameSecond { // we compare with another known baseline instead of running
             comparisonBaselineName = "'\(baselineNameSecond)'"
         } else {
             comparisonBaselineName = "Current run"
