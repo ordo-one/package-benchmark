@@ -16,17 +16,19 @@ import jemalloc
 // Keeping them around as we may want to expand malloc statistics
 // to become more detailed.
 public class MallocStatsProducer {
-    var threadCacheMIB: [Int]
-    var epochMIB: [Int]
-//    var smallNMallocMIB: [Int]
-//    var largeNMallocMIB: [Int]
-//    var smallNDallocMIB: [Int]
-//    var largeNDallocMIB: [Int]
-//    var smallAlloctedMIB: [Int]
-//    var largeAllocatedMIB: [Int]
-    var totalAllocatedMIB: [Int]
-    var smallTMallocMIB: [Int]
-    var largeTMallocMIB: [Int]
+    var threadCacheMIB: [size_t]
+    var epochMIB: [size_t]
+//    var smallNMallocMIB: [size_t]
+//    var largeNMallocMIB: [size_t]
+//    var smallNDallocMIB: [size_t]
+//    var largeNDallocMIB: [size_t]
+//    var smallAlloctedMIB: [size_t]
+//    var largeAllocatedMIB: [size_t]
+    var totalAllocatedMIB: [size_t]
+    var smallNRequestsMIB: [size_t]
+    var largeNRequestsMIB: [size_t]
+//    var smallNFillsMIB: [size_t]
+//    var largeNFillsMIB: [size_t]
 
     // Update jemalloc internal statistics, this is the magic incantation to do it
     @discardableResult
@@ -55,122 +57,32 @@ public class MallocStatsProducer {
     // Basically just set up a number of cached MIB structures for
     // more efficient queries later of malloc statistics.
     public init() {
-        epochMIB = [size_t](repeating: 0, count: 1)
-        totalAllocatedMIB = [size_t](repeating: 0, count: 2)
-        threadCacheMIB = [size_t](repeating: 0, count: 3)
-//        smallNMallocMIB = [size_t](repeating: 0, count: 5)
-//        largeNMallocMIB = [size_t](repeating: 0, count: 5)
-//        smallNDallocMIB = [size_t](repeating: 0, count: 5)
-//        largeNDallocMIB = [size_t](repeating: 0, count: 5)
-//        smallAlloctedMIB = [size_t](repeating: 0, count: 5)
-//        largeAllocatedMIB = [size_t](repeating: 0, count: 5)
-        smallTMallocMIB = [size_t](repeating: 0, count: 5)
-        largeTMallocMIB = [size_t](repeating: 0, count: 5)
-
-        var mibSize = threadCacheMIB.count
-        threadCacheMIB.withUnsafeMutableBufferPointer { pointer in
-            let result = mallctlnametomib("thread.tcache.flush", pointer.baseAddress, &mibSize)
-            if result != 0 {
-                print("mallctlnametomib threadCacheMIB returned \(result)")
-            }
-        }
-
-        mibSize = epochMIB.count
-        epochMIB.withUnsafeMutableBufferPointer { pointer in
-            let result = mallctlnametomib("epoch", pointer.baseAddress, &mibSize)
-            if result != 0 {
-                print("mallctlnametomib epochMIB returned \(result)")
-            }
-        }
-        /*
-         mibSize = smallNMallocMIB.count
-         smallNMallocMIB.withUnsafeMutableBufferPointer { pointer in
-             let result = mallctlnametomib("stats.arenas.\(MALLCTL_ARENAS_ALL).small.nmalloc",
-                                           pointer.baseAddress,
-                                           &mibSize)
-             if result != 0 {
-                 print("mallctlnametomib smallNMallocMIB returned \(result)")
-             }
-         }
-
-         mibSize = largeNMallocMIB.count
-         largeNMallocMIB.withUnsafeMutableBufferPointer { pointer in
-             let result = mallctlnametomib("stats.arenas.\(MALLCTL_ARENAS_ALL).large.nmalloc",
-                                           pointer.baseAddress,
-                                           &mibSize)
-             if result != 0 {
-                 print("mallctlnametomib largeNMallocMIB returned \(result)")
-             }
-         }
-         */
-        // tcaches
-        mibSize = smallTMallocMIB.count
-        smallTMallocMIB.withUnsafeMutableBufferPointer { pointer in
-            let result = mallctlnametomib("stats.arenas.\(MALLCTL_ARENAS_ALL).small.nrequests",
-                                          pointer.baseAddress,
-                                          &mibSize)
-            if result != 0 {
-                print("mallctlnametomib smallTMallocMIB returned \(result)")
-            }
-        }
-
-        mibSize = largeTMallocMIB.count
-        largeTMallocMIB.withUnsafeMutableBufferPointer { pointer in
-            let result = mallctlnametomib("stats.arenas.\(MALLCTL_ARENAS_ALL).large.nrequests",
-                                          pointer.baseAddress,
-                                          &mibSize)
-            if result != 0 {
-                print("mallctlnametomib largeTMallocMIB returned \(result)")
-            }
-        }
-        /*
-                mibSize = smallNDallocMIB.count
-                smallNDallocMIB.withUnsafeMutableBufferPointer { pointer in
-                    let result = mallctlnametomib("stats.arenas.\(MALLCTL_ARENAS_ALL).small.ndalloc",
-                                                  pointer.baseAddress,
-                                                  &mibSize)
-                    if result != 0 {
-                        print("mallctlnametomib smallNDallocMIB returned \(result)")
-                    }
+        func setupMIB(name: String) -> [size_t] {
+            precondition(name.split(separator: ".").count > 0, "setupMIB with 0 count")
+            var mib = [size_t](repeating: 0, count: name.split(separator: ".").count)
+            var mibSize = mib.count
+            mib.withUnsafeMutableBufferPointer { pointer in
+                let result = mallctlnametomib(name, pointer.baseAddress, &mibSize)
+                if result != 0 {
+                    print("mallctlnametomib \(name) returned \(result)")
                 }
-
-                mibSize = largeNDallocMIB.count
-                largeNDallocMIB.withUnsafeMutableBufferPointer { pointer in
-                    let result = mallctlnametomib("stats.arenas.\(MALLCTL_ARENAS_ALL).large.ndalloc",
-                                                  pointer.baseAddress,
-                                                  &mibSize)
-                    if result != 0 {
-                        print("mallctlnametomib largeNDallocMIB returned \(result)")
-                    }
-                }
-
-                mibSize = smallAlloctedMIB.count
-                smallAlloctedMIB.withUnsafeMutableBufferPointer { pointer in
-                    let result = mallctlnametomib("stats.arenas.\(MALLCTL_ARENAS_ALL).small.allocated",
-                                                  pointer.baseAddress,
-                                                  &mibSize)
-                    if result != 0 {
-                        print("mallctlnametomib rsmallAlloctedMIB eturned \(result)")
-                    }
-                }
-
-                mibSize = largeAllocatedMIB.count
-                largeAllocatedMIB.withUnsafeMutableBufferPointer { pointer in
-                    let result = mallctlnametomib("stats.arenas.\(MALLCTL_ARENAS_ALL).large.allocated",
-                                                  pointer.baseAddress,
-                                                  &mibSize)
-                    if result != 0 {
-                        print("mallctlnametomib largeAllocatedMIB returned \(result)")
-                    }
-                }
-         */
-        mibSize = totalAllocatedMIB.count
-        totalAllocatedMIB.withUnsafeMutableBufferPointer { pointer in
-            let result = mallctlnametomib("stats.resident", pointer.baseAddress, &mibSize)
-            if result != 0 {
-                print("mallctlnametomib totalAllocatedMIB returned \(result)")
             }
+            return mib
         }
+
+        epochMIB = setupMIB(name: "epoch")
+        threadCacheMIB = setupMIB(name: "thread.tcache.flush")
+        smallNRequestsMIB = setupMIB(name: "stats.arenas.\(MALLCTL_ARENAS_ALL).small.nrequests")
+        largeNRequestsMIB = setupMIB(name: "stats.arenas.\(MALLCTL_ARENAS_ALL).large.nrequests")
+        totalAllocatedMIB = setupMIB(name: "stats.resident")
+//        smallNMallocMIB = setupMIB(name: "stats.arenas.\(MALLCTL_ARENAS_ALL).small.nmalloc")
+//        largeNMallocMIB = setupMIB(name: "stats.arenas.\(MALLCTL_ARENAS_ALL).large.nmalloc")
+//        smallNDallocMIB = setupMIB(name: "stats.arenas.\(MALLCTL_ARENAS_ALL).small.ndalloc")
+//        largeNDallocMIB = setupMIB(name: "stats.arenas.\(MALLCTL_ARENAS_ALL).large.ndalloc")
+//        smallAlloctedMIB = setupMIB(name: "stats.arenas.\(MALLCTL_ARENAS_ALL).small.allocated")
+//        largeAllocatedMIB = setupMIB(name: "stats.arenas.\(MALLCTL_ARENAS_ALL).large.allocated")
+//        smallNFillsMIB = setupMIB(name: "stats.arenas.\(MALLCTL_ARENAS_ALL).small.nfills")
+//        largeNFillsMIB = setupMIB(name: "stats.arenas.\(MALLCTL_ARENAS_ALL).large.nfills")
     }
 
     // Read the actual stats using a cached MIB as the key
@@ -185,11 +97,13 @@ public class MallocStatsProducer {
         return 0
     }
 
+
+
     func makeMallocStats() -> MallocStats {
         updateEpoch()
-        let allocationsCountSmall = readStats(smallTMallocMIB) // smallNMallocMIB + smallTMallocMIB ?
-        let allocationsCountLarge = readStats(largeTMallocMIB) // largeNMallocMIB + largeTMallocMIB ?
-        let allocatedResidentMemory = readStats(totalAllocatedMIB) // smallAlloctedMIB + largeAllocatedMIB ?
+        let allocationsCountSmall = readStats(smallNRequestsMIB)
+        let allocationsCountLarge = readStats(largeNRequestsMIB)
+        let allocatedResidentMemory = readStats(totalAllocatedMIB)
         return MallocStats(mallocCountTotal: allocationsCountSmall + allocationsCountLarge,
                            mallocCountSmall: allocationsCountSmall,
                            mallocCountLarge: allocationsCountLarge,
