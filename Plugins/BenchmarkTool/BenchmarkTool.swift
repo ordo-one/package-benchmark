@@ -48,7 +48,7 @@ struct BenchmarkTool: AsyncParsableCommand {
     var command: String
 
     @Option(name: .long, help: "The export file format to use, 'influx'")
-    var exportFormat: ExportFormat
+    var exportFormat: ExportFormat?
 
     @Option(name: .long, help: "The path to baseline directory for storage")
     var baselineStoragePath: String

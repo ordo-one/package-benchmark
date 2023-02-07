@@ -191,6 +191,8 @@ class influxCSVFormatter {
         finalFileFormat = ""
     }
 
+    /// Takes in benchmark data and returns a csv formatted for influxDB
+    /// - Returns: CSV string representation
     func influxCSVFormat() -> String {
         let machine = exportableBenchmark.benchmarkMachine
         let hostName = machine.hostname
