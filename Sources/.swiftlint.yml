@@ -1,0 +1,6 @@
+opt_in_rules:
+  - file_name
+file_name:
+  excluded:
+    - "BenchmarkInternals.swift"
+    - "MallocStats+jemalloc-support.swift"
