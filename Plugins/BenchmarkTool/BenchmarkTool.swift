@@ -32,6 +32,10 @@ enum Grouping: String, ExpressibleByArgument {
     case test
 }
 
+enum ExportFormat: String, ExpressibleByArgument {
+    case influx
+}
+
 @main
 struct BenchmarkTool: AsyncParsableCommand {
     @Option(name: .long, help: "The path to the benchmark to run")
@@ -42,6 +46,9 @@ struct BenchmarkTool: AsyncParsableCommand {
 
     @Option(name: .long, help: "The command to perform")
     var command: String
+
+    @Option(name: .long, help: "The export file format to use, 'influx'")
+    var exportFormat: ExportFormat?
 
     @Option(name: .long, help: "The path to baseline directory for storage")
     var baselineStoragePath: String
@@ -86,7 +93,7 @@ struct BenchmarkTool: AsyncParsableCommand {
         switch command {
         case "baseline":
             currentBaseline = try read(baselineIdentifier: baselineName)
-            if let currentBaseline = currentBaseline {
+            if let currentBaseline {
                 prettyPrint(currentBaseline, header: "Current baseline")
             } else {
                 print("No baseline found.")
@@ -94,11 +101,11 @@ struct BenchmarkTool: AsyncParsableCommand {
         case "compare":
             currentBaseline = try read(baselineIdentifier: baselineName)
 
-            if let currentBaseline = currentBaseline {
-                if let baselineNameSecond = baselineNameSecond { // we compare with another known baseline instead of running
+            if let currentBaseline {
+                if let baselineNameSecond { // we compare with another known baseline instead of running
                     let otherBaseline = try read(baselineIdentifier: baselineNameSecond)
 
-                    if let otherBaseline = otherBaseline {
+                    if let otherBaseline {
                         prettyPrintDelta(otherBaseline)
 
                         if otherBaseline.betterResultsOrEqual(than: currentBaseline, printOutput: true) {
@@ -121,6 +128,8 @@ struct BenchmarkTool: AsyncParsableCommand {
         case "list":
             fallthrough
         case "update-baseline":
+            fallthrough
+        case "export":
             fallthrough
         case "run":
             try runChild(benchmarkExecutablePath) { [self] result in
@@ -180,6 +189,8 @@ struct BenchmarkTool: AsyncParsableCommand {
 
                 switch command {
                 case "update-baseline":
+                    fallthrough
+                case "export":
                     fallthrough
                 case "run":
                     fallthrough

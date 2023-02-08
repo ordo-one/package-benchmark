@@ -128,7 +128,7 @@ extension BenchmarkTool {
 
         outputPath.append(subPath.components)
 
-        if let hostIdentifier = hostIdentifier {
+        if let hostIdentifier {
             outputPath.append("\(hostIdentifier).results.json")
         } else {
             outputPath.append("results.json")
@@ -175,13 +175,13 @@ extension BenchmarkTool {
         path.append(baselinesDirectory) // package/.benchmarkBaselines
         path.append(FilePath.Component(target)!) // package/.benchmarkBaselines/myTarget1
 
-        if let baselineIdentifier = baselineIdentifier {
+        if let baselineIdentifier {
             path.append(baselineIdentifier) // package/.benchmarkBaselines/myTarget1/named1
         } else {
             path.append("default") // // package/.benchmarkBaselines/myTarget1/default
         }
 
-        if let hostIdentifier = hostIdentifier {
+        if let hostIdentifier {
             path.append("\(hostIdentifier).results.json")
         } else {
             path.append("results.json")

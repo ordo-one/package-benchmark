@@ -13,7 +13,6 @@ import BenchmarkSupport
 
 @_dynamicReplacement(for: registerBenchmarks)
 func benchmarks() {
-
     Benchmark.defaultDesiredDuration = .seconds(2)
     Benchmark.defaultDesiredIterations = 10_000
     Benchmark.defaultThroughputScalingFactor = .kilo
@@ -31,9 +30,8 @@ func benchmarks() {
     }
 
     Benchmark("Foundation.Date") { benchmark in
-        for _ in benchmark.throughputIterations  {
+        for _ in benchmark.throughputIterations {
             BenchmarkSupport.blackHole(Foundation.Date())
         }
     }
-
 }

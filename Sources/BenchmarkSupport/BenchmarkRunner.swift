@@ -65,7 +65,7 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
             case let .run(benchmarkToRun):
                 let benchmark = Benchmark.benchmarks.first { $0.name == benchmarkToRun.name }
 
-                if let benchmark = benchmark {
+                if let benchmark {
                     // optionally run a few warmup iterations by default to clean out outliers due to cacheing etc.
 
                     for iterations in 0 ..< benchmark.warmupIterations {

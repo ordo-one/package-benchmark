@@ -13,6 +13,7 @@ swift package benchmark
 * `compare` - compare a benchmark run with a specified baseline, or compare two different baselines if two are specified
 * `update-baseline` - update either the default unnamed baseline, or a named specific baseline
 * `baseline` - display the contents of either the default unnamed baseline, or a named specific baseline
+* `export` - export data into the specified format, currently only [influx](https://docs.influxdata.com/influxdb/cloud/write-data/developer-tools/csv) output format is implemented for exporting
 
 ## Options 
 
@@ -96,4 +97,9 @@ swift package --allow-writing-to-package-directory benchmark update-baseline alp
 ### Update benchmark baseline for a specific target:
 ```
 swift package --allow-writing-to-package-directory benchmark update-baseline --target Frostflake-Benchmark
+```
+
+### Export benchmark data:
+```
+swift package --allow-writing-to-package-directory benchmark export <export_format>
 ```

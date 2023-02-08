@@ -97,8 +97,6 @@ public class MallocStatsProducer {
         return 0
     }
 
-
-
     func makeMallocStats() -> MallocStats {
         updateEpoch()
         let allocationsCountSmall = readStats(smallNRequestsMIB)

@@ -18,4 +18,4 @@
 /// benchmark. To defeat these optimizations, pass such unused results to
 /// this function so that the compiler considers them used.
 @inline(never)
-public func blackHole<T>(_: T) {}
+public func blackHole(_: some Any) {}
