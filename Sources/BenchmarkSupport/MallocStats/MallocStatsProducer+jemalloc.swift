@@ -58,7 +58,7 @@ public class MallocStatsProducer {
     // more efficient queries later of malloc statistics.
     public init() {
         func setupMIB(name: String) -> [size_t] {
-            precondition(name.split(separator: ".").count > 0, "setupMIB with 0 count")
+            precondition(!name.split(separator: ".").isEmpty, "setupMIB with 0 count")
             var mib = [size_t](repeating: 0, count: name.split(separator: ".").count)
             var mibSize = mib.count
             mib.withUnsafeMutableBufferPointer { pointer in
