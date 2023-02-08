@@ -4,7 +4,10 @@ on:
   workflow_dispatch:
   pull_request:
     branches: [ main ]
-  
+
+permissions:
+  pull-requests: write
+
 jobs:
   benchmark-delta:
 
