@@ -16,8 +16,9 @@ extension BenchmarkRunner {}
 // swiftlint disable: attributes
 @_dynamicReplacement(for: registerBenchmarks)
 func benchmarks() {
-    Benchmark.defaultDesiredDuration = .seconds(1)
-    Benchmark.defaultDesiredIterations = .giga(1)
+    Benchmark.defaultDesiredDuration = .seconds(2)
+    Benchmark.defaultDesiredIterations = .kilo(1)
+    Benchmark.defaultThroughputScalingFactor = .mega
 
     Benchmark("Record",
               metrics: [.wallClock, .throughput] + BenchmarkMetric.memory,
@@ -32,7 +33,7 @@ func benchmarks() {
         benchmark.startMeasurement()
 
         for i in benchmark.throughputIterations {
-            histogram.record(values[i % numValues])
+            blackHole(histogram.record(values[i % numValues]))
         }
     }
 
@@ -42,17 +43,18 @@ func benchmarks() {
         var histogram = Histogram<UInt64>(numberOfSignificantValueDigits: .three)
 
         let numValues = 1024 // so compiler can optimize modulo below
-        let values = [UInt64]((0..<numValues).map { _ in UInt64.random(in: 100...1000) })
+        let values = [UInt64]((0..<numValues).map { _ in UInt64.random(in: 100...10_000) })
 
         benchmark.startMeasurement()
 
         for i in benchmark.throughputIterations {
-            histogram.record(values[i % numValues])
+            blackHole(histogram.record(values[i % numValues]))
         }
     }
 
     Benchmark("ValueAtPercentile",
               metrics: [.wallClock, .throughput],
+              throughputScalingFactor: .kilo,
               skip: false) { benchmark in
         let maxValue: UInt64 = 1_000_000
 
@@ -60,7 +62,7 @@ func benchmarks() {
 
         // fill histogram with some data
         for _ in 0 ..< 10_000 {
-            histogram.record(UInt64.random(in: 10...1000))
+            blackHole(histogram.record(UInt64.random(in: 10...1000)))
         }
 
         let percentiles = [ 0.0, 25.0, 50.0, 75.0, 80.0, 90.0, 99.0, 100.0 ]
@@ -74,6 +76,7 @@ func benchmarks() {
 
     Benchmark("Mean",
               metrics: [.wallClock, .throughput],
+              throughputScalingFactor: .kilo,
               skip: false) { benchmark in
         let maxValue: UInt64 = 1_000_000
 
@@ -81,7 +84,7 @@ func benchmarks() {
 
         // fill histogram with some data
         for _ in 0 ..< 10_000 {
-            histogram.record(UInt64.random(in: 10...1000))
+            blackHole(histogram.record(UInt64.random(in: 10...1000)))
         }
 
         benchmark.startMeasurement()
