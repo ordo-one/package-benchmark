@@ -33,11 +33,11 @@ final class OperatingSystemAndMallocTests: XCTestCase {
         }
         let stopOperatingSystemStats = operatingSystemStatsProducer.makeOperatingSystemStats()
         operatingSystemStatsProducer.stopSampling()
-        XCTAssert(stopOperatingSystemStats.cpuTotal >= startOperatingSystemStats.cpuTotal)
-        XCTAssert(stopOperatingSystemStats.cpuUser >= startOperatingSystemStats.cpuUser)
-        XCTAssert(stopOperatingSystemStats.cpuSystem >= startOperatingSystemStats.cpuSystem)
-        XCTAssert(stopOperatingSystemStats.peakMemoryResident >= startOperatingSystemStats.peakMemoryResident)
-        XCTAssert(stopOperatingSystemStats.peakMemoryVirtual >= startOperatingSystemStats.peakMemoryVirtual)
+        XCTAssertGreaterThanOrEqual(stopOperatingSystemStats.cpuTotal, startOperatingSystemStats.cpuTotal)
+        XCTAssertGreaterThanOrEqual(stopOperatingSystemStats.cpuUser, startOperatingSystemStats.cpuUser)
+        XCTAssertGreaterThanOrEqual(stopOperatingSystemStats.cpuSystem, startOperatingSystemStats.cpuSystem)
+        XCTAssertGreaterThanOrEqual(stopOperatingSystemStats.peakMemoryResident, startOperatingSystemStats.peakMemoryResident)
+        XCTAssertGreaterThanOrEqual(stopOperatingSystemStats.peakMemoryVirtual, startOperatingSystemStats.peakMemoryVirtual)
     }
 
     func testOperatingSystemStatsProducerMetricSupported() throws {
@@ -62,7 +62,7 @@ final class OperatingSystemAndMallocTests: XCTestCase {
 
         let stopMallocStats = mallocStatsProducer.makeMallocStats()
 
-        XCTAssert(stopMallocStats.mallocCountTotal - startMallocStats.mallocCountTotal >= 100)
-        XCTAssert(stopMallocStats.allocatedResidentMemory - startMallocStats.allocatedResidentMemory >= 100 * 1_024)
+        XCTAssertGreaterThanOrEqual(stopMallocStats.mallocCountTotal - startMallocStats.mallocCountTotal, 100)
+        XCTAssertGreaterThanOrEqual(stopMallocStats.allocatedResidentMemory - startMallocStats.allocatedResidentMemory, 100 * 1_024)
     }
 }

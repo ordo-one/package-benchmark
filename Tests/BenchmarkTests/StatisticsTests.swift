@@ -25,21 +25,21 @@ final class StatisticsTests: XCTestCase {
             stats.add(measurement)
         }
 
-        XCTAssert(stats.measurementCount == measurementCount * 2)
-        XCTAssert(stats.timeUnits == .count)
-        XCTAssert(round(stats.averageMeasurement) == round(Double(measurementCount / 2)))
-        XCTAssert(stats.bucketOverflowLinear == 0)
-        XCTAssert(stats.bucketOverflowPowerOfTwo == 0)
+        XCTAssertEqual(stats.measurementCount, measurementCount * 2)
+        XCTAssertEqual(stats.timeUnits, .count)
+        XCTAssertEqual(round(stats.averageMeasurement), round(Double(measurementCount / 2)))
+        XCTAssertEqual(stats.bucketOverflowLinear, 0)
+        XCTAssertEqual(stats.bucketOverflowPowerOfTwo, 0)
 
         stats.calculateStatistics()
 
-        XCTAssert(stats.percentileResults[0]! == 0)
-        XCTAssert(stats.percentileResults[1]! == Int(round(Double(measurementCount) * 0.25)))
-        XCTAssert(stats.percentileResults[2]! == Int(round(Double(measurementCount) * 0.5)))
-        XCTAssert(stats.percentileResults[3]! == Int(round(Double(measurementCount) * 0.75)))
-        XCTAssert(stats.percentileResults[4]! == Int(round(Double(measurementCount) * 0.9)))
-        XCTAssert(stats.percentileResults[5]! == Int(round(Double(measurementCount) * 0.99)))
-        XCTAssert(stats.percentileResults[6]! == Int(measurementCount))
+        XCTAssertEqual(stats.percentileResults[0]!, 0)
+        XCTAssertEqual(stats.percentileResults[1]!, Int(round(Double(measurementCount) * 0.25)))
+        XCTAssertEqual(stats.percentileResults[2]!, Int(round(Double(measurementCount) * 0.5)))
+        XCTAssertEqual(stats.percentileResults[3]!, Int(round(Double(measurementCount) * 0.75)))
+        XCTAssertEqual(stats.percentileResults[4]!, Int(round(Double(measurementCount) * 0.9)))
+        XCTAssertEqual(stats.percentileResults[5]!, Int(round(Double(measurementCount) * 0.99)))
+        XCTAssertEqual(stats.percentileResults[6]!, Int(measurementCount))
     }
 
     func testOnlyZeroMeasurements() throws {
@@ -51,25 +51,25 @@ final class StatisticsTests: XCTestCase {
             stats.add(0)
         }
 
-        XCTAssert(stats.measurementCount == range.count)
-        XCTAssert(stats.timeUnits == .automatic)
-        XCTAssert(stats.averageMeasurement == 0.0)
-        XCTAssert(stats.bucketOverflowLinear == 0)
-        XCTAssert(stats.bucketOverflowPowerOfTwo == 0)
+        XCTAssertEqual(stats.measurementCount, range.count)
+        XCTAssertEqual(stats.timeUnits, .automatic)
+        XCTAssertEqual(stats.averageMeasurement, 0.0)
+        XCTAssertEqual(stats.bucketOverflowLinear, 0)
+        XCTAssertEqual(stats.bucketOverflowPowerOfTwo, 0)
 
         XCTAssert(stats.onlyZeroMeasurements)
 
         stats.calculateStatistics()
 
         XCTAssert(stats.onlyZeroMeasurements)
-        XCTAssert(stats.timeUnits == .count)
-        XCTAssert(stats.percentileResults[0]! == 0)
-        XCTAssert(stats.percentileResults[1]! == 0)
-        XCTAssert(stats.percentileResults[2]! == 0)
-        XCTAssert(stats.percentileResults[3]! == 0)
-        XCTAssert(stats.percentileResults[4]! == 0)
-        XCTAssert(stats.percentileResults[5]! == 0)
-        XCTAssert(stats.percentileResults[6]! == 0)
+        XCTAssertEqual(stats.timeUnits, .count)
+        XCTAssertEqual(stats.percentileResults[0]!, 0)
+        XCTAssertEqual(stats.percentileResults[1]!, 0)
+        XCTAssertEqual(stats.percentileResults[2]!, 0)
+        XCTAssertEqual(stats.percentileResults[3]!, 0)
+        XCTAssertEqual(stats.percentileResults[4]!, 0)
+        XCTAssertEqual(stats.percentileResults[5]!, 0)
+        XCTAssertEqual(stats.percentileResults[6]!, 0)
     }
 
     func testFewerMeasurementsThanPercentiles() throws {
@@ -83,21 +83,21 @@ final class StatisticsTests: XCTestCase {
             accumulatedMeasurement += measurement
         }
 
-        XCTAssert(stats.measurementCount == range.count)
-        XCTAssert(stats.timeUnits == .count)
-        XCTAssert(round(stats.averageMeasurement) == round(Double(accumulatedMeasurement) / Double(range.count)))
-        XCTAssert(stats.bucketOverflowLinear == 0)
-        XCTAssert(stats.bucketOverflowPowerOfTwo == 0)
+        XCTAssertEqual(stats.measurementCount, range.count)
+        XCTAssertEqual(stats.timeUnits, .count)
+        XCTAssertEqual(round(stats.averageMeasurement), round(Double(accumulatedMeasurement) / Double(range.count)))
+        XCTAssertEqual(stats.bucketOverflowLinear, 0)
+        XCTAssertEqual(stats.bucketOverflowPowerOfTwo, 0)
 
         stats.calculateStatistics()
 
-        XCTAssert(stats.percentileResults[0]! == 1)
-        XCTAssert(stats.percentileResults[1]! == Int(round(Double(range.count) * 0.25)))
-        XCTAssert(stats.percentileResults[2]! == Int(round(Double(range.count) * 0.5)))
-        XCTAssert(stats.percentileResults[3]! == Int(round(Double(range.count) * 0.75)))
-        XCTAssert(stats.percentileResults[4]! == Int(round(Double(range.count) * 0.9)))
-        XCTAssert(stats.percentileResults[5]! == Int(round(Double(range.count) * 0.99)))
-        XCTAssert(stats.percentileResults[6]! == Int(range.count))
+        XCTAssertEqual(stats.percentileResults[0]!, 1)
+        XCTAssertEqual(stats.percentileResults[1]!, Int(round(Double(range.count) * 0.25)))
+        XCTAssertEqual(stats.percentileResults[2]!, Int(round(Double(range.count) * 0.5)))
+        XCTAssertEqual(stats.percentileResults[3]!, Int(round(Double(range.count) * 0.75)))
+        XCTAssertEqual(stats.percentileResults[4]!, Int(round(Double(range.count) * 0.9)))
+        XCTAssertEqual(stats.percentileResults[5]!, Int(round(Double(range.count) * 0.99)))
+        XCTAssertEqual(stats.percentileResults[6]!, Int(range.count))
     }
 
     func testAutomaticUnits() throws {
@@ -105,49 +105,49 @@ final class StatisticsTests: XCTestCase {
 
         stats.add(0)
         stats.calculateStatistics()
-        XCTAssert(stats.timeUnits == .count)
+        XCTAssertEqual(stats.timeUnits, .count)
 
         stats.reset()
         stats.add(1)
-        XCTAssert(stats.timeUnits == .count)
+        XCTAssertEqual(stats.timeUnits, .count)
 
         stats.reset()
         stats.add(9_999)
-        XCTAssert(stats.timeUnits == .count)
+        XCTAssertEqual(stats.timeUnits, .count)
 
         stats.reset()
         stats.add(10_000)
-        XCTAssert(stats.timeUnits == .kilo)
+        XCTAssertEqual(stats.timeUnits, .kilo)
 
         stats.reset()
         stats.add(100_000)
-        XCTAssert(stats.timeUnits == .kilo)
+        XCTAssertEqual(stats.timeUnits, .kilo)
 
         stats.reset()
         stats.add(1_000_000)
-        XCTAssert(stats.timeUnits == .kilo)
+        XCTAssertEqual(stats.timeUnits, .kilo)
 
         stats.reset()
         stats.add(9_999_999)
-        XCTAssert(stats.timeUnits == .kilo)
+        XCTAssertEqual(stats.timeUnits, .kilo)
 
         stats.reset()
         stats.add(10_000_000)
-        XCTAssert(stats.timeUnits == .mega)
+        XCTAssertEqual(stats.timeUnits, .mega)
 
         stats.reset()
         stats.add(9_999_999_999)
-        XCTAssert(stats.timeUnits == .mega)
+        XCTAssertEqual(stats.timeUnits, .mega)
 
         stats.reset()
         stats.add(10_000_000_000)
-        XCTAssert(stats.timeUnits == .giga)
+        XCTAssertEqual(stats.timeUnits, .giga)
 
         stats.reset()
         stats.add(0)
-        XCTAssert(stats.timeUnits == .automatic)
+        XCTAssertEqual(stats.timeUnits, .automatic)
         stats.calculateStatistics()
-        XCTAssert(stats.timeUnits == .count)
+        XCTAssertEqual(stats.timeUnits, .count)
     }
 
     func testStatisticsOverflow() throws {
@@ -159,18 +159,18 @@ final class StatisticsTests: XCTestCase {
             stats.add(measurement)
         }
 
-        XCTAssert(stats.bucketOverflowLinear == measurementCount - bucketCount)
-        XCTAssert(stats.bucketOverflowPowerOfTwo == 0)
+        XCTAssertEqual(stats.bucketOverflowLinear, measurementCount - bucketCount)
+        XCTAssertEqual(stats.bucketOverflowPowerOfTwo, 0)
 
         stats.calculateStatistics()
 
-        XCTAssert(stats.percentileResults[0]! == 1)
-        XCTAssert(stats.percentileResults[1]! == 75)
-        XCTAssert(stats.percentileResults[2]! == 256)
-        XCTAssert(stats.percentileResults[3]! == 256)
-        XCTAssert(stats.percentileResults[4]! == 512)
-        XCTAssert(stats.percentileResults[5]! == 512)
-        XCTAssert(stats.percentileResults[6]! == 512)
+        XCTAssertEqual(stats.percentileResults[0]!, 1)
+        XCTAssertEqual(stats.percentileResults[1]!, 75)
+        XCTAssertEqual(stats.percentileResults[2]!, 256)
+        XCTAssertEqual(stats.percentileResults[3]!, 256)
+        XCTAssertEqual(stats.percentileResults[4]!, 512)
+        XCTAssertEqual(stats.percentileResults[5]!, 512)
+        XCTAssertEqual(stats.percentileResults[6]!, 512)
     }
 
     func testStatisticsOverflowReversePolarity() throws {
@@ -182,18 +182,18 @@ final class StatisticsTests: XCTestCase {
             stats.add(measurement)
         }
 
-        XCTAssert(stats.bucketOverflowLinear == measurementCount - bucketCount)
-        XCTAssert(stats.bucketOverflowPowerOfTwo == 0)
+        XCTAssertEqual(stats.bucketOverflowLinear, measurementCount - bucketCount)
+        XCTAssertEqual(stats.bucketOverflowPowerOfTwo, 0)
 
         stats.calculateStatistics()
 
-        XCTAssert(stats.percentileResults[0]! == 512)
-        XCTAssert(stats.percentileResults[1]! == 256)
-        XCTAssert(stats.percentileResults[2]! == 256)
-        XCTAssert(stats.percentileResults[3]! == 128)
-        XCTAssert(stats.percentileResults[4]! == 31)
-        XCTAssert(stats.percentileResults[5]! == 4)
-        XCTAssert(stats.percentileResults[6]! == 1)
+        XCTAssertEqual(stats.percentileResults[0]!, 512)
+        XCTAssertEqual(stats.percentileResults[1]!, 256)
+        XCTAssertEqual(stats.percentileResults[2]!, 256)
+        XCTAssertEqual(stats.percentileResults[3]!, 128)
+        XCTAssertEqual(stats.percentileResults[4]!, 31)
+        XCTAssertEqual(stats.percentileResults[5]!, 4)
+        XCTAssertEqual(stats.percentileResults[6]!, 1)
     }
 
     func testHistograms() throws {
@@ -207,6 +207,6 @@ final class StatisticsTests: XCTestCase {
 
         let histograms = stats.output()
 
-        XCTAssert(histograms.count > 100)
+        XCTAssertGreaterThan(histograms.count, 100)
     }
 }
