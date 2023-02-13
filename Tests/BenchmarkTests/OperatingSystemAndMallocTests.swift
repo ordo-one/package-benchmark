@@ -36,8 +36,10 @@ final class OperatingSystemAndMallocTests: XCTestCase {
         XCTAssertGreaterThanOrEqual(stopOperatingSystemStats.cpuTotal, startOperatingSystemStats.cpuTotal)
         XCTAssertGreaterThanOrEqual(stopOperatingSystemStats.cpuUser, startOperatingSystemStats.cpuUser)
         XCTAssertGreaterThanOrEqual(stopOperatingSystemStats.cpuSystem, startOperatingSystemStats.cpuSystem)
-        XCTAssertGreaterThanOrEqual(stopOperatingSystemStats.peakMemoryResident, startOperatingSystemStats.peakMemoryResident)
-        XCTAssertGreaterThanOrEqual(stopOperatingSystemStats.peakMemoryVirtual, startOperatingSystemStats.peakMemoryVirtual)
+        XCTAssertGreaterThanOrEqual(stopOperatingSystemStats.peakMemoryResident,
+                                    startOperatingSystemStats.peakMemoryResident)
+        XCTAssertGreaterThanOrEqual(stopOperatingSystemStats.peakMemoryVirtual,
+                                    startOperatingSystemStats.peakMemoryVirtual)
     }
 
     func testOperatingSystemStatsProducerMetricSupported() throws {
@@ -63,6 +65,7 @@ final class OperatingSystemAndMallocTests: XCTestCase {
         let stopMallocStats = mallocStatsProducer.makeMallocStats()
 
         XCTAssertGreaterThanOrEqual(stopMallocStats.mallocCountTotal - startMallocStats.mallocCountTotal, 100)
-        XCTAssertGreaterThanOrEqual(stopMallocStats.allocatedResidentMemory - startMallocStats.allocatedResidentMemory, 100 * 1_024)
+        XCTAssertGreaterThanOrEqual(stopMallocStats.allocatedResidentMemory - startMallocStats.allocatedResidentMemory,
+                                    100 * 1_024)
     }
 }
