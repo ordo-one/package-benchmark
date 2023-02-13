@@ -21,7 +21,7 @@ let package = Package(
         .package(url: "https://github.com/ordo-one/TextTable", .upToNextMajor(from: "0.0.1")),
         .package(url: "https://github.com/ordo-one/package-jemalloc", .upToNextMajor(from: "1.0.0")),
         .package(url: "https://github.com/ordo-one/package-datetime", .upToNextMajor(from: "0.0.0")),
-        .package(url: "https://github.com/ordo-one/package-histogram", branch: "main"),
+        .package(url: "https://github.com/ordo-one/package-histogram", .upToNextMajor(from: "0.0.1")),
     ],
     targets: [
         // Plugin used by users of the package
