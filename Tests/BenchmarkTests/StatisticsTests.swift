@@ -107,7 +107,7 @@ final class StatisticsTests: XCTestCase {
             Case(value: 9_999_999, units: .kilo),
             Case(value: 10_000_000, units: .mega),
             Case(value: 9_999_999_999, units: .mega),
-            Case(value: 10_000_000_000, units: .giga),
+            Case(value: 10_000_000_000, units: .giga)
         ]
 
         for (value, expectedUnits) in cases {
