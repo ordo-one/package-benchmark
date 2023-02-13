@@ -21,6 +21,7 @@ let package = Package(
         .package(url: "https://github.com/ordo-one/TextTable", .upToNextMajor(from: "0.0.1")),
         .package(url: "https://github.com/ordo-one/package-jemalloc", .upToNextMajor(from: "1.0.0")),
         .package(url: "https://github.com/ordo-one/package-datetime", .upToNextMajor(from: "0.0.0")),
+        .package(url: "https://github.com/ordo-one/package-histogram", branch: "main"),
     ],
     targets: [
         // Plugin used by users of the package
@@ -56,7 +57,8 @@ let package = Package(
             name: "Statistics",
             dependencies: [
                 .product(name: "Numerics", package: "swift-numerics"),
-                .product(name: "DateTime", package: "package-datetime")
+                .product(name: "DateTime", package: "package-datetime"),
+                .product(name: "Histogram", package: "package-histogram"),
             ]
         ),
 
@@ -100,6 +102,16 @@ let package = Package(
                 "BenchmarkSupport"
             ],
             path: "Benchmarks/DateTime"
+        ),
+
+        // Benchmark of the Histogram package
+        .executableTarget(
+            name: "HistogramBenchmark",
+            dependencies: [
+                "BenchmarkSupport",
+                .product(name: "Histogram", package: "package-histogram"),
+            ],
+            path: "Benchmarks/Histogram"
         ),
 
         // Scaffolding to support benchmarks under the hood
