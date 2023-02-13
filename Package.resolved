@@ -10,6 +10,15 @@
       }
     },
     {
+      "identity" : "package-histogram",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/ordo-one/package-histogram",
+      "state" : {
+        "revision" : "657b68ad2a56de72216845263d0cb05135061ea0",
+        "version" : "0.0.1"
+      }
+    },
+    {
       "identity" : "package-jemalloc",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/ordo-one/package-jemalloc",

@@ -59,6 +59,6 @@ final class BenchmarkRunnerTests: XCTestCase, BenchmarkRunnerReadWrite {
         runner.outputFD = 0
         runner.debug = false
         try await runner.run()
-        XCTAssert(writeCount == 6) // 3 tests results + 3 end markers
+        XCTAssertEqual(writeCount, 6) // 3 tests results + 3 end markers
     }
 }

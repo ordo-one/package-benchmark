@@ -45,7 +45,7 @@ final class BenchmarkResultTests: XCTestCase {
                                            thresholds: .default,
                                            percentiles: secondPercentiles)
 
-        XCTAssert(firstResult == secondResult)
+        XCTAssertEqual(firstResult, secondResult)
     }
 
     func testBenchmarkResultLessThan() throws {
@@ -80,7 +80,7 @@ final class BenchmarkResultTests: XCTestCase {
                                            thresholds: .default,
                                            percentiles: secondPercentiles)
 
-        XCTAssert(firstResult < secondResult)
+        XCTAssertLessThan(firstResult, secondResult)
     }
 
     func testBenchmarkResultLessThanFailure() throws {
@@ -236,6 +236,6 @@ final class BenchmarkResultTests: XCTestCase {
                                           thresholds: .default,
                                           percentiles: firstPercentiles)
 
-        XCTAssert((firstResult.unitDescription + firstResult.unitDescriptionPretty).count > 5)
+        XCTAssertGreaterThan((firstResult.unitDescription + firstResult.unitDescriptionPretty).count, 5)
     }
 }
