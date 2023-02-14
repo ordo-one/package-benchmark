@@ -9,8 +9,8 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 //
 
-import Numerics
 import Histogram
+import Numerics
 
 public let defaultPercentilesToCalculate = [0.000001, 25.0, 50.0, 75.0, 90.0, 99.0, 100.0]
 private let numberPadding = 10
@@ -75,8 +75,6 @@ public struct Statistics {
             return .count
         }
 
-        //print("deducing time units from mean: \(histogram.mean)")
-
         return StatisticsUnits(fromMagnitudeOf: histogram.mean)
     }
 
@@ -85,11 +83,11 @@ public struct Statistics {
     public var onlyZeroMeasurements = true
 
     public var measurementCount: Int {
-        return Int(histogram.totalCount)
+        Int(histogram.totalCount)
     }
 
     public var averageMeasurement: Double {
-        return histogram.mean
+        histogram.mean
     }
 
     public init(maximumMeasurement: Int = defaultMaximumMeasurement,
@@ -100,7 +98,7 @@ public struct Statistics {
         self.numberOfSignificantDigits = numberOfSignificantDigits
         self.prefersLarger = prefersLarger
         percentilesToCalculate = percentiles
-        self._timeUnits = timeUnits
+        _timeUnits = timeUnits
 
         histogram = Histogram(highestTrackableValue: UInt64(maximumMeasurement), numberOfSignificantValueDigits: numberOfSignificantDigits)
         histogram.autoResize = true
@@ -118,7 +116,7 @@ public struct Statistics {
 //            fatalError()
         }
 
-        if measurement != 0 && onlyZeroMeasurements {
+        if measurement != 0, onlyZeroMeasurements {
             onlyZeroMeasurements = false
         }
 
@@ -156,7 +154,7 @@ public struct Statistics {
     /// A printable text-based histogram+percentiles suitable for display in a fixed-size font
     /// - Returns: All collected statistics
     public mutating func output() -> String {
-        var out: String = ""
+        var out = ""
         histogram.outputPercentileDistribution(to: &out, outputValueUnitScalingRatio: Double(timeUnits.rawValue))
         return out
     }

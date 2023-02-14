@@ -36,6 +36,18 @@ enum ExportFormat: String, ExpressibleByArgument {
     case influx
 }
 
+enum BenchmarkOperation: String, ExpressibleByArgument {
+    case baseline
+    case compare
+    case list
+    case run
+    case updateBaseline = "update-baseline"
+    case export
+    case query // query all benchmarks from target, used internally in tool
+}
+
+typealias BenchmarkResults = [BenchmarkIdentifier: [BenchmarkResult]]
+
 @main
 struct BenchmarkTool: AsyncParsableCommand {
     @Option(name: .long, help: "The path to the benchmark to run")
@@ -45,7 +57,7 @@ struct BenchmarkTool: AsyncParsableCommand {
     var target: String
 
     @Option(name: .long, help: "The command to perform")
-    var command: String
+    var command: BenchmarkOperation
 
     @Option(name: .long, help: "The export file format to use, 'influx'")
     var exportFormat: ExportFormat?
@@ -89,16 +101,23 @@ struct BenchmarkTool: AsyncParsableCommand {
         benchmarkFailure = true
     }
 
+    func printChildRunError(_ result: Int32) {
+        print("Failed to run '\(command)' for \(benchmarkExecutablePath), result [\(result)]")
+        print("Likely your benchmark crahed, try running the tool in the debugger, e.g.")
+        print("lldb \(benchmarkExecutablePath)")
+        print("Or check Console.app for a backtrace if on macOS.")
+    }
+
     mutating func run() async throws {
         switch command {
-        case "baseline":
+        case .baseline:
             currentBaseline = try read(baselineIdentifier: baselineName)
             if let currentBaseline {
                 prettyPrint(currentBaseline, header: "Current baseline")
             } else {
                 print("No baseline found.")
             }
-        case "compare":
+        case .compare:
             currentBaseline = try read(baselineIdentifier: baselineName)
 
             if let currentBaseline {
@@ -125,21 +144,38 @@ struct BenchmarkTool: AsyncParsableCommand {
                 }
             }
             fallthrough
-        case "list":
+        case .list:
             fallthrough
-        case "update-baseline":
+        case .updateBaseline:
             fallthrough
-        case "export":
+        case .export:
             fallthrough
-        case "run":
-            try runChild(benchmarkExecutablePath) { [self] result in
+        case .run:
+            // first get a list of benchmarks from the executable
+            try runChild(benchmarkPath: benchmarkExecutablePath,
+                         benchmarkCommand: .query) { [self] result in
                 if result != 0 {
-                    print("Failed to run '\(command)' for \(benchmarkExecutablePath), result [\(result)]")
-                    print("Likely your benchmark crahed, try running the tool in the debugger, e.g.")
-                    print("lldb \(benchmarkExecutablePath)")
-                    print("Or check Console.app for a backtrace if on macOS.")
+                    printChildRunError(result)
                 }
             }
+
+            var benchmarkResults: BenchmarkResults = [:]
+
+            // run each benchmark for the target as a separate process
+            try benchmarks.forEach { benchmark in
+                // Then perform actions
+                let results = try runChild(benchmarkPath: benchmarkExecutablePath,
+                                           benchmarkCommand: command,
+                                           benchmark: benchmark) { [self] result in
+                    if result != 0 {
+                        printChildRunError(result)
+                    }
+                }
+
+                benchmarkResults = benchmarkResults.merging(results) { (_, new) in new }
+            }
+
+            try postProcessBenchmarkResults(benchmarkResults)
         default:
             print("Unknown command \(command) in BenchmarkTool")
         }
@@ -164,9 +200,14 @@ struct BenchmarkTool: AsyncParsableCommand {
         case POSIXSpawnError(Int32)
     }
 
-    mutating func runChild(_ benchmarkPath: String, completion: ((Int32) -> Void)? = nil) throws {
+    @discardableResult
+    mutating func runChild(benchmarkPath: String,
+                           benchmarkCommand: BenchmarkOperation,
+                           benchmark: Benchmark? = nil,
+                           completion: ((Int32) -> Void)? = nil) throws -> BenchmarkResults {
         var pid: pid_t = 0
 
+        var benchmarkResults: BenchmarkResults = [:]
         let fromChild = try FileDescriptor.pipe()
         let toChild = try FileDescriptor.pipe()
         let path = FilePath(benchmarkPath)
@@ -185,23 +226,26 @@ struct BenchmarkTool: AsyncParsableCommand {
             try fromChild.writeEnd.close()
 
             do {
-                try queryBenchmarks() // Get all available benchmarks first
-
-                switch command {
-                case "update-baseline":
-                    fallthrough
-                case "export":
-                    fallthrough
-                case "run":
-                    fallthrough
-                case "compare":
-                    try runBenchmarks()
-                case "list":
+                switch benchmarkCommand {
+                case .query:
+                    try queryBenchmarks() // Get all available benchmarks first
+                case .list:
                     try listBenchmarks()
-                case "baseline":
+                case .updateBaseline:
+                    fallthrough
+                case .export:
+                    fallthrough
+                case .run:
+                    fallthrough
+                case .compare:
+                    guard let benchmark else {
+                        fatalError("No benchmark specified for update/export/run/compare operation")
+                    }
+                    benchmarkResults = try runBenchmark(benchmark)
+                case .baseline:
                     fallthrough
                 default:
-                    print("Unknown command \(command)")
+                    print("Unknown command \(benchmarkCommand)")
                 }
 
                 try write(.end)
@@ -219,5 +263,7 @@ struct BenchmarkTool: AsyncParsableCommand {
                 throw RunCommandError.POSIXSpawnError(status)
             }
         }
+
+        return benchmarkResults
     }
 }
