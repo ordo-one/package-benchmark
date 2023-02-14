@@ -31,7 +31,9 @@ extension BenchmarkTool {
         }
     }
 
-    mutating func runBenchmark(_ benchmark: Benchmark, _ benchmarkResults: inout BenchmarkResults) throws {
+    mutating func runBenchmark(_ benchmark: Benchmark) throws -> BenchmarkResults {
+        var benchmarkResults: BenchmarkResults = [:]
+
         try write(.run(benchmark: benchmark))
 
         outerloop: while true {
@@ -55,9 +57,11 @@ extension BenchmarkTool {
                 print("Unexpected reply \(benchmarkReply)")
             }
         }
+
+        return benchmarkResults
     }
 
-    mutating func postProcessBenchmarks(_ benchmarkResults: BenchmarkResults) throws {
+    mutating func postProcessBenchmarkResults(_ benchmarkResults: BenchmarkResults) throws {
         let benchmarkMachine = benchmarkMachine()
 
         switch command {

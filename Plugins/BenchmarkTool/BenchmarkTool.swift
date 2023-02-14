@@ -101,6 +101,13 @@ struct BenchmarkTool: AsyncParsableCommand {
         benchmarkFailure = true
     }
 
+    func printChildRunError(_ result: Int32) {
+        print("Failed to run '\(command)' for \(benchmarkExecutablePath), result [\(result)]")
+        print("Likely your benchmark crahed, try running the tool in the debugger, e.g.")
+        print("lldb \(benchmarkExecutablePath)")
+        print("Or check Console.app for a backtrace if on macOS.")
+    }
+
     mutating func run() async throws {
         switch command {
         case .baseline:
@@ -144,37 +151,31 @@ struct BenchmarkTool: AsyncParsableCommand {
         case .export:
             fallthrough
         case .run:
-            var benchmarkResults: [BenchmarkIdentifier: [BenchmarkResult]] = [:]
-
             // first get a list of benchmarks from the executable
             try runChild(benchmarkPath: benchmarkExecutablePath,
-                         benchmarkCommand: .query,
-                         benchmarkResults: &benchmarkResults) { [self] result in
+                         benchmarkCommand: .query) { [self] result in
                 if result != 0 {
-                    print("Failed to run '\(command)' for \(benchmarkExecutablePath), result [\(result)]")
-                    print("Likely your benchmark crahed, try running the tool in the debugger, e.g.")
-                    print("lldb \(benchmarkExecutablePath)")
-                    print("Or check Console.app for a backtrace if on macOS.")
+                    printChildRunError(result)
                 }
             }
+
+            var benchmarkResults: BenchmarkResults = [:]
 
             // run each benchmark for the target as a separate process
             try benchmarks.forEach { benchmark in
                 // Then perform actions
-                try runChild(benchmarkPath: benchmarkExecutablePath,
-                             benchmarkCommand: command,
-                             benchmark: benchmark,
-                             benchmarkResults: &benchmarkResults) { [self] result in
+                let results = try runChild(benchmarkPath: benchmarkExecutablePath,
+                                           benchmarkCommand: command,
+                                           benchmark: benchmark) { [self] result in
                     if result != 0 {
-                        print("Failed to run '\(command)' for \(benchmarkExecutablePath), result [\(result)]")
-                        print("Likely your benchmark crahed, try running the tool in the debugger, e.g.")
-                        print("lldb \(benchmarkExecutablePath)")
-                        print("Or check Console.app for a backtrace if on macOS.")
+                        printChildRunError(result)
                     }
                 }
+
+                benchmarkResults = benchmarkResults.merging(results) { (_, new) in new }
             }
 
-            try postProcessBenchmarks(benchmarkResults)
+            try postProcessBenchmarkResults(benchmarkResults)
         default:
             print("Unknown command \(command) in BenchmarkTool")
         }
@@ -199,13 +200,14 @@ struct BenchmarkTool: AsyncParsableCommand {
         case POSIXSpawnError(Int32)
     }
 
+    @discardableResult
     mutating func runChild(benchmarkPath: String,
                            benchmarkCommand: BenchmarkOperation,
                            benchmark: Benchmark? = nil,
-                           benchmarkResults: inout BenchmarkResults,
-                           completion: ((Int32) -> Void)? = nil) throws {
+                           completion: ((Int32) -> Void)? = nil) throws -> BenchmarkResults {
         var pid: pid_t = 0
 
+        var benchmarkResults: BenchmarkResults = [:]
         let fromChild = try FileDescriptor.pipe()
         let toChild = try FileDescriptor.pipe()
         let path = FilePath(benchmarkPath)
@@ -239,7 +241,7 @@ struct BenchmarkTool: AsyncParsableCommand {
                     guard let benchmark else {
                         fatalError("No benchmark specified for update/export/run/compare operation")
                     }
-                    try runBenchmark(benchmark, &benchmarkResults)
+                    benchmarkResults = try runBenchmark(benchmark)
                 case .baseline:
                     fallthrough
                 default:
@@ -261,5 +263,7 @@ struct BenchmarkTool: AsyncParsableCommand {
                 throw RunCommandError.POSIXSpawnError(status)
             }
         }
+
+        return benchmarkResults
     }
 }

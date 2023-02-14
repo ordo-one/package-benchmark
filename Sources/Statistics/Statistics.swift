@@ -75,8 +75,6 @@ public struct Statistics {
             return .count
         }
 
-        // print("deducing time units from mean: \(histogram.mean)")
-
         return StatisticsUnits(fromMagnitudeOf: histogram.mean)
     }
 
