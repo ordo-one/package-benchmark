@@ -31,40 +31,39 @@ extension BenchmarkTool {
         }
     }
 
-    mutating func runBenchmarks() throws {
-        var benchmarkResults: [BenchmarkIdentifier: [BenchmarkResult]] = [:]
+    mutating func runBenchmark(_ benchmark: Benchmark, _ benchmarkResults: inout BenchmarkResults) throws {
+        try write(.run(benchmark: benchmark))
 
-        let benchmarkMachine = benchmarkMachine()
+        outerloop: while true {
+            let benchmarkReply = try read()
 
-        try benchmarks.forEach { benchmark in
-            try write(.run(benchmark: benchmark))
+            switch benchmarkReply {
+            case let .result(benchmark: benchmark, results: results):
+                let filteredResults = results.filter { benchmark.metrics.contains($0.metric) }
 
-            outerloop: while true {
-                let benchmarkReply = try read()
-
-                switch benchmarkReply {
-                case let .result(benchmark: benchmark, results: results):
-                    let filteredResults = results.filter { benchmark.metrics.contains($0.metric) }
-
-                    benchmarkResults[BenchmarkIdentifier(target: target, name: benchmark.name)] = filteredResults
-                case .end:
-                    break outerloop
-                case let .error(description):
-                    print("*****")
-                    print("***** Benchmark '\(benchmark.name)' failed:")
-                    print("***** \(description)")
-                    print("*****")
-                    failBenchmark("")
-                    break outerloop
-                default:
-                    print("Unexpected reply \(benchmarkReply)")
-                }
+                benchmarkResults[BenchmarkIdentifier(target: target, name: benchmark.name)] = filteredResults
+            case .end:
+                break outerloop
+            case let .error(description):
+                print("*****")
+                print("***** Benchmark '\(benchmark.name)' failed:")
+                print("***** \(description)")
+                print("*****")
+                failBenchmark("")
+                break outerloop
+            default:
+                print("Unexpected reply \(benchmarkReply)")
             }
         }
+    }
+
+    mutating func postProcessBenchmarks(_ benchmarkResults: BenchmarkResults) throws {
+        let benchmarkMachine = benchmarkMachine()
+
         switch command {
-        case "run":
+        case .run:
             prettyPrint(BenchmarkBaseline(machine: benchmarkMachine, results: benchmarkResults))
-        case "compare":
+        case .compare:
             prettyPrintDelta(BenchmarkBaseline(machine: benchmarkMachine, results: benchmarkResults))
 
             guard let currentBaseline else {
@@ -81,13 +80,13 @@ extension BenchmarkTool {
                 benchmarkFailure = true
             }
 
-        case "update-baseline":
+        case .updateBaseline:
             if quiet == false {
                 prettyPrint(BenchmarkBaseline(machine: benchmarkMachine, results: benchmarkResults),
                             header: "Updating baselines")
             }
             try write(BenchmarkBaseline(machine: benchmarkMachine, results: benchmarkResults))
-        case "export":
+        case .export:
             if exportFormat == .influx {
                 let exportStruct = saveExportableResults(BenchmarkBaseline(machine: benchmarkMachine, results: benchmarkResults))
                 let csvString = convertToCSV(exportableBenchmark: exportStruct)

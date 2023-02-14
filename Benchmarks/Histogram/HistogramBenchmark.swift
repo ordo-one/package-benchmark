@@ -27,8 +27,8 @@ func benchmarks() {
 
         var histogram = Histogram<UInt64>(highestTrackableValue: maxValue, numberOfSignificantValueDigits: .three)
 
-        let numValues = 1024 // so compiler can optimize modulo below
-        let values = [UInt64]((0..<numValues).map { _ in UInt64.random(in: 100...1000) })
+        let numValues = 1_024 // so compiler can optimize modulo below
+        let values = [UInt64]((0 ..< numValues).map { _ in UInt64.random(in: 100 ... 1_000) })
 
         benchmark.startMeasurement()
 
@@ -42,8 +42,8 @@ func benchmarks() {
               skip: false) { benchmark in
         var histogram = Histogram<UInt64>(numberOfSignificantValueDigits: .three)
 
-        let numValues = 1024 // so compiler can optimize modulo below
-        let values = [UInt64]((0..<numValues).map { _ in UInt64.random(in: 100...10_000) })
+        let numValues = 1_024 // so compiler can optimize modulo below
+        let values = [UInt64]((0 ..< numValues).map { _ in UInt64.random(in: 100 ... 10_000) })
 
         benchmark.startMeasurement()
 
@@ -62,10 +62,10 @@ func benchmarks() {
 
         // fill histogram with some data
         for _ in 0 ..< 10_000 {
-            blackHole(histogram.record(UInt64.random(in: 10...1000)))
+            blackHole(histogram.record(UInt64.random(in: 10 ... 1_000)))
         }
 
-        let percentiles = [ 0.0, 25.0, 50.0, 75.0, 80.0, 90.0, 99.0, 100.0 ]
+        let percentiles = [0.0, 25.0, 50.0, 75.0, 80.0, 90.0, 99.0, 100.0]
 
         benchmark.startMeasurement()
 
@@ -84,7 +84,7 @@ func benchmarks() {
 
         // fill histogram with some data
         for _ in 0 ..< 10_000 {
-            blackHole(histogram.record(UInt64.random(in: 10...1000)))
+            blackHole(histogram.record(UInt64.random(in: 10 ... 1_000)))
         }
 
         benchmark.startMeasurement()
