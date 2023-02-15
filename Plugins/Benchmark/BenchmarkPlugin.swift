@@ -21,6 +21,7 @@ import PackagePlugin
     #error("Unsupported Platform")
 #endif
 
+@available(macOS 13.0, *)
 @main struct Benchmark: CommandPlugin {
     func withCStrings(_ strings: [String], scoped: ([UnsafeMutablePointer<CChar>?]) throws -> Void) rethrows {
         let cStrings = strings.map { strdup($0) }
@@ -32,9 +33,11 @@ import PackagePlugin
         // Get specific target(s) to run benchmarks for if specified on command line
         var argumentExtractor = ArgumentExtractor(arguments)
         let specifiedTargets = try argumentExtractor.extractSpecifiedTargets(in: context.package, withOption: "target")
-        let skipTargets = try argumentExtractor.extractSpecifiedTargets(in: context.package, withOption: "skip")
+        let skipTargets = try argumentExtractor.extractSpecifiedTargets(in: context.package, withOption: "skip-target")
         let outputFormats = argumentExtractor.extractOption(named: "format")
         let groupingToUse = argumentExtractor.extractOption(named: "grouping")
+        let filterSpecified = argumentExtractor.extractOption(named: "filter")
+        let skipSpecified = argumentExtractor.extractOption(named: "skip")
         let quietRunning = argumentExtractor.extractFlag(named: "quiet")
         var outputFormat = "text"
         var grouping = "test"
@@ -80,10 +83,12 @@ import PackagePlugin
                 fflush(nil)
             }
         }
+
         let buildResult = try packageManager.build(
             .all(includingTests: false),
             parameters: .init(configuration: .release)
         )
+
         if outputFormat == "text" {
             if quietRunning == 0 {
                 print("Build complete! Running benchmarks...")
@@ -147,6 +152,14 @@ import PackagePlugin
                                   "--quiet", quietRunning > 0 ? true.description : false.description,
                                   "--first-benchmark-tool", firstBenchmarkTool.description]
 
+            filterSpecified.forEach { filter in
+                args.append(contentsOf: ["--filter", filter])
+            }
+
+            skipSpecified.forEach { skip in
+                args.append(contentsOf: ["--skip", skip])
+            }
+
             switch commandToPerform {
             case "list":
                 args.append(contentsOf: ["--command", "list"])
@@ -207,5 +220,6 @@ import PackagePlugin
 
     enum MyError: Error {
         case benchmarkDeviationOrBenchmarkFailed
+        case invalidArguments
     }
 }

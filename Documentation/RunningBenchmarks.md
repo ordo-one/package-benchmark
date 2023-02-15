@@ -17,11 +17,13 @@ swift package benchmark
 
 ## Options 
 
-* `--target` - specify which target we should run the benchmark plugin for, multiple may be specified, default all targets
-* `--skip` - specify that a given target should be skipped
+* `--target` - specify which target we should run the benchmark plugin for (regex), multiple may be specified, default all targets
+* `--skip-target` - specify that a given target should be skipped matching regex, multiple can be specified
 * `--grouping` - `metric` or `test` - specifies how results should be grouped in tables, default `test`
 * `--format` - `text` or `markdown` - specifes textual output format (markdown useful for e.g. GitHub CI), default `text`
 * `--quiet` - suppress output (e.g. tables)
+* `--filter` - Include benchmarks matching regex, multiple can be provided
+* `--skip` - Skip benchmarks matching regex, multiple can be provided
 
 ## Disk write permissions failures
 We've seen one instance of strange permissioning failures for disk writes for tests that use LMDB (where only the lock file can be created, but the actual data file fails - even when specifying `--allow-writing-to-package-directory`).
@@ -42,6 +44,10 @@ swift package benchmark
 ### Run all benchmark targets, but display by metric instead of by test:
 ```
 swift package benchmark --grouping metric
+```
+### Run targets / benchmarks with regex matching
+```
+swift package benchmark --target ".*Time" --filter ".*k\." --skip ".*UTC.*" --skip-target ".*Time"
 ```
 
 ### List available benchmark targets:

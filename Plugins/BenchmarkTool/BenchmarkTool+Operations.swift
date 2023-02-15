@@ -64,6 +64,10 @@ extension BenchmarkTool {
     mutating func postProcessBenchmarkResults(_ benchmarkResults: BenchmarkResults) throws {
         let benchmarkMachine = benchmarkMachine()
 
+        if benchmarkResults.isEmpty {
+            return
+        }
+
         switch command {
         case .run:
             prettyPrint(BenchmarkBaseline(machine: benchmarkMachine, results: benchmarkResults))

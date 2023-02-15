@@ -9,7 +9,7 @@
 //
 
 import Dispatch
-import Statistics // For TimeInstant/TimeDuration until we can migrate to 5.7 Instant/Duration
+import Statistics
 
 /// Defines a benchmark
 public final class Benchmark: Codable, Hashable {

@@ -1,66 +1,54 @@
-// This source file is part of the Swift.org open source project
 //
-// Copyright (c) 2022 Apple Inc. and the Swift project authors
-// Licensed under Apache License v2.0 with Runtime Library Exception
+// Copyright (c) 2023 Ordo One AB.
 //
-// See https://swift.org/LICENSE.txt for license information
-// See https://swift.org/CONTRIBUTORS.txt for Swift project authors
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+//
+// You may obtain a copy of the License at
+// http://www.apache.org/licenses/LICENSE-2.0
+//
 
-// Extracted and adopted/modified from Swift-DocC, thank you!
 import PackagePlugin
 
 enum ArgumentParsingError: Error, CustomStringConvertible {
-    case unknownTarget(_ targetName: String)
-    case productDoesNotContainSwiftSourceModuleTargets(String)
-    case packageDoesNotContainSwiftSourceModuleTargets
-    case targetIsNotSwiftSourceModule(String)
-    case testTarget(String)
+    case noMatchingTargetsForRegex
 
     var description: String {
-        switch self {
-        case let .unknownTarget(targetName):
-            return """
-            no target named '\(targetName)'
-
-            """
-        case let .productDoesNotContainSwiftSourceModuleTargets(string):
-            return "product '\(string)' does not contain any Swift source modules"
-        case let .targetIsNotSwiftSourceModule(string):
-            return "target '\(string)' is not a Swift source module"
-        case let .testTarget(string):
-            return "target '\(string)' is a test target; only library and executable targets are supported by Swift-DocC"
-        case .packageDoesNotContainSwiftSourceModuleTargets:
-            return "the current package does not contain any compatible Swift source modules"
-        }
+        "no target matching regex for target/skip-target"
     }
 
     var errorDescription: String? {
         description
     }
+
 }
 
+@available(macOS 13.0, *)
 extension ArgumentExtractor {
-    mutating func extractSpecifiedTargets(in package: Package, withOption option: String) throws -> [SwiftSourceModuleTarget] {
+    mutating func extractSpecifiedTargets(in package: Package,
+                                          withOption option: String) throws -> [SwiftSourceModuleTarget] {
         let specifiedTargets = extractOption(named: option)
+        var targets: [SwiftSourceModuleTarget] = []
+        var anyMatching = false
 
-        let targets = try specifiedTargets.map { specifiedTarget -> SwiftSourceModuleTarget in
-            let target = package.targets.first { target in
-                target.name == specifiedTarget
+        try package.targets.forEach { target in
+            for specifiedTarget in specifiedTargets {
+                let regex = try Regex(specifiedTarget)
+
+                if target.name.wholeMatch(of:regex) != nil {
+                    if let swiftSourceModuleTarget = target as? SwiftSourceModuleTarget {
+                        if swiftSourceModuleTarget.kind != .test {
+                            targets.append(swiftSourceModuleTarget)
+                            anyMatching = true
+                            break
+                        }
+                    }
+                }
             }
+        }
 
-            guard let target else {
-                throw ArgumentParsingError.unknownTarget(specifiedTarget)
-            }
-
-            guard let swiftSourceModuleTarget = target as? SwiftSourceModuleTarget else {
-                throw ArgumentParsingError.targetIsNotSwiftSourceModule(specifiedTarget)
-            }
-
-            guard swiftSourceModuleTarget.kind != .test else {
-                throw ArgumentParsingError.testTarget(specifiedTarget)
-            }
-
-            return swiftSourceModuleTarget
+        if !specifiedTargets.isEmpty && !anyMatching {
+            throw ArgumentParsingError.noMatchingTargetsForRegex
         }
 
         return targets
