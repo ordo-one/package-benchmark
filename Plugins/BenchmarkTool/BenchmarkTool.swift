@@ -115,30 +115,10 @@ struct BenchmarkTool: AsyncParsableCommand {
     }
 
     func shouldRunBenchmark(_ name: String) throws -> Bool {
-        for matchingString in skip {
-            let regex = try Regex(matchingString)
-
-            if name.contains(regex) {
-                return false
-            }
+        if try skip.contains(where: { name.wholeMatch(of: try Regex($0)) != nil }) {
+            return false
         }
-
-        var anyMatching = false
-
-        if filter.isEmpty {
-            anyMatching = true
-        } else {
-            for matchingString in filter {
-                let regex = try Regex(matchingString)
-
-                if name.contains(regex) {
-                    anyMatching = true
-                    break
-                }
-            }
-        }
-
-        return anyMatching
+        return try filter.isEmpty || filter.contains(where: { name.wholeMatch(of: try Regex($0)) != nil })
     }
 
     mutating func run() async throws {
