@@ -87,6 +87,12 @@ struct BenchmarkTool: AsyncParsableCommand {
     @Option(name: .long, help: "The grouping to use, 'metric' or 'test'")
     var grouping: Grouping
 
+    @Option(name: .long, help: "Benchmarks matching the regexp filter that should be run")
+    var filter: [String] = []
+
+    @Option(name: .long, help: "Benchmarks matching the regexp filter that should be skipped")
+    var skip: [String] = []
+
     var inputFD: CInt = 0
     var outputFD: CInt = 0
 
@@ -106,6 +112,33 @@ struct BenchmarkTool: AsyncParsableCommand {
         print("Likely your benchmark crahed, try running the tool in the debugger, e.g.")
         print("lldb \(benchmarkExecutablePath)")
         print("Or check Console.app for a backtrace if on macOS.")
+    }
+
+    func shouldRunBenchmark(_ name: String) throws -> Bool {
+        for matchingString in skip {
+            let regex = try Regex(matchingString)
+
+            if name.contains(regex) {
+                return false
+            }
+        }
+
+        var anyMatching = false
+
+        if filter.isEmpty {
+            anyMatching = true
+        } else {
+            for matchingString in filter {
+                let regex = try Regex(matchingString)
+
+                if name.contains(regex) {
+                    anyMatching = true
+                    break
+                }
+            }
+        }
+
+        return anyMatching
     }
 
     mutating func run() async throws {
@@ -163,18 +196,19 @@ struct BenchmarkTool: AsyncParsableCommand {
 
             // run each benchmark for the target as a separate process
             try benchmarks.forEach { benchmark in
-                // Then perform actions
-                let results = try runChild(benchmarkPath: benchmarkExecutablePath,
-                                           benchmarkCommand: command,
-                                           benchmark: benchmark) { [self] result in
-                    if result != 0 {
-                        printChildRunError(result)
+                if try shouldRunBenchmark(benchmark.name) {
+                    // Then perform actions
+                    let results = try runChild(benchmarkPath: benchmarkExecutablePath,
+                                               benchmarkCommand: command,
+                                               benchmark: benchmark) { [self] result in
+                        if result != 0 {
+                            printChildRunError(result)
+                        }
                     }
+
+                    benchmarkResults = benchmarkResults.merging(results) { (_, new) in new }
                 }
-
-                benchmarkResults = benchmarkResults.merging(results) { (_, new) in new }
             }
-
             try postProcessBenchmarkResults(benchmarkResults)
         default:
             print("Unknown command \(command) in BenchmarkTool")
