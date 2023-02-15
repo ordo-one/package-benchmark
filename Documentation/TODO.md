@@ -19,8 +19,6 @@ unclear if we can get conditional import of module if its available somehow?
 
 ## Misc
 * Try to add support for missing metrics from both platforms
-* Add support for running specific tests in 'isolation' (especially for memory measuring tests, perhaps simply automatically do isolation
-for tests that reports VSIZE/RSIZE to get comparable numbers by default)
 * Add support for printing the distribution graphs (linear and power-of-two) that we have instead of tables.
 * Add support to Linux for using perf\_events to capture context switches, cache hit rate, IPC, instructions, ... (need physical machine for most, only context switches are available from virtualized hosts)
 * Validate why some measurements provides 0 to Statistics (enable fatalError() and troubleshoot - likely malloc and time)
