@@ -206,7 +206,7 @@ struct BenchmarkTool: AsyncParsableCommand {
                         }
                     }
 
-                    benchmarkResults = benchmarkResults.merging(results) { (_, new) in new }
+                    benchmarkResults = benchmarkResults.merging(results) { _, new in new }
                 }
             }
             try postProcessBenchmarkResults(benchmarkResults)

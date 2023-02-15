@@ -20,7 +20,7 @@ extension ArgumentExtractor {
         try package.targets.forEach { target in
             for specifiedTarget in specifiedTargets {
                 let regex = try Regex(specifiedTarget)
-                
+
                 if target.name.contains(regex) {
                     if let swiftSourceModuleTarget = target as? SwiftSourceModuleTarget {
                         if swiftSourceModuleTarget.kind != .test {

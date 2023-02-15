@@ -78,7 +78,7 @@ The `Benchmark` initializer has a wide range of options that allows tuning for h
                  timeUnits: BenchmarkTimeUnits = Benchmark.defaultTimeUnits,
                  warmupIterations: Int = Benchmark.defaultWarmupIterations,
                  throughputScalingFactor: StatisticsUnits = Benchmark.defaultThroughputScalingFactor,
-                 desiredDuration: TimeDuration = Benchmark.defaultDesiredDuration,
+                 desiredDuration: Duration = Benchmark.defaultDesiredDuration,
                  desiredIterations: Int = Benchmark.defaultDesiredIterations,
                  skip: Bool = Benchmark.defaultSkip,
                  thresholds: [BenchmarkMetric: BenchmarkResult.PercentileThresholds]? = Benchmark.defaultThresholds,
