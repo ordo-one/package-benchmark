@@ -25,19 +25,25 @@ import BenchmarkSupport
 
 @_dynamicReplacement(for: registerBenchmarks)
 func benchmarks() {
-    let customThreshold = BenchmarkResult.PercentileThresholds(relative: [.p50 : 13.0, .p75 : 18.0],
-                                                               absolute: [.p50 : 170, .p75 : 1200])
+    let customThreshold = BenchmarkResult.PercentileThresholds(relative: [.p50: 5.0, .p75: 10.0],
+                                                               absolute: [.p25: 10, .p50: 15])
+    let customThreshold2 = BenchmarkResult.PercentileThresholds(relative: .strict)
+    let customThreshold3 = BenchmarkResult.PercentileThresholds(absolute: .relaxed)
+
+    Benchmark.defaultConfiguration = .init(timeUnits: .microseconds,
+                                           thresholds: [.wallClock: customThreshold,
+                                                        .throughput: customThreshold2,
+                                                        .cpuTotal: customThreshold3,
+                                                        .cpuUser: .strict])
 
     Benchmark("Foundation Date()",
-              metrics: [.throughput, .wallClock],
-              throughputScalingFactor: .mega,
-              thresholds: [.throughput : customThreshold, .wallClock : customThreshold]) { benchmark in
+              configuration: .init(metrics: [.throughput, .wallClock], throughputScalingFactor: .mega)) { benchmark in
         for _ in benchmark.throughputIterations {
             blackHole(Date())
         }
     }
 
-    Benchmark("Foundation AttributedString()", skip: false) { benchmark in
+    Benchmark("Foundation AttributedString()") { benchmark in
         let count = 200
         var str = AttributedString(String(repeating: "a", count: count))
         str += AttributedString(String(repeating: "b", count: count))
@@ -51,38 +57,46 @@ func benchmarks() {
 }
 ```
 
-The `Benchmark` initializer has a wide range of options that allows tuning for how the benchmark should be run as well as what metrics and threshold should be captured and applied.
+The `Benchmark` initializer has a wide range of options that allows tuning for how the benchmark should be run as well as what metrics and threshold should be captured and applied through the `configuration` parameter.
 
 ```swift
     /// Definition of a Benchmark
     /// - Parameters:
     ///   - name: The name used for display purposes of the benchmark (also used for
     ///   matching when comparing to baselines)
-    ///   - metrics: Defines the metrics that should be measured for the benchmark
-    ///   - timeUnits: Override the automatic detection of timeunits for metrics related to time
-    ///   to a specific one (auto should work for most use cases)
-    ///   - warmupIterations: Specifies  a number of warmup iterations should be performed before the
-    ///   measurement to reduce outliers due to e.g. cache population, currently 3 warmup iterations will be run.
-    ///   - throughputScalingFactor: Specifies the number of logical subiterations being done, scaling
-    ///   throughput measurements accordingly. E.g. `.kilo`
-    ///   will scale results with 1000. Any iteration done in the benchmark should use
-    ///   `benchmark.throughputScalingFactor.rawvalue` for the number of iterations.
-    ///   - desiredDuration: The target wall clock runtime for the benchmark
-    ///   - desiredIterations: The target number of iterations for the benchmark.
-    ///   - skip: Set to true if the benchmark should be excluded from benchmark runs
-    ///   - thresholds: Defines custom threshold per metric for failing the benchmark in CI for in `benchmark compare`
+    ///   - configuration: Defines the settings that should be used for this benchmark
     ///   - closure: The actual benchmark closure that will be measured
     @discardableResult
     public init?(_ name: String,
-                 metrics: [BenchmarkMetric] = Benchmark.defaultMetrics,
-                 timeUnits: BenchmarkTimeUnits = Benchmark.defaultTimeUnits,
-                 warmupIterations: Int = Benchmark.defaultWarmupIterations,
-                 throughputScalingFactor: StatisticsUnits = Benchmark.defaultThroughputScalingFactor,
-                 desiredDuration: Duration = Benchmark.defaultDesiredDuration,
-                 desiredIterations: Int = Benchmark.defaultDesiredIterations,
-                 skip: Bool = Benchmark.defaultSkip,
-                 thresholds: [BenchmarkMetric: BenchmarkResult.PercentileThresholds]? = Benchmark.defaultThresholds,
+                 configuration: Benchmark.Configuration = Benchmark.defaultConfiguration,
                  closure: @escaping BenchmarkClosure) {
+```
+
+And the benchmark configuration:
+```swift
+public extension Benchmark {
+    struct Configuration: Codable {
+        /// Defines the metrics that should be measured for the benchmark
+        public var metrics: [BenchmarkMetric]
+        /// Override the automatic detection of timeunits for metrics related to time to a specific
+        /// one (auto should work for most use cases)
+        public var timeUnits: BenchmarkTimeUnits
+        /// Specifies a number of warmup iterations should be performed before the measurement to
+        /// reduce outliers due to e.g. cache population
+        public var warmupIterations: Int
+        /// Specifies the number of logical subiterations being done, scaling throughput measurements accordingly.
+        /// E.g. `.kilo`will scale results with 1000. Any iteration done in the benchmark should use
+        /// `benchmark.throughputScalingFactor.rawvalue` for the number of iterations.
+        public var throughputScalingFactor: StatisticsUnits
+        /// The target wall clock runtime for the benchmark, currenty defaults to `.seconds(1)` if not set
+        public var desiredDuration: Duration
+        /// The target number of iterations for the benchmark., currently defaults to 100K iterations if not set
+        public var desiredIterations: Int
+        /// Whether to skip this test (convenience for not having to comment out tests that have issues)
+        public var skip = false
+        /// Customized CI failure thresholds for a given metric for the Benchmark
+        public var thresholds: [BenchmarkMetric: BenchmarkResult.PercentileThresholds]?
+...
 ```
 
 ### throughputScalingFactor
@@ -92,9 +106,8 @@ An example would be:
 
 ```swift
     Benchmark("Foundation Date()",
-              metrics: [.throughput],
-              throughputScalingFactor: .mega) { benchmark in
-        for _ in benchmark.throughputIterations { // will loop 1_000_000 times
+              configuration: .init(metrics: [.throughput, .wallClock], throughputScalingFactor: .mega)) { benchmark in
+        for _ in benchmark.throughputIterations {
             blackHole(Date())
         }
     }
@@ -106,28 +119,21 @@ Metrics can be specified both explicitly, e.g. `[.throughput, .wallClock]` but a
 `BenchmarkMetric+Defaults.swift`, like e.g. `BenchmarkMetric.memory` or `BenchmarkMetric.all`.
 
 ### Settings defaults for all benchmarks in a suite
-It's possible to set the desired time units for a whole benchmark suite easily by setting `Benchmark.defaultBenchmarkTimeUnits`
+It's possible to set the desired time units for a whole benchmark suite easily by setting `Benchmark.defaultConfiguration.timeUnits`
 ```swift
 @_dynamicReplacement(for: registerBenchmarks)
 func benchmarks() {
 
-    Benchmark.defaultBenchmarkTimeUnits = .nanoseconds
+    Benchmark.defaultConfiguration.timeUnits = .nanoseconds
 
     Benchmark("Foundation Date()") {
 ...
     }
 ```
 
-Similar defaults can be set for all benchmark settings using the class variables:
+Similar defaults can be set for all benchmark settings using the class variable that takes a standard `Benchmark.Configuration`:
 ```
-Benchmark.defaultMetrics
-Benchmark.defaultTimeUnits
-Benchmark.defaultWarmupIterations
-Benchmark.defaultThroughputScalingFactor
-Benchmark.defaultDesiredDuration
-Benchmark.defaultDesiredIterations
-Benchmark.defaultSkip
-Benchmark.defaultThresholds
+Benchmark.defaultConfiguration = .init(...)
 ```
 
 ### Custom thresholds
@@ -137,9 +143,10 @@ Benchmark.defaultThresholds
                                                                absolute: [.p50 : 170, .p75 : 1200])
 
     Benchmark("Foundation Date()",
+              configuration: .init(
               metrics: [.throughput, .wallClock],
               throughputScalingFactor: .mega,
-              thresholds: [.throughput : customThreshold, .wallClock : customThreshold]) { benchmark in
+              thresholds: [.throughput : customThreshold, .wallClock : customThreshold])) { benchmark in
         for _ in benchmark.throughputIterations {
             blackHole(Date())
         }
