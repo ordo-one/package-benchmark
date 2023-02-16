@@ -31,7 +31,7 @@ final class BenchmarkTests: XCTestCase {
 
     func testBenchmarkRunCustomMetric() throws {
         let benchmark = Benchmark("testBenchmarkRunCustomMetric benchmark",
-                                  metrics: [.custom("customMetric")]) { benchmark in
+                                  configuration: .init(metrics: [.custom("customMetric")])) { benchmark in
             for measurement in 1 ... 100 {
                 benchmark.measurement(.custom("customMetric"), measurement)
             }
@@ -50,7 +50,7 @@ final class BenchmarkTests: XCTestCase {
 
     func testBenchmarkRunFailure() throws {
         let benchmark = Benchmark("testBenchmarkRunFailure benchmark",
-                                  metrics: [.custom("customMetric")]) { benchmark in
+                                  configuration: .init(metrics: [.custom("customMetric")])) { benchmark in
             benchmark.error("Benchmark failed")
         }
         XCTAssertNotNil(benchmark)
@@ -61,10 +61,12 @@ final class BenchmarkTests: XCTestCase {
 
     func testBenchmarkRunMoreParameters() throws {
         let benchmark = Benchmark("testBenchmarkRunMoreParameters benchmark",
-                                  metrics: BenchmarkMetric.all,
-                                  timeUnits: .milliseconds,
-                                  warmupIterations: 0,
-                                  throughputScalingFactor: .mega) { benchmark in
+                                  configuration: .init(
+                                      metrics: BenchmarkMetric.all,
+                                      timeUnits: .milliseconds,
+                                      warmupIterations: 0,
+                                      throughputScalingFactor: .mega
+                                  )) { benchmark in
             for outerloop in benchmark.throughputIterations {
                 blackHole(outerloop)
             }

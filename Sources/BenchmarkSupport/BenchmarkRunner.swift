@@ -68,7 +68,7 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
                 if let benchmark {
                     // optionally run a few warmup iterations by default to clean out outliers due to cacheing etc.
 
-                    for iterations in 0 ..< benchmark.warmupIterations {
+                    for iterations in 0 ..< benchmark.configuration.warmupIterations {
                         benchmark.currentIteration = iterations
                         benchmark.run()
                     }
@@ -80,10 +80,11 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
                     var mallocStatsRequested = false
 
                     // Create metric statistics as needed
-                    benchmark.metrics.forEach { metric in
+                    benchmark.configuration.metrics.forEach { metric in
                         switch metric {
                         case .wallClock:
-                            statistics[.wallClock] = Statistics(timeUnits: StatisticsUnits(benchmark.timeUnits))
+                            statistics[.wallClock] = Statistics(timeUnits:
+                                StatisticsUnits(benchmark.configuration.timeUnits))
                         default:
                             if operatingSystemStatsProducer.metricSupported(metric) == true {
                                 statistics[metric] = Statistics(timeUnits: .automatic,
@@ -144,8 +145,9 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
                             accummulatedWallclock += runningTime
                             accummulatedWallclockMeasurements += 1
 
-                            var roundedThroughput = Double(benchmark.throughputScalingFactor.rawValue * 1_000_000_000)
-                                / Double(runningTime.nanoseconds())
+                            var roundedThroughput =
+                                Double(benchmark.configuration.throughputScalingFactor.rawValue * 1_000_000_000)
+                                    / Double(runningTime.nanoseconds())
                             roundedThroughput.round(.toNearestOrAwayFromZero)
 
                             let throughput = Int(roundedThroughput)
@@ -229,17 +231,17 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
                         statistics[metric]?.add(value)
                     }
 
-                    if benchmark.metrics.contains(.threads) ||
-                        benchmark.metrics.contains(.threadsRunning) {
+                    if benchmark.configuration.metrics.contains(.threads) ||
+                        benchmark.configuration.metrics.contains(.threadsRunning) {
                         operatingSystemStatsProducer.startSampling(5_000) // ~5 ms
                     }
 
                     // Run the benchmark at a minimum the desired iterations/runtime --
-                    while iterations <= benchmark.desiredIterations ||
-                        accummulatedRuntime <= benchmark.desiredDuration {
+                    while iterations <= benchmark.configuration.desiredIterations ||
+                        accummulatedRuntime <= benchmark.configuration.desiredDuration {
                         // and at a maximum the same...
-                        guard accummulatedRuntime < benchmark.desiredDuration,
-                              iterations < benchmark.desiredIterations
+                        guard accummulatedRuntime < benchmark.configuration.desiredDuration,
+                              iterations < benchmark.configuration.desiredIterations
                         else {
                             break
                         }
@@ -249,15 +251,15 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
                             return
                         }
 
-                        benchmark.currentIteration = iterations + benchmark.warmupIterations
+                        benchmark.currentIteration = iterations + benchmark.configuration.warmupIterations
 
                         benchmark.run()
 
                         iterations += 1
                     }
 
-                    if benchmark.metrics.contains(.threads) ||
-                        benchmark.metrics.contains(.threadsRunning) {
+                    if benchmark.configuration.metrics.contains(.threads) ||
+                        benchmark.configuration.metrics.contains(.threadsRunning) {
                         operatingSystemStatsProducer.stopSampling()
                     }
 
@@ -283,8 +285,8 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
                             let result = BenchmarkResult(metric: key,
                                                          timeUnits: BenchmarkTimeUnits(value.timeUnits),
                                                          measurements: value.measurementCount,
-                                                         warmupIterations: benchmark.warmupIterations,
-                                                         thresholds: benchmark.thresholds?[key],
+                                                         warmupIterations: benchmark.configuration.warmupIterations,
+                                                         thresholds: benchmark.configuration.thresholds?[key],
                                                          percentiles: percentiles)
                             results.append(result)
                         }
