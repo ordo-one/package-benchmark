@@ -20,7 +20,6 @@ enum ArgumentParsingError: Error, CustomStringConvertible {
     var errorDescription: String? {
         description
     }
-
 }
 
 @available(macOS 13.0, *)
@@ -35,7 +34,7 @@ extension ArgumentExtractor {
             for specifiedTarget in specifiedTargets {
                 let regex = try Regex(specifiedTarget)
 
-                if target.name.wholeMatch(of:regex) != nil {
+                if target.name.wholeMatch(of: regex) != nil {
                     if let swiftSourceModuleTarget = target as? SwiftSourceModuleTarget {
                         if swiftSourceModuleTarget.kind != .test {
                             targets.append(swiftSourceModuleTarget)
@@ -47,7 +46,7 @@ extension ArgumentExtractor {
             }
         }
 
-        if !specifiedTargets.isEmpty && !anyMatching {
+        if !specifiedTargets.isEmpty, !anyMatching {
             throw ArgumentParsingError.noMatchingTargetsForRegex
         }
 

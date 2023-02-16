@@ -15,16 +15,14 @@ extension BenchmarkRunner {}
 // swiftlint disable: attributes
 @_dynamicReplacement(for: registerBenchmarks)
 func benchmarks() {
-    Benchmark.defaultDesiredDuration = .milliseconds(10)
-    Benchmark.defaultDesiredIterations = .giga(1)
+    Benchmark.defaultConfiguration = .init(desiredDuration: .milliseconds(10),
+                                           desiredIterations: .giga(1))
 
     Benchmark("Basic",
-              metrics: [.wallClock, .throughput],
-              skip: false) { _ in
+              configuration: .init(metrics: [.wallClock, .throughput])) { _ in
     }
 
     Benchmark("All metrics",
-              metrics: BenchmarkMetric.all,
-              skip: true) { _ in
+              configuration: .init(metrics: BenchmarkMetric.all, skip: true)) { _ in
     }
 }

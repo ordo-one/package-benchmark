@@ -16,13 +16,12 @@ extension BenchmarkRunner {}
 // swiftlint disable: attributes
 @_dynamicReplacement(for: registerBenchmarks)
 func benchmarks() {
-    Benchmark.defaultDesiredDuration = .seconds(2)
-    Benchmark.defaultDesiredIterations = .kilo(1)
-    Benchmark.defaultThroughputScalingFactor = .mega
+    Benchmark.defaultConfiguration = .init(throughputScalingFactor: .mega,
+                                           desiredDuration: .seconds(1),
+                                           desiredIterations: .kilo(1))
 
     Benchmark("Record",
-              metrics: [.wallClock, .throughput] + BenchmarkMetric.memory,
-              skip: false) { benchmark in
+              configuration: .init(metrics: [.wallClock, .throughput] + BenchmarkMetric.memory)) { benchmark in
         let maxValue: UInt64 = 1_000_000
 
         var histogram = Histogram<UInt64>(highestTrackableValue: maxValue, numberOfSignificantValueDigits: .three)
@@ -38,8 +37,7 @@ func benchmarks() {
     }
 
     Benchmark("Record to autoresizing",
-              metrics: [.wallClock, .throughput] + BenchmarkMetric.memory,
-              skip: false) { benchmark in
+              configuration: .init(metrics: [.wallClock, .throughput] + BenchmarkMetric.memory)) { benchmark in
         var histogram = Histogram<UInt64>(numberOfSignificantValueDigits: .three)
 
         let numValues = 1_024 // so compiler can optimize modulo below
@@ -53,9 +51,8 @@ func benchmarks() {
     }
 
     Benchmark("ValueAtPercentile",
-              metrics: [.wallClock, .throughput],
-              throughputScalingFactor: .kilo,
-              skip: false) { benchmark in
+              configuration: .init(metrics: [.wallClock, .throughput] + BenchmarkMetric.memory,
+                                   throughputScalingFactor: .kilo)) { benchmark in
         let maxValue: UInt64 = 1_000_000
 
         var histogram = Histogram<UInt64>(highestTrackableValue: maxValue, numberOfSignificantValueDigits: .three)
@@ -75,9 +72,7 @@ func benchmarks() {
     }
 
     Benchmark("Mean",
-              metrics: [.wallClock, .throughput],
-              throughputScalingFactor: .kilo,
-              skip: false) { benchmark in
+              configuration: .init(metrics: [.wallClock, .throughput], throughputScalingFactor: .kilo)) { benchmark in
         let maxValue: UInt64 = 1_000_000
 
         var histogram = Histogram<UInt64>(highestTrackableValue: maxValue, numberOfSignificantValueDigits: .three)

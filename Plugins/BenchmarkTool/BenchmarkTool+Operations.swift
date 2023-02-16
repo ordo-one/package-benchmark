@@ -41,7 +41,7 @@ extension BenchmarkTool {
 
             switch benchmarkReply {
             case let .result(benchmark: benchmark, results: results):
-                let filteredResults = results.filter { benchmark.metrics.contains($0.metric) }
+                let filteredResults = results.filter { benchmark.configuration.metrics.contains($0.metric) }
 
                 benchmarkResults[BenchmarkIdentifier(target: target, name: benchmark.name)] = filteredResults
             case .end:

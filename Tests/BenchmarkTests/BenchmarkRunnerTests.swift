@@ -16,11 +16,11 @@ import XCTest
 
 @_dynamicReplacement(for: registerBenchmarks) // Register benchmarks
 func benchmarks() {
-    Benchmark("Minimal benchmark", metrics: BenchmarkMetric.all, desiredIterations: 1) { _ in
+    Benchmark("Minimal benchmark", configuration: .init(metrics: BenchmarkMetric.all, desiredIterations: 1)) { _ in
     }
-    Benchmark("Minimal benchmark 2", warmupIterations: 0, desiredIterations: 2) { _ in
+    Benchmark("Minimal benchmark 2", configuration: .init(warmupIterations: 0, desiredIterations: 2)) { _ in
     }
-    Benchmark("Minimal benchmark 3", timeUnits: .seconds, desiredIterations: 3) { _ in
+    Benchmark("Minimal benchmark 3", configuration: .init(timeUnits: .seconds, desiredIterations: 3)) { _ in
     }
 }
 

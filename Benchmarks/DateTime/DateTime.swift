@@ -13,9 +13,9 @@ import BenchmarkSupport
 
 @_dynamicReplacement(for: registerBenchmarks)
 func benchmarks() {
-    Benchmark.defaultDesiredDuration = .seconds(2)
-    Benchmark.defaultDesiredIterations = 10_000
-    Benchmark.defaultThroughputScalingFactor = .kilo
+    Benchmark.defaultConfiguration = .init(throughputScalingFactor: .kilo,
+                                           desiredDuration: .seconds(2),
+                                           desiredIterations: .kilo(10))
 
     Benchmark("InternalUTCClock.now") { benchmark in
         for _ in benchmark.throughputIterations {
