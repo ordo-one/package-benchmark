@@ -11,60 +11,6 @@
 import Dispatch
 import Statistics
 
-public extension Benchmark {
-    struct Configuration: Codable {
-        /// Defines the metrics that should be measured for the benchmark
-        public var metrics: [BenchmarkMetric]
-        /// Override the automatic detection of timeunits for metrics related to time to a specific
-        /// one (auto should work for most use cases)
-        public var timeUnits: BenchmarkTimeUnits
-        /// Specifies a number of warmup iterations should be performed before the measurement to
-        /// reduce outliers due to e.g. cache population
-        public var warmupIterations: Int
-        /// Specifies the number of logical subiterations being done, scaling throughput measurements accordingly.
-        /// E.g. `.kilo`will scale results with 1000. Any iteration done in the benchmark should use
-        /// `benchmark.throughputScalingFactor.rawvalue` for the number of iterations.
-        public var throughputScalingFactor: StatisticsUnits
-        /// The target wall clock runtime for the benchmark, currenty defaults to `.seconds(1)` if not set
-        public var desiredDuration: Duration
-        /// The target number of iterations for the benchmark., currently defaults to 100K iterations if not set
-        public var desiredIterations: Int
-        /// Whether to skip this test (convenience for not having to comment out tests that have issues)
-        public var skip = false
-        /// Customized CI failure thresholds for a given metric for the Benchmark
-        public var thresholds: [BenchmarkMetric: BenchmarkResult.PercentileThresholds]?
-
-        public init(metrics: [BenchmarkMetric] = defaultConfiguration.metrics,
-                    timeUnits: BenchmarkTimeUnits = defaultConfiguration.timeUnits,
-                    warmupIterations: Int = defaultConfiguration.warmupIterations,
-                    throughputScalingFactor: StatisticsUnits = defaultConfiguration.throughputScalingFactor,
-                    desiredDuration: Duration = defaultConfiguration.desiredDuration,
-                    desiredIterations: Int = defaultConfiguration.desiredIterations,
-                    skip: Bool = defaultConfiguration.skip,
-                    thresholds: [BenchmarkMetric: BenchmarkResult.PercentileThresholds]? =
-                        defaultConfiguration.thresholds) {
-            self.metrics = metrics
-            self.timeUnits = timeUnits
-            self.warmupIterations = warmupIterations
-            self.throughputScalingFactor = throughputScalingFactor
-            self.desiredDuration = desiredDuration
-            self.desiredIterations = desiredIterations
-            self.skip = skip
-            self.thresholds = thresholds
-        }
-// swiftlint:disable nesting
-        enum CodingKeys: String, CodingKey {
-            case metrics
-            case timeUnits
-            case warmupIterations
-            case throughputScalingFactor
-            case desiredDuration
-            case desiredIterations
-            case thresholds
-        }
-    }
-}
-
 /// Defines a benchmark
 public final class Benchmark: Codable, Hashable {
     public typealias BenchmarkClosure = (_ benchmark: Benchmark) -> Void
@@ -77,8 +23,6 @@ public final class Benchmark: Codable, Hashable {
     /// The name used for display purposes of the benchmark (also used for matching when comparing to baselines)
     public var name: String
 
-    public var configuration: Configuration = .init()
-
     /// The reason for a benchmark failure, not set if successful
     public var failureReason: String?
     /// The current benchmark iteration (also includes warmup iterations), can be useful when
@@ -88,8 +32,9 @@ public final class Benchmark: Codable, Hashable {
     /// Convenience range to iterate over for benchmarks
     public var throughputIterations: Range<Int> { 0 ..< configuration.throughputScalingFactor.rawValue }
 
-    ///   - closure: The actual benchmark closure that will be measured
+    /// closure: The actual benchmark closure that will be measured
     var closure: BenchmarkClosure? // The actual benchmark to run
+    /// asyncClosure: The actual benchmark (async) closure that will be measured
     var asyncClosure: BenchmarkAsyncClosure? // The actual benchmark to run
 
     // Hooks for benchmark infrastructure to capture metrics of actual measurement() block without preamble:
@@ -98,6 +43,9 @@ public final class Benchmark: Codable, Hashable {
 
     // Hook for custom metrics capturing
     public var customMetricMeasurement: BenchmarkCustomMetricMeasurement?
+
+    /// The configuration to use for this benchmark
+    public var configuration: Configuration = .init()
 
     /// Hook for setting defaults for a whole benchmark suite
     public static var defaultConfiguration: Configuration = .init(metrics: BenchmarkMetric.default,
@@ -115,6 +63,7 @@ public final class Benchmark: Codable, Hashable {
 
     enum CodingKeys: String, CodingKey {
         case name
+        case configuration
         case failureReason
     }
 
@@ -262,6 +211,60 @@ public final class Benchmark: Codable, Hashable {
 
         if asyncClosure != nil {
             runAsync()
+        }
+    }
+}
+
+public extension Benchmark {
+    struct Configuration: Codable {
+        /// Defines the metrics that should be measured for the benchmark
+        public var metrics: [BenchmarkMetric]
+        /// Override the automatic detection of timeunits for metrics related to time to a specific
+        /// one (auto should work for most use cases)
+        public var timeUnits: BenchmarkTimeUnits
+        /// Specifies a number of warmup iterations should be performed before the measurement to
+        /// reduce outliers due to e.g. cache population
+        public var warmupIterations: Int
+        /// Specifies the number of logical subiterations being done, scaling throughput measurements accordingly.
+        /// E.g. `.kilo`will scale results with 1000. Any iteration done in the benchmark should use
+        /// `benchmark.throughputScalingFactor.rawvalue` for the number of iterations.
+        public var throughputScalingFactor: StatisticsUnits
+        /// The target wall clock runtime for the benchmark, currenty defaults to `.seconds(1)` if not set
+        public var desiredDuration: Duration
+        /// The target number of iterations for the benchmark., currently defaults to 100K iterations if not set
+        public var desiredIterations: Int
+        /// Whether to skip this test (convenience for not having to comment out tests that have issues)
+        public var skip = false
+        /// Customized CI failure thresholds for a given metric for the Benchmark
+        public var thresholds: [BenchmarkMetric: BenchmarkResult.PercentileThresholds]?
+
+        public init(metrics: [BenchmarkMetric] = defaultConfiguration.metrics,
+                    timeUnits: BenchmarkTimeUnits = defaultConfiguration.timeUnits,
+                    warmupIterations: Int = defaultConfiguration.warmupIterations,
+                    throughputScalingFactor: StatisticsUnits = defaultConfiguration.throughputScalingFactor,
+                    desiredDuration: Duration = defaultConfiguration.desiredDuration,
+                    desiredIterations: Int = defaultConfiguration.desiredIterations,
+                    skip: Bool = defaultConfiguration.skip,
+                    thresholds: [BenchmarkMetric: BenchmarkResult.PercentileThresholds]? =
+                    defaultConfiguration.thresholds) {
+            self.metrics = metrics
+            self.timeUnits = timeUnits
+            self.warmupIterations = warmupIterations
+            self.throughputScalingFactor = throughputScalingFactor
+            self.desiredDuration = desiredDuration
+            self.desiredIterations = desiredIterations
+            self.skip = skip
+            self.thresholds = thresholds
+        }
+        // swiftlint:disable nesting
+        enum CodingKeys: String, CodingKey {
+            case metrics
+            case timeUnits
+            case warmupIterations
+            case throughputScalingFactor
+            case desiredDuration
+            case desiredIterations
+            case thresholds
         }
     }
 }
