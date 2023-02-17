@@ -37,11 +37,12 @@ let exportablesDirectory: String = ".exportableBenchmarks"
 
 extension BenchmarkTool {
     func write(_ exportablebenchmark: String,
-               hostIdentifier: String? = nil) throws {
+               hostIdentifier: String? = nil,
+               fileName: String = "results.txt") throws {
         // Set up desired output path and create any intermediate directories for structure as required:
 
         /*
-         We store the baselines in a .benchmarkBaselines directory, by default in the package root path
+         We store the baselines in a .exportableBenchmarks directory, by default in the package root path
          unless otherwise specified.
 
          The 'default' folder is used when no specific named baseline have been specified with the
@@ -58,6 +59,7 @@ extension BenchmarkTool {
          │   │   ├── hostIdentifier1.influx_results.csv
          │   │   ├── hostIdentifier2.influx_results.csv
          │   │   └── hostIdentifier3.influx_results.csv
+         │   │   └── histogram.txt
          │   ├── named1
          │   │   ├── results.json
          │   │   ├── hostIdentifier1.influx_results.csv
@@ -90,9 +92,9 @@ extension BenchmarkTool {
 
         var csvFile = FilePath()
         if let hostIdentifier {
-            csvFile.append("\(hostIdentifier).influx_results.csv")
+            csvFile.append("\(hostIdentifier).\(fileName)")
         } else {
-            csvFile.append("influx_results.csv")
+            csvFile.append(fileName)
         }
 
         outputPath.append(csvFile.components)

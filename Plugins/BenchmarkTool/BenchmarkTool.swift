@@ -32,8 +32,9 @@ enum Grouping: String, ExpressibleByArgument {
     case test
 }
 
-enum ExportFormat: String, ExpressibleByArgument {
+enum ExportFormat: String, ExpressibleByArgument, CaseIterable {
     case influx
+    case percentiles
 }
 
 enum BenchmarkOperation: String, ExpressibleByArgument {
@@ -59,7 +60,7 @@ struct BenchmarkTool: AsyncParsableCommand {
     @Option(name: .long, help: "The command to perform")
     var command: BenchmarkOperation
 
-    @Option(name: .long, help: "The export file format to use, 'influx'")
+    @Option(name: .long, help: "The export file format to use \((ExportFormat.allCases).map {String(describing: $0)})")
     var exportFormat: ExportFormat?
 
     @Option(name: .long, help: "The path to baseline directory for storage")

@@ -161,6 +161,9 @@ import PackagePlugin
             }
 
             switch commandToPerform {
+            case "help": // we should fix inline help here, missing SAP
+                print("Please visit https://github.com/ordo-one/package-benchmark for usage documentation")
+                exit(0)
             case "list":
                 args.append(contentsOf: ["--command", "list"])
             case "run":

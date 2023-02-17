@@ -95,11 +95,19 @@ extension BenchmarkTool {
             }
             try write(BenchmarkBaseline(machine: benchmarkMachine, results: benchmarkResults))
         case .export:
-            if exportFormat == .influx {
+            switch exportFormat {
+            case .influx:
                 let exportStruct = saveExportableResults(BenchmarkBaseline(machine: benchmarkMachine, results: benchmarkResults))
                 let csvString = convertToCSV(exportableBenchmark: exportStruct)
-                try write(csvString)
-            } else {
+                try write(csvString, fileName: "influx_results.csv")
+            case .percentiles:
+                try benchmarkResults.forEach { key, results in
+                   try results.forEach { values in
+                       let outputString = values.statistics!.histogram
+                       try write("\(outputString)", fileName: "\(key.name).\(values.metric).histogram.txt")
+                    }
+                }
+            default:
                 print("Export type not supported.")
             }
         default:
