@@ -287,7 +287,8 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
                                                          measurements: value.measurementCount,
                                                          warmupIterations: benchmark.configuration.warmupIterations,
                                                          thresholds: benchmark.configuration.thresholds?[key],
-                                                         percentiles: percentiles)
+                                                         percentiles: percentiles,
+                                                         statistics: value)
                             results.append(result)
                         }
                     }

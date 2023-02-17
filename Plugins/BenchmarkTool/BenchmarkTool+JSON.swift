@@ -25,7 +25,10 @@ extension BenchmarkTool {
         }
 
         try bytesArray.withUnsafeBufferPointer {
-            _ = try output.write(UnsafeRawBufferPointer($0))
+            let written = try output.write(UnsafeRawBufferPointer($0))
+            if written != count {
+                fatalError("written != count \(written) ---- \(count)")
+            }
         }
     }
 
@@ -40,8 +43,14 @@ extension BenchmarkTool {
             }
         }
 
-        let readBytes = try [UInt8](unsafeUninitializedCapacity: bufferLength) { buf, count in
-            count = try input.read(into: UnsafeMutableRawBufferPointer(buf))
+        var readBytes = [UInt8]()
+
+        while readBytes.count < bufferLength {
+
+            let nextBytes = try [UInt8](unsafeUninitializedCapacity: bufferLength - readBytes.count) { buf, count in
+                count = try input.read(into: UnsafeMutableRawBufferPointer(buf))
+            }
+            readBytes.append(contentsOf: nextBytes)
         }
 
         let request = try XJSONDecoder().decode(BenchmarkCommandReply.self, from: readBytes)

@@ -56,7 +56,7 @@ public enum StatisticsUnits: Int, Codable {
 }
 
 /// A type that provides distribution / percentile calculations of latency measurements
-public struct Statistics {
+public struct Statistics: Codable {
     public let numberOfSignificantDigits: SignificantDigits
     public let prefersLarger: Bool
 

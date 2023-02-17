@@ -263,7 +263,9 @@ struct BenchmarkTool: AsyncParsableCommand {
                 }
 
                 try write(.end)
-            } catch {}
+            } catch {
+                fatalError("\(error)")
+            }
 
             if status == 0 {
                 if waitpid(pid, &status, 0) != -1 {

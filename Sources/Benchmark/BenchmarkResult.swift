@@ -40,13 +40,15 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
                 measurements: Int,
                 warmupIterations: Int,
                 thresholds: PercentileThresholds? = nil,
-                percentiles: [BenchmarkResult.Percentile: Int]) {
+                percentiles: [BenchmarkResult.Percentile: Int],
+                statistics: Statistics? = nil) {
         self.metric = metric
         self.timeUnits = timeUnits
         self.measurements = measurements
         self.warmupIterations = warmupIterations
         self.thresholds = thresholds
         self.percentiles = percentiles
+        self.statistics = statistics
     }
 
     public var metric: BenchmarkMetric
@@ -55,6 +57,7 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
     public var warmupIterations: Int
     public var thresholds: PercentileThresholds?
     public var percentiles: [BenchmarkResult.Percentile: Int]
+    public var statistics: Statistics?
 
     public mutating func scaleResults(to otherResult: BenchmarkResult) {
         guard timeUnits != otherResult.timeUnits else {
