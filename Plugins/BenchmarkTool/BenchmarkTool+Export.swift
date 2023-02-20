@@ -33,7 +33,7 @@ struct TestMetricData: Codable {
     var percentiles: [BenchmarkResult.Percentile: Int]
 }
 
-let exportablesDirectory: String = ".exportableBenchmarks"
+let exportablesDirectory: String = ".benchmarkExport"
 
 extension BenchmarkTool {
     func write(_ exportablebenchmark: String,
