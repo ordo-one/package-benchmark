@@ -200,7 +200,12 @@ import PackagePlugin
             }
 
             withCStrings(args) { cArgs in
-                var status = posix_spawn(&pid, benchmarkTool.path.string, nil, nil, cArgs, environ)
+                // https://forums.swift.org/t/swiftpm-always-rebuilds-command-plugins-in-release-configuration/63225
+                let toolname = benchmarkTool.path.lastComponent
+                let newPath = benchmarkTool.path.removingLastComponent().removingLastComponent()
+                    .appending(subpath: "release").appending(subpath: toolname)
+
+                var status = posix_spawn(&pid, newPath.string, nil, nil, cArgs, environ)
 
                 if status == 0 {
                     if waitpid(pid, &status, 0) != -1 {
