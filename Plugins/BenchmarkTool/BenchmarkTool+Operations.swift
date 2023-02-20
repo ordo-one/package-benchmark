@@ -17,18 +17,18 @@ import SystemPackage
 extension BenchmarkTool {
     mutating func queryBenchmarks() throws {
         try write(.list)
-        outerloop: while true {
-            let benchmarkReply = try read()
+    outerloop: while true {
+        let benchmarkReply = try read()
 
-            switch benchmarkReply {
-            case let .list(benchmark):
-                benchmarks.append(benchmark)
-            case .end:
-                break outerloop
-            default:
-                print("Unexpected reply \(benchmarkReply)")
-            }
+        switch benchmarkReply {
+        case let .list(benchmark):
+            benchmarks.append(benchmark)
+        case .end:
+            break outerloop
+        default:
+            print("Unexpected reply \(benchmarkReply)")
         }
+    }
     }
 
     mutating func runBenchmark(_ benchmark: Benchmark) throws -> BenchmarkResults {
@@ -36,27 +36,27 @@ extension BenchmarkTool {
 
         try write(.run(benchmark: benchmark))
 
-        outerloop: while true {
-            let benchmarkReply = try read()
+    outerloop: while true {
+        let benchmarkReply = try read()
 
-            switch benchmarkReply {
-            case let .result(benchmark: benchmark, results: results):
-                let filteredResults = results.filter { benchmark.configuration.metrics.contains($0.metric) }
+        switch benchmarkReply {
+        case let .result(benchmark: benchmark, results: results):
+            let filteredResults = results.filter { benchmark.configuration.metrics.contains($0.metric) }
 
-                benchmarkResults[BenchmarkIdentifier(target: target, name: benchmark.name)] = filteredResults
-            case .end:
-                break outerloop
-            case let .error(description):
-                print("*****")
-                print("***** Benchmark '\(benchmark.name)' failed:")
-                print("***** \(description)")
-                print("*****")
-                failBenchmark("")
-                break outerloop
-            default:
-                print("Unexpected reply \(benchmarkReply)")
-            }
+            benchmarkResults[BenchmarkIdentifier(target: target, name: benchmark.name)] = filteredResults
+        case .end:
+            break outerloop
+        case let .error(description):
+            print("*****")
+            print("***** Benchmark '\(benchmark.name)' failed:")
+            print("***** \(description)")
+            print("*****")
+            failBenchmark("")
+            break outerloop
+        default:
+            print("Unexpected reply \(benchmarkReply)")
         }
+    }
 
         return benchmarkResults
     }
@@ -102,9 +102,28 @@ extension BenchmarkTool {
                 try write(csvString, fileName: "influx_results.csv")
             case .percentiles:
                 try benchmarkResults.forEach { key, results in
-                   try results.forEach { values in
-                       let outputString = values.statistics!.histogram
-                       try write("\(outputString)", fileName: "\(key.name).\(values.metric).histogram.txt")
+                    try results.forEach { values in
+                        let outputString = values.statistics!.histogram
+                        try write("\(outputString)", fileName: "\(key.name).\(values.metric).histogram.txt")
+                    }
+                }
+            case .jmh:
+                try write("\(convertToJMH(BenchmarkBaseline(machine: benchmarkMachine, results: benchmarkResults)))",
+                          fileName: "export.jmh")
+            case .tsv:
+                try benchmarkResults.forEach { key, results in
+                    var outputString = ""
+
+                    try results.forEach { values in
+                        if let histogram = values.statistics?.histogram {
+                            histogram.recordedValues().forEach { value in
+                                for _ in 0..<value.count {
+                                    outputString += "\(value.value)\n"
+                                }
+                            }
+
+                        }
+                        try write("\(outputString)", fileName: "\(key.name).\(values.metric).tsv")
                     }
                 }
             default:

@@ -35,6 +35,9 @@ enum Grouping: String, ExpressibleByArgument {
 enum ExportFormat: String, ExpressibleByArgument, CaseIterable {
     case influx
     case percentiles
+//    case gnuplot
+    case tsv
+    case jmh
 }
 
 enum BenchmarkOperation: String, ExpressibleByArgument {
