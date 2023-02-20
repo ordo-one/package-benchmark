@@ -163,6 +163,14 @@ struct BenchmarkTool: AsyncParsableCommand {
         case .updateBaseline:
             fallthrough
         case .export:
+            if let baselineName {
+                if let currentBaseline = try read(baselineIdentifier: baselineName) {
+                    try postProcessBenchmarkResults(currentBaseline.results)
+                } else {
+                    failBenchmark("\(target): Couldn't read baseline '\(baselineName)' for export.")
+                }
+                return
+            }
             fallthrough
         case .run:
             // first get a list of benchmarks from the executable

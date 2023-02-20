@@ -83,7 +83,7 @@ extension BenchmarkTool {
         if let baselineIdentifier = baselineName {
             subPath.append(baselineIdentifier) // package/.exportableBenchmarks/myTarget1/named1
         } else {
-            subPath.append("exportable") // // package/.exportableBenchmarks/myTarget1/exportable
+            subPath.append("default") // // package/.exportableBenchmarks/myTarget1/default
         }
 
         outputPath.createSubPath(subPath) // Create destination subpath if needed

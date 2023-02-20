@@ -13,19 +13,19 @@ import SystemPackage
 import TextTable
 
 extension BenchmarkTool {
-    func printMarkdown(_ markdown: String, terminator: String = "\n") {
+    fileprivate func printMarkdown(_ markdown: String, terminator: String = "\n") {
         if format == .markdown {
             print(markdown, terminator: terminator)
         }
     }
 
-    func printText(_ markdown: String, terminator: String = "\n") {
+    fileprivate func printText(_ markdown: String, terminator: String = "\n") {
         if format == .text {
             print(markdown, terminator: terminator)
         }
     }
 
-    func formatTableEntry(_ base: Int, _ comparison: Int, _ reversePolarity: Bool = false) -> Int {
+    fileprivate func formatTableEntry(_ base: Int, _ comparison: Int, _ reversePolarity: Bool = false) -> Int {
         guard comparison != 0, base != 0 else {
             return 0
         }
@@ -39,7 +39,7 @@ extension BenchmarkTool {
         return diff
     }
 
-    func printMachine(_ machine: BenchmarkMachine, _ header: String) {
+    fileprivate func printMachine(_ machine: BenchmarkMachine, _ header: String) {
         printMarkdown("## ", terminator: "")
         print(header)
         printText("============================================================================================================================")
@@ -51,7 +51,7 @@ extension BenchmarkTool {
         printText("")
     }
 
-    func _prettyPrint(title: String, key: String, results: [BenchmarkBaseline.ResultsEntry]) {
+    fileprivate func _prettyPrint(title: String, key: String, results: [BenchmarkBaseline.ResultsEntry]) {
         let percentileWidth = 7
         let table = TextTable<BenchmarkBaseline.ResultsEntry> {
             [Column(title: title, value: "\($0.description) \($0.metrics.unitDescriptionPretty)", width: 40, align: .left),
