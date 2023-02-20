@@ -80,6 +80,7 @@ extension BenchmarkTool {
         if quiet {
             return
         }
+
         if firstBenchmarkTool {
             printMachine(baseline.machine, header)
         }
@@ -108,19 +109,10 @@ extension BenchmarkTool {
         }
     }
 
-    struct BenchmarkTableEntry {
-        var description: String
-        var metrics: BenchmarkResult
-    }
-
     func prettyPrintDelta(_ baseline: BenchmarkBaseline,
                           hostIdentifier _: String? = nil) {
-        guard let currentBaseline else {
+        guard let currentBaseline, quiet == false else {
             print("No baseline available to compare with.")
-            return
-        }
-
-        if quiet {
             return
         }
 
@@ -188,7 +180,7 @@ extension BenchmarkTool {
                                 }
                             }
                             let percentileWidth = 7
-                            let table = TextTable<BenchmarkTableEntry> {
+                            let table = TextTable<BenchmarkBaseline.ResultsEntry> {
                                 [Column(title: "\(result.metric.description) \(result.unitDescriptionPretty)", value: $0.description, width: 40, align: .center),
                                  Column(title: "p0", value: $0.metrics.percentiles[.p0] ?? "n/a", width: percentileWidth, align: .right),
                                  Column(title: "p25", value: $0.metrics.percentiles[.p25] ?? "n/a", width: percentileWidth, align: .right),
@@ -233,11 +225,11 @@ extension BenchmarkTool {
                                                                        percentiles: percentiles)
 
                             printMarkdown("```")
-                            var tableEntries: [BenchmarkTableEntry] = []
-                            tableEntries.append(BenchmarkTableEntry(description: baseBaselineName, metrics: base))
-                            tableEntries.append(BenchmarkTableEntry(description: comparisonBaselineName, metrics: result))
-                            tableEntries.append(BenchmarkTableEntry(description: BenchmarkMetric.delta.description, metrics: deltaComparison))
-                            tableEntries.append(BenchmarkTableEntry(description: "Improvement %", metrics: percentageComparison))
+                            var tableEntries: [BenchmarkBaseline.ResultsEntry] = []
+                            tableEntries.append(BenchmarkBaseline.ResultsEntry(description: baseBaselineName, metrics: base))
+                            tableEntries.append(BenchmarkBaseline.ResultsEntry(description: comparisonBaselineName, metrics: result))
+                            tableEntries.append(BenchmarkBaseline.ResultsEntry(description: BenchmarkMetric.delta.description, metrics: deltaComparison))
+                            tableEntries.append(BenchmarkBaseline.ResultsEntry(description: "Improvement %", metrics: percentageComparison))
                             table.print(tableEntries, style: Style.fancy)
                             printMarkdown("```")
 

@@ -72,12 +72,12 @@ extension BenchmarkTool {
         case .run:
             prettyPrint(BenchmarkBaseline(machine: benchmarkMachine, results: benchmarkResults))
         case .compare:
-            prettyPrintDelta(BenchmarkBaseline(machine: benchmarkMachine, results: benchmarkResults))
-
             guard let currentBaseline else {
                 print("No baseline available to compare with.")
                 return
             }
+
+            prettyPrintDelta(BenchmarkBaseline(machine: benchmarkMachine, results: benchmarkResults))
 
             if BenchmarkBaseline(machine: benchmarkMachine,
                                  results: benchmarkResults).betterResultsOrEqual(than: currentBaseline,
