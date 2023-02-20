@@ -63,14 +63,104 @@ struct BenchmarkIdentifier: Codable, Hashable {
     }
 }
 
+extension Sequence where Iterator.Element: Hashable {
+    func unique() -> [Iterator.Element] {
+        var seen: Set<Iterator.Element> = []
+        return filter { seen.insert($0).inserted }
+    }
+}
+
+typealias BenchmarkResultsByIdentifier=[BenchmarkIdentifier: [BenchmarkResult]]
 struct BenchmarkBaseline: Codable {
+    /// Used for writing to tables/exports
+    struct ResultsEntry {
+        var description: String
+        var metrics: BenchmarkResult
+    }
+
     internal init(machine: BenchmarkMachine, results: [BenchmarkIdentifier: [BenchmarkResult]]) {
         self.machine = machine
         self.results = results
     }
 
     var machine: BenchmarkMachine
-    var results: [BenchmarkIdentifier: [BenchmarkResult]]
+    var results: BenchmarkResultsByIdentifier
+
+    var benchmarkIdentifiers: [BenchmarkIdentifier] {
+        return Array(self.results.keys).sorted(by: {
+            if $0.target == $1.target {
+                return $0.name < $1.name
+            }
+            return $0.target < $1.target
+        })
+    }
+
+    var targets: [String] {
+        return self.benchmarkIdentifiers.map { $0.target }.unique().sorted(by: {$0 < $1 })
+    }
+
+    var benchmarkNames: [String] {
+        return self.benchmarkIdentifiers.map { $0.name }.unique().sorted(by: {$0 < $1 })
+    }
+
+    var benchmarkMetrics: [BenchmarkMetric] {
+        var results: [BenchmarkMetric] = []
+        self.results.forEach { identifier, resultVector in
+            resultVector.forEach {
+                results.append($0.metric)
+            }
+        }
+
+        return results.unique().sorted(by: {$0.description < $1.description})
+    }
+
+    func resultEntriesMatching(_ closure: (BenchmarkIdentifier, BenchmarkResult) -> (Bool, String)) -> [ResultsEntry] {
+        var results: [ResultsEntry] = []
+        self.results.forEach { identifier, resultVector in
+            resultVector.forEach {
+                let (include, description) = closure(identifier, $0)
+                if include {
+                    results.append(ResultsEntry(description: description, metrics: $0))
+                }
+            }
+        }
+
+        return results.sorted(by: {$0.description < $1.description})
+    }
+
+
+    func metricsMatching(_ closure: (BenchmarkIdentifier, BenchmarkResult) -> Bool) -> [BenchmarkMetric] {
+        var results: [BenchmarkMetric] = []
+        self.results.forEach { identifier, resultVector in
+            resultVector.forEach {
+                if closure(identifier, $0) {
+                    results.append($0.metric)
+                }
+            }
+        }
+
+        return results.sorted(by: {$0.description < $1.description})
+    }
+
+    func resultsMatching(_ closure: (BenchmarkIdentifier, BenchmarkResult) -> Bool) -> [BenchmarkResult] {
+        var results: [BenchmarkResult] = []
+        self.results.forEach { identifier, resultVector in
+            resultVector.forEach {
+                if closure(identifier, $0) {
+                    results.append($0)
+                }
+            }
+        }
+
+        return results.sorted(by: {$0.metric.description < $1.metric.description})
+    }
+
+    func resultsByTarget(_ target: String) -> [String : [BenchmarkResult]] {
+        let filteredResults = self.results.filter { $0.key.target == target }.sorted(by: {$0.key.name < $1.key.name})
+        let resultsPerTarget = Dictionary(uniqueKeysWithValues: filteredResults.map {key, value in (key.name, value)})
+
+        return resultsPerTarget
+    }
 }
 
 let baselinesDirectory: String = ".benchmarkBaselines"

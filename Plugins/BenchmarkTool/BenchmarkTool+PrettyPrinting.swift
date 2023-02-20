@@ -51,62 +51,10 @@ extension BenchmarkTool {
         printText("")
     }
 
-    func prettyPrintByTest(_ baseline: BenchmarkBaseline) {
+    func _prettyPrint(title: String, key: String, results: [BenchmarkBaseline.ResultsEntry]) {
         let percentileWidth = 7
-        let table = TextTable<BenchmarkResult> {
-            [Column(title: "Metric", value: "\($0.metric.description) \($0.unitDescriptionPretty)", width: 40, align: .left),
-             Column(title: "p0", value: $0.percentiles[.p0] ?? "n/a", width: percentileWidth, align: .right),
-             Column(title: "p25", value: $0.percentiles[.p25] ?? "n/a", width: percentileWidth, align: .right),
-             Column(title: "p50", value: $0.percentiles[.p50] ?? "n/a", width: percentileWidth, align: .right),
-             Column(title: "p75", value: $0.percentiles[.p75] ?? "n/a", width: percentileWidth, align: .right),
-             Column(title: "p90", value: $0.percentiles[.p90] ?? "n/a", width: percentileWidth, align: .right),
-             Column(title: "p99", value: $0.percentiles[.p99] ?? "n/a", width: percentileWidth, align: .right),
-             Column(title: "p100", value: $0.percentiles[.p100] ?? "n/a", width: percentileWidth, align: .right),
-             Column(title: "Samples", value: $0.measurements, width: percentileWidth, align: .right)]
-        }
-
-        let keys = baseline.results.keys.sorted(by: { $0.name < $1.name })
-
-        keys.forEach { key in
-            if let value = baseline.results[key] {
-                var allResults: [BenchmarkResult] = []
-                value.forEach { result in
-                    allResults.append(result)
-                }
-
-                allResults.sort(by: { $0.metric.description < $1.metric.description })
-                printMarkdown("### ", terminator: "")
-                print("\(key.name)")
-                printMarkdown("")
-
-                printMarkdown("```")
-                table.print(allResults, style: Style.fancy)
-                printMarkdown("```")
-            }
-        }
-    }
-
-    struct BenchmarkMetricTableEntry {
-        var description: String
-        var metrics: BenchmarkResult
-    }
-
-    func prettyPrintByMetric(_ baseline: BenchmarkBaseline) {
-        var tableEntries: [BenchmarkMetric: [BenchmarkMetricTableEntry]] = [:]
-
-        baseline.results.forEach { benchmarkIdentifier, benchmarkResults in
-            benchmarkResults.forEach { result in
-                if tableEntries[result.metric] == nil {
-                    tableEntries[result.metric] = [BenchmarkMetricTableEntry(description: benchmarkIdentifier.name, metrics: result)]
-                } else {
-                    tableEntries[result.metric]?.append(BenchmarkMetricTableEntry(description: benchmarkIdentifier.name, metrics: result))
-                }
-            }
-        }
-
-        let percentileWidth = 7
-        let table = TextTable<BenchmarkMetricTableEntry> {
-            [Column(title: "Test", value: "\($0.description) \($0.metrics.unitDescriptionPretty)", width: 40, align: .left),
+        let table = TextTable<BenchmarkBaseline.ResultsEntry> {
+            [Column(title: title, value: "\($0.description) \($0.metrics.unitDescriptionPretty)", width: 40, align: .left),
              Column(title: "p0", value: $0.metrics.percentiles[.p0] ?? "n/a", width: percentileWidth, align: .right),
              Column(title: "p25", value: $0.metrics.percentiles[.p25] ?? "n/a", width: percentileWidth, align: .right),
              Column(title: "p50", value: $0.metrics.percentiles[.p50] ?? "n/a", width: percentileWidth, align: .right),
@@ -117,24 +65,13 @@ extension BenchmarkTool {
              Column(title: "Samples", value: $0.metrics.measurements, width: percentileWidth, align: .right)]
         }
 
-        let keys = tableEntries.keys.sorted(by: { $0.description < $1.description })
-        keys.forEach { key in
-            if let value = tableEntries[key] {
-                var allResults: [BenchmarkMetricTableEntry] = []
-                value.forEach { result in
-                    allResults.append(result)
-                }
+        printMarkdown("### ", terminator: "")
+        print("\(key)")
+        printMarkdown("")
 
-                allResults.sort(by: { $0.description < $1.description })
-                printMarkdown("### ", terminator: "")
-                print("\(key)")
-                printMarkdown("")
-
-                printMarkdown("```")
-                table.print(allResults, style: Style.fancy)
-                printMarkdown("```")
-            }
-        }
+        printMarkdown("```")
+        table.print(results, style: Style.fancy)
+        printMarkdown("```")
     }
 
     func prettyPrint(_ baseline: BenchmarkBaseline,
@@ -154,9 +91,20 @@ extension BenchmarkTool {
 
         switch grouping {
         case .test:
-            prettyPrintByTest(baseline)
+            baseline.benchmarkNames.forEach { benchmarkName in
+                let results = baseline.resultEntriesMatching { identifier, result in
+                    return (identifier.name == benchmarkName, result.metric.description)
+                }
+                _prettyPrint(title: "Metric", key: benchmarkName, results: results)
+            }
         case .metric:
-            prettyPrintByMetric(baseline)
+            baseline.benchmarkMetrics.forEach { metric in
+
+                let results = baseline.resultEntriesMatching { identifier, result in
+                    return (result.metric == metric, identifier.name)
+                }
+                _prettyPrint(title: "Test", key: metric.description, results: results)
+            }
         }
     }
 
