@@ -23,6 +23,7 @@ let package = Package(
         .package(url: "https://github.com/ordo-one/package-datetime", .upToNextMajor(from: "0.0.0")),
         .package(url: "https://github.com/ordo-one/package-histogram", .upToNextMajor(from: "0.0.1")),
         .package(url: "https://github.com/ordo-one/Progress.swift", .upToNextMajor(from: "1.0.0")),
+        .package(url: "https://github.com/apple/swift-docc-plugin", .upToNextMajor(from: "1.1.0")),
     ],
     targets: [
         // Plugin used by users of the package
