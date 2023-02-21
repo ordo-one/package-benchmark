@@ -72,6 +72,9 @@ struct BenchmarkTool: AsyncParsableCommand {
     @Option(name: .long, help: "The path to baseline directory for comparisons")
     var baselineComparisonPath: String
 
+    @Option(name: .long, help: "The path to export to")
+    var exportPath: String?
+
     // Used for pretty printing machine info etc.
     @Option(name: .long, help: "True if the invocation of this tool is the first in the run of the plugin")
     var firstBenchmarkTool: Bool

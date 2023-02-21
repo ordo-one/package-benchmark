@@ -103,12 +103,21 @@ extension BenchmarkTool {
                 try benchmarkResults.forEach { key, results in
                     try results.forEach { values in
                         let outputString = values.statistics!.histogram
-                        try write("\(outputString)", fileName: "\(key.name).\(values.metric).histogram.txt")
+                        var metricDescription = values.metric.description.replacingOccurrences(of: "/", with: "_")
+                        metricDescription = metricDescription.replacingOccurrences(of: " ", with: "_")
+                        try write("\(outputString)", fileName: "\(key.name).\(metricDescription).histogram.txt")
                     }
                 }
             case .jmh:
-                try write("\(convertToJMH(BenchmarkBaseline(machine: benchmarkMachine, results: benchmarkResults)))",
-                          fileName: "jmh_export.json")
+                let baseline = BenchmarkBaseline(machine: benchmarkMachine, results: benchmarkResults)
+                try baseline.targets.forEach { target in
+                    var metricDescription = target.replacingOccurrences(of: "/", with: "_")
+                    metricDescription = metricDescription.replacingOccurrences(of: " ", with: "_")
+
+                    try write("\(convertToJMH(baseline))",
+                              fileName: "\(baselineName ?? "default")-\(target)-jmh_export.json")
+                }
+
             case .tsv:
                 try benchmarkResults.forEach { key, results in
                     var outputString = ""

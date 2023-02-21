@@ -23,6 +23,16 @@ import PackagePlugin
 
 @available(macOS 13.0, *)
 @main struct Benchmark: CommandPlugin {
+    enum Command: String {
+        case help
+        case list
+        case run
+        case compare
+        case updateBaseline = "update-baseline"
+        case export
+        case baseline
+    }
+
     func withCStrings(_ strings: [String], scoped: ([UnsafeMutablePointer<CChar>?]) throws -> Void) rethrows {
         let cStrings = strings.map { strdup($0) }
         try scoped(cStrings + [nil])
@@ -37,10 +47,19 @@ import PackagePlugin
         let outputFormats = argumentExtractor.extractOption(named: "format")
         let groupingToUse = argumentExtractor.extractOption(named: "grouping")
         let filterSpecified = argumentExtractor.extractOption(named: "filter")
+        let pathSpecified = argumentExtractor.extractOption(named: "path") // export path
         let skipSpecified = argumentExtractor.extractOption(named: "skip")
         let quietRunning = argumentExtractor.extractFlag(named: "quiet")
         var outputFormat = "text"
         var grouping = "test"
+        var exportPath = ""
+
+        if pathSpecified.count > 0 {
+            exportPath = pathSpecified.first!
+            if pathSpecified.count > 1 {
+                print("Only a single output path may be specified, will use the first one specified '\(exportPath)'")
+            }
+        }
 
         if outputFormats.count > 0 {
             if let format = outputFormats.first {
@@ -131,7 +150,9 @@ import PackagePlugin
         // Remaining positional arguments are various action verbs for the plugin
         var positionalArguments = argumentExtractor.remainingArguments
 
-        let commandToPerform = positionalArguments.count > 0 ? positionalArguments.removeFirst() : "run" // default
+        let commandString = positionalArguments.count > 0 ? positionalArguments.removeFirst() : "run" // default
+
+        let commandToPerform = Command(rawValue: commandString)
 
         let benchmarkTool = try context.tool(named: "BenchmarkTool")
 
@@ -139,7 +160,7 @@ import PackagePlugin
 
         var benchmarkFailure = false
         // Run the benchmarkTool for each target, constructing proper argument list for the BenchmarkTool
-        benchmarks.forEach { benchmark in
+        for benchmark in benchmarks {
             var pid: pid_t = 0
 
             var args: [String] = [benchmarkTool.path.lastComponent.description,
@@ -160,15 +181,19 @@ import PackagePlugin
                 args.append(contentsOf: ["--skip", skip])
             }
 
+            if pathSpecified.count > 0 {
+                args.append(contentsOf: ["--export-path", exportPath])
+            }
+
             switch commandToPerform {
-            case "help": // we should fix inline help here, missing SAP
+            case .help: // we should fix inline help here, missing SAP
                 print("Please visit https://github.com/ordo-one/package-benchmark for usage documentation")
                 exit(0)
-            case "list":
+            case .list:
                 args.append(contentsOf: ["--command", "list"])
-            case "run":
+            case .run:
                 args.append(contentsOf: ["--command", "run"])
-            case "compare":
+            case .compare:
                 args.append(contentsOf: ["--command", "compare"])
                 if positionalArguments.count > 0 {
                     args.append(contentsOf: ["--baseline-name", positionalArguments[0]])
@@ -176,12 +201,12 @@ import PackagePlugin
                 if positionalArguments.count > 1 {
                     args.append(contentsOf: ["--baseline-name-second", positionalArguments[1]])
                 }
-            case "update-baseline":
+            case .updateBaseline:
                 args.append(contentsOf: ["--command", "update-baseline"])
                 if positionalArguments.count > 0 {
                     args.append(contentsOf: ["--baseline-name", positionalArguments[0]])
                 }
-            case "export":
+            case .export:
                 args.append(contentsOf: ["--command", "export"])
                 if positionalArguments.count > 0 {
                     args.append(contentsOf: ["--export-format", positionalArguments[0]])
@@ -189,13 +214,13 @@ import PackagePlugin
                 if positionalArguments.count > 1 {
                     args.append(contentsOf: ["--baseline-name", positionalArguments[1]])
                 }
-            case "baseline":
+            case .baseline:
                 args.append(contentsOf: ["--command", "baseline"])
                 if positionalArguments.count > 0 {
                     args.append(contentsOf: ["--baseline-name", positionalArguments[0]])
                 }
             default:
-                print("Unknown command/option \(commandToPerform)")
+                print("Unknown command/option \(commandString)")
                 return
             }
 

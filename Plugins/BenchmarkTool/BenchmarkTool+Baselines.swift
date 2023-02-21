@@ -286,8 +286,19 @@ extension BenchmarkTool {
             do {
                 try fd.closeAfter {
                     do {
-                        let readBytes = try [UInt8](unsafeUninitializedCapacity: 64 * 1_024 * 1_024) { buf, count in
-                            count = try fd.read(into: UnsafeMutableRawBufferPointer(buf))
+                        var readBytes = [UInt8]()
+                        let bufferSize = 16 * 1_024 * 1_024
+                        var done = false
+
+                        while done == false { // readBytes.count < bufferLength {
+
+                            let nextBytes = try [UInt8](unsafeUninitializedCapacity: bufferSize) { buf, count in
+                                count = try fd.read(into: UnsafeMutableRawBufferPointer(buf))
+                                if count == 0 {
+                                    done = true
+                                }
+                            }
+                            readBytes.append(contentsOf: nextBytes)
                         }
 
                         baseline = try XJSONDecoder().decode(BenchmarkBaseline.self, from: readBytes)

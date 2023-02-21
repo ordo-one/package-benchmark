@@ -11,8 +11,15 @@
 import Benchmark
 import DateTime
 import ExtrasJSON
-import Foundation
 import SystemPackage
+
+#if canImport(Darwin)
+import Darwin
+#elseif canImport(Glibc)
+import Glibc
+#else
+#error("Unsupported Platform")
+#endif
 
 struct ExportableBenchmark: Codable {
     var benchmarkMachine: BenchmarkMachine
@@ -76,21 +83,27 @@ extension BenchmarkTool {
          └── ...
          */
 
-        var outputPath = FilePath(baselineStoragePath) // package
-        var subPath = FilePath() // subpath rooted in package used for directory creation
+        var outputPath: FilePath
 
-        subPath.append(exportDirectory) // package/.exportableBenchmarks
-        subPath.append(FilePath.Component(target)!) // package/.exportableBenchmarks/myTarget1
-
-        if let baselineIdentifier = baselineName {
-            subPath.append(baselineIdentifier) // package/.exportableBenchmarks/myTarget1/named1
+        if let exportPath {
+            outputPath = FilePath(exportPath) // user specified using --export-path
         } else {
-            subPath.append("default") // // package/.exportableBenchmarks/myTarget1/default
+            outputPath = FilePath(baselineStoragePath) // package
+            var subPath = FilePath() // subpath rooted in package used for directory creation
+
+            subPath.append(exportDirectory) // package/.exportableBenchmarks
+            subPath.append(FilePath.Component(target)!) // package/.exportableBenchmarks/myTarget1
+
+            if let baselineIdentifier = baselineName {
+                subPath.append(baselineIdentifier) // package/.exportableBenchmarks/myTarget1/named1
+            } else {
+                subPath.append("default") // // package/.exportableBenchmarks/myTarget1/default
+            }
+
+            outputPath.createSubPath(subPath) // Create destination subpath if needed
+
+            outputPath.append(subPath.components)
         }
-
-        outputPath.createSubPath(subPath) // Create destination subpath if needed
-
-        outputPath.append(subPath.components)
 
         var csvFile = FilePath()
         if let hostIdentifier {
@@ -102,18 +115,30 @@ extension BenchmarkTool {
         outputPath.append(csvFile.components)
 
         do {
-            if FileManager.default.fileExists(atPath: outputPath.description) {
-                try FileManager.default.removeItem(atPath: outputPath.description)
-            }
+            let fd = try FileDescriptor.open(
+                outputPath, .writeOnly, options: [.truncate, .create], permissions: .ownerReadWrite
+            )
 
-            // Write out exportable benchmarks
-            FileManager.default.createFile(atPath: outputPath.description, contents: exportablebenchmark.data(using: String.Encoding.utf8))
+            do {
+                try fd.closeAfter {
+                    do {
+                        var bytes = exportablebenchmark
+                        try bytes.withUTF8 {
+                            _ = try fd.write(UnsafeRawBufferPointer($0))
+                        }
+                    } catch {
+                        print("Failed to write to file \(outputPath)")
+                    }
+                }
+            } catch {
+                print("Failed to close fd for \(outputPath) after write.")
+            }
         } catch {
             if errno == EPERM {
                 print("Lacking permissions to write to \(outputPath)")
                 print("Give benchmark plugin permissions by running with e.g.:")
                 print("")
-                print("swift package --allow-writing-to-package-directory benchmark export influx")
+                print("swift package --allow-writing-to-package-directory benchmark update-baseline")
                 print("")
             } else {
                 print("Failed to open file \(outputPath), errno = [\(errno)]")

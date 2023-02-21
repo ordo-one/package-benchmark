@@ -19,19 +19,19 @@ func benchmarks() {
                                            desiredDuration: .seconds(2),
                                            desiredIterations: .kilo(30))
 
-    Benchmark("InternalUTCClock.now") { benchmark in
+    Benchmark("InternalUTCClock-now") { benchmark in
         for _ in benchmark.throughputIterations {
             BenchmarkSupport.blackHole(InternalUTCClock.now)
         }
     }
 
-    Benchmark("BenchmarkClock.now") { benchmark in
+    Benchmark("BenchmarkClock-now") { benchmark in
         for _ in benchmark.throughputIterations {
             BenchmarkSupport.blackHole(BenchmarkClock.now)
         }
     }
 
-    Benchmark("Foundation.Date") { benchmark in
+    Benchmark("Foundation-Date") { benchmark in
         for _ in benchmark.throughputIterations {
             BenchmarkSupport.blackHole(Foundation.Date())
         }
