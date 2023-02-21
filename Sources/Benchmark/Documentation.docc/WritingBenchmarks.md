@@ -24,6 +24,9 @@ func benchmarks() {
 
 A more real test for a couple of Foundation features would be:
 
+<!-- TODO: wrap the code _much_ tighter to allow full view within a default window. 
+The sidebar takes up an impressive amount of space, and ideally this should be viewable without having to scroll horizontally. 
+-->
 ```swift
 import SystemPackage
 import Foundation
@@ -65,9 +68,13 @@ func benchmarks() {
 ```
 
 The ``Benchmark/Benchmark`` initializer includes options to allow you to tune how the benchmark should be run, as well as what metrics and thresholds should be captured.
-These benchmark options are applied through the `configuration` parameter.
+These benchmark options are applied through the ``Benchmark/configuration-swift.property`` parameter.
 
 <!-- I think there's a way to reference code in source control/GitHub that may be appropriate here. -->
+
+<!-- TODO: wrap the code _much_ tighter to allow full view within a default window. 
+The sidebar takes up an impressive amount of space, and ideally this should be viewable without having to scroll horizontally. 
+-->
 
 ```swift
     /// Definition of a Benchmark
@@ -82,9 +89,9 @@ These benchmark options are applied through the `configuration` parameter.
                  closure: @escaping BenchmarkClosure) {
 ```
 
-And the benchmark configuration is defined in ``Benchmark/Configuration``.
+And the benchmark configuration is defined in ``Benchmark/Configuration-swift.struct``.
 
-<!-- I think there's a way to reference code in source control/GitHub that may be appropriate here. -->
+<!-- TODO: Reframe this in terms of a reference to the Configuration struct and it's reference documentation -->
 
 ```swift
 public extension Benchmark {
@@ -114,8 +121,12 @@ public extension Benchmark {
 
 ### throughputScalingFactor
 
-If your benchmark uses a small test and you want to run a scaled number of iterations to retrieve stable results, define a `throughputScalingFactor` in your ``Benchmark/Configuration``.
+If your benchmark uses a small test and you want to run a scaled number of iterations to retrieve stable results, define a ``Benchmark/Configuration-swift.struct/throughputScalingFactor`` in ``Benchmark/Configuration-swift.struct``.
 An example of using `throughputScalingFactor`:
+
+<!-- TODO: wrap the code _much_ tighter to allow full view within a default window. 
+The sidebar takes up an impressive amount of space, and ideally this should be viewable without having to scroll horizontally. 
+-->
 
 ```swift
     Benchmark("Foundation Date()",
@@ -129,11 +140,11 @@ An example of using `throughputScalingFactor`:
 ### Metrics
 
 Metrics can be specified explicitly, for example `[.throughput, .wallClock]`.
-Benchmark also provides a number of convenience methods for common sets of metrics, for example ``Benchmark/BenchmarkMetric/memory`` and ``Benchmark/BenchmarkMetric/all`.
+Benchmark also provides a number of convenience methods for common sets of metrics, for example ``Benchmark/BenchmarkMetric/memory`` and - ``Benchmark/BenchmarkMetric/all``.
 
 ### Settings defaults for all benchmarks within a suite
 
-Set the desired time units for all benchmarks within a suite easily by setting ``Benchmark/Benchmark/defaultConfiguration/timeUnits``:
+Set the desired time units for all benchmarks within a suite easily by setting ``Benchmark/Configuration-swift.struct/timeUnits``:
 
 ```swift
 @_dynamicReplacement(for: registerBenchmarks)
@@ -146,13 +157,17 @@ func benchmarks() {
     }
 ```
 
-Similar defaults can be set for all benchmark settings using the class variable that takes a standard ``Benchmark/Benchmark/Configuration``:
+Similar defaults can be set for all benchmark settings using the class variable that takes a standard ``Benchmark/Configuration-swift.struct``:
 
 ```swift
 Benchmark.defaultConfiguration = .init(...)
 ```
 
 ### Custom thresholds
+
+<!-- TODO: wrap the code _much_ tighter to allow full view within a default window. 
+The sidebar takes up an impressive amount of space, and ideally this should be viewable without having to scroll horizontally. 
+-->
 
 ```swift
     let customThreshold = BenchmarkResult.PercentileThresholds(relative: [.p50 : 13.0, .p75 : 18.0],

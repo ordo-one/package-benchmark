@@ -18,14 +18,17 @@ Benchmark measurements are provided as percentiles to support analysis of the ac
 An individual benchmark is typically run for a minimum amount of time and/or a given number of iterations.
 The default percentiles presented are:
 
-<!-- TBD: consider putting this into a table format -->
-- `p0` (min)
-- `p25`
-- `p50` (median)
-- `p75`
-- `p90`
-- `p99`
-- `p100` (max)
+<!-- TODO: revise this back to a tighter format - it's visually overwhelming as a table. -->
+
+| Percentiles | |
+| --- | --- |
+| `p0` | (min) |
+| `p25` | |
+| `p50` | (median) |
+| `p75` | |
+| `p90` | |
+| `p99` | |
+| `p100` | (max) |
 
 You can also configure your own sets of percentiles within Benchmark configurations.
 For more details on configuring benchmarks, see [LINK TBD].
@@ -57,7 +60,7 @@ For more details on configuring benchmarks, see [LINK TBD].
 - ``Benchmark/Benchmark/Configuration-swift.struct/throughputScalingFactor``
 - ``Benchmark/Benchmark/Configuration-swift.struct/timeUnits``
 - ``Benchmark/Benchmark/Configuration-swift.struct/warmupIterations``
-- ``Benchmark/Benchmark/Equatable-Implementations``
+
 - ``Benchmark/Benchmark/benchmarks``
 - ``Benchmark/Benchmark/configuration-swift.property``
 - ``Benchmark/Benchmark/currentIteration``
@@ -92,11 +95,9 @@ For more details on configuring benchmarks, see [LINK TBD].
 - ``Benchmark/BenchmarkCommandRequest/run(benchmark:)``
 - ``Benchmark/BenchmarkMetric``
 - ``Benchmark/BenchmarkMetric/!=(_:_:)``
-- ``Benchmark/BenchmarkMetric/CustomStringConvertible-Implementations``
-- ``Benchmark/BenchmarkMetric/Equatable-Implementations``
+
 - ``Benchmark/BenchmarkMetric/Polarity``
 - ``Benchmark/BenchmarkMetric/Polarity/!=(_:_:)``
-- ``Benchmark/BenchmarkMetric/Polarity/Equatable-Implementations``
 - ``Benchmark/BenchmarkMetric/Polarity/init(from:)``
 - ``Benchmark/BenchmarkMetric/Polarity/prefersLarger``
 - ``Benchmark/BenchmarkMetric/Polarity/prefersSmaller``
@@ -143,11 +144,8 @@ For more details on configuring benchmarks, see [LINK TBD].
 - ``Benchmark/BenchmarkResult/.._(_:)``
 - ``Benchmark/BenchmarkResult/.._(_:_:)``
 - ``Benchmark/BenchmarkResult/==(_:_:)``
-- ``Benchmark/BenchmarkResult/Comparable-Implementations``
-- ``Benchmark/BenchmarkResult/Equatable-Implementations``
 - ``Benchmark/BenchmarkResult/Percentile``
 - ``Benchmark/BenchmarkResult/Percentile/!=(_:_:)``
-- ``Benchmark/BenchmarkResult/Percentile/Equatable-Implementations``
 - ``Benchmark/BenchmarkResult/Percentile/init(from:)``
 - ``Benchmark/BenchmarkResult/Percentile/p0``
 - ``Benchmark/BenchmarkResult/Percentile/p100``
@@ -185,8 +183,6 @@ For more details on configuring benchmarks, see [LINK TBD].
 - ``Benchmark/BenchmarkResult/warmupIterations``
 - ``Benchmark/BenchmarkTimeUnits``
 - ``Benchmark/BenchmarkTimeUnits/!=(_:_:)``
-- ``Benchmark/BenchmarkTimeUnits/Equatable-Implementations``
-- ``Benchmark/BenchmarkTimeUnits/RawRepresentable-Implementations``
 - ``Benchmark/BenchmarkTimeUnits/automatic``
 - ``Benchmark/BenchmarkTimeUnits/description``
 - ``Benchmark/BenchmarkTimeUnits/encode(to:)``
@@ -199,6 +195,5 @@ For more details on configuring benchmarks, see [LINK TBD].
 - ``Benchmark/BenchmarkTimeUnits/milliseconds``
 - ``Benchmark/BenchmarkTimeUnits/nanoseconds``
 - ``Benchmark/BenchmarkTimeUnits/seconds``
-- ``Benchmark/WritingBenchmarks``
 - ``Benchmark/blackHole(_:)``
 - ``Benchmark/registerBenchmarks()``
