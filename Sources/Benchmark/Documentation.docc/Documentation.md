@@ -39,6 +39,7 @@ For more details on configuring benchmarks, see [LINK TBD].
 
 - <doc:GettingStarted>
 - <doc:WritingBenchmarks>
+- <doc:Metrics>
 
 ### All The Things
 
