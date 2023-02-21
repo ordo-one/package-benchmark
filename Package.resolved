@@ -5,8 +5,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/ordo-one/package-datetime",
       "state" : {
-        "revision" : "9c1e16bfe7683e787161f866ff8b5cbc88089cb4",
-        "version" : "0.0.6"
+        "revision" : "cbfca20a5116683241ed4b3c555c6eef82c78ef6",
+        "version" : "0.0.3"
       }
     },
     {
@@ -30,10 +30,10 @@
     {
       "identity" : "spimanifest",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/SwiftPackageIndex/SPIManifest",
+      "location" : "https://github.com/SwiftPackageIndex/SPIManifest.git",
       "state" : {
-        "revision" : "268fab2006be5c11411994bc76f429d9971a840a",
-        "version" : "0.15.0"
+        "revision" : "2c8538d38f8d38e07e93ca957c13e0d313d6358d",
+        "version" : "0.13.0"
       }
     },
     {
@@ -41,8 +41,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/apple/swift-argument-parser",
       "state" : {
-        "revision" : "fee6933f37fde9a5e12a1e4aeaa93fe60116ff2a",
-        "version" : "1.2.2"
+        "revision" : "fddd1c00396eed152c45a46bea9f47b98e59301d",
+        "version" : "1.2.0"
       }
     },
     {
@@ -86,8 +86,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/jpsim/Yams.git",
       "state" : {
-        "revision" : "4889c132978bc6ad3e80f680011ec3dd4fead90c",
-        "version" : "5.0.4"
+        "revision" : "01835dc202670b5bb90d07f3eae41867e9ed29f6",
+        "version" : "5.0.1"
       }
     }
   ],

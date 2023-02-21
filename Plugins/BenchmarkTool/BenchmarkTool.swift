@@ -104,11 +104,16 @@ struct BenchmarkTool: AsyncParsableCommand {
 
     var currentBaseline: BenchmarkBaseline?
 
-    var benchmarkFailure = false
-
-    mutating func failBenchmark(_ reason: String) {
-        print(reason)
-        benchmarkFailure = true
+    mutating func failBenchmark(_ reason: String? = nil) {
+        if let reason {
+            print(reason)
+            print("")
+        }
+#if canImport(Darwin)
+        Darwin.exit(EXIT_FAILURE)
+#elseif canImport(Glibc)
+        Glibc.exit(EXIT_FAILURE)
+#endif
     }
 
     func printChildRunError(_ result: Int32) {
@@ -134,6 +139,7 @@ struct BenchmarkTool: AsyncParsableCommand {
             } else {
                 print("No baseline found.")
             }
+            return
         case .compare:
             currentBaseline = try read(baselineIdentifier: baselineName)
 
@@ -148,23 +154,14 @@ struct BenchmarkTool: AsyncParsableCommand {
                             print("New baseline '\(baselineNameSecond)' for '\(target)' is BETTER (or equal) than the '\(baselineName ?? "default")' baseline thresholds.")
                             print("")
                         } else {
-                            print("New baseline '\(baselineNameSecond)' for '\(target)' is WORSE than the '\(baselineName ?? "default")' baseline thresholds.")
-                            print("")
-                            benchmarkFailure = true
+                            failBenchmark("New baseline '\(baselineNameSecond)' for '\(target)' is WORSE than the '\(baselineName ?? "default")' baseline thresholds.")
                         }
-
-                        break
                     } else {
                         failBenchmark("\(target): Couldn't find baseline '\(baselineNameSecond)' to compare with, skipping comparison.")
-                        return
                     }
+                    return
                 }
             }
-            fallthrough
-        case .list:
-            fallthrough
-        case .updateBaseline:
-            fallthrough
         case .export:
             if let baselineName {
                 if let currentBaseline = try read(baselineIdentifier: baselineName) {
@@ -174,45 +171,43 @@ struct BenchmarkTool: AsyncParsableCommand {
                 }
                 return
             }
-            fallthrough
+        case .list:
+            break
+        case .updateBaseline:
+            break
         case .run:
-            // first get a list of benchmarks from the executable
-            try runChild(benchmarkPath: benchmarkExecutablePath,
-                         benchmarkCommand: .query) { [self] result in
-                if result != 0 {
-                    printChildRunError(result)
-                }
-            }
-
-            var benchmarkResults: BenchmarkResults = [:]
-
-            // run each benchmark for the target as a separate process
-            try benchmarks.forEach { benchmark in
-                if try shouldRunBenchmark(benchmark.name) {
-                    // Then perform actions
-                    let results = try runChild(benchmarkPath: benchmarkExecutablePath,
-                                               benchmarkCommand: command,
-                                               benchmark: benchmark) { [self] result in
-                        if result != 0 {
-                            printChildRunError(result)
-                        }
-                    }
-
-                    benchmarkResults = benchmarkResults.merging(results) { _, new in new }
-                }
-            }
-            try postProcessBenchmarkResults(benchmarkResults)
+            break
         default:
             print("Unknown command \(command) in BenchmarkTool")
         }
 
-        if benchmarkFailure {
-            #if canImport(Darwin)
-                Darwin.exit(EXIT_FAILURE)
-            #elseif canImport(Glibc)
-                Glibc.exit(EXIT_FAILURE)
-            #endif
+        // first get a list of benchmarks from the executable
+        try runChild(benchmarkPath: benchmarkExecutablePath,
+                     benchmarkCommand: .query) { [self] result in
+            if result != 0 {
+                printChildRunError(result)
+            }
         }
+
+        var benchmarkResults: BenchmarkResults = [:]
+
+        // run each benchmark for the target as a separate process
+        try benchmarks.forEach { benchmark in
+            if try shouldRunBenchmark(benchmark.name) {
+                // Then perform actions
+                let results = try runChild(benchmarkPath: benchmarkExecutablePath,
+                                           benchmarkCommand: command,
+                                           benchmark: benchmark) { [self] result in
+                    if result != 0 {
+                        printChildRunError(result)
+                    }
+                }
+
+                benchmarkResults = benchmarkResults.merging(results) { _, new in new }
+            }
+        }
+
+        try postProcessBenchmarkResults(benchmarkResults)
     }
 
     func withCStrings(_ strings: [String], scoped: ([UnsafeMutablePointer<CChar>?]) throws -> Void) rethrows {

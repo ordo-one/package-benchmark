@@ -84,8 +84,7 @@ extension BenchmarkTool {
                                                                                  printOutput: true) {
                 print("Current run of \(target) is BETTER (or equal) than the '\(baselineName ?? "default")' baseline thresholds.")
             } else {
-                print("Current run is \(target) WORSE than the '\(baselineName ?? "default")' baseline thresholds.")
-                benchmarkFailure = true
+                failBenchmark("Current run is \(target) WORSE than the '\(baselineName ?? "default")' baseline thresholds.")
             }
 
         case .updateBaseline:
@@ -109,7 +108,7 @@ extension BenchmarkTool {
                 }
             case .jmh:
                 try write("\(convertToJMH(BenchmarkBaseline(machine: benchmarkMachine, results: benchmarkResults)))",
-                          fileName: "export.jmh")
+                          fileName: "jmh_export.json")
             case .tsv:
                 try benchmarkResults.forEach { key, results in
                     var outputString = ""
