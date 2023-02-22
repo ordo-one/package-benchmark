@@ -51,6 +51,7 @@ import PackagePlugin
         let skipSpecified = argumentExtractor.extractOption(named: "skip")
 //        let baselines = argumentExtractor.extractOption(named: "baseline")
         let quietRunning = argumentExtractor.extractFlag(named: "quiet")
+        let debug = argumentExtractor.extractFlag(named: "debug")
         var outputFormat = "text"
         var grouping = "test"
         var exportPath = ""
@@ -222,6 +223,19 @@ import PackagePlugin
             let toolname = benchmarkTool.path.lastComponent
             let newPath = benchmarkTool.path.removingLastComponent().removingLastComponent()
                 .appending(subpath: "release").appending(subpath: toolname)
+
+            if debug > 0 {
+                print("To debug, start BenchmarkTool in LLDB using:")
+                print("lldb \(newPath.string)")
+                print("")
+                print("Then launch BenchmarkTool with:")
+                print("run ", terminator: "")
+                for arg in 1 ..< args.count {
+                    print("\(args[arg]) ", terminator: "")
+                }
+                print("")
+                return
+            }
 
             var pid: pid_t = 0
             var status = posix_spawn(&pid, newPath.string, nil, nil, cArgs, environ)

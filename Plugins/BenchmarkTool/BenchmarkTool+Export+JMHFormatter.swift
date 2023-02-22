@@ -44,7 +44,6 @@ extension JMHPrimaryMetric {
             }
         }
 
-
         self.score = roundToDecimalplaces(score / Double(factor), 3)
         self.scoreError = roundToDecimalplaces(error / Double(factor), 3)
         self.scoreConfidence = [roundToDecimalplaces(score - error) / Double(factor), roundToDecimalplaces(score + error) / Double(factor)]
@@ -62,7 +61,7 @@ extension BenchmarkTool {
     func convertToJMH(_ baseline: BenchmarkBaseline) throws -> String {
         var resultString = ""
         var jmhElements: [JMHElement] = []
-        var secondaryMetrics: [String : JMHPrimaryMetric] = [:]
+        var secondaryMetrics: [String : JMHPrimaryMetric] = [:] // could move to OrderedDictionary for consistent output
 
 
         baseline.targets.forEach { benchmarkTarget in

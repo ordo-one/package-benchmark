@@ -42,67 +42,26 @@ struct TestMetricData: Codable {
     var percentiles: [BenchmarkResult.Percentile: Int]
 }
 
-let exportDirectory: String = ".benchmarkExport"
-
 extension BenchmarkTool {
     func write(_ exportablebenchmark: String,
                hostIdentifier: String? = nil,
                fileName: String = "results.txt") throws {
+
         // Set up desired output path and create any intermediate directories for structure as required:
-
-        /*
-         We store the baselines in a .exportableBenchmarks directory, by default in the package root path
-         unless otherwise specified.
-
-         The 'default' folder is used when no specific named baseline have been specified with the
-         command line. Specified 'named' baselines is useful for convenient A/B/C testing and comparisons.
-         Unless a host identifier have been specified on the command line (or in an environment variable),
-         we by default store results in 'influx_results.csv', otherwise we will use the environment variable
-         or command line to optionally specify a 'hostIdentifier' that allow for separation between
-         different hosts if checking in baselines in repos.
-
-         .exportableBenchmarks
-         ├── target1
-         │   ├── default
-         │   │   ├── results.json
-         │   │   ├── hostIdentifier1.influx_results.csv
-         │   │   ├── hostIdentifier2.influx_results.csv
-         │   │   └── hostIdentifier3.influx_results.csv
-         │   │   └── histogram.txt
-         │   ├── named1
-         │   │   ├── results.json
-         │   │   ├── hostIdentifier1.influx_results.csv
-         │   │   ├── hostIdentifier2.influx_results.csv
-         │   │   └── hostIdentifier3.influx_results.csv
-         │   ├── named2
-         │   │   └── ...
-         │   └── ...
-         ├── target2
-         │   └── default
-         │       └── ...
-         └── ...
-         */
-
         var outputPath: FilePath
 
         if let exportPath {
-            outputPath = FilePath(exportPath) // user specified using --export-path
-        } else {
-            outputPath = FilePath(baselineStoragePath) // package
-            var subPath = FilePath() // subpath rooted in package used for directory creation
+            let subPath = FilePath(exportPath).removingRoot()
 
-            subPath.append(exportDirectory) // package/.exportableBenchmarks
-            subPath.append(FilePath.Component(target)!) // package/.exportableBenchmarks/myTarget1
-
-            if let baselineIdentifier = baselineName {
-                subPath.append(baselineIdentifier) // package/.exportableBenchmarks/myTarget1/named1
+            if FilePath(exportPath).root != nil {
+                outputPath = FilePath(root: FilePath(exportPath).root)
             } else {
-                subPath.append("default") // // package/.exportableBenchmarks/myTarget1/default
+                outputPath = FilePath(".")
             }
-
-            outputPath.createSubPath(subPath) // Create destination subpath if needed
-
+            outputPath.createSubPath(subPath)
             outputPath.append(subPath.components)
+        } else {
+            outputPath = FilePath(".")
         }
 
         var csvFile = FilePath()
@@ -138,7 +97,7 @@ extension BenchmarkTool {
                 print("Lacking permissions to write to \(outputPath)")
                 print("Give benchmark plugin permissions by running with e.g.:")
                 print("")
-                print("swift package --allow-writing-to-package-directory benchmark update-baseline")
+                print("swift package --allow-writing-to-package-directory benchmark export")
                 print("")
             } else {
                 print("Failed to open file \(outputPath), errno = [\(errno)]")

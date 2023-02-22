@@ -65,6 +65,12 @@ extension BenchmarkTool {
     }
 
     mutating func postProcessBenchmarkResults(_ benchmarkResults: BenchmarkResults) throws {
+        func cleanupStringForShellSafety(_ string: String) -> String {
+            var cleanedString = string.replacingOccurrences(of: "/", with: "_")
+            cleanedString = cleanedString.replacingOccurrences(of: " ", with: "_")
+            return cleanedString
+        }
+
         let benchmarkMachine = benchmarkMachine()
 
         if benchmarkResults.isEmpty {
@@ -106,21 +112,13 @@ extension BenchmarkTool {
                 try benchmarkResults.forEach { key, results in
                     try results.forEach { values in
                         let outputString = values.statistics!.histogram
-                        var metricDescription = values.metric.description.replacingOccurrences(of: "/", with: "_")
-                        metricDescription = metricDescription.replacingOccurrences(of: " ", with: "_")
-                        try write("\(outputString)", fileName: "\(key.name).\(metricDescription).histogram.txt")
+                        let description = cleanupStringForShellSafety(values.metric.description)
+                        try write("\(outputString)", fileName: "\(key.name).\(description).histogram.txt")
                     }
                 }
             case .jmh:
                 let baseline = BenchmarkBaseline(machine: benchmarkMachine, results: benchmarkResults)
-                try baseline.targets.forEach { target in
-                    var metricDescription = target.replacingOccurrences(of: "/", with: "_")
-                    metricDescription = metricDescription.replacingOccurrences(of: " ", with: "_")
-
-                    try write("\(convertToJMH(baseline))",
-                              fileName: "\(baselineName ?? "default")-\(target)-jmh_export.json")
-                }
-
+                try write("\(convertToJMH(baseline))", fileName: "\(baselineName ?? "default")-jmh_export.json")
             case .tsv:
                 try benchmarkResults.forEach { key, results in
                     var outputString = ""
