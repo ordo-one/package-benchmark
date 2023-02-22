@@ -59,7 +59,7 @@ struct BenchmarkTool: AsyncParsableCommand {
     @Option(name: .long, help: "The command to perform")
     var command: BenchmarkOperation
 
-    @Option(name: .long, help: "The export file format to use \((ExportFormat.allCases).map {String(describing: $0)})")
+    @Option(name: .long, help: "The export file format to use \((ExportFormat.allCases).map { String(describing: $0) })")
     var exportFormat: ExportFormat?
 
     @Option(name: .long, help: "The path to baseline directory for storage")
@@ -93,7 +93,7 @@ struct BenchmarkTool: AsyncParsableCommand {
     var skip: [String] = []
 
     var targets: [String] {
-        return benchmarkExecutablePaths.map { FilePath($0).lastComponent!.description }
+        benchmarkExecutablePaths.map { FilePath($0).lastComponent!.description }
     }
 
     var inputFD: CInt = 0
@@ -102,18 +102,18 @@ struct BenchmarkTool: AsyncParsableCommand {
     var benchmarks: [Benchmark] = []
 
     var currentBaseline: BenchmarkBaseline?
-    var target: String = ""
+    var readBaselines: [BenchmarkBaseline] = [] // The baselines read from disk
 
     mutating func failBenchmark(_ reason: String? = nil) {
         if let reason {
             print(reason)
             print("")
         }
-#if canImport(Darwin)
-        Darwin.exit(EXIT_FAILURE)
-#elseif canImport(Glibc)
-        Glibc.exit(EXIT_FAILURE)
-#endif
+        #if canImport(Darwin)
+            Darwin.exit(EXIT_FAILURE)
+        #elseif canImport(Glibc)
+            Glibc.exit(EXIT_FAILURE)
+        #endif
     }
 
     func printChildRunError(error: Int32, benchmarkExecutablePath: String) {
@@ -133,44 +133,57 @@ struct BenchmarkTool: AsyncParsableCommand {
     mutating func run() async throws {
         switch command {
         case .baseline:
-            currentBaseline = try read(baselineIdentifier: baselineName)
-            if let currentBaseline {
-                prettyPrint(currentBaseline, header: "Current baseline")
-            } else {
+            try targets.forEach { target in
+                let currentBaseline = try read(target: target, baselineIdentifier: baselineName)
+                if let currentBaseline {
+                    readBaselines.append(currentBaseline)
+                    prettyPrint(currentBaseline, header: "Current baseline")
+                }
+            }
+
+            if readBaselines.isEmpty {
                 print("No baseline found.")
             }
             return
         case .compare:
-            currentBaseline = try read(baselineIdentifier: baselineName)
+            try targets.forEach { target in
+                currentBaseline = try read(target: target, baselineIdentifier: baselineName)
 
-            if let currentBaseline {
-                if let baselineNameSecond { // we compare with another known baseline instead of running
-                    let otherBaseline = try read(baselineIdentifier: baselineNameSecond)
+                if let currentBaseline {
+                    readBaselines.append(currentBaseline)
+                    if let baselineNameSecond { // we compare with another known baseline instead of running
+                        let otherBaseline = try read(target: target, baselineIdentifier: baselineNameSecond)
 
-                    if let otherBaseline {
-                        prettyPrintDelta(otherBaseline)
+                        if let otherBaseline {
+                            prettyPrintDelta(baseline: otherBaseline, target: target)
 
-                        if otherBaseline.betterResultsOrEqual(than: currentBaseline, printOutput: true) {
-                            print("New baseline '\(baselineNameSecond)' for '\(target)' is BETTER (or equal) than the '\(baselineName ?? "default")' baseline thresholds.")
-                            print("")
+                            if otherBaseline.betterResultsOrEqual(than: currentBaseline, printOutput: true) {
+                                print("New baseline '\(baselineNameSecond)' for '\(target)' is BETTER (or equal) than the '\(baselineName ?? "default")' baseline thresholds.")
+                                print("")
+                            } else {
+                                failBenchmark("New baseline '\(baselineNameSecond)' for '\(target)' is WORSE than the '\(baselineName ?? "default")' baseline thresholds.")
+                            }
                         } else {
-                            failBenchmark("New baseline '\(baselineNameSecond)' for '\(target)' is WORSE than the '\(baselineName ?? "default")' baseline thresholds.")
+                            failBenchmark("\(target): Couldn't find baseline '\(baselineNameSecond)' to compare with, skipping comparison.")
                         }
+                        return
+                    }
+                }
+            }
+        case .export:
+            var results: BenchmarkResults = [:]
+            try targets.forEach { target in
+                if let baselineName {
+                    if let currentBaseline = try read(target: target, baselineIdentifier: baselineName) {
+                        readBaselines.append(currentBaseline)
+                        results.merge(currentBaseline.results) { first, _ in first }
                     } else {
-                        failBenchmark("\(target): Couldn't find baseline '\(baselineNameSecond)' to compare with, skipping comparison.")
+                        failBenchmark("\(target): Couldn't read baseline '\(baselineName)' for export.")
                     }
                     return
                 }
             }
-        case .export:
-            if let baselineName {
-                if let currentBaseline = try read(baselineIdentifier: baselineName) {
-                    try postProcessBenchmarkResults(currentBaseline.results)
-                } else {
-                    failBenchmark("\(target): Couldn't read baseline '\(baselineName)' for export.")
-                }
-                return
-            }
+            try postProcessBenchmarkResults(results)
         case .list:
             break
         case .updateBaseline:
@@ -201,8 +214,6 @@ struct BenchmarkTool: AsyncParsableCommand {
         // run each benchmark for the target as a separate process
         try benchmarks.forEach { benchmark in
             if try shouldRunBenchmark(benchmark.name) {
-                target = FilePath(benchmark.executablePath!).lastComponent!.description
-                // Then perform actions
                 let results = try runChild(benchmarkPath: benchmark.executablePath!,
                                            benchmarkCommand: command,
                                            benchmark: benchmark) { [self] result in
@@ -242,7 +253,8 @@ struct BenchmarkTool: AsyncParsableCommand {
         let path = FilePath(benchmarkPath)
         let args: [String] = [path.lastComponent!.description,
                               "--input-fd", toChild.readEnd.rawValue.description,
-                              "--output-fd", fromChild.writeEnd.rawValue.description]
+                              "--output-fd", fromChild.writeEnd.rawValue.description,
+                              "--quiet", quiet.description]
 
         inputFD = fromChild.readEnd.rawValue
         outputFD = toChild.writeEnd.rawValue
@@ -270,7 +282,7 @@ struct BenchmarkTool: AsyncParsableCommand {
                     guard let benchmark else {
                         fatalError("No benchmark specified for update/export/run/compare operation")
                     }
-                    benchmarkResults = try runBenchmark(benchmark)
+                    benchmarkResults = try runBenchmark(target: path.lastComponent!.description, benchmark: benchmark)
                 case .baseline:
                     fallthrough
                 default:

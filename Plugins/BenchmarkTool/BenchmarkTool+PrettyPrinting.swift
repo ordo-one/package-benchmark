@@ -13,19 +13,19 @@ import SystemPackage
 import TextTable
 
 extension BenchmarkTool {
-    fileprivate func printMarkdown(_ markdown: String, terminator: String = "\n") {
+    private func printMarkdown(_ markdown: String, terminator: String = "\n") {
         if format == .markdown {
             print(markdown, terminator: terminator)
         }
     }
 
-    fileprivate func printText(_ markdown: String, terminator: String = "\n") {
+    private func printText(_ markdown: String, terminator: String = "\n") {
         if format == .text {
             print(markdown, terminator: terminator)
         }
     }
 
-    fileprivate func formatTableEntry(_ base: Int, _ comparison: Int, _ reversePolarity: Bool = false) -> Int {
+    private func formatTableEntry(_ base: Int, _ comparison: Int, _ reversePolarity: Bool = false) -> Int {
         guard comparison != 0, base != 0 else {
             return 0
         }
@@ -39,8 +39,8 @@ extension BenchmarkTool {
         return diff
     }
 
-    fileprivate func printMachine(_ machine: BenchmarkMachine, _ header: String) {
-        let separator = String(repeating: "=", count: machine.kernelVersion.count )
+    private func printMachine(_ machine: BenchmarkMachine, _ header: String) {
+        let separator = String(repeating: "=", count: machine.kernelVersion.count)
         print("")
         printMarkdown("## ", terminator: "")
         printText(separator)
@@ -54,10 +54,10 @@ extension BenchmarkTool {
         printText("")
     }
 
-    fileprivate func _prettyPrint(title: String,
-                                  key: String,
-                                  results: [BenchmarkBaseline.ResultsEntry],
-                                  width: Int = 30) {
+    private func _prettyPrint(title: String,
+                              key: String,
+                              results: [BenchmarkBaseline.ResultsEntry],
+                              width: Int = 30) {
         let percentileWidth = 7
         let table = TextTable<BenchmarkBaseline.ResultsEntry> {
             [Column(title: title, value: "\($0.description) \($0.metrics.unitDescriptionPretty)", width: width, align: .left),
@@ -92,14 +92,14 @@ extension BenchmarkTool {
         switch grouping {
         case .test:
             var width = 10
-            let metrics = baseline.metricsMatching { identifier, result in true }
+            let metrics = baseline.metricsMatching { _, _ in true }
             metrics.forEach { metric in
                 width = max(width, metric.description.count)
             }
             width = min(70, width + 5) // add 5 for ' (M)'
 
             baseline.targets.forEach { target in
-                let separator = String(repeating: "=", count: "\(target)".count )
+                let separator = String(repeating: "=", count: "\(target)".count)
                 printMarkdown("## ", terminator: "")
                 printText(separator)
                 print("\(target)")
@@ -107,7 +107,7 @@ extension BenchmarkTool {
                 print("")
                 baseline.benchmarkNames.forEach { benchmarkName in
                     let results = baseline.resultEntriesMatching { identifier, result in
-                        return (identifier.name == benchmarkName && identifier.target == target, result.metric.description)
+                        (identifier.name == benchmarkName && identifier.target == target, result.metric.description)
                     }
                     if results.count > 0 {
                         _prettyPrint(title: "Metric", key: benchmarkName, results: results, width: width)
@@ -124,14 +124,15 @@ extension BenchmarkTool {
             baseline.benchmarkMetrics.forEach { metric in
 
                 let results = baseline.resultEntriesMatching { identifier, result in
-                    return (result.metric == metric, "\(identifier.target):\(identifier.name)")
+                    (result.metric == metric, "\(identifier.target):\(identifier.name)")
                 }
                 _prettyPrint(title: "Test", key: metric.description, results: results, width: width)
             }
         }
     }
 
-    func prettyPrintDelta(_ baseline: BenchmarkBaseline,
+    func prettyPrintDelta(baseline: BenchmarkBaseline,
+                          target: String,
                           hostIdentifier _: String? = nil) {
         guard let currentBaseline, quiet == false else {
             print("No baseline available to compare with.")

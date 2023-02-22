@@ -12,8 +12,8 @@
 // jq -s add delta-*.json > delta.json
 
 import Benchmark
-import Numerics
 import ExtrasJSON
+import Numerics
 import Statistics
 
 extension JMHPrimaryMetric {
@@ -29,7 +29,7 @@ extension JMHPrimaryMetric {
         let score = histogram.mean
 
         let percentiles = [0.0, 50.0, 90.0, 95.0, 99.0, 99.9, 99.99, 99.999, 99.9999, 100.0]
-        var percentileValues : [String : Double] = [:]
+        var percentileValues: [String: Double] = [:]
         var recordedValues: [Double] = []
 //        let factor = 1 // result.metric == .throughput ? 1 : 1_000_000_000 / result.timeUnits.rawValue
         let factor = result.metric.countable() == false ? 1_000 : 1
@@ -45,15 +45,15 @@ extension JMHPrimaryMetric {
         }
 
         self.score = roundToDecimalplaces(score / Double(factor), 3)
-        self.scoreError = roundToDecimalplaces(error / Double(factor), 3)
-        self.scoreConfidence = [roundToDecimalplaces(score - error) / Double(factor), roundToDecimalplaces(score + error) / Double(factor)]
-        self.scorePercentiles = percentileValues
+        scoreError = roundToDecimalplaces(error / Double(factor), 3)
+        scoreConfidence = [roundToDecimalplaces(score - error) / Double(factor), roundToDecimalplaces(score + error) / Double(factor)]
+        scorePercentiles = percentileValues
         if result.metric.countable() {
-            self.scoreUnit = result.metric == .throughput ? "# / s" : "#"
+            scoreUnit = result.metric == .throughput ? "# / s" : "#"
         } else {
-            self.scoreUnit = "μs" // result.timeUnits.description
+            scoreUnit = "μs" // result.timeUnits.description
         }
-        self.rawData = [recordedValues]
+        rawData = [recordedValues]
     }
 }
 
@@ -61,8 +61,7 @@ extension BenchmarkTool {
     func convertToJMH(_ baseline: BenchmarkBaseline) throws -> String {
         var resultString = ""
         var jmhElements: [JMHElement] = []
-        var secondaryMetrics: [String : JMHPrimaryMetric] = [:] // could move to OrderedDictionary for consistent output
-
+        var secondaryMetrics: [String: JMHPrimaryMetric] = [:] // could move to OrderedDictionary for consistent output
 
         baseline.targets.forEach { benchmarkTarget in
 
@@ -104,7 +103,7 @@ extension BenchmarkTool {
         }
 
         let bytesArray = try XJSONEncoder().encode(jmhElements)
-        resultString = (String(bytes: bytesArray, encoding: .utf8)!)
+        resultString = String(bytes: bytesArray, encoding: .utf8)!
 
         return resultString
     }

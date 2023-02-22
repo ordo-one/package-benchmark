@@ -17,6 +17,7 @@
 import Foundation
 
 // MARK: - JMHElement
+
 struct JMHElement: Codable {
     var benchmark: String
     var mode: String
@@ -29,7 +30,7 @@ struct JMHElement: Codable {
     var measurementTime: String
     var measurementBatchSize: Int
     var primaryMetric: JMHPrimaryMetric
-    var secondaryMetrics: [String : JMHPrimaryMetric]?
+    var secondaryMetrics: [String: JMHPrimaryMetric]?
 
     enum CodingKeys: String, CodingKey {
         case benchmark
@@ -48,6 +49,7 @@ struct JMHElement: Codable {
 }
 
 // MARK: - JMHPrimaryMetric
+
 struct JMHPrimaryMetric: Codable {
     var score: Double
     var scoreError: Double
@@ -67,6 +69,7 @@ struct JMHPrimaryMetric: Codable {
 }
 
 // MARK: - JMHSecondaryMetrics
+
 struct JMHSecondaryMetrics: Codable {
     var gcAllocRate: JMHPrimaryMetric
     var gcAllocRateNorm: JMHPrimaryMetric
@@ -90,6 +93,7 @@ struct JMHSecondaryMetrics: Codable {
 }
 
 // MARK: - JMHGc
+
 struct JMHGc: Codable {
     var score: Int
     var scoreError: String

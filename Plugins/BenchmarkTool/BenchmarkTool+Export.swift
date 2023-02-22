@@ -14,43 +14,26 @@ import ExtrasJSON
 import SystemPackage
 
 #if canImport(Darwin)
-import Darwin
+    import Darwin
 #elseif canImport(Glibc)
-import Glibc
+    import Glibc
 #else
-#error("Unsupported Platform")
+    #error("Unsupported Platform")
 #endif
 
-struct ExportableBenchmark: Codable {
-    var benchmarkMachine: BenchmarkMachine
-    var target: String
-    var benchmarks: [TestData]
-}
-
-struct TestData: Codable {
-    var test: String
-    var iterations: Int
-    var warmupIterations: Int
-    var data: [TestMetricData]
-}
-
-struct TestMetricData: Codable {
-    var metric: String
-    var units: String
-    var average: Double
-    var metricsdata: [Int]
-    var percentiles: [BenchmarkResult.Percentile: Int]
-}
-
 extension BenchmarkTool {
-    func write(_ exportablebenchmark: String,
+    func write(exportData: String,
                hostIdentifier: String? = nil,
                fileName: String = "results.txt") throws {
-
         // Set up desired output path and create any intermediate directories for structure as required:
         var outputPath: FilePath
 
         if let exportPath {
+            if exportPath == "stdout" {
+                print(exportData)
+                return
+            }
+
             let subPath = FilePath(exportPath).removingRoot()
 
             if FilePath(exportPath).root != nil {
@@ -81,7 +64,7 @@ extension BenchmarkTool {
             do {
                 try fd.closeAfter {
                     do {
-                        var bytes = exportablebenchmark
+                        var bytes = exportData
                         try bytes.withUTF8 {
                             _ = try fd.write(UnsafeRawBufferPointer($0))
                         }
@@ -105,68 +88,41 @@ extension BenchmarkTool {
         }
     }
 
-    func saveExportableResults(
-        _ benchmarks: BenchmarkBaseline) -> ExportableBenchmark {
-        let keys = benchmarks.results.keys.sorted(by: { $0.name < $1.name })
-        var testList: [TestData] = []
-
-        keys.forEach { test in
-            if let value = benchmarks.results[test] {
-                var allResults: [BenchmarkResult] = []
-                value.forEach { result in
-                    allResults.append(result)
+    func exportResults(_ baseline: BenchmarkBaseline) throws {
+        switch exportFormat {
+        case .influx:
+            try write(exportData: "\(convertToInflux(baseline))",
+                      fileName: "\(baselineName ?? "default")-influx-export.csv")
+        case .percentiles:
+            try baseline.results.forEach { key, results in
+                try results.forEach { values in
+                    let outputString = values.statistics!.histogram
+                    let description = cleanupStringForShellSafety(values.metric.description)
+                    try write(exportData: "\(outputString)",
+                              fileName: "\(key.name).\(description).histogram-export.txt")
                 }
-
-                allResults.sort(by: { $0.metric.description < $1.metric.description })
-
-                var benchmarkResultData: [TestMetricData] = []
-                var iterations = 0
-                var warmupIterations = 0
-                allResults.forEach { results in
-                    benchmarkResultData.append(
-                        processBenchmarkResult(test: results,
-                                               testName: test.name)
-                    )
-
-                    iterations = results.measurements
-                    warmupIterations = results.warmupIterations
-                }
-
-                testList.append(
-                    TestData(test: test.name,
-                             iterations: iterations,
-                             warmupIterations: warmupIterations,
-                             data: benchmarkResultData)
-                )
             }
+        case .jmh:
+            try write(exportData: "\(convertToJMH(baseline))",
+                      fileName: "\(baselineName ?? "default")-jmh-export.json")
+        case .tsv:
+            try baseline.results.forEach { key, results in
+                var outputString = ""
+
+                try results.forEach { values in
+                    if let histogram = values.statistics?.histogram {
+                        histogram.recordedValues().forEach { value in
+                            for _ in 0 ..< value.count {
+                                outputString += "\(value.value)\n"
+                            }
+                        }
+                    }
+                    try write(exportData: "\(outputString)",
+                              fileName: "\(key.name).\(values.metric).tsv")
+                }
+            }
+        default:
+            print("Export type not supported.")
         }
-
-        return ExportableBenchmark(benchmarkMachine: benchmarks.machine,
-                                   target: target,
-                                   benchmarks: testList)
-    }
-
-    func processBenchmarkResult(test: BenchmarkResult,
-                                testName _: String) -> TestMetricData {
-        var testData: [Int] = []
-        test.percentiles.forEach { result in
-            testData.append(result.value)
-        }
-
-        let totalValue = Double(testData.reduce(0, +))
-        let totalCount = Double(testData.count)
-        let averageValue = (totalValue / totalCount)
-
-        return TestMetricData(metric: test.metric.description,
-                              units: test.unitDescription,
-                              average: averageValue,
-                              metricsdata: testData,
-                              percentiles: test.percentiles)
-    }
-
-    func convertToCSV(exportableBenchmark: ExportableBenchmark) -> String {
-        let formatter = InfluxCSVFormatter(exportableBenchmark: exportableBenchmark)
-        return formatter.influxCSVFormat()
     }
 }
-

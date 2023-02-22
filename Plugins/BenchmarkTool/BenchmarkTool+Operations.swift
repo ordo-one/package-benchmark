@@ -15,62 +15,60 @@ import ExtrasJSON
 import SystemPackage
 
 extension BenchmarkTool {
-
     mutating func queryBenchmarks(_ benchmarkPath: String) throws {
         try write(.list)
-    outerloop: while true {
-        let benchmarkReply = try read()
+        outerloop: while true {
+            let benchmarkReply = try read()
 
-        switch benchmarkReply {
-        case let .list(benchmark):
-            benchmark.executablePath = benchmarkPath
-            benchmark.target = FilePath(benchmarkPath).lastComponent!.description
-            benchmarks.append(benchmark)
-        case .end:
-            break outerloop
-        default:
-            print("Unexpected reply \(benchmarkReply)")
+            switch benchmarkReply {
+            case let .list(benchmark):
+                benchmark.executablePath = benchmarkPath
+                benchmark.target = FilePath(benchmarkPath).lastComponent!.description
+                benchmarks.append(benchmark)
+            case .end:
+                break outerloop
+            default:
+                print("Unexpected reply \(benchmarkReply)")
+            }
         }
     }
-    }
 
-    mutating func runBenchmark(_ benchmark: Benchmark) throws -> BenchmarkResults {
+    mutating func runBenchmark(target: String, benchmark: Benchmark) throws -> BenchmarkResults {
         var benchmarkResults: BenchmarkResults = [:]
 
         try write(.run(benchmark: benchmark))
 
-    outerloop: while true {
-        let benchmarkReply = try read()
+        outerloop: while true {
+            let benchmarkReply = try read()
 
-        switch benchmarkReply {
-        case let .result(benchmark: benchmark, results: results):
-            let filteredResults = results.filter { benchmark.configuration.metrics.contains($0.metric) }
-
-            benchmarkResults[BenchmarkIdentifier(target: target, name: benchmark.name)] = filteredResults
-        case .end:
-            break outerloop
-        case let .error(description):
-            print("*****")
-            print("***** Benchmark '\(benchmark.name)' failed:")
-            print("***** \(description)")
-            print("*****")
-            failBenchmark("")
-            break outerloop
-        default:
-            print("Unexpected reply \(benchmarkReply)")
+            switch benchmarkReply {
+            case let .result(benchmark: benchmark, results: results):
+                let filteredResults = results.filter { benchmark.configuration.metrics.contains($0.metric) }
+                benchmarkResults[BenchmarkIdentifier(target: target, name: benchmark.name)] = filteredResults
+            case .end:
+                break outerloop
+            case let .error(description):
+                print("*****")
+                print("***** Benchmark '\(benchmark.name)' failed:")
+                print("***** \(description)")
+                print("*****")
+                failBenchmark("")
+                break outerloop
+            default:
+                print("Unexpected reply \(benchmarkReply)")
+            }
         }
-    }
 
         return benchmarkResults
     }
 
-    mutating func postProcessBenchmarkResults(_ benchmarkResults: BenchmarkResults) throws {
-        func cleanupStringForShellSafety(_ string: String) -> String {
-            var cleanedString = string.replacingOccurrences(of: "/", with: "_")
-            cleanedString = cleanedString.replacingOccurrences(of: " ", with: "_")
-            return cleanedString
-        }
+    func cleanupStringForShellSafety(_ string: String) -> String {
+        var cleanedString = string.replacingOccurrences(of: "/", with: "_")
+        cleanedString = cleanedString.replacingOccurrences(of: " ", with: "_")
+        return cleanedString
+    }
 
+    mutating func postProcessBenchmarkResults(_ benchmarkResults: BenchmarkResults) throws {
         let benchmarkMachine = benchmarkMachine()
 
         if benchmarkResults.isEmpty {
@@ -81,63 +79,38 @@ extension BenchmarkTool {
         case .run:
             prettyPrint(BenchmarkBaseline(machine: benchmarkMachine, results: benchmarkResults))
         case .compare:
-            guard let currentBaseline else {
+            guard readBaselines.isEmpty == false else {
                 print("No baseline available to compare with.")
                 return
             }
 
-            prettyPrintDelta(BenchmarkBaseline(machine: benchmarkMachine, results: benchmarkResults))
+            readBaselines.forEach { baseline in
+                baseline.targets.forEach { target in
+                    prettyPrintDelta(baseline: BenchmarkBaseline(machine: benchmarkMachine, results: benchmarkResults),
+                                     target: target)
 
-            if BenchmarkBaseline(machine: benchmarkMachine,
-                                 results: benchmarkResults).betterResultsOrEqual(than: currentBaseline,
-                                                                                 printOutput: true) {
-                print("Current run of \(target) is BETTER (or equal) than the '\(baselineName ?? "default")' baseline thresholds.")
-            } else {
-                failBenchmark("Current run is \(target) WORSE than the '\(baselineName ?? "default")' baseline thresholds.")
+                    if BenchmarkBaseline(machine: benchmarkMachine,
+                                         results: benchmarkResults).betterResultsOrEqual(than: baseline,
+                                                                                         printOutput: true) {
+                        print("Current run of \(target) is BETTER (or equal) than the '\(baselineName ?? "default")' baseline thresholds.")
+                    } else {
+                        failBenchmark("Current run of \(target) is WORSE than the '\(baselineName ?? "default")' baseline thresholds.")
+                    }
+                }
             }
-
         case .updateBaseline:
             if quiet == false {
                 prettyPrint(BenchmarkBaseline(machine: benchmarkMachine, results: benchmarkResults),
                             header: "Updating baselines")
             }
-            try write(BenchmarkBaseline(machine: benchmarkMachine, results: benchmarkResults))
-        case .export:
-            switch exportFormat {
-            case .influx:
-                let exportStruct = saveExportableResults(BenchmarkBaseline(machine: benchmarkMachine, results: benchmarkResults))
-                let csvString = convertToCSV(exportableBenchmark: exportStruct)
-                try write(csvString, fileName: "influx_results.csv")
-            case .percentiles:
-                try benchmarkResults.forEach { key, results in
-                    try results.forEach { values in
-                        let outputString = values.statistics!.histogram
-                        let description = cleanupStringForShellSafety(values.metric.description)
-                        try write("\(outputString)", fileName: "\(key.name).\(description).histogram.txt")
-                    }
+            try readBaselines.forEach { baseline in
+                try baseline.targets.forEach { target in
+                    try write(BenchmarkBaseline(machine: benchmarkMachine, results: baseline.results), target: target)
                 }
-            case .jmh:
-                let baseline = BenchmarkBaseline(machine: benchmarkMachine, results: benchmarkResults)
-                try write("\(convertToJMH(baseline))", fileName: "\(baselineName ?? "default")-jmh_export.json")
-            case .tsv:
-                try benchmarkResults.forEach { key, results in
-                    var outputString = ""
-
-                    try results.forEach { values in
-                        if let histogram = values.statistics?.histogram {
-                            histogram.recordedValues().forEach { value in
-                                for _ in 0..<value.count {
-                                    outputString += "\(value.value)\n"
-                                }
-                            }
-
-                        }
-                        try write("\(outputString)", fileName: "\(key.name).\(values.metric).tsv")
-                    }
-                }
-            default:
-                print("Export type not supported.")
             }
+        case .export:
+            try exportResults(BenchmarkBaseline(machine: benchmarkMachine,
+                                                results: benchmarkResults))
         default:
             print("Unexpected command \(command)")
         }

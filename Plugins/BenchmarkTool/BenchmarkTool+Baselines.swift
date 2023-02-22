@@ -70,7 +70,7 @@ extension Sequence where Iterator.Element: Hashable {
     }
 }
 
-typealias BenchmarkResultsByIdentifier=[BenchmarkIdentifier: [BenchmarkResult]]
+typealias BenchmarkResultsByIdentifier = [BenchmarkIdentifier: [BenchmarkResult]]
 struct BenchmarkBaseline: Codable {
     /// Used for writing to tables/exports
     struct ResultsEntry {
@@ -87,7 +87,7 @@ struct BenchmarkBaseline: Codable {
     var results: BenchmarkResultsByIdentifier
 
     var benchmarkIdentifiers: [BenchmarkIdentifier] {
-        return Array(self.results.keys).sorted(by: {
+        Array(results.keys).sorted(by: {
             if $0.target == $1.target {
                 return $0.name < $1.name
             }
@@ -96,22 +96,22 @@ struct BenchmarkBaseline: Codable {
     }
 
     var targets: [String] {
-        return self.benchmarkIdentifiers.map { $0.target }.unique().sorted(by: {$0 < $1 })
+        benchmarkIdentifiers.map(\.target).unique().sorted(by: { $0 < $1 })
     }
 
     var benchmarkNames: [String] {
-        return self.benchmarkIdentifiers.map { $0.name }.unique().sorted(by: {$0 < $1 })
+        benchmarkIdentifiers.map(\.name).unique().sorted(by: { $0 < $1 })
     }
 
     var benchmarkMetrics: [BenchmarkMetric] {
         var results: [BenchmarkMetric] = []
-        self.results.forEach { identifier, resultVector in
+        self.results.forEach { _, resultVector in
             resultVector.forEach {
                 results.append($0.metric)
             }
         }
 
-        return results.unique().sorted(by: {$0.description < $1.description})
+        return results.unique().sorted(by: { $0.description < $1.description })
     }
 
     func resultEntriesMatching(_ closure: (BenchmarkIdentifier, BenchmarkResult) -> (Bool, String)) -> [ResultsEntry] {
@@ -125,9 +125,8 @@ struct BenchmarkBaseline: Codable {
             }
         }
 
-        return results.sorted(by: {$0.description < $1.description})
+        return results.sorted(by: { $0.description < $1.description })
     }
-
 
     func metricsMatching(_ closure: (BenchmarkIdentifier, BenchmarkResult) -> Bool) -> [BenchmarkMetric] {
         var results: [BenchmarkMetric] = []
@@ -139,7 +138,7 @@ struct BenchmarkBaseline: Codable {
             }
         }
 
-        return results.sorted(by: {$0.description < $1.description})
+        return results.sorted(by: { $0.description < $1.description })
     }
 
     func resultsMatching(_ closure: (BenchmarkIdentifier, BenchmarkResult) -> Bool) -> [BenchmarkResult] {
@@ -152,12 +151,12 @@ struct BenchmarkBaseline: Codable {
             }
         }
 
-        return results.sorted(by: {$0.metric.description < $1.metric.description})
+        return results.sorted(by: { $0.metric.description < $1.metric.description })
     }
 
-    func resultsByTarget(_ target: String) -> [String : [BenchmarkResult]] {
-        let filteredResults = self.results.filter { $0.key.target == target }.sorted(by: {$0.key.name < $1.key.name})
-        let resultsPerTarget = Dictionary(uniqueKeysWithValues: filteredResults.map {key, value in (key.name, value)})
+    func resultsByTarget(_ target: String) -> [String: [BenchmarkResult]] {
+        let filteredResults = results.filter { $0.key.target == target }.sorted(by: { $0.key.name < $1.key.name })
+        let resultsPerTarget = Dictionary(uniqueKeysWithValues: filteredResults.map { key, value in (key.name, value) })
 
         return resultsPerTarget
     }
@@ -167,6 +166,7 @@ let baselinesDirectory: String = ".benchmarkBaselines"
 
 extension BenchmarkTool {
     func write(_ baseline: BenchmarkBaseline,
+               target: String,
                hostIdentifier: String? = nil) throws {
         // Set up desired output path and create any intermediate directories for structure as required:
 
@@ -206,7 +206,7 @@ extension BenchmarkTool {
         var subPath = FilePath() // subpath rooted in package used for directory creation
 
         subPath.append(baselinesDirectory) // package/.benchmarkBaselines
-        subPath.append(FilePath.Component(target)!) // package/.benchmarkBaselines/myTarget1
+        subPath.append("\(target)") // package/.benchmarkBaselines/myTarget1
 
         if let baselineIdentifier = baselineName {
             subPath.append(baselineIdentifier) // package/.benchmarkBaselines/myTarget1/named1
@@ -260,6 +260,7 @@ extension BenchmarkTool {
     }
 
     func read(hostIdentifier: String? = nil,
+              target: String,
               baselineIdentifier: String? = nil) throws -> BenchmarkBaseline? {
         var path = FilePath(baselineStoragePath)
         path.append(baselinesDirectory) // package/.benchmarkBaselines
@@ -291,7 +292,6 @@ extension BenchmarkTool {
                         var done = false
 
                         while done == false { // readBytes.count < bufferLength {
-
                             let nextBytes = try [UInt8](unsafeUninitializedCapacity: bufferSize) { buf, count in
                                 count = try fd.read(into: UnsafeMutableRawBufferPointer(buf))
                                 if count == 0 {

@@ -46,7 +46,6 @@ extension BenchmarkTool {
         var readBytes = [UInt8]()
 
         while readBytes.count < bufferLength {
-
             let nextBytes = try [UInt8](unsafeUninitializedCapacity: bufferLength - readBytes.count) { buf, count in
                 count = try input.read(into: UnsafeMutableRawBufferPointer(buf))
             }

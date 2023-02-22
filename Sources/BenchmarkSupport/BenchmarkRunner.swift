@@ -21,6 +21,9 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
 
     public init() {}
 
+    @Option(name: .shortAndLong, help: "Whether to supress progress output.")
+    var quiet = false
+
     @Option(name: .shortAndLong, help: "The input pipe filedescriptor used for communication with host process.")
     var inputFD: Int32?
 
@@ -236,7 +239,9 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
                         operatingSystemStatsProducer.startSampling(5_000) // ~5 ms
                     }
 
-                    print("Running \(benchmarkToRun.target ?? "unknown target"):\(benchmarkToRun.name)")
+                    if quiet == false {
+                        print("Running \(benchmarkToRun.target):\(benchmarkToRun.name)")
+                    }
 
                     // Run the benchmark at a minimum the desired iterations/runtime --
                     while iterations <= benchmark.configuration.desiredIterations ||
