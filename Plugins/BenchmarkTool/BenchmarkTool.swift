@@ -35,7 +35,6 @@ enum Grouping: String, ExpressibleByArgument {
 enum ExportFormat: String, ExpressibleByArgument, CaseIterable {
     case influx
     case percentiles
-//    case gnuplot
     case tsv
     case jmh
 }
@@ -54,11 +53,8 @@ typealias BenchmarkResults = [BenchmarkIdentifier: [BenchmarkResult]]
 
 @main
 struct BenchmarkTool: AsyncParsableCommand {
-    @Option(name: .long, help: "The path to the benchmark to run")
-    var benchmarkExecutablePath: String
-
-    @Option(name: .long, help: "The target name of the benchmark to run")
-    var target: String
+    @Option(name: .long, help: "The paths to the benchmarks to run")
+    var benchmarkExecutablePaths: [String]
 
     @Option(name: .long, help: "The command to perform")
     var command: BenchmarkOperation
@@ -74,10 +70,6 @@ struct BenchmarkTool: AsyncParsableCommand {
 
     @Option(name: .long, help: "The path to export to")
     var exportPath: String?
-
-    // Used for pretty printing machine info etc.
-    @Option(name: .long, help: "True if the invocation of this tool is the first in the run of the plugin")
-    var firstBenchmarkTool: Bool
 
     @Option(name: .long, help: "True if we should supress output")
     var quiet: Bool
@@ -100,12 +92,17 @@ struct BenchmarkTool: AsyncParsableCommand {
     @Option(name: .long, help: "Benchmarks matching the regexp filter that should be skipped")
     var skip: [String] = []
 
+    var targets: [String] {
+        return benchmarkExecutablePaths.map { FilePath($0).lastComponent!.description }
+    }
+
     var inputFD: CInt = 0
     var outputFD: CInt = 0
 
     var benchmarks: [Benchmark] = []
 
     var currentBaseline: BenchmarkBaseline?
+    var target: String = ""
 
     mutating func failBenchmark(_ reason: String? = nil) {
         if let reason {
@@ -119,8 +116,8 @@ struct BenchmarkTool: AsyncParsableCommand {
 #endif
     }
 
-    func printChildRunError(_ result: Int32) {
-        print("Failed to run '\(command)' for \(benchmarkExecutablePath), result [\(result)]")
+    func printChildRunError(error: Int32, benchmarkExecutablePath: String) {
+        print("Failed to run '\(command)' for \(benchmarkExecutablePath), error code [\(error)]")
         print("Likely your benchmark crahed, try running the tool in the debugger, e.g.")
         print("lldb \(benchmarkExecutablePath)")
         print("Or check Console.app for a backtrace if on macOS.")
@@ -184,12 +181,19 @@ struct BenchmarkTool: AsyncParsableCommand {
             print("Unknown command \(command) in BenchmarkTool")
         }
 
-        // first get a list of benchmarks from the executable
-        try runChild(benchmarkPath: benchmarkExecutablePath,
-                     benchmarkCommand: .query) { [self] result in
-            if result != 0 {
-                printChildRunError(result)
+        // First get a list of all benchmarks
+        try benchmarkExecutablePaths.forEach { benchmarkExecutablePath in
+            try runChild(benchmarkPath: benchmarkExecutablePath,
+                         benchmarkCommand: .query) { [self] result in
+                if result != 0 {
+                    printChildRunError(error: result, benchmarkExecutablePath: benchmarkExecutablePath)
+                }
             }
+        }
+
+        guard command != .list else {
+            try listBenchmarks()
+            return
         }
 
         var benchmarkResults: BenchmarkResults = [:]
@@ -197,12 +201,13 @@ struct BenchmarkTool: AsyncParsableCommand {
         // run each benchmark for the target as a separate process
         try benchmarks.forEach { benchmark in
             if try shouldRunBenchmark(benchmark.name) {
+                target = FilePath(benchmark.executablePath).lastComponent!.description
                 // Then perform actions
-                let results = try runChild(benchmarkPath: benchmarkExecutablePath,
+                let results = try runChild(benchmarkPath: benchmark.executablePath,
                                            benchmarkCommand: command,
                                            benchmark: benchmark) { [self] result in
                     if result != 0 {
-                        printChildRunError(result)
+                        printChildRunError(error: result, benchmarkExecutablePath: benchmark.executablePath)
                     }
                 }
 
@@ -252,7 +257,7 @@ struct BenchmarkTool: AsyncParsableCommand {
             do {
                 switch benchmarkCommand {
                 case .query:
-                    try queryBenchmarks() // Get all available benchmarks first
+                    try queryBenchmarks(benchmarkPath) // Get all available benchmarks first
                 case .list:
                     try listBenchmarks()
                 case .updateBaseline:

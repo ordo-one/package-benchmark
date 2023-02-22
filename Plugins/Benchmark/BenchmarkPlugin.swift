@@ -49,6 +49,7 @@ import PackagePlugin
         let filterSpecified = argumentExtractor.extractOption(named: "filter")
         let pathSpecified = argumentExtractor.extractOption(named: "path") // export path
         let skipSpecified = argumentExtractor.extractOption(named: "skip")
+//        let baselines = argumentExtractor.extractOption(named: "baseline")
         let quietRunning = argumentExtractor.extractFlag(named: "quiet")
         var outputFormat = "text"
         var grouping = "test"
@@ -150,112 +151,98 @@ import PackagePlugin
         // Remaining positional arguments are various action verbs for the plugin
         var positionalArguments = argumentExtractor.remainingArguments
 
-        let commandString = positionalArguments.count > 0 ? positionalArguments.removeFirst() : "run" // default
+        let commandString = positionalArguments.count > 0 ? positionalArguments.removeFirst() : Command.run.rawValue
 
-        let commandToPerform = Command(rawValue: commandString)
+        guard let commandToPerform = Command(rawValue: commandString), commandToPerform != .help else {
+            print("Please visit https://github.com/ordo-one/package-benchmark for usage documentation")
+            return
+        }
 
         let benchmarkTool = try context.tool(named: "BenchmarkTool")
 
-        var firstBenchmarkTool = true
+        // Set up all the arguments
 
-        var benchmarkFailure = false
-        // Run the benchmarkTool for each target, constructing proper argument list for the BenchmarkTool
-        for benchmark in benchmarks {
+        var args: [String] = [benchmarkTool.path.lastComponent.description,
+                              "--command", commandToPerform.rawValue,
+                              "--baseline-storage-path", context.package.directory.string,
+                              "--baseline-comparison-path", context.package.directory.string,
+                              "--format", outputFormat,
+                              "--grouping", grouping,
+                              "--quiet", quietRunning > 0 ? true.description : false.description]
+
+        filterSpecified.forEach { filter in
+            args.append(contentsOf: ["--filter", filter])
+        }
+
+        skipSpecified.forEach { skip in
+            args.append(contentsOf: ["--skip", skip])
+        }
+
+        if pathSpecified.count > 0 {
+            args.append(contentsOf: ["--export-path", exportPath])
+        }
+
+        switch commandToPerform {
+        case .help: // we should fix inline help here, missing SAP
+            break
+        case .list:
+            break
+        case .run:
+            break
+        case .compare:
+            if positionalArguments.count > 0 {
+                args.append(contentsOf: ["--baseline-name", positionalArguments[0]])
+            }
+            if positionalArguments.count > 1 {
+                args.append(contentsOf: ["--baseline-name-second", positionalArguments[1]])
+            }
+        case .updateBaseline:
+            if positionalArguments.count > 0 {
+                args.append(contentsOf: ["--baseline-name", positionalArguments[0]])
+            }
+        case .export:
+            if positionalArguments.count > 0 {
+                args.append(contentsOf: ["--export-format", positionalArguments[0]])
+            }
+            if positionalArguments.count > 1 {
+                args.append(contentsOf: ["--baseline-name", positionalArguments[1]])
+            }
+        case .baseline:
+            if positionalArguments.count > 0 {
+                args.append(contentsOf: ["--baseline-name", positionalArguments[0]])
+            }
+        }
+
+        benchmarks.forEach { benchmark in
+            args.append(contentsOf: ["--benchmark-executable-paths", benchmark.path.string])
+        }
+
+        try withCStrings(args) { cArgs in
+            // https://forums.swift.org/t/swiftpm-always-rebuilds-command-plugins-in-release-configuration/63225
+            let toolname = benchmarkTool.path.lastComponent
+            let newPath = benchmarkTool.path.removingLastComponent().removingLastComponent()
+                .appending(subpath: "release").appending(subpath: toolname)
+
             var pid: pid_t = 0
+            var status = posix_spawn(&pid, newPath.string, nil, nil, cArgs, environ)
 
-            var args: [String] = [benchmarkTool.path.lastComponent.description,
-                                  "--target", benchmark.path.lastComponent.description,
-                                  "--benchmark-executable-path", benchmark.path.string,
-                                  "--baseline-storage-path", context.package.directory.string,
-                                  "--baseline-comparison-path", context.package.directory.string,
-                                  "--format", outputFormat,
-                                  "--grouping", grouping,
-                                  "--quiet", quietRunning > 0 ? true.description : false.description,
-                                  "--first-benchmark-tool", firstBenchmarkTool.description]
-
-            filterSpecified.forEach { filter in
-                args.append(contentsOf: ["--filter", filter])
-            }
-
-            skipSpecified.forEach { skip in
-                args.append(contentsOf: ["--skip", skip])
-            }
-
-            if pathSpecified.count > 0 {
-                args.append(contentsOf: ["--export-path", exportPath])
-            }
-
-            switch commandToPerform {
-            case .help: // we should fix inline help here, missing SAP
-                print("Please visit https://github.com/ordo-one/package-benchmark for usage documentation")
-                exit(0)
-            case .list:
-                args.append(contentsOf: ["--command", "list"])
-            case .run:
-                args.append(contentsOf: ["--command", "run"])
-            case .compare:
-                args.append(contentsOf: ["--command", "compare"])
-                if positionalArguments.count > 0 {
-                    args.append(contentsOf: ["--baseline-name", positionalArguments[0]])
-                }
-                if positionalArguments.count > 1 {
-                    args.append(contentsOf: ["--baseline-name-second", positionalArguments[1]])
-                }
-            case .updateBaseline:
-                args.append(contentsOf: ["--command", "update-baseline"])
-                if positionalArguments.count > 0 {
-                    args.append(contentsOf: ["--baseline-name", positionalArguments[0]])
-                }
-            case .export:
-                args.append(contentsOf: ["--command", "export"])
-                if positionalArguments.count > 0 {
-                    args.append(contentsOf: ["--export-format", positionalArguments[0]])
-                }
-                if positionalArguments.count > 1 {
-                    args.append(contentsOf: ["--baseline-name", positionalArguments[1]])
-                }
-            case .baseline:
-                args.append(contentsOf: ["--command", "baseline"])
-                if positionalArguments.count > 0 {
-                    args.append(contentsOf: ["--baseline-name", positionalArguments[0]])
-                }
-            default:
-                print("Unknown command/option \(commandString)")
-                return
-            }
-
-            withCStrings(args) { cArgs in
-                // https://forums.swift.org/t/swiftpm-always-rebuilds-command-plugins-in-release-configuration/63225
-                let toolname = benchmarkTool.path.lastComponent
-                let newPath = benchmarkTool.path.removingLastComponent().removingLastComponent()
-                    .appending(subpath: "release").appending(subpath: toolname)
-
-                var status = posix_spawn(&pid, newPath.string, nil, nil, cArgs, environ)
-
-                if status == 0 {
-                    if waitpid(pid, &status, 0) != -1 {
-                        if status != 0 {
-                            benchmarkFailure = true
-                        }
-                    } else {
-                        print("BenchmarkTool returned a non-zero exit code, errno = \(errno)")
-                        exit(errno)
+            if status == 0 {
+                if waitpid(pid, &status, 0) != -1 {
+                    if status != 0 {
+                        print("One or more benchmark suites had a threshold violation or crashed during runtime.")
+                        throw MyError.benchmarkDeviationOrBenchmarkFailed
                     }
                 } else {
-                    print("Failed to run BenchmarkTool, posix_spawn() returned [\(status)]")
+                    print("BenchmarkTool returned a non-zero exit code, errno = \(errno)")
+                    exit(errno)
                 }
+            } else {
+                print("Failed to run BenchmarkTool, posix_spawn() returned [\(status)]")
             }
-
-            firstBenchmarkTool = false
-        }
-        if benchmarkFailure {
-            print("One or more benchmark suites had a threshold violation or crashed during runtime.")
-            throw MyError.benchmarkDeviationOrBenchmarkFailed
         }
     }
 
     enum MyError: Error {
         case benchmarkDeviationOrBenchmarkFailed
-        case invalidArguments
     }
 }

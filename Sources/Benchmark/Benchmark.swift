@@ -32,6 +32,7 @@ public final class Benchmark: Codable, Hashable {
     /// Convenience range to iterate over for benchmarks
     public var throughputIterations: Range<Int> { 0 ..< configuration.throughputScalingFactor.rawValue }
 
+    public var executablePath: String = ""
     /// closure: The actual benchmark closure that will be measured
     var closure: BenchmarkClosure? // The actual benchmark to run
     /// asyncClosure: The actual benchmark (async) closure that will be measured

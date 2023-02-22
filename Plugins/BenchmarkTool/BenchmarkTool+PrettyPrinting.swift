@@ -81,9 +81,7 @@ extension BenchmarkTool {
             return
         }
 
-        if firstBenchmarkTool {
-            printMachine(baseline.machine, header)
-        }
+        printMachine(baseline.machine, header)
 
         printMarkdown("## ", terminator: "")
         print("\(target)")
@@ -116,12 +114,10 @@ extension BenchmarkTool {
             return
         }
 
-        if firstBenchmarkTool {
-            printMachine(baseline.machine, "Comparing results with baseline")
-            if currentBaseline.machine != baseline.machine {
-                print("Warning: Machine configuration is different when comparing baselines, other config:")
-                printMachine(currentBaseline.machine, "")
-            }
+        printMachine(baseline.machine, "Comparing results with baseline")
+        if currentBaseline.machine != baseline.machine {
+            print("Warning: Machine configuration is different when comparing baselines, other config:")
+            printMachine(currentBaseline.machine, "")
         }
 
         printMarkdown("## ", terminator: "")

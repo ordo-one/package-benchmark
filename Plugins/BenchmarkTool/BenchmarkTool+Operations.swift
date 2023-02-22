@@ -15,13 +15,14 @@ import ExtrasJSON
 import SystemPackage
 
 extension BenchmarkTool {
-    mutating func queryBenchmarks() throws {
+    mutating func queryBenchmarks(_ benchmarkPath: String) throws {
         try write(.list)
     outerloop: while true {
         let benchmarkReply = try read()
 
         switch benchmarkReply {
         case let .list(benchmark):
+            benchmark.executablePath = benchmarkPath
             benchmarks.append(benchmark)
         case .end:
             break outerloop
@@ -143,10 +144,14 @@ extension BenchmarkTool {
     }
 
     func listBenchmarks() throws {
-        print("Target '\(FilePath(benchmarkExecutablePath).lastComponent!)' available benchmarks:")
-        benchmarks.forEach { benchmark in
-            print("\(benchmark.name)")
+        benchmarkExecutablePaths.forEach { benchmarkExecutablePath in
+            print("Target '\(FilePath(benchmarkExecutablePath).lastComponent!)' available benchmarks:")
+            benchmarks.forEach { benchmark in
+                if benchmark.executablePath == benchmarkExecutablePath {
+                    print("\(benchmark.name)")
+                }
+            }
+            print("")
         }
-        print("")
     }
 }
