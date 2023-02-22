@@ -112,7 +112,7 @@ import PackagePlugin
 
         if outputFormat == "text" {
             if quietRunning == 0 {
-                print("Build complete! Running benchmarks...")
+                print("Build complete!")
                 print("")
             }
         }

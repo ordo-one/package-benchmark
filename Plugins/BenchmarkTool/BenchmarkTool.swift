@@ -101,7 +101,7 @@ struct BenchmarkTool: AsyncParsableCommand {
 
     var benchmarks: [Benchmark] = []
 
-    var currentBaseline: BenchmarkBaseline?
+//    var currentBaseline: BenchmarkBaseline?
     var readBaselines: [BenchmarkBaseline] = [] // The baselines read from disk
 
     mutating func failBenchmark(_ reason: String? = nil) {
@@ -145,12 +145,64 @@ struct BenchmarkTool: AsyncParsableCommand {
             } else {
                 var aggregatedBaseline = readBaselines.first!
                 for baseline in 1 ..< readBaselines.count {
-                    aggregatedBaseline.merge(readBaselines[baseline])
+                    aggregatedBaseline = aggregatedBaseline.merge(readBaselines[baseline])
                 }
                 prettyPrint(aggregatedBaseline, header: "Current baseline")
             }
             return
         case .compare:
+            var otherBaselines: [BenchmarkBaseline] = []
+
+            try targets.forEach { target in
+                let currentBaseline = try read(target: target, baselineIdentifier: baselineName)
+
+                if let currentBaseline {
+                    readBaselines.append(currentBaseline)
+                    if let baselineNameSecond { // we compare with another known baseline instead of running
+                        let otherBaseline = try read(target: target, baselineIdentifier: baselineNameSecond)
+                        if let otherBaseline {
+                            otherBaselines.append(otherBaseline)
+                        }
+                    }
+                }
+            }
+
+            // Merge baselines read
+            var aggregatedBaseline = readBaselines.first!
+            for baseline in 1 ..< readBaselines.count {
+                aggregatedBaseline = aggregatedBaseline.merge(readBaselines[baseline])
+            }
+
+            // We read a second set of baseline to compare with
+            if otherBaselines.isEmpty == false {
+                // merge those as well
+                var otherAggregatedBaseline = otherBaselines.first!
+                for baseline in 1 ..< otherBaselines.count {
+                    otherAggregatedBaseline = otherAggregatedBaseline.merge(otherBaselines[baseline])
+                }
+
+//                print("\(aggregatedBaseline.results.count) \(otherAggregatedBaseline.results.count)")
+
+                prettyPrintDelta(currentBaseline:aggregatedBaseline, baseline: otherAggregatedBaseline)
+
+                if otherAggregatedBaseline.betterResultsOrEqual(than: aggregatedBaseline, printOutput: true) {
+                    print("New baseline '\(baselineNameSecond ?? "current")' is BETTER (or equal) than the '\(baselineName ?? "default")' baseline thresholds.")
+                    print("")
+
+                } else {
+                    failBenchmark("New baseline '\(baselineNameSecond ?? "current ")' is WORSE than the '\(baselineName ?? "default")' baseline thresholds.")
+                }
+
+                return
+            } else if baselineNameSecond != nil {
+                failBenchmark("Couldn't find baseline '\(baselineNameSecond!)' to compare with, skipping comparison.")
+            }
+
+  //              return
+//            }
+
+/*
+
             try targets.forEach { target in
                 currentBaseline = try read(target: target, baselineIdentifier: baselineName)
 
@@ -165,6 +217,7 @@ struct BenchmarkTool: AsyncParsableCommand {
                             if otherBaseline.betterResultsOrEqual(than: currentBaseline, printOutput: true) {
                                 print("New baseline '\(baselineNameSecond)' for '\(target)' is BETTER (or equal) than the '\(baselineName ?? "default")' baseline thresholds.")
                                 print("")
+
                             } else {
                                 failBenchmark("New baseline '\(baselineNameSecond)' for '\(target)' is WORSE than the '\(baselineName ?? "default")' baseline thresholds.")
                             }
@@ -174,7 +227,7 @@ struct BenchmarkTool: AsyncParsableCommand {
                         return
                     }
                 }
-            }
+            } */
         case .export:
             var results: BenchmarkResults = [:]
             try targets.forEach { target in

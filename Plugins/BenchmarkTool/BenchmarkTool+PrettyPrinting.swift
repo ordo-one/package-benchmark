@@ -131,134 +131,133 @@ extension BenchmarkTool {
         }
     }
 
-    func prettyPrintDelta(baseline: BenchmarkBaseline,
-                          target: String,
-                          hostIdentifier _: String? = nil) {
-        guard let currentBaseline, quiet == false else {
-            print("No baseline available to compare with.")
-            return
-        }
-
+    func prettyPrintDelta(currentBaseline: BenchmarkBaseline,
+                          baseline: BenchmarkBaseline,
+                          hostIdentifier _: String? = nil) {        
         printMachine(baseline.machine, "Comparing results with baseline")
         if currentBaseline.machine != baseline.machine {
             print("Warning: Machine configuration is different when comparing baselines, other config:")
             printMachine(currentBaseline.machine, "")
         }
+        
+        baseline.targets.forEach { target in
+            
+            printMarkdown("## ", terminator: "")
+            print("\(target)")
+            printText("============================================================================================================================")
+            print("")
+            
+            var baseBaselineName: String
+            var comparisonBaselineName: String
+            if let baselineName { // we compare with another known baseline instead of running
+                baseBaselineName = "'\(baselineName)'"
+            } else {
+                baseBaselineName = "Baseline"
+            }
+            if let baselineNameSecond { // we compare with another known baseline instead of running
+                comparisonBaselineName = "'\(baselineNameSecond)'"
+            } else {
+                comparisonBaselineName = "Current run"
+            }
+            
+            var keys = baseline.results.keys.sorted(by: { $0.name < $1.name })
 
-        printMarkdown("## ", terminator: "")
-        print("\(target)")
-        printText("============================================================================================================================")
-        print("")
-
-        var baseBaselineName: String
-        var comparisonBaselineName: String
-        if let baselineName { // we compare with another known baseline instead of running
-            baseBaselineName = "'\(baselineName)'"
-        } else {
-            baseBaselineName = "Baseline"
-        }
-        if let baselineNameSecond { // we compare with another known baseline instead of running
-            comparisonBaselineName = "'\(baselineNameSecond)'"
-        } else {
-            comparisonBaselineName = "Current run"
-        }
-
-        let keys = baseline.results.keys.sorted(by: { $0.name < $1.name })
-
-        keys.forEach { key in
-            if let value = baseline.results[key] {
-                guard let baselineComparison = currentBaseline.results[key] else {
-                    //       print("No baseline to compare with for `\(key.target):\(key.name)`.")
-                    return
-                }
-
-                printMarkdown("### ", terminator: "")
-                printText("----------------------------------------------------------------------------------------------------------------------------")
-                print("\(key.name) metrics")
-                printText("----------------------------------------------------------------------------------------------------------------------------")
-                print("")
-
-                value.forEach { currentResult in
-                    var result = currentResult
-                    if let base = baselineComparison.first(where: { $0.metric == result.metric }) {
-                        if result == base {
-//                            print(" \(result.metric) results were identical.")
-//                            print("")
-                        } else {
-                            var hideResults: Bool = true
-
-                            if result.betterResultsOrEqual(than: base, thresholds: result.thresholds ?? BenchmarkResult.PercentileThresholds.default) {
-                                hideResults = true
+            keys.removeAll(where: {$0.target == target})
+            keys.forEach { key in
+                if let value = baseline.results[key] {
+                    guard let baselineComparison = currentBaseline.results[key] else {
+                        //       print("No baseline to compare with for `\(key.target):\(key.name)`.")
+                        return
+                    }
+                    
+                    printMarkdown("### ", terminator: "")
+                    printText("----------------------------------------------------------------------------------------------------------------------------")
+                    print("\(key.name) metrics")
+                    printText("----------------------------------------------------------------------------------------------------------------------------")
+                    print("")
+                    
+                    value.forEach { currentResult in
+                        var result = currentResult
+                        if let base = baselineComparison.first(where: { $0.metric == result.metric }) {
+                            if result == base {
+                                //                            print(" \(result.metric) results were identical.")
+                                //                            print("")
                             } else {
-                                hideResults = false
-                            }
-
-                            if format == .markdown {
-                                if hideResults {
-                                    print("<details><summary>\(result.metric): results within specified thresholds, fold down for details.</summary>")
-                                    print("<p>")
-                                    print("")
+                                var hideResults: Bool = true
+                                
+                                if result.betterResultsOrEqual(than: base, thresholds: result.thresholds ?? BenchmarkResult.PercentileThresholds.default) {
+                                    hideResults = true
+                                } else {
+                                    hideResults = false
                                 }
-                            }
-                            let percentileWidth = 7
-                            let table = TextTable<BenchmarkBaseline.ResultsEntry> {
-                                [Column(title: "\(result.metric.description) \(result.unitDescriptionPretty)", value: $0.description, width: 40, align: .center),
-                                 Column(title: "p0", value: $0.metrics.percentiles[.p0] ?? "n/a", width: percentileWidth, align: .right),
-                                 Column(title: "p25", value: $0.metrics.percentiles[.p25] ?? "n/a", width: percentileWidth, align: .right),
-                                 Column(title: "p50", value: $0.metrics.percentiles[.p50] ?? "n/a", width: percentileWidth, align: .right),
-                                 Column(title: "p75", value: $0.metrics.percentiles[.p75] ?? "n/a", width: percentileWidth, align: .right),
-                                 Column(title: "p90", value: $0.metrics.percentiles[.p90] ?? "n/a", width: percentileWidth, align: .right),
-                                 Column(title: "p99", value: $0.metrics.percentiles[.p99] ?? "n/a", width: percentileWidth, align: .right),
-                                 Column(title: "p100", value: $0.metrics.percentiles[.p100] ?? "n/a", width: percentileWidth, align: .right),
-                                 Column(title: "Samples", value: $0.metrics.measurements, width: percentileWidth, align: .right)]
-                            }
-
-                            // Rescale result to base if needed
-                            result.scaleResults(to: base)
-
-                            var percentiles: [BenchmarkResult.Percentile: Int] = [:]
-
-                            result.percentiles.forEach { percentile, value in
-                                if let basePercentile = base.percentiles[percentile] {
-                                    percentiles[percentile] = value - basePercentile
+                                
+                                if format == .markdown {
+                                    if hideResults {
+                                        print("<details><summary>\(result.metric): results within specified thresholds, fold down for details.</summary>")
+                                        print("<p>")
+                                        print("")
+                                    }
                                 }
-                            }
-
-                            let deltaComparison = BenchmarkResult(metric: BenchmarkMetric.delta,
-                                                                  timeUnits: result.timeUnits,
-                                                                  measurements: result.measurements - base.measurements,
-                                                                  warmupIterations: result.warmupIterations - base.warmupIterations,
-                                                                  percentiles: percentiles)
-
-                            let reversedPolarity = base.metric.polarity() == .prefersLarger
-
-                            percentiles = [:]
-                            result.percentiles.forEach { percentile, value in
-                                if let basePercentile = base.percentiles[percentile] {
-                                    percentiles[percentile] = formatTableEntry(basePercentile, value, reversedPolarity)
+                                let percentileWidth = 7
+                                let table = TextTable<BenchmarkBaseline.ResultsEntry> {
+                                    [Column(title: "\(result.metric.description) \(result.unitDescriptionPretty)", value: $0.description, width: 40, align: .center),
+                                     Column(title: "p0", value: $0.metrics.percentiles[.p0] ?? "n/a", width: percentileWidth, align: .right),
+                                     Column(title: "p25", value: $0.metrics.percentiles[.p25] ?? "n/a", width: percentileWidth, align: .right),
+                                     Column(title: "p50", value: $0.metrics.percentiles[.p50] ?? "n/a", width: percentileWidth, align: .right),
+                                     Column(title: "p75", value: $0.metrics.percentiles[.p75] ?? "n/a", width: percentileWidth, align: .right),
+                                     Column(title: "p90", value: $0.metrics.percentiles[.p90] ?? "n/a", width: percentileWidth, align: .right),
+                                     Column(title: "p99", value: $0.metrics.percentiles[.p99] ?? "n/a", width: percentileWidth, align: .right),
+                                     Column(title: "p100", value: $0.metrics.percentiles[.p100] ?? "n/a", width: percentileWidth, align: .right),
+                                     Column(title: "Samples", value: $0.metrics.measurements, width: percentileWidth, align: .right)]
                                 }
-                            }
-
-                            let percentageComparison = BenchmarkResult(metric: BenchmarkMetric.deltaPercentage,
-                                                                       timeUnits: base.timeUnits,
-                                                                       measurements: formatTableEntry(base.measurements, result.measurements, false),
-                                                                       warmupIterations: formatTableEntry(base.warmupIterations, result.warmupIterations, true),
-                                                                       percentiles: percentiles)
-
-                            printMarkdown("```")
-                            var tableEntries: [BenchmarkBaseline.ResultsEntry] = []
-                            tableEntries.append(BenchmarkBaseline.ResultsEntry(description: baseBaselineName, metrics: base))
-                            tableEntries.append(BenchmarkBaseline.ResultsEntry(description: comparisonBaselineName, metrics: result))
-                            tableEntries.append(BenchmarkBaseline.ResultsEntry(description: BenchmarkMetric.delta.description, metrics: deltaComparison))
-                            tableEntries.append(BenchmarkBaseline.ResultsEntry(description: "Improvement %", metrics: percentageComparison))
-                            table.print(tableEntries, style: Style.fancy)
-                            printMarkdown("```")
-
-                            if format == .markdown {
-                                if hideResults {
-                                    print("<p>")
-                                    print("</details>")
-                                    print("")
+                                
+                                // Rescale result to base if needed
+                                result.scaleResults(to: base)
+                                
+                                var percentiles: [BenchmarkResult.Percentile: Int] = [:]
+                                
+                                result.percentiles.forEach { percentile, value in
+                                    if let basePercentile = base.percentiles[percentile] {
+                                        percentiles[percentile] = value - basePercentile
+                                    }
+                                }
+                                
+                                let deltaComparison = BenchmarkResult(metric: BenchmarkMetric.delta,
+                                                                      timeUnits: result.timeUnits,
+                                                                      measurements: result.measurements - base.measurements,
+                                                                      warmupIterations: result.warmupIterations - base.warmupIterations,
+                                                                      percentiles: percentiles)
+                                
+                                let reversedPolarity = base.metric.polarity() == .prefersLarger
+                                
+                                percentiles = [:]
+                                result.percentiles.forEach { percentile, value in
+                                    if let basePercentile = base.percentiles[percentile] {
+                                        percentiles[percentile] = formatTableEntry(basePercentile, value, reversedPolarity)
+                                    }
+                                }
+                                
+                                let percentageComparison = BenchmarkResult(metric: BenchmarkMetric.deltaPercentage,
+                                                                           timeUnits: base.timeUnits,
+                                                                           measurements: formatTableEntry(base.measurements, result.measurements, false),
+                                                                           warmupIterations: formatTableEntry(base.warmupIterations, result.warmupIterations, true),
+                                                                           percentiles: percentiles)
+                                
+                                printMarkdown("```")
+                                var tableEntries: [BenchmarkBaseline.ResultsEntry] = []
+                                tableEntries.append(BenchmarkBaseline.ResultsEntry(description: baseBaselineName, metrics: base))
+                                tableEntries.append(BenchmarkBaseline.ResultsEntry(description: comparisonBaselineName, metrics: result))
+                                tableEntries.append(BenchmarkBaseline.ResultsEntry(description: BenchmarkMetric.delta.description, metrics: deltaComparison))
+                                tableEntries.append(BenchmarkBaseline.ResultsEntry(description: "Improvement %", metrics: percentageComparison))
+                                table.print(tableEntries, style: Style.fancy)
+                                printMarkdown("```")
+                                
+                                if format == .markdown {
+                                    if hideResults {
+                                        print("<p>")
+                                        print("</details>")
+                                        print("")
+                                    }
                                 }
                             }
                         }

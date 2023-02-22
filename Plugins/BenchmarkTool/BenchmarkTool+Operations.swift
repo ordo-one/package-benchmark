@@ -84,19 +84,19 @@ extension BenchmarkTool {
                 return
             }
 
-            readBaselines.forEach { baseline in
-                baseline.targets.forEach { target in
-                    prettyPrintDelta(baseline: BenchmarkBaseline(machine: benchmarkMachine, results: benchmarkResults),
-                                     target: target)
+            // Merge baselines read
+            var aggregatedBaseline = readBaselines.first!
+            for baseline in 1 ..< readBaselines.count {
+                aggregatedBaseline = aggregatedBaseline.merge(readBaselines[baseline])
+            }
 
-                    if BenchmarkBaseline(machine: benchmarkMachine,
-                                         results: benchmarkResults).betterResultsOrEqual(than: baseline,
-                                                                                         printOutput: true) {
-                        print("Current run of \(target) is BETTER (or equal) than the '\(baselineName ?? "default")' baseline thresholds.")
-                    } else {
-                        failBenchmark("Current run of \(target) is WORSE than the '\(baselineName ?? "default")' baseline thresholds.")
-                    }
-                }
+            let currentBaseline = BenchmarkBaseline(machine: benchmarkMachine, results: benchmarkResults)
+            prettyPrintDelta(currentBaseline: currentBaseline, baseline: aggregatedBaseline)
+
+            if currentBaseline.betterResultsOrEqual(than: aggregatedBaseline, printOutput: true) {
+                print("Current run is BETTER (or equal) than the '\(baselineName ?? "default")' baseline thresholds.")
+            } else {
+                failBenchmark("Current run of is WORSE than the '\(baselineName ?? "default")' baseline thresholds.")
             }
         case .updateBaseline:
             if quiet == false {
