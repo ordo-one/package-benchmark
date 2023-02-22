@@ -40,9 +40,12 @@ extension BenchmarkTool {
     }
 
     fileprivate func printMachine(_ machine: BenchmarkMachine, _ header: String) {
+        let separator = String(repeating: "=", count: machine.kernelVersion.count )
+        print("")
         printMarkdown("## ", terminator: "")
+        printText(separator)
         print(header)
-        printText("============================================================================================================================")
+        printText(separator)
         print("")
         printMarkdown("```")
         print("Host '\(machine.hostname)' with \(machine.processors) '\(machine.processorType)' processors with \(machine.memory) GB memory, running:")
@@ -51,10 +54,13 @@ extension BenchmarkTool {
         printText("")
     }
 
-    fileprivate func _prettyPrint(title: String, key: String, results: [BenchmarkBaseline.ResultsEntry]) {
+    fileprivate func _prettyPrint(title: String,
+                                  key: String,
+                                  results: [BenchmarkBaseline.ResultsEntry],
+                                  width: Int = 30) {
         let percentileWidth = 7
         let table = TextTable<BenchmarkBaseline.ResultsEntry> {
-            [Column(title: title, value: "\($0.description) \($0.metrics.unitDescriptionPretty)", width: 40, align: .left),
+            [Column(title: title, value: "\($0.description) \($0.metrics.unitDescriptionPretty)", width: width, align: .left),
              Column(title: "p0", value: $0.metrics.percentiles[.p0] ?? "n/a", width: percentileWidth, align: .right),
              Column(title: "p25", value: $0.metrics.percentiles[.p25] ?? "n/a", width: percentileWidth, align: .right),
              Column(title: "p50", value: $0.metrics.percentiles[.p50] ?? "n/a", width: percentileWidth, align: .right),
@@ -83,26 +89,44 @@ extension BenchmarkTool {
 
         printMachine(baseline.machine, header)
 
-        printMarkdown("## ", terminator: "")
-        print("\(target)")
-        printText("============================================================================================================================")
-        print("")
-
         switch grouping {
         case .test:
-            baseline.benchmarkNames.forEach { benchmarkName in
-                let results = baseline.resultEntriesMatching { identifier, result in
-                    return (identifier.name == benchmarkName, result.metric.description)
+            var width = 10
+            let metrics = baseline.metricsMatching { identifier, result in true }
+            metrics.forEach { metric in
+                width = max(width, metric.description.count)
+            }
+            width = min(70, width + 5) // add 5 for ' (M)'
+
+            baseline.targets.forEach { target in
+                let separator = String(repeating: "=", count: "\(target)".count )
+                printMarkdown("## ", terminator: "")
+                printText(separator)
+                print("\(target)")
+                printText(separator)
+                print("")
+                baseline.benchmarkNames.forEach { benchmarkName in
+                    let results = baseline.resultEntriesMatching { identifier, result in
+                        return (identifier.name == benchmarkName && identifier.target == target, result.metric.description)
+                    }
+                    if results.count > 0 {
+                        _prettyPrint(title: "Metric", key: benchmarkName, results: results, width: width)
+                    }
                 }
-                _prettyPrint(title: "Metric", key: benchmarkName, results: results)
             }
         case .metric:
+            var width = 10
+            baseline.benchmarkIdentifiers.forEach { identifier in
+                width = max(width, "\(identifier.target):\(identifier.name)".count)
+            }
+            width = min(70, width + 5) // add 5 for ' (M)'
+
             baseline.benchmarkMetrics.forEach { metric in
 
                 let results = baseline.resultEntriesMatching { identifier, result in
-                    return (result.metric == metric, identifier.name)
+                    return (result.metric == metric, "\(identifier.target):\(identifier.name)")
                 }
-                _prettyPrint(title: "Test", key: metric.description, results: results)
+                _prettyPrint(title: "Test", key: metric.description, results: results, width: width)
             }
         }
     }

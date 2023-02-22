@@ -15,6 +15,7 @@ import ExtrasJSON
 import SystemPackage
 
 extension BenchmarkTool {
+
     mutating func queryBenchmarks(_ benchmarkPath: String) throws {
         try write(.list)
     outerloop: while true {
@@ -23,6 +24,7 @@ extension BenchmarkTool {
         switch benchmarkReply {
         case let .list(benchmark):
             benchmark.executablePath = benchmarkPath
+            benchmark.target = FilePath(benchmarkPath).lastComponent!.description
             benchmarks.append(benchmark)
         case .end:
             break outerloop

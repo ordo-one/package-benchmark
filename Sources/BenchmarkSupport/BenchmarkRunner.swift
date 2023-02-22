@@ -236,6 +236,8 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
                         operatingSystemStatsProducer.startSampling(5_000) // ~5 ms
                     }
 
+                    print("Running \(benchmarkToRun.target ?? "unknown target"):\(benchmarkToRun.name)")
+
                     // Run the benchmark at a minimum the desired iterations/runtime --
                     while iterations <= benchmark.configuration.desiredIterations ||
                         accummulatedRuntime <= benchmark.configuration.desiredDuration {
