@@ -83,6 +83,15 @@ struct BenchmarkBaseline: Codable {
         self.results = results
     }
 
+    @discardableResult
+    mutating func merge(_ otherBaseline: BenchmarkBaseline) -> BenchmarkBaseline {
+        if self.machine != otherBaseline.machine {
+            print("Warning: Merging baselines from two different machine configurations")
+        }
+        self.results.merge(otherBaseline.results) { first, _ in first }
+        return self
+    }
+
     var machine: BenchmarkMachine
     var results: BenchmarkResultsByIdentifier
 

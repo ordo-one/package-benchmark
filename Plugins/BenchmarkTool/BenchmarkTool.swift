@@ -137,12 +137,17 @@ struct BenchmarkTool: AsyncParsableCommand {
                 let currentBaseline = try read(target: target, baselineIdentifier: baselineName)
                 if let currentBaseline {
                     readBaselines.append(currentBaseline)
-                    prettyPrint(currentBaseline, header: "Current baseline")
                 }
             }
 
             if readBaselines.isEmpty {
                 print("No baseline found.")
+            } else {
+                var aggregatedBaseline = readBaselines.first!
+                for baseline in 1 ..< readBaselines.count {
+                    aggregatedBaseline.merge(readBaselines[baseline])
+                }
+                prettyPrint(aggregatedBaseline, header: "Current baseline")
             }
             return
         case .compare:

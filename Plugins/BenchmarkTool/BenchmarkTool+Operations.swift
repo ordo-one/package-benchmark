@@ -103,10 +103,11 @@ extension BenchmarkTool {
                 prettyPrint(BenchmarkBaseline(machine: benchmarkMachine, results: benchmarkResults),
                             header: "Updating baselines")
             }
-            try readBaselines.forEach { baseline in
-                try baseline.targets.forEach { target in
-                    try write(BenchmarkBaseline(machine: benchmarkMachine, results: baseline.results), target: target)
-                }
+            let baseline = BenchmarkBaseline(machine: benchmarkMachine,
+                                             results: benchmarkResults)
+            try baseline.targets.forEach { target in
+                let results = baseline.results.filter { $0.key.target == target }
+                try write(BenchmarkBaseline(machine: benchmarkMachine, results: results), target: target)
             }
         case .export:
             try exportResults(BenchmarkBaseline(machine: benchmarkMachine,
