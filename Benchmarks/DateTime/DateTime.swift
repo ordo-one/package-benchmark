@@ -13,15 +13,16 @@ import BenchmarkSupport
 
 @_dynamicReplacement(for: registerBenchmarks)
 func benchmarks() {
-    Benchmark.defaultConfiguration = .init(metrics: [.throughput, .allocatedResidentMemory],
+    Benchmark.defaultConfiguration = .init(metrics: [.throughput, .wallClock],
                                            warmupIterations: .kilo(1),
                                            throughputScalingFactor: .kilo,
-                                           desiredDuration: .seconds(1),
+                                           desiredDuration: .seconds(10),
                                            desiredIterations: .kilo(10))
 
     Benchmark("InternalUTCClock-now") { benchmark in
-        for _ in benchmark.throughputIterations {
-            BenchmarkSupport.blackHole(InternalUTCClock.now)
+        for _ in benchmark.throughputIterations  {
+            for _ in 0...100 {
+                BenchmarkSupport.blackHole(InternalUTCClock.now) }
         }
     }
 

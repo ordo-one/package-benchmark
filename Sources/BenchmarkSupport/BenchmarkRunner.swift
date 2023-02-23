@@ -14,6 +14,15 @@ import DateTime
 import ExtrasJSON
 @_exported import Statistics
 import SystemPackage
+import Progress
+#if canImport(Darwin)
+import Darwin
+#elseif canImport(Glibc)
+import Glibc
+#else
+#error("Unsupported Platform")
+#endif
+
 
 // @main must be done in actual benchmark to avoid linker errors unfortunately
 public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
@@ -239,9 +248,14 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
                         operatingSystemStatsProducer.startSampling(5_000) // ~5 ms
                     }
 
-                    if quiet == false {
-                        print("Running \(benchmarkToRun.target):\(benchmarkToRun.name)")
-                    }
+                    var progress = ProgressBar(count: benchmark.configuration.desiredIterations,
+                                               configuration: [ProgressPercent(),
+                                                               ProgressBarLine(barLength: 60),
+                                                               ProgressTimeEstimates(),
+                                                               ProgressString(string:"\(benchmarkToRun.target):\(benchmarkToRun.name)"),])
+                    progress.setValue(0)
+
+                    var currentPercentage = 0
 
                     // Run the benchmark at a minimum the desired iterations/runtime --
                     while iterations <= benchmark.configuration.desiredIterations ||
@@ -263,6 +277,29 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
                         benchmark.run()
 
                         iterations += 1
+
+                        if quiet == false {
+                            let iterationsPercentage: Double = 100.0 * Double(iterations) /
+                            Double(benchmark.configuration.desiredIterations)
+
+                            let timePercentage: Double = 100.0 * (accummulatedRuntime /
+                                                                  benchmark.configuration.desiredDuration)
+
+                            let maxPercentage = max(iterationsPercentage, timePercentage)
+
+                            if Int(maxPercentage) > currentPercentage {
+
+                                currentPercentage = Int(maxPercentage)
+                                progress.setValue(Int((maxPercentage / 100) *
+                                                      Double(benchmark.configuration.desiredIterations)))
+                                fflush(stdout)
+                            }
+                        }
+                    }
+
+                    if quiet == false {
+                        progress.setValue(benchmark.configuration.desiredIterations)
+                        fflush(stdout)
                     }
 
                     if benchmark.configuration.metrics.contains(.threads) ||
