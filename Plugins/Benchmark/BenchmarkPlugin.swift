@@ -238,10 +238,12 @@ import PackagePlugin
         }
 
         try withCStrings(args) { cArgs in
+            let newPath = benchmarkTool.path
+            // This doesn't work for external dependents
             // https://forums.swift.org/t/swiftpm-always-rebuilds-command-plugins-in-release-configuration/63225
-            let toolname = benchmarkTool.path.lastComponent
-            let newPath = benchmarkTool.path.removingLastComponent().removingLastComponent()
-                .appending(subpath: "release").appending(subpath: toolname)
+//            let toolname = benchmarkTool.path.lastComponent
+//            let newPath = benchmarkTool.path.removingLastComponent().removingLastComponent()
+//                .appending(subpath: "release").appending(subpath: toolname)
 
             if debug > 0 {
                 print("To debug, start BenchmarkTool in LLDB using:")
