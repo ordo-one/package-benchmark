@@ -143,6 +143,7 @@ extension BenchmarkTool {
     }
 
     func listBenchmarks() throws {
+        print("")
         benchmarkExecutablePaths.forEach { benchmarkExecutablePath in
             print("Target '\(FilePath(benchmarkExecutablePath).lastComponent!)' available benchmarks:")
             benchmarks.forEach { benchmark in
