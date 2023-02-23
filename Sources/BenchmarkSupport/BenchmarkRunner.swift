@@ -12,17 +12,16 @@ import ArgumentParser
 @_exported import Benchmark
 import DateTime
 import ExtrasJSON
+import Progress
 @_exported import Statistics
 import SystemPackage
-import Progress
 #if canImport(Darwin)
-import Darwin
+    import Darwin
 #elseif canImport(Glibc)
-import Glibc
+    import Glibc
 #else
-#error("Unsupported Platform")
+    #error("Unsupported Platform")
 #endif
-
 
 // @main must be done in actual benchmark to avoid linker errors unfortunately
 public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
@@ -248,11 +247,12 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
                         operatingSystemStatsProducer.startSampling(5_000) // ~5 ms
                     }
 
+                    let progressString = "| \(benchmarkToRun.target):\(benchmarkToRun.name)"
                     var progress = ProgressBar(count: benchmark.configuration.desiredIterations,
                                                configuration: [ProgressPercent(),
                                                                ProgressBarLine(barLength: 60),
                                                                ProgressTimeEstimates(),
-                                                               ProgressString(string:"| \(benchmarkToRun.target):\(benchmarkToRun.name)"),])
+                                                               ProgressString(string: progressString)])
                     if quiet == false {
                         progress.setValue(0)
                         fflush(stdout)
@@ -282,18 +282,17 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
 
                         if quiet == false {
                             let iterationsPercentage: Double = 100.0 * Double(iterations) /
-                            Double(benchmark.configuration.desiredIterations)
+                                Double(benchmark.configuration.desiredIterations)
 
                             let timePercentage: Double = 100.0 * (accummulatedRuntime /
-                                                                  benchmark.configuration.desiredDuration)
+                                benchmark.configuration.desiredDuration)
 
                             let maxPercentage = max(iterationsPercentage, timePercentage)
 
                             if Int(maxPercentage) > currentPercentage {
-
                                 currentPercentage = Int(maxPercentage)
                                 progress.setValue(Int((maxPercentage / 100) *
-                                                      Double(benchmark.configuration.desiredIterations)))
+                                        Double(benchmark.configuration.desiredIterations)))
                                 fflush(stdout)
                             }
                         }

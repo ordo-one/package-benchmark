@@ -78,10 +78,10 @@ extension BenchmarkTool {
                 }
 
                 let currentBaseline = benchmarkBaselines[0]
-                let baselineName = self.baseline[0]
-                let comparingBaselineName = self.compare ?? "unknown"
+                let baselineName = baseline[0]
+                let comparingBaselineName = compare ?? "unknown"
 
-                prettyPrintDelta(currentBaseline:currentBaseline, baseline: comparisonBaseline)
+                prettyPrintDelta(currentBaseline: currentBaseline, baseline: comparisonBaseline)
 
                 if currentBaseline.betterResultsOrEqual(than: comparisonBaseline, printOutput: true) {
                     print("New baseline '\(comparingBaselineName)' is BETTER (or equal) than the '\(baselineName)' baseline thresholds.")

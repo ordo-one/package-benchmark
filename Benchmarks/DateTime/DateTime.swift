@@ -20,9 +20,10 @@ func benchmarks() {
                                            desiredIterations: .kilo(10))
 
     Benchmark("InternalUTCClock-now") { benchmark in
-        for _ in benchmark.throughputIterations  {
-            for _ in 0...100 {
-                BenchmarkSupport.blackHole(InternalUTCClock.now) }
+        for _ in benchmark.throughputIterations {
+            for _ in 0 ... 100 {
+                BenchmarkSupport.blackHole(InternalUTCClock.now)
+            }
         }
     }
 

@@ -57,7 +57,8 @@ struct Benchmark: AsyncParsableCommand {
 
         To allow writing to the package directory, you may need to pass the appropriate option to swift package:
         swift package --allow-writing-to-package-directory benchmark <command> <options>
-        """)
+        """
+    )
 
     @Argument(help: "The benchmark command to perform, one of: \((Command.allCases).map { String(describing: $0) }). If not specified, 'run' is implied.")
     var command: Command
@@ -98,6 +99,5 @@ struct Benchmark: AsyncParsableCommand {
     @Option(name: .long, help: "The grouping to use, one of: \((Grouping.allCases).map { String(describing: $0) }). default is '\(Grouping.benchmark.rawValue)'")
     var grouping: Grouping
 
-    mutating func run() async throws {
-    }
+    mutating func run() async throws {}
 }

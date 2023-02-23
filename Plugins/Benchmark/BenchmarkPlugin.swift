@@ -98,7 +98,7 @@ import PackagePlugin
             }
         }
 
-        if (updateBaseline > 0 || deleteBaseline > 0) && positionalArguments.count > 1 {
+        if updateBaseline > 0 || deleteBaseline > 0, positionalArguments.count > 1 {
             print("Only a single baseline may be specified for update/delete operations")
             return
         }
@@ -220,12 +220,12 @@ import PackagePlugin
             args.append(contentsOf: ["--path", exportPath])
         }
 
-        if commandToPerform == .run && positionalArguments.count > 0 {
+        if commandToPerform == .run, positionalArguments.count > 0 {
             print("Can't specify baselines for normal run operation, superfluous arguments [\(positionalArguments)]")
             return
         }
 
-        if commandToPerform == .baseline && positionalArguments.count == 0 {
+        if commandToPerform == .baseline, positionalArguments.count == 0 {
             args.append(contentsOf: ["--baseline", "default"])
         } else {
             positionalArguments.forEach { baseline in

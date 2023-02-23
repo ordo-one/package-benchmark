@@ -133,39 +133,39 @@ extension BenchmarkTool {
 
     func prettyPrintDelta(currentBaseline: BenchmarkBaseline,
                           baseline: BenchmarkBaseline,
-                          hostIdentifier _: String? = nil) {        
+                          hostIdentifier _: String? = nil) {
         printMachine(baseline.machine, "Comparing results with baseline")
         if currentBaseline.machine != baseline.machine {
             print("Warning: Machine configuration is different when comparing baselines, other config:")
             printMachine(currentBaseline.machine, "")
         }
-        
+
         baseline.targets.forEach { target in
-            
+
             printMarkdown("## ", terminator: "")
             print("\(target)")
             printText("============================================================================================================================")
             print("")
-            
+
             let baseBaselineName = currentBaseline.baselineName
             let comparisonBaselineName = baseline.baselineName
-            
+
             var keys = baseline.results.keys.sorted(by: { $0.name < $1.name })
 
-            keys.removeAll(where: {$0.target == target})
+            keys.removeAll(where: { $0.target == target })
             keys.forEach { key in
                 if let value = baseline.results[key] {
                     guard let baselineComparison = currentBaseline.results[key] else {
                         //       print("No baseline to compare with for `\(key.target):\(key.name)`.")
                         return
                     }
-                    
+
                     printMarkdown("### ", terminator: "")
                     printText("----------------------------------------------------------------------------------------------------------------------------")
                     print("\(key.name) metrics")
                     printText("----------------------------------------------------------------------------------------------------------------------------")
                     print("")
-                    
+
                     value.forEach { currentResult in
                         var result = currentResult
                         if let base = baselineComparison.first(where: { $0.metric == result.metric }) {
@@ -174,13 +174,13 @@ extension BenchmarkTool {
                                 //                            print("")
                             } else {
                                 var hideResults: Bool = true
-                                
+
                                 if result.betterResultsOrEqual(than: base, thresholds: result.thresholds ?? BenchmarkResult.PercentileThresholds.default) {
                                     hideResults = true
                                 } else {
                                     hideResults = false
                                 }
-                                
+
                                 if format == .markdown {
                                     if hideResults {
                                         print("<details><summary>\(result.metric): results within specified thresholds, fold down for details.</summary>")
@@ -200,39 +200,39 @@ extension BenchmarkTool {
                                      Column(title: "p100", value: $0.metrics.percentiles[.p100] ?? "n/a", width: percentileWidth, align: .right),
                                      Column(title: "Samples", value: $0.metrics.measurements, width: percentileWidth, align: .right)]
                                 }
-                                
+
                                 // Rescale result to base if needed
                                 result.scaleResults(to: base)
-                                
+
                                 var percentiles: [BenchmarkResult.Percentile: Int] = [:]
-                                
+
                                 result.percentiles.forEach { percentile, value in
                                     if let basePercentile = base.percentiles[percentile] {
                                         percentiles[percentile] = value - basePercentile
                                     }
                                 }
-                                
+
                                 let deltaComparison = BenchmarkResult(metric: BenchmarkMetric.delta,
                                                                       timeUnits: result.timeUnits,
                                                                       measurements: result.measurements - base.measurements,
                                                                       warmupIterations: result.warmupIterations - base.warmupIterations,
                                                                       percentiles: percentiles)
-                                
+
                                 let reversedPolarity = base.metric.polarity() == .prefersLarger
-                                
+
                                 percentiles = [:]
                                 result.percentiles.forEach { percentile, value in
                                     if let basePercentile = base.percentiles[percentile] {
                                         percentiles[percentile] = formatTableEntry(basePercentile, value, reversedPolarity)
                                     }
                                 }
-                                
+
                                 let percentageComparison = BenchmarkResult(metric: BenchmarkMetric.deltaPercentage,
                                                                            timeUnits: base.timeUnits,
                                                                            measurements: formatTableEntry(base.measurements, result.measurements, false),
                                                                            warmupIterations: formatTableEntry(base.warmupIterations, result.warmupIterations, true),
                                                                            percentiles: percentiles)
-                                
+
                                 printMarkdown("```")
                                 var tableEntries: [BenchmarkBaseline.ResultsEntry] = []
                                 tableEntries.append(BenchmarkBaseline.ResultsEntry(description: baseBaselineName, metrics: base))
@@ -241,7 +241,7 @@ extension BenchmarkTool {
                                 tableEntries.append(BenchmarkBaseline.ResultsEntry(description: "Improvement %", metrics: percentageComparison))
                                 table.print(tableEntries, style: Style.fancy)
                                 printMarkdown("```")
-                                
+
                                 if format == .markdown {
                                     if hideResults {
                                         print("<p>")

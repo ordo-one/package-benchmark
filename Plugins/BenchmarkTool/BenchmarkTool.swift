@@ -167,14 +167,14 @@ struct BenchmarkTool: AsyncParsableCommand {
         try readBaselines()
 
         // If we just need data from disk, skip running benchmarks
-        if command == .baseline && benchmarkBaselines.count > 0 {
-            if compare == nil && delete == 0 && update == 0 {
+        if command == .baseline, benchmarkBaselines.count > 0 {
+            if compare == nil, delete == 0, update == 0 {
                 try postProcessBenchmarkResults()
                 return
             }
 
             // comparison, short circuit if we have read both baselines from disk
-            if compare != nil && comparisonBaseline != nil { // comparison operation
+            if compare != nil, comparisonBaseline != nil { // comparison operation
                 try postProcessBenchmarkResults()
                 return
             }
