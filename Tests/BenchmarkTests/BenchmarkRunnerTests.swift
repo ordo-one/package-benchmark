@@ -63,4 +63,3 @@ final class BenchmarkRunnerTests: XCTestCase, BenchmarkRunnerReadWrite {
         XCTAssertEqual(writeCount, 6) // 3 tests results + 3 end markers
     }
 }
-
