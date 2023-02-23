@@ -2,18 +2,21 @@
 
 ## Topics
 
-### AllSymbols
+### Creating Time Units
 
-- ``Benchmark/BenchmarkTimeUnits/!=(_:_:)``
 - ``Benchmark/BenchmarkTimeUnits/automatic``
-- ``Benchmark/BenchmarkTimeUnits/description``
-- ``Benchmark/BenchmarkTimeUnits/encode(to:)``
-- ``Benchmark/BenchmarkTimeUnits/hash(into:)``
-- ``Benchmark/BenchmarkTimeUnits/hashValue``
-- ``Benchmark/BenchmarkTimeUnits/init(_:)``
-- ``Benchmark/BenchmarkTimeUnits/init(from:)``
-- ``Benchmark/BenchmarkTimeUnits/init(rawValue:)``
-- ``Benchmark/BenchmarkTimeUnits/microseconds``
-- ``Benchmark/BenchmarkTimeUnits/milliseconds``
-- ``Benchmark/BenchmarkTimeUnits/nanoseconds``
 - ``Benchmark/BenchmarkTimeUnits/seconds``
+- ``Benchmark/BenchmarkTimeUnits/milliseconds``
+- ``Benchmark/BenchmarkTimeUnits/microseconds``
+- ``Benchmark/BenchmarkTimeUnits/nanoseconds``
+- ``Benchmark/BenchmarkTimeUnits/init(_:)``
+- ``Benchmark/BenchmarkTimeUnits/init(rawValue:)``
+
+### Describing Time Units
+
+- ``Benchmark/BenchmarkTimeUnits/description``
+
+### Encoding and Decoding Time Units
+
+- ``Benchmark/BenchmarkTimeUnits/encode(to:)``
+- ``Benchmark/BenchmarkTimeUnits/init(from:)``

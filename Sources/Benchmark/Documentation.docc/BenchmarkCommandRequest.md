@@ -2,10 +2,13 @@
 
 ## Topics
 
-### AllSymbols
+### Decoding Command Replies
 
-- ``Benchmark/BenchmarkCommandRequest/end``
 - ``Benchmark/BenchmarkCommandRequest/init(from:)``
+
+### Inspecting Command Replies
+
 - ``Benchmark/BenchmarkCommandRequest/list``
 - ``Benchmark/BenchmarkCommandRequest/run(benchmark:)``
+- ``Benchmark/BenchmarkCommandRequest/end``
 
