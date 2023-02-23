@@ -113,7 +113,8 @@ extension BenchmarkTool {
         var printHeader = true
 
         baseline.targets.forEach { key in
-            let exportStruct = saveExportableResults(BenchmarkBaseline(machine: benchmarkMachine(),
+            let exportStruct = saveExportableResults(BenchmarkBaseline(baselineName: baseline.baselineName,
+                                                                       machine: benchmarkMachine(),
                                                                        results: baseline.results),
                                                      target: key)
 

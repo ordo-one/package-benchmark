@@ -78,7 +78,8 @@ struct BenchmarkBaseline: Codable {
         var metrics: BenchmarkResult
     }
 
-    internal init(machine: BenchmarkMachine, results: [BenchmarkIdentifier: [BenchmarkResult]]) {
+    internal init(baselineName: String, machine: BenchmarkMachine, results: [BenchmarkIdentifier: [BenchmarkResult]]) {
+        self.baselineName = baselineName
         self.machine = machine
         self.results = results
     }
@@ -94,6 +95,7 @@ struct BenchmarkBaseline: Codable {
         return self
     }
 
+    var baselineName: String
     var machine: BenchmarkMachine
     var results: BenchmarkResultsByIdentifier
 
@@ -176,7 +178,7 @@ struct BenchmarkBaseline: Codable {
 let baselinesDirectory: String = ".benchmarkBaselines"
 
 extension BenchmarkTool {
-    func write(_ baseline: BenchmarkBaseline,
+    func write(baseline: BenchmarkBaseline,
                target: String,
                hostIdentifier: String? = nil) throws {
         // Set up desired output path and create any intermediate directories for structure as required:
@@ -212,18 +214,12 @@ extension BenchmarkTool {
          │       └── ...
          └── ...
          */
-
         var outputPath = FilePath(baselineStoragePath) // package
         var subPath = FilePath() // subpath rooted in package used for directory creation
 
         subPath.append(baselinesDirectory) // package/.benchmarkBaselines
         subPath.append("\(target)") // package/.benchmarkBaselines/myTarget1
-
-        if let baselineIdentifier = baselineName {
-            subPath.append(baselineIdentifier) // package/.benchmarkBaselines/myTarget1/named1
-        } else {
-            subPath.append("default") // // package/.benchmarkBaselines/myTarget1/default
-        }
+        subPath.append(baseline.baselineName) // package/.benchmarkBaselines/myTarget1/named1
 
         outputPath.createSubPath(subPath) // Create destination subpath if needed
 
@@ -262,7 +258,7 @@ extension BenchmarkTool {
                 print("Lacking permissions to write to \(outputPath)")
                 print("Give benchmark plugin permissions by running with e.g.:")
                 print("")
-                print("swift package --allow-writing-to-package-directory benchmark update-baseline")
+                print("swift package --allow-writing-to-package-directory benchmark baseline --update")
                 print("")
             } else {
                 print("Failed to open file \(outputPath), errno = [\(errno)]")
@@ -316,7 +312,7 @@ extension BenchmarkTool {
 
                         //                        print("Read baseline: \(baseline!)")
                     } catch {
-                        print("Failed to open file for reading \(path)")
+                        print("Failed to open file for reading \(path) \(error)")
                     }
                 }
 

@@ -83,14 +83,14 @@ extension BenchmarkTool {
     func prettyPrint(_ baseline: BenchmarkBaseline,
                      header: String = "Benchmark results",
                      hostIdentifier _: String? = nil) {
-        if quiet {
+        if quiet > 0 {
             return
         }
 
         printMachine(baseline.machine, header)
 
         switch grouping {
-        case .test:
+        case .benchmark:
             var width = 10
             let metrics = baseline.metricsMatching { _, _ in true }
             metrics.forEach { metric in
@@ -147,18 +147,8 @@ extension BenchmarkTool {
             printText("============================================================================================================================")
             print("")
             
-            var baseBaselineName: String
-            var comparisonBaselineName: String
-            if let baselineName { // we compare with another known baseline instead of running
-                baseBaselineName = "'\(baselineName)'"
-            } else {
-                baseBaselineName = "Baseline"
-            }
-            if let baselineNameSecond { // we compare with another known baseline instead of running
-                comparisonBaselineName = "'\(baselineNameSecond)'"
-            } else {
-                comparisonBaselineName = "Current run"
-            }
+            let baseBaselineName = currentBaseline.baselineName
+            let comparisonBaselineName = baseline.baselineName
             
             var keys = baseline.results.keys.sorted(by: { $0.name < $1.name })
 

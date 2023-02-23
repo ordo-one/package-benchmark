@@ -252,7 +252,7 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
                                                configuration: [ProgressPercent(),
                                                                ProgressBarLine(barLength: 60),
                                                                ProgressTimeEstimates(),
-                                                               ProgressString(string:"\(benchmarkToRun.target):\(benchmarkToRun.name)"),])
+                                                               ProgressString(string:"| \(benchmarkToRun.target):\(benchmarkToRun.name)"),])
                     if quiet == false {
                         progress.setValue(0)
                         fflush(stdout)

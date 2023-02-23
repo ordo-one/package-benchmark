@@ -88,11 +88,15 @@ extension BenchmarkTool {
         }
     }
 
-    func exportResults(_ baseline: BenchmarkBaseline) throws {
-        switch exportFormat {
+    func exportResults(baseline: BenchmarkBaseline, baselineName: String) throws {
+        switch self.format {
+        case .text:
+            fallthrough
+        case .markdown:
+            prettyPrint(baseline)
         case .influx:
             try write(exportData: "\(convertToInflux(baseline))",
-                      fileName: "\(baselineName ?? "default")-influx-export.csv")
+                      fileName: "\(baselineName)-influx-export.csv")
         case .percentiles:
             try baseline.results.forEach { key, results in
                 try results.forEach { values in
@@ -104,7 +108,7 @@ extension BenchmarkTool {
             }
         case .jmh:
             try write(exportData: "\(convertToJMH(baseline))",
-                      fileName: "\(baselineName ?? "default")-jmh-export.json")
+                      fileName: "\(baselineName)-jmh-export.json")
         case .tsv:
             try baseline.results.forEach { key, results in
                 var outputString = ""
@@ -121,8 +125,6 @@ extension BenchmarkTool {
                               fileName: "\(key.name).\(values.metric).tsv")
                 }
             }
-        default:
-            print("Export type not supported.")
         }
     }
 }

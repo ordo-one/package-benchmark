@@ -32,8 +32,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/ordo-one/Progress.swift",
       "state" : {
-        "revision" : "e51f4c1def1d90112359d6b6513cd3186deb34b9",
-        "version" : "1.0.1"
+        "revision" : "2120b3badbb3d7870a301af43ca77918ae4ffbb5",
+        "version" : "1.0.2"
       }
     },
     {

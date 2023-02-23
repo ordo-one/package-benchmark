@@ -69,84 +69,81 @@ extension BenchmarkTool {
     }
 
     mutating func postProcessBenchmarkResults() throws {
-        let benchmarkMachine = benchmarkMachine()
-
         switch command {
         case .baseline:
-            if compare != nil {
-                guard baselines.count > 1 && self.baseline.count > 1 else {
-                    print("Only had \(baselines.count) baselines, can't compare.")
+            if let comparisonBaseline {
+                guard benchmarkBaselines.count > 0 else {
+                    print("Only had \(benchmarkBaselines.count) baselines, can't compare.")
                     return
                 }
 
-                let currentBaseline = baselines[0]
-                let comparingBaseline = baselines[1]
+                let currentBaseline = benchmarkBaselines[0]
                 let baselineName = self.baseline[0]
-                let comparingBaselineName = self.baseline[1]
+                let comparingBaselineName = self.compare ?? "unknown"
 
-                prettyPrintDelta(currentBaseline:currentBaseline, baseline: comparingBaseline)
+                prettyPrintDelta(currentBaseline:currentBaseline, baseline: comparisonBaseline)
 
-                if comparingBaseline.betterResultsOrEqual(than: currentBaseline, printOutput: true) {
+                if currentBaseline.betterResultsOrEqual(than: comparisonBaseline, printOutput: true) {
                     print("New baseline '\(comparingBaselineName)' is BETTER (or equal) than the '\(baselineName)' baseline thresholds.")
                     print("")
 
                 } else {
                     failBenchmark("New baseline '\(comparingBaselineName)' is WORSE than the '\(baselineName)' baseline thresholds.")
                 }
+
+                return
             }
 
-            if baselines.isEmpty {
+            if update > 0 {
+                guard benchmarkBaselines.count > 0 else {
+                    print("Only had \(benchmarkBaselines.count) baselines, can't update.")
+                    return
+                }
+
+                let baseline = benchmarkBaselines[0]
+                var baselineName = self.baseline.first ?? "Current baseline"
+                if baselineName == "default" {
+                    baselineName = "Current baseline"
+                }
+                if quiet == 0 {
+                    prettyPrint(baseline, header: "Updating baseline '\(baselineName)'")
+                }
+
+                try baseline.targets.forEach { target in
+                    let results = baseline.results.filter { $0.key.target == target }
+                    let subset = BenchmarkBaseline(baselineName: baselineName,
+                                                   machine: baseline.machine,
+                                                   results: results)
+                    try write(baseline: subset, target: target)
+                }
+                return
+            }
+
+            if benchmarkBaselines.isEmpty {
                 print("No baseline found.")
             } else {
-                let baseline = baselines[0]
-                prettyPrint(baseline, header: "Current baseline")
+                for baselineIndex in 0..<benchmarkBaselines.count {
+                    let baseline = benchmarkBaselines[baselineIndex]
+                    var baselineName = "unknown"
+                    if baselineIndex < self.baseline.count {
+                        baselineName = self.baseline[baselineIndex]
+                    }
+                    prettyPrint(baseline, header: "Baseline '\(baselineName)'")
+                }
             }
 
             return
         case .run:
-            guard let baseline = baselines.first else {
+
+            guard let baseline = benchmarkBaselines.first else {
                 fatalError("Internal error, no baseline data after benchmark run.")
             }
 
-            prettyPrint(baseline)
-
-/*        case .compare:
-            guard readBaselines.isEmpty == false else {
-                print("No baseline available to compare with.")
-                return
-            }
-
-            // Merge baselines read
-            var aggregatedBaseline = readBaselines.first!
-            for baseline in 1 ..< readBaselines.count {
-                aggregatedBaseline = aggregatedBaseline.merge(readBaselines[baseline])
-            }
-
-            let currentBaseline = BenchmarkBaseline(machine: benchmarkMachine, results: benchmarkResults)
-            prettyPrintDelta(currentBaseline: currentBaseline, baseline: aggregatedBaseline)
-
-            if currentBaseline.betterResultsOrEqual(than: aggregatedBaseline, printOutput: true) {
-                print("Current run is BETTER (or equal) than the '\(baselineName ?? "default")' baseline thresholds.")
-            } else {
-                failBenchmark("Current run of is WORSE than the '\(baselineName ?? "default")' baseline thresholds.")
-            }
-        case .updateBaseline:
-            if quiet == false {
-                prettyPrint(BenchmarkBaseline(machine: benchmarkMachine, results: benchmarkResults),
-                            header: "Updating baselines")
-            }
-            let baseline = BenchmarkBaseline(machine: benchmarkMachine,
-                                             results: benchmarkResults)
-            try baseline.targets.forEach { target in
-                let results = baseline.results.filter { $0.key.target == target }
-                try write(BenchmarkBaseline(machine: benchmarkMachine, results: results), target: target)
-            }
-        case .export:
-            try exportResults(BenchmarkBaseline(machine: benchmarkMachine,
-                                                results: benchmarkResults))
- */
-        default:
-            print("Unexpected command \(command)")
+            try exportResults(baseline: baseline, baselineName: "UNKNOWN")
+        case .query:
+            break
+        case .list:
+            break
         }
     }
 

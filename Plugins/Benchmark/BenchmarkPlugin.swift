@@ -39,6 +39,11 @@ import PackagePlugin
         case jmh
     }
 
+    enum Grouping: String {
+        case metric
+        case benchmark
+    }
+
     func withCStrings(_ strings: [String], scoped: ([UnsafeMutablePointer<CChar>?]) throws -> Void) rethrows {
         let cStrings = strings.map { strdup($0) }
         try scoped(cStrings + [nil])
@@ -62,7 +67,7 @@ import PackagePlugin
         let groupingToUse = argumentExtractor.extractOption(named: "grouping")
         let debug = argumentExtractor.extractFlag(named: "debug")
         var outputFormat: Format = .text
-        var grouping = "test"
+        var grouping = "benchmark"
         var exportPath = "."
         var comparisonBaseline = "default"
 
@@ -111,16 +116,11 @@ import PackagePlugin
         }
 
         if groupingToUse.count > 0 {
-            if let group = groupingToUse.first {
-                switch group {
-                case "test":
-                    fallthrough
-                case "metric":
-                    grouping = "metric"
-                default:
-                    print("Unknown grouping '\(group)', valid groupings are 'metric' and 'test'")
-                    return
-                }
+            if let group = Grouping(rawValue: groupingToUse.first!) {
+                grouping = group.rawValue
+            } else {
+                print("Unknown grouping '\(groupingToUse.first!)', valid groupings are 'metric' and 'benchmark'")
+                return
             }
             if groupingToUse.count > 1 {
                 print("Only a single grouping may be specified, will use the first one specified '\(grouping)'")
@@ -186,8 +186,11 @@ import PackagePlugin
                               "--command", commandToPerform.rawValue,
                               "--baseline-storage-path", context.package.directory.string,
                               "--format", outputFormat.rawValue,
-                              "--grouping", grouping,
-                              "--quiet", quietRunning > 0 ? true.description : false.description]
+                              "--grouping", grouping]
+
+        if quietRunning > 0 {
+            args.append(contentsOf: ["--quiet"])
+        }
 
         if updateBaseline > 0 {
             args.append(contentsOf: ["--update"])
@@ -222,8 +225,12 @@ import PackagePlugin
             return
         }
 
-        positionalArguments.forEach { baseline in
-            args.append(contentsOf: ["--baseline", baseline])
+        if commandToPerform == .baseline && positionalArguments.count == 0 {
+            args.append(contentsOf: ["--baseline", "default"])
+        } else {
+            positionalArguments.forEach { baseline in
+                args.append(contentsOf: ["--baseline", baseline])
+            }
         }
 
         benchmarks.forEach { benchmark in
