@@ -253,8 +253,10 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
                                                                ProgressBarLine(barLength: 60),
                                                                ProgressTimeEstimates(),
                                                                ProgressString(string:"\(benchmarkToRun.target):\(benchmarkToRun.name)"),])
-                    progress.setValue(0)
-
+                    if quiet == false {
+                        progress.setValue(0)
+                        fflush(stdout)
+                    }
                     var currentPercentage = 0
 
                     // Run the benchmark at a minimum the desired iterations/runtime --

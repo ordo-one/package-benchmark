@@ -56,6 +56,19 @@ import PackagePlugin
         var grouping = "test"
         var exportPath = ""
 
+        // Remaining positional arguments are various action verbs for the plugin
+        var positionalArguments = argumentExtractor.remainingArguments
+
+        let commandString = positionalArguments.count > 0 ? positionalArguments.removeFirst() : Command.run.rawValue
+
+        guard let commandToPerform = Command(rawValue: commandString), commandToPerform != .help else {
+            print(help)
+            print("")
+            print("Please visit https://github.com/ordo-one/package-benchmark for more in-depth documentation")
+            print("")
+            return
+        }
+
         if pathSpecified.count > 0 {
             exportPath = pathSpecified.first!
             if pathSpecified.count > 1 {
@@ -113,7 +126,6 @@ import PackagePlugin
         if outputFormat == "text" {
             if quietRunning == 0 {
                 print("Build complete!")
-                print("")
             }
         }
 
@@ -148,16 +160,6 @@ import PackagePlugin
             .filter { benchmark in
                 filteredTargets.first(where: { $0.name == benchmark.path.lastComponent }) != nil ? true : false
             }
-
-        // Remaining positional arguments are various action verbs for the plugin
-        var positionalArguments = argumentExtractor.remainingArguments
-
-        let commandString = positionalArguments.count > 0 ? positionalArguments.removeFirst() : Command.run.rawValue
-
-        guard let commandToPerform = Command(rawValue: commandString), commandToPerform != .help else {
-            print("Please visit https://github.com/ordo-one/package-benchmark for usage documentation")
-            return
-        }
 
         let benchmarkTool = try context.tool(named: "BenchmarkTool")
 

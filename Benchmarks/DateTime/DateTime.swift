@@ -14,7 +14,7 @@ import BenchmarkSupport
 @_dynamicReplacement(for: registerBenchmarks)
 func benchmarks() {
     Benchmark.defaultConfiguration = .init(metrics: [.throughput, .wallClock],
-                                           warmupIterations: .kilo(1),
+                                           warmupIterations: 10,
                                            throughputScalingFactor: .kilo,
                                            desiredDuration: .seconds(10),
                                            desiredIterations: .kilo(10))

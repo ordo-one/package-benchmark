@@ -53,6 +53,15 @@ let package = Package(
             path: "Plugins/BenchmarkTool"
         ),
 
+        // Tool that simply generates the man page for the Benchmark-Plugin as we can't use SAP in it... :-/
+        .executableTarget(
+            name: "BenchmarkHelpGenerator",
+            dependencies: [
+                .product(name: "ArgumentParser", package: "swift-argument-parser"),
+            ],
+            path: "Plugins/BenchmarkHelpGenerator"
+        ),
+
         // Internal statistics support
         .target(
             name: "Statistics",

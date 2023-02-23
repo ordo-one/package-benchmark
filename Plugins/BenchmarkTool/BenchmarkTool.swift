@@ -247,6 +247,16 @@ struct BenchmarkTool: AsyncParsableCommand {
         case .updateBaseline:
             break
         case .run:
+            if quiet == false {
+                let runString = "Running Benchmarks"
+                let separator = String(repeating: "=", count: runString.count)
+                print("")
+                print(separator)
+                print(runString)
+                print(separator)
+                print("")
+                fflush(stdout)
+            }
             break
         default:
             print("Unknown command \(command) in BenchmarkTool")
