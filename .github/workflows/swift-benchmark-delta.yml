@@ -5,14 +5,13 @@ on:
   pull_request:
     branches: [ main ]
 
-permissions:
-  pull-requests: write
-
 jobs:
   benchmark-delta:
-
     runs-on: ${{ matrix.os }}
     continue-on-error: true
+    permissions:
+      pull-requests: write
+      issues: write
 
     strategy:
       matrix:
