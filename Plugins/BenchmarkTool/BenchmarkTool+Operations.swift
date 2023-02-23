@@ -122,13 +122,8 @@ extension BenchmarkTool {
             if benchmarkBaselines.isEmpty {
                 print("No baseline found.")
             } else {
-                for baselineIndex in 0..<benchmarkBaselines.count {
-                    let baseline = benchmarkBaselines[baselineIndex]
-                    var baselineName = "unknown"
-                    if baselineIndex < self.baseline.count {
-                        baselineName = self.baseline[baselineIndex]
-                    }
-                    prettyPrint(baseline, header: "Baseline '\(baselineName)'")
+                try benchmarkBaselines.forEach { baseline in
+                    try exportResults(baseline: baseline)
                 }
             }
 
@@ -139,7 +134,7 @@ extension BenchmarkTool {
                 fatalError("Internal error, no baseline data after benchmark run.")
             }
 
-            try exportResults(baseline: baseline, baselineName: "UNKNOWN")
+            try exportResults(baseline: baseline)
         case .query:
             break
         case .list:

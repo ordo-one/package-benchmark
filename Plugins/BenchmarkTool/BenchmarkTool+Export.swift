@@ -88,7 +88,8 @@ extension BenchmarkTool {
         }
     }
 
-    func exportResults(baseline: BenchmarkBaseline, baselineName: String) throws {
+    func exportResults(baseline: BenchmarkBaseline) throws {
+        let baselineName = baseline.baselineName == "Current baseline" ? "default" : baseline.baselineName
         switch self.format {
         case .text:
             fallthrough
@@ -101,14 +102,14 @@ extension BenchmarkTool {
             try baseline.results.forEach { key, results in
                 try results.forEach { values in
                     let outputString = values.statistics!.histogram
-                    let description = cleanupStringForShellSafety(values.metric.description)
+                    let description = values.metric.description
                     try write(exportData: "\(outputString)",
-                              fileName: "\(key.name).\(description).histogram-export.txt")
+                              fileName: cleanupStringForShellSafety("\(baselineName).\(key.name).\(description).histogram-export.txt"))
                 }
             }
         case .jmh:
             try write(exportData: "\(convertToJMH(baseline))",
-                      fileName: "\(baselineName)-jmh-export.json")
+                      fileName: cleanupStringForShellSafety("\(baselineName)-jmh-export.json"))
         case .tsv:
             try baseline.results.forEach { key, results in
                 var outputString = ""
@@ -122,7 +123,7 @@ extension BenchmarkTool {
                         }
                     }
                     try write(exportData: "\(outputString)",
-                              fileName: "\(key.name).\(values.metric).tsv")
+                              fileName: cleanupStringForShellSafety("\(baselineName).\(key.target).\(key.name).\(values.metric).tsv"))
                 }
             }
         }

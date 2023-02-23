@@ -217,7 +217,7 @@ import PackagePlugin
         }
 
         if pathSpecified.count > 0 {
-            args.append(contentsOf: ["--export-path", exportPath])
+            args.append(contentsOf: ["--path", exportPath])
         }
 
         if commandToPerform == .run && positionalArguments.count > 0 {
