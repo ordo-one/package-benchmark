@@ -101,20 +101,20 @@ extension BenchmarkTool {
                 }
 
                 let baseline = benchmarkBaselines[0]
-                var baselineName = self.baseline.first ?? "Current baseline"
-                if baselineName == "default" {
-                    baselineName = "Current baseline"
-                }
+                let baselineName = self.baseline.first ?? "default"
+
                 if quiet == 0 {
                     prettyPrint(baseline, header: "Updating baseline '\(baselineName)'")
                 }
 
                 try baseline.targets.forEach { target in
                     let results = baseline.results.filter { $0.key.target == target }
-                    let subset = BenchmarkBaseline(baselineName: baselineName,
+                    let subset = BenchmarkBaseline(baselineName: baselineName == "default" ? "Current baseline" : baselineName,
                                                    machine: baseline.machine,
                                                    results: results)
-                    try write(baseline: subset, target: target)
+                    try write(baseline: subset,
+                              baselineName: baselineName,
+                              target: target)
                 }
                 return
             }

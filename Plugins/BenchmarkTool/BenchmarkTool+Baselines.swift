@@ -179,6 +179,7 @@ let baselinesDirectory: String = ".benchmarkBaselines"
 
 extension BenchmarkTool {
     func write(baseline: BenchmarkBaseline,
+               baselineName: String,
                target: String,
                hostIdentifier: String? = nil) throws {
         // Set up desired output path and create any intermediate directories for structure as required:
@@ -219,7 +220,7 @@ extension BenchmarkTool {
 
         subPath.append(baselinesDirectory) // package/.benchmarkBaselines
         subPath.append("\(target)") // package/.benchmarkBaselines/myTarget1
-        subPath.append(baseline.baselineName) // package/.benchmarkBaselines/myTarget1/named1
+        subPath.append(baselineName) // package/.benchmarkBaselines/myTarget1/named1
 
         outputPath.createSubPath(subPath) // Create destination subpath if needed
 
