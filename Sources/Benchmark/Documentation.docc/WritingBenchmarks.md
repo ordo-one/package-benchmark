@@ -9,10 +9,14 @@ Create benchmarks declaratively using the ``Benchmark/Benchmark`` initalizer, sp
 The minimal code for a benchmark suite would be:
 
 ```swift
-import BenchmarkSupport                 // import supporting infrastructure
-@main extension BenchmarkRunner {}      // Required for main() definition to not get linker errors
+// import supporting infrastructure
+import BenchmarkSupport
 
-@_dynamicReplacement(for: registerBenchmarks) // Register benchmarks
+// Required for main() definition to not get linker errors
+@main extension BenchmarkRunner {}      
+
+// Register benchmarks
+@_dynamicReplacement(for: registerBenchmarks) 
 func benchmarks() {
 
     Benchmark("Minimal benchmark") { benchmark in
@@ -24,9 +28,6 @@ func benchmarks() {
 
 A more real test for a couple of Foundation features would be:
 
-<!-- TODO: wrap the code _much_ tighter to allow full view within a default window. 
-The sidebar takes up an impressive amount of space, and ideally this should be viewable without having to scroll horizontally. 
--->
 ```swift
 import SystemPackage
 import Foundation
@@ -35,19 +36,25 @@ import BenchmarkSupport
 
 @_dynamicReplacement(for: registerBenchmarks)
 func benchmarks() {
-    let customThreshold = BenchmarkResult.PercentileThresholds(relative: [.p50: 5.0, .p75: 10.0],
-                                                               absolute: [.p25: 10, .p50: 15])
-    let customThreshold2 = BenchmarkResult.PercentileThresholds(relative: .strict)
-    let customThreshold3 = BenchmarkResult.PercentileThresholds(absolute: .relaxed)
+    let customThreshold = BenchmarkResult.PercentileThresholds(
+        relative: [.p50: 5.0, .p75: 10.0],
+        absolute: [.p25: 10, .p50: 15])
+    let customThreshold2 = BenchmarkResult.PercentileThresholds(
+        relative: .strict)
+    let customThreshold3 = BenchmarkResult.PercentileThresholds(
+        absolute: .relaxed)
 
-    Benchmark.defaultConfiguration = .init(timeUnits: .microseconds,
-                                           thresholds: [.wallClock: customThreshold,
-                                                        .throughput: customThreshold2,
-                                                        .cpuTotal: customThreshold3,
-                                                        .cpuUser: .strict])
+    Benchmark.defaultConfiguration = .init(
+        timeUnits: .microseconds,
+        thresholds: [.wallClock: customThreshold,
+                     .throughput: customThreshold2,
+                     .cpuTotal: customThreshold3,
+                     .cpuUser: .strict])
 
     Benchmark("Foundation Date()",
-              configuration: .init(metrics: [.throughput, .wallClock], throughputScalingFactor: .mega)) { benchmark in
+        configuration: .init(
+            metrics: [.throughput, .wallClock], 
+            throughputScalingFactor: .mega)) { benchmark in
         for _ in benchmark.throughputIterations {
             blackHole(Date())
         }
@@ -55,11 +62,17 @@ func benchmarks() {
 
     Benchmark("Foundation AttributedString()") { benchmark in
         let count = 200
-        var str = AttributedString(String(repeating: "a", count: count))
-        str += AttributedString(String(repeating: "b", count: count))
-        str += AttributedString(String(repeating: "c", count: count))
-        let idx = str.characters.index(str.startIndex, offsetBy: str.characters.count / 2)
-        let toInsert = AttributedString(String(repeating: "c", count: str.characters.count))
+        var str = AttributedString(
+            String(repeating: "a", count: count))
+        str += AttributedString(
+            String(repeating: "b", count: count))
+        str += AttributedString(
+            String(repeating: "c", count: count))
+        let idx = str.characters.index(
+            str.startIndex, 
+            offsetBy: str.characters.count / 2)
+        let toInsert = AttributedString(
+            String(repeating: "c", count: str.characters.count))
 
         benchmark.startMeasurement()
         str.insert(toInsert, at: idx)
@@ -72,21 +85,18 @@ These benchmark options are applied through the ``Benchmark/configuration-swift.
 
 <!-- I think there's a way to reference code in source control/GitHub that may be appropriate here. -->
 
-<!-- TODO: wrap the code _much_ tighter to allow full view within a default window. 
-The sidebar takes up an impressive amount of space, and ideally this should be viewable without having to scroll horizontally. 
--->
-
 ```swift
-    /// Definition of a Benchmark
-    /// - Parameters:
-    ///   - name: The name used for display purposes of the benchmark (also used for
-    ///   matching when comparing to baselines)
-    ///   - configuration: Defines the settings that should be used for this benchmark
-    ///   - closure: The actual benchmark closure that will be measured
-    @discardableResult
-    public init?(_ name: String,
-                 configuration: Benchmark.Configuration = Benchmark.defaultConfiguration,
-                 closure: @escaping BenchmarkClosure) {
+/// Definition of a Benchmark
+/// - Parameters:
+///   - name: The name used for display purposes of the benchmark
+///     (also used for matching when comparing to baselines)
+///   - configuration: Defines the settings that should be used
+///     for this benchmark
+///   - closure: The actual benchmark closure that will be measured
+@discardableResult
+public init?(_ name: String,
+    configuration: Benchmark.Configuration = Benchmark.defaultConfiguration,
+    closure: @escaping BenchmarkClosure) {
 ```
 
 And the benchmark configuration is defined in ``Benchmark/Configuration-swift.struct``.
@@ -98,23 +108,31 @@ public extension Benchmark {
     struct Configuration: Codable {
         /// Defines the metrics that should be measured for the benchmark
         public var metrics: [BenchmarkMetric]
-        /// Override the automatic detection of timeunits for metrics related to time to a specific
-        /// one (auto should work for most use cases)
+        /// Override the automatic detection of timeunits for metrics 
+        /// related to time to a specific one 
+        /// (auto should work for most use cases)
         public var timeUnits: BenchmarkTimeUnits
-        /// Specifies a number of warmup iterations should be performed before the measurement to
-        /// reduce outliers due to e.g. cache population
+        /// Specifies a number of warmup iterations should be performed before   
+        /// the measurement to reduce outliers due to e.g. cache population
         public var warmupIterations: Int
-        /// Specifies the number of logical subiterations being done, scaling throughput measurements accordingly.
-        /// E.g. `.kilo`will scale results with 1000. Any iteration done in the benchmark should use
-        /// `benchmark.throughputScalingFactor.rawvalue` for the number of iterations.
+        /// Specifies the number of logical subiterations being done, scaling 
+        /// throughput measurements accordingly.
+        /// E.g. `.kilo`will scale results with 1000. 
+        /// Any iteration done in the benchmark should use
+        /// `benchmark.throughputScalingFactor.rawvalue` for 
+        /// the number of iterations.
         public var throughputScalingFactor: StatisticsUnits
-        /// The target wall clock runtime for the benchmark, currenty defaults to `.seconds(1)` if not set
+        /// The target wall clock runtime for the benchmark. 
+        /// Defaults to `.seconds(1)` if not set.
         public var desiredDuration: Duration
-        /// The target number of iterations for the benchmark., currently defaults to 100K iterations if not set
+        /// The target number of iterations for the benchmark.
+        /// Defaults to 100K iterations if not set.
         public var desiredIterations: Int
-        /// Whether to skip this test (convenience for not having to comment out tests that have issues)
+        /// Whether to skip this test (convenience for not 
+        /// having to comment out tests that have issues)
         public var skip = false
-        /// Customized CI failure thresholds for a given metric for the Benchmark
+        /// Customized CI failure thresholds for a given metric 
+        /// for the Benchmark
         public var thresholds: [BenchmarkMetric: BenchmarkResult.PercentileThresholds]?
 ...
 ```
@@ -124,17 +142,16 @@ public extension Benchmark {
 If your benchmark uses a small test and you want to run a scaled number of iterations to retrieve stable results, define a ``Benchmark/Configuration-swift.struct/throughputScalingFactor`` in ``Benchmark/Configuration-swift.struct``.
 An example of using `throughputScalingFactor`:
 
-<!-- TODO: wrap the code _much_ tighter to allow full view within a default window. 
-The sidebar takes up an impressive amount of space, and ideally this should be viewable without having to scroll horizontally. 
--->
-
 ```swift
-    Benchmark("Foundation Date()",
-              configuration: .init(metrics: [.throughput, .wallClock], throughputScalingFactor: .mega)) { benchmark in
+Benchmark("Foundation Date()",
+    configuration: .init(
+        metrics: [.throughput, .wallClock], 
+        throughputScalingFactor: .mega)
+    ) { benchmark in
         for _ in benchmark.throughputIterations {
             blackHole(Date())
         }
-    }
+}
 ```
 
 ### Metrics
@@ -165,23 +182,24 @@ Benchmark.defaultConfiguration = .init(...)
 
 ### Custom thresholds
 
-<!-- TODO: wrap the code _much_ tighter to allow full view within a default window. 
-The sidebar takes up an impressive amount of space, and ideally this should be viewable without having to scroll horizontally. 
--->
-
 ```swift
-    let customThreshold = BenchmarkResult.PercentileThresholds(relative: [.p50 : 13.0, .p75 : 18.0],
-                                                               absolute: [.p50 : 170, .p75 : 1200])
+let customThreshold = BenchmarkResult.PercentileThresholds(
+    relative: [.p50 : 13.0, .p75 : 18.0],
+    absolute: [.p50 : 170, .p75 : 1200])
 
-    Benchmark("Foundation Date()",
-              configuration: .init(
-              metrics: [.throughput, .wallClock],
-              throughputScalingFactor: .mega,
-              thresholds: [.throughput : customThreshold, .wallClock : customThreshold])) { benchmark in
-        for _ in benchmark.throughputIterations {
-            blackHole(Date())
-        }
+Benchmark(
+    "Foundation Date()",
+    configuration: .init(
+    metrics: [.throughput, .wallClock],
+    throughputScalingFactor: .mega,
+    thresholds: [
+        .throughput : customThreshold,
+        .wallClock : customThreshold])
+) { benchmark in
+    for _ in benchmark.throughputIterations {
+        blackHole(Date())
     }
+}
 ```
 
 There are a number of convenience methods in `BenchmarkResult+Defaults.swift`.

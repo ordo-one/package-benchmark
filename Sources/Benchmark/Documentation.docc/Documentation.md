@@ -18,17 +18,9 @@ Benchmark measurements are provided as percentiles to support analysis of the ac
 An individual benchmark is typically run for a minimum amount of time and/or a given number of iterations.
 The default percentiles presented are:
 
-<!-- TODO: revise this back to a tighter format - it's visually overwhelming as a table. -->
-
-| Percentiles | |
-| --- | --- |
-| `p0` | (min) |
-| `p25` | |
-| `p50` | (median) |
-| `p75` | |
-| `p90` | |
-| `p99` | |
-| `p100` | (max) |
+| `p0` | `p25` | `p50` | `p75` | `p90` | `p99` | `p100` |
+| ---- | ----- | ----- | ----- | ----- | ----- | ------ |
+| (min)|       | (median) |    |       |       | (max) |
 
 You can also configure your own sets of percentiles within Benchmark configurations.
 For more details on configuring benchmarks, see [LINK TBD].
