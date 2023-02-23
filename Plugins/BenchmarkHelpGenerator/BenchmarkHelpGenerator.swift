@@ -13,9 +13,9 @@
 
 import ArgumentParser
 
-enum Grouping: String, ExpressibleByArgument {
+enum Grouping: String, ExpressibleByArgument, CaseIterable {
     case metric
-    case test
+    case benchmark
 }
 
 enum OutputFormat: String, ExpressibleByArgument, CaseIterable {
@@ -31,33 +31,57 @@ enum Command: String, ExpressibleByArgument, CaseIterable {
     case run
     case list
     case baseline
+    case help
 }
-
-/*
- —format [text, markdown, jmh, percentiles, …]
- —compare baseline (if baseline only single)
- —path path (stdout default)
- —update
- —delete
- —target
- —filter
- —skip
- —skip-target
- —quiet
- —progress (progress bar)
- —verbose?
- */
 
 @main
 struct Benchmark: AsyncParsableCommand {
-    @Argument(help: "The benchmark command to perform, one of: \((Command.allCases).map { String(describing: $0) }). 'baseline' can be followed by 0 or more named baselines (if 0, the baseline name 'default' is used)")
+    static var configuration = CommandConfiguration(
+        abstract: "Runs your benchmark targets located in Benchmarks/",
+        usage: """
+        swift package benchmark <command>
+
+        swift package benchmark run <options>
+        swift package benchmark list
+        swift package benchmark baseline [baseline1 baseline2 ... baselineN] <options>
+        swift package benchmark help
+        """,
+        discussion: """
+        Runs the benchmarks, lists or operates on baselines (a named, stored set of results).
+        Some of the flags are only applicable to baseline operations and are so noted below.
+
+        For the 'text' default format, the output is implicitly 'stdout' unless otherwise specified.
+        For all other formats, the output is to a file in either the current working directory, or
+        the directory specified by the '--path' option, unless the special 'stdout' path is specified
+        in which case output will go to stdout (useful for e.g. baseline 'tsv' format export piped to youplot).
+
+        To allow writing to the package directory, you may need to pass the appropriate option to swift package:
+        swift package --allow-writing-to-package-directory benchmark <command> <options>
+        """)
+
+    @Argument(help: "The benchmark command to perform, one of: \((Command.allCases).map { String(describing: $0) }). If not specified, 'run' is implied.")
     var command: Command
 
-    @Option(name: .long, help: "The output format to use, one of: \((OutputFormat.allCases).map { String(describing: $0) })")
+    @Option(name: .long, help: "Benchmarks matching the regexp filter that should be run")
+    var filter: [String] = []
+
+    @Option(name: .long, help: "Benchmarks matching the regexp filter that should be skipped")
+    var skip: [String] = []
+
+    @Option(name: .long, help: "Benchmark targets matching the regexp filter that should be run")
+    var target: [String] = []
+
+    @Option(name: .long, help: "Benchmark targets matching the regexp filter that should be skipped")
+    var skipTarget: [String] = []
+
+    @Option(name: .long, help: "The output format to use, one of: \((OutputFormat.allCases).map { String(describing: $0) }), default is '\(OutputFormat.text.rawValue)'")
     var format: OutputFormat
 
-    @Option(name: .long, help: "The path where exported data is stored, default is current directory.")
+    @Option(name: .long, help: "The path where exported data is stored, default is the current directory (\".\"). ")
     var path: String
+
+    @Option(name: .long, help: "Compare either a benchmark run, or one baseline with the specified 'compare' baseline.")
+    var compare: String
 
     @Flag(name: .long, help: "Specifies that the baseline should be update with the data from the current run")
     var update: Int
@@ -65,23 +89,14 @@ struct Benchmark: AsyncParsableCommand {
     @Flag(name: .long, help: "Specifies that the baseline should be deleted")
     var delete: Int
 
-    @Flag(name: .long, help: "True if we should supress output")
+    @Flag(name: .long, help: "True if we should supress output (useful for if you just want to check return code)")
     var quiet: Int
 
-    @Option(name: .long, help: "The named baseline we should update or compare with")
-    var baseline: [String]
+    @Flag(name: .long, help: "True if we shouldn't show benchmark progress information")
+    var noProgress: Int
 
-    @Option(name: .long, help: "The second named baseline we should update or compare with for A/B")
-    var baselineNameSecond: String?
-
-    @Option(name: .long, help: "The grouping to use, 'metric' or 'test'")
+    @Option(name: .long, help: "The grouping to use, one of: \((Grouping.allCases).map { String(describing: $0) }). default is '\(Grouping.benchmark.rawValue)'")
     var grouping: Grouping
-
-    @Option(name: .long, help: "Benchmarks matching the regexp filter that should be run")
-    var filter: [String] = []
-
-    @Option(name: .long, help: "Benchmarks matching the regexp filter that should be skipped")
-    var skip: [String] = []
 
     mutating func run() async throws {
     }

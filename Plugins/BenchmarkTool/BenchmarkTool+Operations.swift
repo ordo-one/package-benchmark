@@ -68,17 +68,49 @@ extension BenchmarkTool {
         return cleanedString
     }
 
-    mutating func postProcessBenchmarkResults(_ benchmarkResults: BenchmarkResults) throws {
+    mutating func postProcessBenchmarkResults() throws {
         let benchmarkMachine = benchmarkMachine()
 
-        if benchmarkResults.isEmpty {
-            return
-        }
-
         switch command {
+        case .baseline:
+            if compare != nil {
+                guard baselines.count > 1 && self.baseline.count > 1 else {
+                    print("Only had \(baselines.count) baselines, can't compare.")
+                    return
+                }
+
+                let currentBaseline = baselines[0]
+                let comparingBaseline = baselines[1]
+                let baselineName = self.baseline[0]
+                let comparingBaselineName = self.baseline[1]
+
+                prettyPrintDelta(currentBaseline:currentBaseline, baseline: comparingBaseline)
+
+                if comparingBaseline.betterResultsOrEqual(than: currentBaseline, printOutput: true) {
+                    print("New baseline '\(comparingBaselineName)' is BETTER (or equal) than the '\(baselineName)' baseline thresholds.")
+                    print("")
+
+                } else {
+                    failBenchmark("New baseline '\(comparingBaselineName)' is WORSE than the '\(baselineName)' baseline thresholds.")
+                }
+            }
+
+            if baselines.isEmpty {
+                print("No baseline found.")
+            } else {
+                let baseline = baselines[0]
+                prettyPrint(baseline, header: "Current baseline")
+            }
+
+            return
         case .run:
-            prettyPrint(BenchmarkBaseline(machine: benchmarkMachine, results: benchmarkResults))
-        case .compare:
+            guard let baseline = baselines.first else {
+                fatalError("Internal error, no baseline data after benchmark run.")
+            }
+
+            prettyPrint(baseline)
+
+/*        case .compare:
             guard readBaselines.isEmpty == false else {
                 print("No baseline available to compare with.")
                 return
@@ -112,6 +144,7 @@ extension BenchmarkTool {
         case .export:
             try exportResults(BenchmarkBaseline(machine: benchmarkMachine,
                                                 results: benchmarkResults))
+ */
         default:
             print("Unexpected command \(command)")
         }

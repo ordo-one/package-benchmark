@@ -24,13 +24,19 @@ import PackagePlugin
 @available(macOS 13.0, *)
 @main struct Benchmark: CommandPlugin {
     enum Command: String {
-        case help
-        case list
         case run
-        case compare
-        case updateBaseline = "update-baseline"
-        case export
+        case list
         case baseline
+        case help
+    }
+
+    enum Format: String {
+        case text
+        case markdown
+        case influx
+        case percentiles
+        case tsv
+        case jmh
     }
 
     func withCStrings(_ strings: [String], scoped: ([UnsafeMutablePointer<CChar>?]) throws -> Void) rethrows {
@@ -42,19 +48,23 @@ import PackagePlugin
     func performCommand(context: PluginContext, arguments: [String]) throws {
         // Get specific target(s) to run benchmarks for if specified on command line
         var argumentExtractor = ArgumentExtractor(arguments)
+        let filterSpecified = argumentExtractor.extractOption(named: "filter")
+        let skipSpecified = argumentExtractor.extractOption(named: "skip")
         let specifiedTargets = try argumentExtractor.extractSpecifiedTargets(in: context.package, withOption: "target")
         let skipTargets = try argumentExtractor.extractSpecifiedTargets(in: context.package, withOption: "skip-target")
         let outputFormats = argumentExtractor.extractOption(named: "format")
-        let groupingToUse = argumentExtractor.extractOption(named: "grouping")
-        let filterSpecified = argumentExtractor.extractOption(named: "filter")
         let pathSpecified = argumentExtractor.extractOption(named: "path") // export path
-        let skipSpecified = argumentExtractor.extractOption(named: "skip")
-//        let baselines = argumentExtractor.extractOption(named: "baseline")
+        let compareSpecified = argumentExtractor.extractOption(named: "compare")
+        let updateBaseline = argumentExtractor.extractFlag(named: "update")
+        let deleteBaseline = argumentExtractor.extractFlag(named: "delete")
         let quietRunning = argumentExtractor.extractFlag(named: "quiet")
+        let noProgress = argumentExtractor.extractFlag(named: "no-progress")
+        let groupingToUse = argumentExtractor.extractOption(named: "grouping")
         let debug = argumentExtractor.extractFlag(named: "debug")
-        var outputFormat = "text"
+        var outputFormat: Format = .text
         var grouping = "test"
-        var exportPath = ""
+        var exportPath = "."
+        var comparisonBaseline = "default"
 
         // Remaining positional arguments are various action verbs for the plugin
         var positionalArguments = argumentExtractor.remainingArguments
@@ -76,17 +86,24 @@ import PackagePlugin
             }
         }
 
+        if compareSpecified.count > 0 {
+            comparisonBaseline = compareSpecified.first!
+            if compareSpecified.count > 1 {
+                print("Only a single comparison baseline may be specified, will use the first one specified '\(comparisonBaseline)'")
+            }
+        }
+
+        if (updateBaseline > 0 || deleteBaseline > 0) && positionalArguments.count > 1 {
+            print("Only a single baseline may be specified for update/delete operations")
+            return
+        }
+
         if outputFormats.count > 0 {
-            if let format = outputFormats.first {
-                switch format {
-                case "markdown":
-                    fallthrough
-                case "text":
-                    outputFormat = format
-                default:
-                    print("Unknown output format '\(format)', valid output formats are 'text' and 'markdown'")
-                    return
-                }
+            if let format = Format(rawValue: outputFormats.first!) {
+                outputFormat = format
+            } else {
+                print("Unknown output format '\(outputFormats.first!)'")
+                return
             }
             if outputFormats.count > 1 {
                 print("Only a single output format may be specified, will use the first one specified '\(outputFormat)'")
@@ -111,7 +128,7 @@ import PackagePlugin
         }
 
         // Build all targets
-        if outputFormat == "text" {
+        if outputFormat == .text {
             if quietRunning == 0 {
                 print("Building targets in release mode for benchmark run...")
                 fflush(nil)
@@ -123,7 +140,7 @@ import PackagePlugin
             parameters: .init(configuration: .release)
         )
 
-        if outputFormat == "text" {
+        if outputFormat == .text {
             if quietRunning == 0 {
                 print("Build complete!")
             }
@@ -168,10 +185,25 @@ import PackagePlugin
         var args: [String] = [benchmarkTool.path.lastComponent.description,
                               "--command", commandToPerform.rawValue,
                               "--baseline-storage-path", context.package.directory.string,
-                              "--baseline-comparison-path", context.package.directory.string,
-                              "--format", outputFormat,
+                              "--format", outputFormat.rawValue,
                               "--grouping", grouping,
                               "--quiet", quietRunning > 0 ? true.description : false.description]
+
+        if updateBaseline > 0 {
+            args.append(contentsOf: ["--update"])
+        }
+
+        if deleteBaseline > 0 {
+            args.append(contentsOf: ["--delete"])
+        }
+
+        if noProgress > 0 {
+            args.append(contentsOf: ["--no-progress"])
+        }
+
+        if compareSpecified.count > 0 {
+            args.append(contentsOf: ["--compare", comparisonBaseline])
+        }
 
         filterSpecified.forEach { filter in
             args.append(contentsOf: ["--filter", filter])
@@ -185,35 +217,13 @@ import PackagePlugin
             args.append(contentsOf: ["--export-path", exportPath])
         }
 
-        switch commandToPerform {
-        case .help: // we should fix inline help here, missing SAP
-            break
-        case .list:
-            break
-        case .run:
-            break
-        case .compare:
-            if positionalArguments.count > 0 {
-                args.append(contentsOf: ["--baseline-name", positionalArguments[0]])
-            }
-            if positionalArguments.count > 1 {
-                args.append(contentsOf: ["--baseline-name-second", positionalArguments[1]])
-            }
-        case .updateBaseline:
-            if positionalArguments.count > 0 {
-                args.append(contentsOf: ["--baseline-name", positionalArguments[0]])
-            }
-        case .export:
-            if positionalArguments.count > 0 {
-                args.append(contentsOf: ["--export-format", positionalArguments[0]])
-            }
-            if positionalArguments.count > 1 {
-                args.append(contentsOf: ["--baseline-name", positionalArguments[1]])
-            }
-        case .baseline:
-            if positionalArguments.count > 0 {
-                args.append(contentsOf: ["--baseline-name", positionalArguments[0]])
-            }
+        if commandToPerform == .run && positionalArguments.count > 0 {
+            print("Can't specify baselines for normal run operation, superfluous arguments [\(positionalArguments)]")
+            return
+        }
+
+        positionalArguments.forEach { baseline in
+            args.append(contentsOf: ["--baseline", baseline])
         }
 
         benchmarks.forEach { benchmark in

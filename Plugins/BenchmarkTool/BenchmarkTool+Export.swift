@@ -28,16 +28,16 @@ extension BenchmarkTool {
         // Set up desired output path and create any intermediate directories for structure as required:
         var outputPath: FilePath
 
-        if let exportPath {
-            if exportPath == "stdout" {
+        if let path {
+            if path == "stdout" {
                 print(exportData)
                 return
             }
 
-            let subPath = FilePath(exportPath).removingRoot()
+            let subPath = FilePath(path).removingRoot()
 
-            if FilePath(exportPath).root != nil {
-                outputPath = FilePath(root: FilePath(exportPath).root)
+            if FilePath(path).root != nil {
+                outputPath = FilePath(root: FilePath(path).root)
             } else {
                 outputPath = FilePath(".")
             }

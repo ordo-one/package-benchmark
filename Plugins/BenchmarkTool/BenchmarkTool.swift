@@ -41,11 +41,8 @@ enum ExportFormat: String, ExpressibleByArgument, CaseIterable {
 
 enum BenchmarkOperation: String, ExpressibleByArgument {
     case baseline
-    case compare
     case list
     case run
-    case updateBaseline = "update-baseline"
-    case export
     case query // query all benchmarks from target, used internally in tool
 }
 
@@ -65,14 +62,26 @@ struct BenchmarkTool: AsyncParsableCommand {
     @Option(name: .long, help: "The path to baseline directory for storage")
     var baselineStoragePath: String
 
-    @Option(name: .long, help: "The path to baseline directory for comparisons")
-    var baselineComparisonPath: String
-
     @Option(name: .long, help: "The path to export to")
-    var exportPath: String?
+    var path: String?
+
+    @Option(name: .long, help: "The baseline to compare with")
+    var compare: String?
 
     @Option(name: .long, help: "True if we should supress output")
     var quiet: Bool
+
+    @Option(name: .long, help: "True if we should update the baseline")
+    var update: Bool?
+
+    @Option(name: .long, help: "True if we should delete the baseline")
+    var delete: Bool?
+
+    @Option(name: .long, help: "True if we should supress progress in benchmark run")
+    var noProgress: Bool?
+
+    @Option(name: .long, help: "The named baseline(s) we should display, update, delete or compare with")
+    var baseline: [String] = []
 
     @Option(name: .long, help: "The named baseline we should update or compare with")
     var baselineName: String?
@@ -100,9 +109,7 @@ struct BenchmarkTool: AsyncParsableCommand {
     var outputFD: CInt = 0
 
     var benchmarks: [Benchmark] = []
-
-//    var currentBaseline: BenchmarkBaseline?
-    var readBaselines: [BenchmarkBaseline] = [] // The baselines read from disk
+    var baselines: [BenchmarkBaseline] = [] // The baselines read from disk, merged
 
     mutating func failBenchmark(_ reason: String? = nil) {
         if let reason {
@@ -130,121 +137,48 @@ struct BenchmarkTool: AsyncParsableCommand {
         return try filter.isEmpty || filter.contains(where: { name.wholeMatch(of: try Regex($0)) != nil })
     }
 
-    mutating func run() async throws {
-        switch command {
-        case .baseline:
-            try targets.forEach { target in
-                let currentBaseline = try read(target: target, baselineIdentifier: baselineName)
-                if let currentBaseline {
-                    readBaselines.append(currentBaseline)
-                }
-            }
+    mutating func readBaselines() throws {
+        // read all specified baselines
+        var readBaselines: [BenchmarkBaseline] = [] // The baselines read from disk
 
-            if readBaselines.isEmpty {
-                print("No baseline found.")
-            } else {
-                var aggregatedBaseline = readBaselines.first!
-                for baseline in 1 ..< readBaselines.count {
-                    aggregatedBaseline = aggregatedBaseline.merge(readBaselines[baseline])
-                }
-                prettyPrint(aggregatedBaseline, header: "Current baseline")
-            }
-            return
-        case .compare:
-            var otherBaselines: [BenchmarkBaseline] = []
-
-            try targets.forEach { target in
+        try baseline.forEach { baselineName in // for all specified baselines at command line
+            try targets.forEach { target in // read from all the targets (baselines are stored separately)
                 let currentBaseline = try read(target: target, baselineIdentifier: baselineName)
 
                 if let currentBaseline {
                     readBaselines.append(currentBaseline)
-                    if let baselineNameSecond { // we compare with another known baseline instead of running
-                        let otherBaseline = try read(target: target, baselineIdentifier: baselineNameSecond)
-                        if let otherBaseline {
-                            otherBaselines.append(otherBaseline)
-                        }
-                    }
                 }
             }
 
             // Merge baselines read
-            var aggregatedBaseline = readBaselines.first!
-            for baseline in 1 ..< readBaselines.count {
-                aggregatedBaseline = aggregatedBaseline.merge(readBaselines[baseline])
+            if readBaselines.isEmpty == false {
+                var aggregatedBaseline = readBaselines.first!
+                for baseline in 1 ..< readBaselines.count {
+                    aggregatedBaseline = aggregatedBaseline.merge(readBaselines[baseline])
+                }
+
+                baselines.append(aggregatedBaseline)
             }
+            readBaselines.removeAll(keepingCapacity: true)
+        }
+    }
 
-            // We read a second set of baseline to compare with
-            if otherBaselines.isEmpty == false {
-                // merge those as well
-                var otherAggregatedBaseline = otherBaselines.first!
-                for baseline in 1 ..< otherBaselines.count {
-                    otherAggregatedBaseline = otherAggregatedBaseline.merge(otherBaselines[baseline])
-                }
+    mutating func run() async throws {
+        try readBaselines()
+        switch command {
+        case .query:
+            fatalError("Query command should never be specified to the BenchmarkTool")
+        case .baseline:
 
-//                print("\(aggregatedBaseline.results.count) \(otherAggregatedBaseline.results.count)")
-
-                prettyPrintDelta(currentBaseline:aggregatedBaseline, baseline: otherAggregatedBaseline)
-
-                if otherAggregatedBaseline.betterResultsOrEqual(than: aggregatedBaseline, printOutput: true) {
-                    print("New baseline '\(baselineNameSecond ?? "current")' is BETTER (or equal) than the '\(baselineName ?? "default")' baseline thresholds.")
-                    print("")
-
-                } else {
-                    failBenchmark("New baseline '\(baselineNameSecond ?? "current ")' is WORSE than the '\(baselineName ?? "default")' baseline thresholds.")
-                }
-
+            if compare != nil && baselines.count > 1 {
+                try postProcessBenchmarkResults()
                 return
-            } else if baselineNameSecond != nil {
-                failBenchmark("Couldn't find baseline '\(baselineNameSecond!)' to compare with, skipping comparison.")
+            } else {
+
             }
 
-  //              return
-//            }
-
-/*
-
-            try targets.forEach { target in
-                currentBaseline = try read(target: target, baselineIdentifier: baselineName)
-
-                if let currentBaseline {
-                    readBaselines.append(currentBaseline)
-                    if let baselineNameSecond { // we compare with another known baseline instead of running
-                        let otherBaseline = try read(target: target, baselineIdentifier: baselineNameSecond)
-
-                        if let otherBaseline {
-                            prettyPrintDelta(baseline: otherBaseline, target: target)
-
-                            if otherBaseline.betterResultsOrEqual(than: currentBaseline, printOutput: true) {
-                                print("New baseline '\(baselineNameSecond)' for '\(target)' is BETTER (or equal) than the '\(baselineName ?? "default")' baseline thresholds.")
-                                print("")
-
-                            } else {
-                                failBenchmark("New baseline '\(baselineNameSecond)' for '\(target)' is WORSE than the '\(baselineName ?? "default")' baseline thresholds.")
-                            }
-                        } else {
-                            failBenchmark("\(target): Couldn't find baseline '\(baselineNameSecond)' to compare with, skipping comparison.")
-                        }
-                        return
-                    }
-                }
-            } */
-        case .export:
-            var results: BenchmarkResults = [:]
-            try targets.forEach { target in
-                if let baselineName {
-                    if let currentBaseline = try read(target: target, baselineIdentifier: baselineName) {
-                        readBaselines.append(currentBaseline)
-                        results.merge(currentBaseline.results) { first, _ in first }
-                    } else {
-                        failBenchmark("\(target): Couldn't read baseline '\(baselineName)' for export.")
-                    }
-                    return
-                }
-            }
-            try postProcessBenchmarkResults(results)
+            return
         case .list:
-            break
-        case .updateBaseline:
             break
         case .run:
             if quiet == false {
@@ -258,44 +192,217 @@ struct BenchmarkTool: AsyncParsableCommand {
                 fflush(stdout)
             }
             break
-        default:
-            print("Unknown command \(command) in BenchmarkTool")
         }
 
-        // First get a list of all benchmarks
-        try benchmarkExecutablePaths.forEach { benchmarkExecutablePath in
-            try runChild(benchmarkPath: benchmarkExecutablePath,
-                         benchmarkCommand: .query) { [self] result in
-                if result != 0 {
-                    printChildRunError(error: result, benchmarkExecutablePath: benchmarkExecutablePath)
-                }
-            }
-        }
+        if command == .list || command == .run {
 
-        guard command != .list else {
-            try listBenchmarks()
-            return
-        }
-
-        var benchmarkResults: BenchmarkResults = [:]
-
-        // run each benchmark for the target as a separate process
-        try benchmarks.forEach { benchmark in
-            if try shouldRunBenchmark(benchmark.name) {
-                let results = try runChild(benchmarkPath: benchmark.executablePath!,
-                                           benchmarkCommand: command,
-                                           benchmark: benchmark) { [self] result in
+            // First get a list of all benchmarks
+            try benchmarkExecutablePaths.forEach { benchmarkExecutablePath in
+                try runChild(benchmarkPath: benchmarkExecutablePath,
+                             benchmarkCommand: .query) { [self] result in
                     if result != 0 {
-                        printChildRunError(error: result, benchmarkExecutablePath: benchmark.executablePath!)
+                        printChildRunError(error: result, benchmarkExecutablePath: benchmarkExecutablePath)
                     }
                 }
-
-                benchmarkResults = benchmarkResults.merging(results) { _, new in new }
             }
+
+            guard command != .list else {
+                try listBenchmarks()
+                return
+            }
+
+            var benchmarkResults: BenchmarkResults = [:]
+
+            // run each benchmark for the target as a separate process
+            try benchmarks.forEach { benchmark in
+                if try shouldRunBenchmark(benchmark.name) {
+                    let results = try runChild(benchmarkPath: benchmark.executablePath!,
+                                               benchmarkCommand: command,
+                                               benchmark: benchmark) { [self] result in
+                        if result != 0 {
+                            printChildRunError(error: result, benchmarkExecutablePath: benchmark.executablePath!)
+                        }
+                    }
+
+                    benchmarkResults = benchmarkResults.merging(results) { _, new in new }
+                }
+            }
+
+            // Insert benchmark run at first position of baselines
+            baseline.insert("Current run", at:0)
+            baselines.insert(BenchmarkBaseline(machine: benchmarkMachine(), results: benchmarkResults), at: 0)
         }
 
-        try postProcessBenchmarkResults(benchmarkResults)
+        try postProcessBenchmarkResults()
     }
+
+    /*
+     mutating func run() async throws {
+     switch command {
+     case .baseline:
+     try targets.forEach { target in
+     let currentBaseline = try read(target: target, baselineIdentifier: baselineName)
+     if let currentBaseline {
+     readBaselines.append(currentBaseline)
+     }
+     }
+
+     if readBaselines.isEmpty {
+     print("No baseline found.")
+     } else {
+     var aggregatedBaseline = readBaselines.first!
+     for baseline in 1 ..< readBaselines.count {
+     aggregatedBaseline = aggregatedBaseline.merge(readBaselines[baseline])
+     }
+     prettyPrint(aggregatedBaseline, header: "Current baseline")
+     }
+     return
+     case .compare:
+     var otherBaselines: [BenchmarkBaseline] = []
+
+     try targets.forEach { target in
+     let currentBaseline = try read(target: target, baselineIdentifier: baselineName)
+
+     if let currentBaseline {
+     readBaselines.append(currentBaseline)
+     if let baselineNameSecond { // we compare with another known baseline instead of running
+     let otherBaseline = try read(target: target, baselineIdentifier: baselineNameSecond)
+     if let otherBaseline {
+     otherBaselines.append(otherBaseline)
+     }
+     }
+     }
+     }
+
+     // Merge baselines read
+     var aggregatedBaseline = readBaselines.first!
+     for baseline in 1 ..< readBaselines.count {
+     aggregatedBaseline = aggregatedBaseline.merge(readBaselines[baseline])
+     }
+
+     // We read a second set of baseline to compare with
+     if otherBaselines.isEmpty == false {
+     // merge those as well
+     var otherAggregatedBaseline = otherBaselines.first!
+     for baseline in 1 ..< otherBaselines.count {
+     otherAggregatedBaseline = otherAggregatedBaseline.merge(otherBaselines[baseline])
+     }
+
+     prettyPrintDelta(currentBaseline:aggregatedBaseline, baseline: otherAggregatedBaseline)
+
+     if otherAggregatedBaseline.betterResultsOrEqual(than: aggregatedBaseline, printOutput: true) {
+     print("New baseline '\(baselineNameSecond ?? "current")' is BETTER (or equal) than the '\(baselineName ?? "default")' baseline thresholds.")
+     print("")
+
+     } else {
+     failBenchmark("New baseline '\(baselineNameSecond ?? "current ")' is WORSE than the '\(baselineName ?? "default")' baseline thresholds.")
+     }
+
+     return
+     } else if baselineNameSecond != nil {
+     failBenchmark("Couldn't find baseline '\(baselineNameSecond!)' to compare with, skipping comparison.")
+     }
+
+     //              return
+     //            }
+
+     /*
+
+      try targets.forEach { target in
+      currentBaseline = try read(target: target, baselineIdentifier: baselineName)
+
+      if let currentBaseline {
+      readBaselines.append(currentBaseline)
+      if let baselineNameSecond { // we compare with another known baseline instead of running
+      let otherBaseline = try read(target: target, baselineIdentifier: baselineNameSecond)
+
+      if let otherBaseline {
+      prettyPrintDelta(baseline: otherBaseline, target: target)
+
+      if otherBaseline.betterResultsOrEqual(than: currentBaseline, printOutput: true) {
+      print("New baseline '\(baselineNameSecond)' for '\(target)' is BETTER (or equal) than the '\(baselineName ?? "default")' baseline thresholds.")
+      print("")
+
+      } else {
+      failBenchmark("New baseline '\(baselineNameSecond)' for '\(target)' is WORSE than the '\(baselineName ?? "default")' baseline thresholds.")
+      }
+      } else {
+      failBenchmark("\(target): Couldn't find baseline '\(baselineNameSecond)' to compare with, skipping comparison.")
+      }
+      return
+      }
+      }
+      } */
+     case .export:
+     var results: BenchmarkResults = [:]
+     try targets.forEach { target in
+     if let baselineName {
+     if let currentBaseline = try read(target: target, baselineIdentifier: baselineName) {
+     readBaselines.append(currentBaseline)
+     results.merge(currentBaseline.results) { first, _ in first }
+     } else {
+     failBenchmark("\(target): Couldn't read baseline '\(baselineName)' for export.")
+     }
+     return
+     }
+     }
+     try postProcessBenchmarkResults(results)
+     case .list:
+     break
+     case .updateBaseline:
+     break
+     case .run:
+     if quiet == false {
+     let runString = "Running Benchmarks"
+     let separator = String(repeating: "=", count: runString.count)
+     print("")
+     print(separator)
+     print(runString)
+     print(separator)
+     print("")
+     fflush(stdout)
+     }
+     break
+     default:
+     print("Unknown command \(command) in BenchmarkTool")
+     }
+
+     // First get a list of all benchmarks
+     try benchmarkExecutablePaths.forEach { benchmarkExecutablePath in
+     try runChild(benchmarkPath: benchmarkExecutablePath,
+     benchmarkCommand: .query) { [self] result in
+     if result != 0 {
+     printChildRunError(error: result, benchmarkExecutablePath: benchmarkExecutablePath)
+     }
+     }
+     }
+
+     guard command != .list else {
+     try listBenchmarks()
+     return
+     }
+
+     var benchmarkResults: BenchmarkResults = [:]
+
+     // run each benchmark for the target as a separate process
+     try benchmarks.forEach { benchmark in
+     if try shouldRunBenchmark(benchmark.name) {
+     let results = try runChild(benchmarkPath: benchmark.executablePath!,
+     benchmarkCommand: command,
+     benchmark: benchmark) { [self] result in
+     if result != 0 {
+     printChildRunError(error: result, benchmarkExecutablePath: benchmark.executablePath!)
+     }
+     }
+
+     benchmarkResults = benchmarkResults.merging(results) { _, new in new }
+     }
+     }
+
+     try postProcessBenchmarkResults(benchmarkResults)
+     }
+
+     */
 
     func withCStrings(_ strings: [String], scoped: ([UnsafeMutablePointer<CChar>?]) throws -> Void) rethrows {
         let cStrings = strings.map { strdup($0) }
@@ -340,21 +447,13 @@ struct BenchmarkTool: AsyncParsableCommand {
                     try queryBenchmarks(benchmarkPath) // Get all available benchmarks first
                 case .list:
                     try listBenchmarks()
-                case .updateBaseline:
-                    fallthrough
-                case .export:
+                case .baseline:
                     fallthrough
                 case .run:
-                    fallthrough
-                case .compare:
                     guard let benchmark else {
                         fatalError("No benchmark specified for update/export/run/compare operation")
                     }
                     benchmarkResults = try runBenchmark(target: path.lastComponent!.description, benchmark: benchmark)
-                case .baseline:
-                    fallthrough
-                default:
-                    print("Unknown command \(benchmarkCommand)")
                 }
 
                 try write(.end)
