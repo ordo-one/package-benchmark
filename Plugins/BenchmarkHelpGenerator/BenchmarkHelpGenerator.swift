@@ -84,16 +84,16 @@ struct Benchmark: AsyncParsableCommand {
     @Option(name: .long, help: "Compare either a benchmark run, or one baseline with the specified 'compare' baseline.")
     var compare: String
 
-    @Flag(name: .long, help: "Specifies that the baseline should be update with the data from the current run")
+    @Flag(name: .long, help: "Specifies that the named baseline should be updated with the data from the current run")
     var update: Int
 
-    @Flag(name: .long, help: "Specifies that the baseline should be deleted")
+    @Flag(name: .long, help: "Specifies that the named baseline should be deleted")
     var delete: Int
 
-    @Flag(name: .long, help: "True if we should supress output (useful for if you just want to check return code)")
+    @Flag(name: .long, help: "Specifies that output should be supressed (useful for if you just want to check return code)")
     var quiet: Int
 
-    @Flag(name: .long, help: "True if we shouldn't show benchmark progress information")
+    @Flag(name: .long, help: "Specifies that benchmark progress information should not be displayed")
     var noProgress: Int
 
     @Option(name: .long, help: "The grouping to use, one of: \((Grouping.allCases).map { String(describing: $0) }). default is '\(Grouping.benchmark.rawValue)'")

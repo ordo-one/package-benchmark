@@ -25,25 +25,26 @@ let help =
 
     USAGE: swift package benchmark <command>
 
-           swift package benchmark run <options>
-           swift package benchmark list
-           swift package benchmark baseline [baseline1 baseline2 ... baselineN] <options>
+       swift package benchmark run <options>
+       swift package benchmark list
+       swift package benchmark baseline [baseline1 baseline2 ... baselineN] <options>
+       swift package benchmark help
 
     ARGUMENTS:
-      <command>               The benchmark command to perform, one of: ["run", "list", "baseline"]. If not specified, 'run' is implied.
+    <command>               The benchmark command to perform, one of: ["run", "list", "baseline", "help"]. If not specified, 'run' is implied.
 
     OPTIONS:
-      --filter <filter>       Benchmarks matching the regexp filter that should be run
-      --skip <skip>           Benchmarks matching the regexp filter that should be skipped
-      --target <target>       Benchmark targets matching the regexp filter that should be run
-      --skip-target <skip-target>
-                              Benchmark targets matching the regexp filter that should be skipped
-      --format <format>       The output format to use, one of: ["text", "markdown", "influx", "percentiles", "tsv", "jmh"], default is 'text'
-      --path <path>           The path where exported data is stored, default is the current directory (".").
-      --update                Specifies that the baseline should be update with the data from the current run
-      --delete                Specifies that the baseline should be deleted
-      --quiet                 True if we should supress output (useful for if you just want to check return code)
-      --no-progress           True if we shouldn't show benchmark progress information
-      --grouping <grouping>   The grouping to use, one of: ["metric", "benchmark"]. default is 'benchmark'
-      -h, --help              Show help information.
+    --filter <filter>       Benchmarks matching the regexp filter that should be run
+    --skip <skip>           Benchmarks matching the regexp filter that should be skipped
+    --target <target>       Benchmark targets matching the regexp filter that should be run
+    --skip-target <skip-target>
+                          Benchmark targets matching the regexp filter that should be skipped
+    --format <format>       The output format to use, one of: ["text", "markdown", "influx", "percentiles", "tsv", "jmh"], default is 'text'
+    --path <path>           The path where exported data is stored, default is the current directory (".").
+    --compare <compare>     Compare either a benchmark run, or one baseline with the specified 'compare' baseline.
+    --update                Specifies that the named baseline should be updated with the data from the current run
+    --delete                Specifies that the named baseline should be deleted
+    --quiet                 Specifies that output should be supressed (useful for if you just want to check return code)
+    --no-progress           Specifies that benchmark progress information should not be displayed
+    --grouping <grouping>   The grouping to use, one of: ["metric", "benchmark"]. default is 'benchmark'
     """

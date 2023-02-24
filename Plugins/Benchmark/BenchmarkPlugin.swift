@@ -179,10 +179,7 @@ import PackagePlugin
             }
 
         if benchmarks.isEmpty {
-            print("")
-            print("Warning: Found no benchmarks to run, use 'swift package benchmark list' to list valid benchmark targets")
-            print("")
-            return
+            throw ArgumentParsingError.noMatchingTargetsForRegex
         }
 
         let benchmarkTool = try context.tool(named: "BenchmarkTool")
