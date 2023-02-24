@@ -186,11 +186,11 @@ struct BenchmarkTool: AsyncParsableCommand {
                 try postProcessBenchmarkResults()
                 return
             }
+        }
 
-            if listBaselines > 0 {
-                try postProcessBenchmarkResults()
-                return
-            }
+        if listBaselines > 0 {
+            try postProcessBenchmarkResults()
+            return
         }
 
         guard command != .query else {
