@@ -41,7 +41,7 @@ public extension FilePath {
                             print("Lacking permissions to write to \(creationPath)")
                             print("Give benchmark plugin permissions by running with e.g.:")
                             print("")
-                            print("swift package --allow-writing-to-package-directory benchmark baseline --update")
+                            print("swift package --allow-writing-to-package-directory benchmark baseline update")
                             print("")
                         }
                         print("Failed to create directory at [\(creationPath)], errno = [\(errno)]")

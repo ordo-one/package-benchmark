@@ -167,7 +167,9 @@ struct BenchmarkTool: AsyncParsableCommand {
     }
 
     mutating func run() async throws {
-        try readBaselines()
+        if command == .baseline && delete == 0 && listBaselines == 0 { // don't need to read baseline
+            try readBaselines()
+        }
 
         // If we just need data from disk, skip running benchmarks
         if command == .baseline, benchmarkBaselines.count > 0 {
@@ -181,11 +183,11 @@ struct BenchmarkTool: AsyncParsableCommand {
                 try postProcessBenchmarkResults()
                 return
             }
+        }
 
-            if delete > 0 { // not yet implemented, but can go to post processing, no need to run benchmarks
-                try postProcessBenchmarkResults()
-                return
-            }
+        if delete > 0 { 
+            try postProcessBenchmarkResults()
+            return
         }
 
         if listBaselines > 0 {

@@ -13,6 +13,7 @@
 import Benchmark
 import ExtrasJSON
 import SystemPackage
+import Foundation
 
 #if canImport(Darwin)
     import Darwin
@@ -197,8 +198,44 @@ extension BenchmarkTool {
                 }
             }
         }
-
     }
+
+    func removeBaselinesNamed(target: String, baselineName: String) {
+        var storagePath: FilePath = FilePath(baselineStoragePath)
+        let filemanager = FileManager.default
+
+        storagePath.append(baselinesDirectory) // package/.benchmarkBaselines
+        for file in storagePath.directoryEntries {
+            if file.ends(with: ".") == false &&
+                file.ends(with: "..")  == false {
+                if target == file.lastComponent!.description {
+                    var subDirectory = storagePath
+                    subDirectory.append(file.lastComponent!)
+                    if file.lastComponent != nil {
+                        for file in subDirectory.directoryEntries {
+                            if let subdirectoryName = file.lastComponent {
+                                if file.ends(with: ".") == false &&
+                                    file.ends(with: "..")  == false {
+                                    if subdirectoryName.description == baselineName {
+                                        do {
+                                            try filemanager.removeItem(atPath: file.description)
+                                        } catch {
+                                            print("Failed to remove file \(file), error \(error)")
+                                            print("Give benchmark plugin permissions to delete files by running with e.g.:")
+                                            print("")
+                                            print("swift package --allow-writing-to-package-directory benchmark baseline delete")
+                                            print("")
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     func write(baseline: BenchmarkBaseline,
                baselineName: String,
                target: String,
@@ -280,7 +317,7 @@ extension BenchmarkTool {
                 print("Lacking permissions to write to \(outputPath)")
                 print("Give benchmark plugin permissions by running with e.g.:")
                 print("")
-                print("swift package --allow-writing-to-package-directory benchmark baseline --update")
+                print("swift package --allow-writing-to-package-directory benchmark baseline update")
                 print("")
             } else {
                 print("Failed to open file \(outputPath), errno = [\(errno)]")

@@ -80,7 +80,7 @@ extension BenchmarkTool {
                 print("Lacking permissions to write to \(outputPath)")
                 print("Give benchmark plugin permissions by running with e.g.:")
                 print("")
-                print("swift package --allow-writing-to-package-directory benchmark export")
+                print("swift package --allow-writing-to-package-directory benchmark --format jmh")
                 print("")
             } else {
                 print("Failed to open file \(outputPath), errno = [\(errno)]")

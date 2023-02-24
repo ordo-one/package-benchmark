@@ -71,6 +71,18 @@ extension BenchmarkTool {
     mutating func postProcessBenchmarkResults() throws {
         switch command {
         case .baseline:
+            if delete > 0 {
+                benchmarkExecutablePaths.forEach { path in
+                    let target = FilePath(path).lastComponent!.description
+                    print("")
+                    baseline.forEach {
+                        print("Removing baseline for \(target): '\($0)'")
+                        removeBaselinesNamed(target: target, baselineName: $0)
+                    }
+                }
+                return
+            }
+
             if listBaselines > 0 {
                 print("")
                 printAllBaselines()
