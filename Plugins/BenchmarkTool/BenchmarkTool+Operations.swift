@@ -71,6 +71,12 @@ extension BenchmarkTool {
     mutating func postProcessBenchmarkResults() throws {
         switch command {
         case .baseline:
+            if listBaselines > 0 {
+                print("")
+                printAllBaselines()
+                return
+            }
+
             if let comparisonBaseline {
                 guard benchmarkBaselines.count > 0 else {
                     print("Only had \(benchmarkBaselines.count) baselines, can't compare.")

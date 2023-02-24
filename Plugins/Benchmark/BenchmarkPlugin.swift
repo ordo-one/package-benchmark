@@ -60,8 +60,8 @@ import PackagePlugin
         let outputFormats = argumentExtractor.extractOption(named: "format")
         let pathSpecified = argumentExtractor.extractOption(named: "path") // export path
         let compareSpecified = argumentExtractor.extractOption(named: "compare")
-        let updateBaseline = argumentExtractor.extractFlag(named: "update")
-        let deleteBaseline = argumentExtractor.extractFlag(named: "delete")
+//        let updateBaseline = argumentExtractor.extractFlag(named: "update")
+//        let deleteBaseline = argumentExtractor.extractFlag(named: "delete")
         let quietRunning = argumentExtractor.extractFlag(named: "quiet")
         let noProgress = argumentExtractor.extractFlag(named: "no-progress")
         let groupingToUse = argumentExtractor.extractOption(named: "grouping")
@@ -106,11 +106,6 @@ import PackagePlugin
             if compareSpecified.count > 1 {
                 print("Only a single comparison baseline may be specified, will use the first one specified '\(comparisonBaseline)'")
             }
-        }
-
-        if updateBaseline > 0 || deleteBaseline > 0, positionalArguments.count > 1 {
-            print("Only a single baseline may be specified for update/delete operations")
-            return
         }
 
         if outputFormats.count > 0 {
@@ -214,14 +209,6 @@ import PackagePlugin
             args.append(contentsOf: ["--quiet"])
         }
 
-        if updateBaseline > 0 {
-            args.append(contentsOf: ["--update"])
-        }
-
-        if deleteBaseline > 0 {
-            args.append(contentsOf: ["--delete"])
-        }
-
         if noProgress > 0 {
             args.append(contentsOf: ["--no-progress"])
         }
@@ -245,6 +232,31 @@ import PackagePlugin
         if commandToPerform == .run, positionalArguments.count > 0 {
             print("Can't specify baselines for normal run operation, superfluous arguments [\(positionalArguments)]")
             return
+        }
+
+        if commandToPerform == .baseline {
+            if let firstBaselineArgument = positionalArguments.first {
+                switch firstBaselineArgument {
+                case "update":
+                    positionalArguments.removeFirst()
+                    args.append(contentsOf: ["--update"])
+
+                    if positionalArguments.count > 1 {
+                        print("Only a single baseline may be specified for update operations \(positionalArguments)")
+                        return
+                    }
+                case "delete":
+                    positionalArguments.removeFirst()
+                    args.append(contentsOf: ["--delete"])
+                case "read": // to allow for a baseline named 'update'
+                    positionalArguments.removeFirst()
+                case "list":
+                    positionalArguments.removeFirst()
+                    args.append(contentsOf: ["--list-baselines"])
+                default:
+                    break
+                }
+            }
         }
 
         if commandToPerform == .baseline, positionalArguments.count == 0 {

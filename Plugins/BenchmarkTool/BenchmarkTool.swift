@@ -74,6 +74,9 @@ struct BenchmarkTool: AsyncParsableCommand {
     @Flag(name: .long, help: "True if we should delete the baseline")
     var delete: Int
 
+    @Flag(name: .long, help: "True if we should display available baselines")
+    var listBaselines: Int
+
     @Flag(name: .long, help: "True if we should supress progress in benchmark run")
     var noProgress: Int
 
@@ -180,6 +183,11 @@ struct BenchmarkTool: AsyncParsableCommand {
             }
 
             if delete > 0 { // not yet implemented, but can go to post processing, no need to run benchmarks
+                try postProcessBenchmarkResults()
+                return
+            }
+
+            if listBaselines > 0 {
                 try postProcessBenchmarkResults()
                 return
             }

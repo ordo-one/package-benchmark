@@ -94,7 +94,7 @@ extension BenchmarkTool {
         case .text:
             fallthrough
         case .markdown:
-            prettyPrint(baseline)
+            prettyPrint(baseline, header: "Baseline '\(baselineName)'")
         case .influx:
             try write(exportData: "\(convertToInflux(baseline))",
                       fileName: "\(baselineName)-influx-export.csv")

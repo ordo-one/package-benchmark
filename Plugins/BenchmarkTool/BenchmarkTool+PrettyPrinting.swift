@@ -81,7 +81,7 @@ extension BenchmarkTool {
     }
 
     func prettyPrint(_ baseline: BenchmarkBaseline,
-                     header: String = "Benchmark results",
+                     header: String, // = "Benchmark results",
                      hostIdentifier _: String? = nil) {
         if quiet > 0 {
             return

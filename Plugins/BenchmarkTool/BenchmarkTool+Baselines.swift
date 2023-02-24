@@ -172,6 +172,33 @@ struct BenchmarkBaseline: Codable {
 let baselinesDirectory: String = ".benchmarkBaselines"
 
 extension BenchmarkTool {
+    func printAllBaselines() {
+        var storagePath: FilePath = FilePath(baselineStoragePath)
+        storagePath.append(baselinesDirectory) // package/.benchmarkBaselines
+        for file in storagePath.directoryEntries {
+            if file.ends(with: ".") == false &&
+                file.ends(with: "..")  == false {
+                var subDirectory = storagePath
+                subDirectory.append(file.lastComponent!)
+                if let directoryName = file.lastComponent {
+                    let string = "Baselines for \(directoryName.description)"
+                    let separator = String(repeating: "=", count: string.count)
+                    print(string)
+                    print(separator)
+                    for file in subDirectory.directoryEntries {
+                        if let subdirectoryName = file.lastComponent {
+                            if file.ends(with: ".") == false &&
+                                file.ends(with: "..")  == false {
+                                print("\(subdirectoryName.description)")
+                            }
+                        }
+                    }
+                    print("")
+                }
+            }
+        }
+
+    }
     func write(baseline: BenchmarkBaseline,
                baselineName: String,
                target: String,

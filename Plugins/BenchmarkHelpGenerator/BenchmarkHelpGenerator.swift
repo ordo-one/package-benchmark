@@ -43,7 +43,7 @@ struct Benchmark: AsyncParsableCommand {
 
         swift package benchmark run <options>
         swift package benchmark list
-        swift package benchmark baseline [baseline1 baseline2 ... baselineN] <options>
+        swift package benchmark baseline [read|update|delete|list] [baseline1 baseline2 ... baselineN] <options>
         swift package benchmark help
         """,
         discussion: """
@@ -83,12 +83,6 @@ struct Benchmark: AsyncParsableCommand {
 
     @Option(name: .long, help: "Compare either a benchmark run, or one baseline with the specified 'compare' baseline.")
     var compare: String
-
-    @Flag(name: .long, help: "Specifies that the named baseline should be updated with the data from the current run")
-    var update: Int
-
-    @Flag(name: .long, help: "Specifies that the named baseline should be deleted")
-    var delete: Int
 
     @Flag(name: .long, help: "Specifies that output should be supressed (useful for if you just want to check return code)")
     var quiet: Int
