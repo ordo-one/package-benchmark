@@ -27,7 +27,7 @@ let help =
 
        swift package benchmark run <options>
        swift package benchmark list
-       swift package benchmark baseline [baseline1 baseline2 ... baselineN] <options>
+       swift package benchmark baseline [read|update|delete|list] [baseline1 baseline2 ... baselineN] <options>
        swift package benchmark help
 
     ARGUMENTS:
@@ -42,8 +42,6 @@ let help =
     --format <format>       The output format to use, one of: ["text", "markdown", "influx", "percentiles", "tsv", "jmh"], default is 'text'
     --path <path>           The path where exported data is stored, default is the current directory (".").
     --compare <compare>     Compare either a benchmark run, or one baseline with the specified 'compare' baseline.
-    --update                Specifies that the named baseline should be updated with the data from the current run
-    --delete                Specifies that the named baseline should be deleted
     --quiet                 Specifies that output should be supressed (useful for if you just want to check return code)
     --no-progress           Specifies that benchmark progress information should not be displayed
     --grouping <grouping>   The grouping to use, one of: ["metric", "benchmark"]. default is 'benchmark'
