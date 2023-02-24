@@ -157,6 +157,11 @@ struct BenchmarkTool: AsyncParsableCommand {
         try baseline.forEach { baselineName in // for all specified baselines at command line
             if let baseline = try readBaseline(baselineName) {
                 benchmarkBaselines.append(baseline)
+            } else {
+                if quiet == 0 {
+                    print("")
+                    print("Warning: Failed to load specified baseline '\(baselineName)'.")
+                }
             }
         }
 
@@ -167,7 +172,7 @@ struct BenchmarkTool: AsyncParsableCommand {
     }
 
     mutating func run() async throws {
-        if command == .baseline && delete == 0 && listBaselines == 0 { // don't need to read baseline
+        if command == .baseline && delete == 0 && listBaselines == 0 && update == 0 { // don't need to read baseline
             try readBaselines()
         }
 
@@ -214,7 +219,7 @@ struct BenchmarkTool: AsyncParsableCommand {
             return
         }
 
-        if quiet > 0 {
+        if quiet == 0 {
             let runString = "Running Benchmarks"
             let separator = String(repeating: "=", count: runString.count)
             print("")
@@ -243,7 +248,8 @@ struct BenchmarkTool: AsyncParsableCommand {
         }
 
         // Insert benchmark run at first position of baselines
-        benchmarkBaselines.insert(BenchmarkBaseline(baselineName: "Current run",
+        baseline.insert("default", at: 0)
+        benchmarkBaselines.insert(BenchmarkBaseline(baselineName: "Current baseline",
                                                     machine: benchmarkMachine(),
                                                     results: benchmarkResults), at: 0)
 

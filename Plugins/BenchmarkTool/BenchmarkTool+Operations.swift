@@ -96,7 +96,7 @@ extension BenchmarkTool {
                 }
 
                 let currentBaseline = benchmarkBaselines[0]
-                let baselineName = baseline[0]
+                let baselineName = baseline[0] == "default" ? "Current baseline" : baseline[0]
                 let comparingBaselineName = compare ?? "unknown"
 
                 prettyPrintDelta(currentBaseline: currentBaseline, baseline: comparisonBaseline)

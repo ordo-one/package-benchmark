@@ -248,6 +248,15 @@ import PackagePlugin
                 case "delete":
                     positionalArguments.removeFirst()
                     args.append(contentsOf: ["--delete"])
+                case "compare":
+                    positionalArguments.removeFirst()
+                    if positionalArguments.count > 2 {
+                        print("Multiple baselines can't be compared, only one or two baselines may be specified for comparisons \(positionalArguments)")
+                        throw MyError.invalidArgument
+                    }
+
+                    // This will be the second if two, the first otherwise
+                    args.append(contentsOf: ["--compare", positionalArguments.removeLast()])
                 case "read": // to allow for a baseline named 'update'
                     positionalArguments.removeFirst()
                 case "list":
