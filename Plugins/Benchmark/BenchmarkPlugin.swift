@@ -178,6 +178,13 @@ import PackagePlugin
                 filteredTargets.first(where: { $0.name == benchmark.path.lastComponent }) != nil ? true : false
             }
 
+        if benchmarks.isEmpty {
+            print("")
+            print("Warning: Found no benchmarks to run, use 'swift package benchmark list' to list valid benchmark targets")
+            print("")
+            return
+        }
+
         let benchmarkTool = try context.tool(named: "BenchmarkTool")
 
         // Set up all the arguments
