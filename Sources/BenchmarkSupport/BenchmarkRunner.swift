@@ -24,6 +24,7 @@ import SystemPackage
 #endif
 
 // @main must be done in actual benchmark to avoid linker errors unfortunately
+// swiftlint: disable type_body_length
 public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
     static var testReadWrite: BenchmarkRunnerReadWrite?
 
@@ -252,10 +253,10 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
                     if quiet == false {
                         let progressString = "| \(benchmarkToRun.target):\(benchmarkToRun.name)"
                         progressBar = ProgressBar(count: benchmark.configuration.desiredIterations,
-                                               configuration: [ProgressPercent(),
-                                                               ProgressBarLine(barLength: 60),
-                                                               ProgressTimeEstimates(),
-                                                               ProgressString(string: progressString)])
+                                                  configuration: [ProgressPercent(),
+                                                                  ProgressBarLine(barLength: 60),
+                                                                  ProgressTimeEstimates(),
+                                                                  ProgressString(string: progressString)])
                         if var progressBar {
                             progressBar.setValue(0)
                         }
@@ -285,10 +286,10 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
                         iterations += 1
 
                         if var progressBar {
-                            let iterationsPercentage: Double = 100.0 * Double(iterations) /
+                            let iterationsPercentage = 100.0 * Double(iterations) /
                                 Double(benchmark.configuration.desiredIterations)
 
-                            let timePercentage: Double = 100.0 * (accummulatedRuntime /
+                            let timePercentage = 100.0 * (accummulatedRuntime /
                                 benchmark.configuration.desiredDuration)
 
                             let maxPercentage = max(iterationsPercentage, timePercentage)

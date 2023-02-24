@@ -154,7 +154,7 @@ public extension BenchmarkMetric {
         }
     }
 }
-
+// swiftlint:disable cyclomatic_complexity
 // As we can't have raw values and associated data we add this...
 extension BenchmarkMetric {
     init(_ textualMetric: String) {

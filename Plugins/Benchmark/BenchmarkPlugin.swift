@@ -75,7 +75,7 @@ import PackagePlugin
             print("Unknown option/flag specfied: \(argumentExtractor.unextractedOptionsOrFlags)")
             throw MyError.invalidArgument
         }
-        
+
         // Remaining positional arguments are various action verbs for the plugin
         var positionalArguments = argumentExtractor.remainingArguments
 
@@ -168,10 +168,10 @@ import PackagePlugin
         let benchmarkTool = try context.tool(named: "BenchmarkTool")
 
         var args: [String] = [benchmarkTool.path.lastComponent.description,
-                                 "--command", commandToPerform.rawValue,
-                                 "--baseline-storage-path", context.package.directory.string,
-                                 "--format", outputFormat.rawValue,
-                                 "--grouping", grouping]
+                              "--command", commandToPerform.rawValue,
+                              "--baseline-storage-path", context.package.directory.string,
+                              "--format", outputFormat.rawValue,
+                              "--grouping", grouping]
 
         try filteredTargets.forEach { target in
             if quietRunning == 0 {
@@ -283,7 +283,7 @@ import PackagePlugin
                         throw MyError.benchmarkDeviationOrBenchmarkFailed
                     }
                 } else {
-                    print("BenchmarkTool returned a non-zero exit code, errno = \(errno)")
+                    print("waitpid() for pid \(pid) returned a non-zero exit code \(status), errno = \(errno)")
                     exit(errno)
                 }
             } else {
