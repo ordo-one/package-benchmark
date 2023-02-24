@@ -81,8 +81,10 @@ import PackagePlugin
         let commandString = positionalArguments.count > 0 ? positionalArguments.removeFirst() : Command.run.rawValue
 
         guard let commandToPerform = Command(rawValue: commandString), commandToPerform != .help else {
-            print("")
-            print("Unknown command '\(commandString)'.")
+            if commandString != "help" {
+                print("")
+                print("Unknown command '\(commandString)'.")
+            }
             print("")
             print(help)
             print("")
@@ -134,31 +136,6 @@ import PackagePlugin
             }
         }
 
-        // Build all targets
-        if outputFormat == .text {
-            if quietRunning == 0 {
-                print("Building targets in release mode for benchmark run...")
-                fflush(nil)
-            }
-        }
-
-        let buildResult = try packageManager.build(
-            .all(includingTests: false),
-            parameters: .init(configuration: .release)
-        )
-
-        if outputFormat == .text {
-            if quietRunning == 0 {
-                print("Build complete!")
-            }
-        }
-
-        guard buildResult.succeeded else {
-            print(buildResult.logText)
-            print("Benchmark failed to run due to build error.")
-            return
-        }
-
         let swiftSourceModuleTargets: [SwiftSourceModuleTarget]
         if specifiedTargets.isEmpty {
             swiftSourceModuleTargets = context.package.targets(ofType: SwiftSourceModuleTarget.self)
@@ -179,25 +156,56 @@ import PackagePlugin
                 skipTargets.first(where: { $0.name == benchmark.name }) == nil ? true : false
             }
 
-        // Filter out all executable products which are Benchmarks we should run
-        let benchmarks = buildResult.builtArtifacts
-            .filter { benchmark in
-                filteredTargets.first(where: { $0.name == benchmark.path.lastComponent }) != nil ? true : false
+        // Build the targets
+        if outputFormat == .text {
+            if quietRunning == 0 {
+                print("Building benchmark targets in release mode for benchmark run...")
+                fflush(nil)
             }
-
-        if benchmarks.isEmpty {
-            throw ArgumentParsingError.noMatchingTargetsForRegex
         }
 
         let benchmarkTool = try context.tool(named: "BenchmarkTool")
 
-        // Set up all the arguments
-
         var args: [String] = [benchmarkTool.path.lastComponent.description,
-                              "--command", commandToPerform.rawValue,
-                              "--baseline-storage-path", context.package.directory.string,
-                              "--format", outputFormat.rawValue,
-                              "--grouping", grouping]
+                                 "--command", commandToPerform.rawValue,
+                                 "--baseline-storage-path", context.package.directory.string,
+                                 "--format", outputFormat.rawValue,
+                                 "--grouping", grouping]
+
+        try filteredTargets.forEach { target in
+            print("Building \(target.name)")
+            let buildResult = try packageManager.build(
+                .product(target.name),
+//                .all(includingTests: false),
+                parameters: .init(configuration: .release)
+            )
+
+            guard buildResult.succeeded else {
+                print(buildResult.logText)
+                print("Benchmark failed to run due to build error.")
+                return
+            }
+
+            // Filter out all executable products which are Benchmarks we should run
+            let benchmarks = buildResult.builtArtifacts
+                .filter { benchmark in
+                    filteredTargets.first(where: { $0.name == benchmark.path.lastComponent }) != nil ? true : false
+                }
+
+            if benchmarks.isEmpty {
+                throw ArgumentParsingError.noMatchingTargetsForRegex
+            }
+
+            benchmarks.forEach { benchmark in
+                args.append(contentsOf: ["--benchmark-executable-paths", benchmark.path.string])
+            }
+        }
+
+        if outputFormat == .text {
+            if quietRunning == 0 {
+                print("Build complete!")
+            }
+        }
 
         if quietRunning > 0 {
             args.append(contentsOf: ["--quiet"])
@@ -242,10 +250,6 @@ import PackagePlugin
             positionalArguments.forEach { baseline in
                 args.append(contentsOf: ["--baseline", baseline])
             }
-        }
-
-        benchmarks.forEach { benchmark in
-            args.append(contentsOf: ["--benchmark-executable-paths", benchmark.path.string])
         }
 
         try withCStrings(args) { cArgs in
