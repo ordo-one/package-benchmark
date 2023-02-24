@@ -69,11 +69,11 @@ extension BenchmarkTool {
                             _ = try fd.write(UnsafeRawBufferPointer($0))
                         }
                     } catch {
-                        print("Failed to write to file \(outputPath)")
+                        print("Failed to write to file \(outputPath) [\(error)]")
                     }
                 }
             } catch {
-                print("Failed to close fd for \(outputPath) after write.")
+                print("Failed to close fd for \(outputPath) after write [\(error)].")
             }
         } catch {
             if errno == EPERM {

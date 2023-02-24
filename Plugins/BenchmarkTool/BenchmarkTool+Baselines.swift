@@ -99,20 +99,15 @@ struct BenchmarkBaseline: Codable {
     var results: BenchmarkResultsByIdentifier
 
     var benchmarkIdentifiers: [BenchmarkIdentifier] {
-        Array(results.keys).sorted(by: {
-            if $0.target == $1.target {
-                return $0.name < $1.name
-            }
-            return $0.target < $1.target
-        })
+        Array(results.keys).sorted(by: { ($0.target, $0.name) < ($1.target, $1.name) })
     }
 
     var targets: [String] {
-        benchmarkIdentifiers.map(\.target).unique().sorted(by: { $0 < $1 })
+        benchmarkIdentifiers.map(\.target).unique().sorted()
     }
 
     var benchmarkNames: [String] {
-        benchmarkIdentifiers.map(\.name).unique().sorted(by: { $0 < $1 })
+        benchmarkIdentifiers.map(\.name).unique().sorted()
     }
 
     var benchmarkMetrics: [BenchmarkMetric] {
@@ -310,22 +305,18 @@ extension BenchmarkTool {
 
                         baseline = try XJSONDecoder().decode(BenchmarkBaseline.self, from: readBytes)
 
-                        //                        print("Read baseline: \(baseline!)")
                     } catch {
-                        print("Failed to open file for reading \(path) \(error)")
+                        print("Failed to open file for reading \(path) [\(error)]")
                     }
                 }
-
             } catch {
                 print("Failed to close fd for \(path) after reading.")
             }
-
         } catch {
             if errno != ENOENT { // file not found is ok, e.g. when no baselines exist
                 print("Failed to open file \(path), errno = [\(errno)]")
             }
         }
-
         return baseline
     }
 }

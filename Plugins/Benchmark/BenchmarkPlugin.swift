@@ -73,8 +73,9 @@ import PackagePlugin
 
         if argumentExtractor.unextractedOptionsOrFlags.count > 0 {
             print("Unknown option/flag specfied: \(argumentExtractor.unextractedOptionsOrFlags)")
-            return
+            throw MyError.invalidArgument
         }
+        
         // Remaining positional arguments are various action verbs for the plugin
         var positionalArguments = argumentExtractor.remainingArguments
 
@@ -148,7 +149,7 @@ import PackagePlugin
             .filter { benchmark in
                 let path = benchmark.directory.removingLastComponent()
                 return path.lastComponent == "Benchmarks" ? true : false
-            } 
+            }
             .filter { benchmark in
                 swiftSourceModuleTargets.first(where: { $0.name == benchmark.name }) != nil ? true : false
             }
@@ -173,10 +174,12 @@ import PackagePlugin
                                  "--grouping", grouping]
 
         try filteredTargets.forEach { target in
-            print("Building \(target.name)")
+            if quietRunning == 0 {
+                print("Building \(target.name)")
+            }
+
             let buildResult = try packageManager.build(
-                .product(target.name),
-//                .all(includingTests: false),
+                .product(target.name), // .all(includingTests: false),
                 parameters: .init(configuration: .release)
             )
 
@@ -265,10 +268,7 @@ import PackagePlugin
                 print("lldb \(newPath.string)")
                 print("")
                 print("Then launch BenchmarkTool with:")
-                print("run ", terminator: "")
-                for arg in 1 ..< args.count {
-                    print("\(args[arg]) ", terminator: "")
-                }
+                print("run \(args.dropFirst().joined(separator: " "))")
                 print("")
                 return
             }
@@ -294,5 +294,6 @@ import PackagePlugin
 
     enum MyError: Error {
         case benchmarkDeviationOrBenchmarkFailed
+        case invalidArgument
     }
 }

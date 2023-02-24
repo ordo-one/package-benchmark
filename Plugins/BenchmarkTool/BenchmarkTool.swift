@@ -265,7 +265,7 @@ struct BenchmarkTool: AsyncParsableCommand {
         let args: [String] = [path.lastComponent!.description,
                               "--input-fd", toChild.readEnd.rawValue.description,
                               "--output-fd", fromChild.writeEnd.rawValue.description,
-                              "--quiet", noProgress > 0 ? true.description : false.description]
+                              "--quiet", (noProgress > 0).description]
 
         inputFD = fromChild.readEnd.rawValue
         outputFD = toChild.writeEnd.rawValue
