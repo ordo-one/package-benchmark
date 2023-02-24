@@ -247,14 +247,18 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
                         operatingSystemStatsProducer.startSampling(5_000) // ~5 ms
                     }
 
-                    let progressString = "| \(benchmarkToRun.target):\(benchmarkToRun.name)"
-                    var progress = ProgressBar(count: benchmark.configuration.desiredIterations,
+                    var progressBar: ProgressBar?
+
+                    if quiet == false {
+                        let progressString = "| \(benchmarkToRun.target):\(benchmarkToRun.name)"
+                        progressBar = ProgressBar(count: benchmark.configuration.desiredIterations,
                                                configuration: [ProgressPercent(),
                                                                ProgressBarLine(barLength: 60),
                                                                ProgressTimeEstimates(),
                                                                ProgressString(string: progressString)])
-                    if quiet == false {
-                        progress.setValue(0)
+                        if var progressBar {
+                            progressBar.setValue(0)
+                        }
                         fflush(stdout)
                     }
                     var currentPercentage = 0
@@ -280,7 +284,7 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
 
                         iterations += 1
 
-                        if quiet == false {
+                        if var progressBar {
                             let iterationsPercentage: Double = 100.0 * Double(iterations) /
                                 Double(benchmark.configuration.desiredIterations)
 
@@ -291,15 +295,15 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
 
                             if Int(maxPercentage) > currentPercentage {
                                 currentPercentage = Int(maxPercentage)
-                                progress.setValue(Int((maxPercentage / 100) *
+                                progressBar.setValue(Int((maxPercentage / 100) *
                                         Double(benchmark.configuration.desiredIterations)))
                                 fflush(stdout)
                             }
                         }
                     }
 
-                    if quiet == false {
-                        progress.setValue(benchmark.configuration.desiredIterations)
+                    if var progressBar {
+                        progressBar.setValue(benchmark.configuration.desiredIterations)
                         fflush(stdout)
                     }
 

@@ -82,7 +82,7 @@ import PackagePlugin
 
         guard let commandToPerform = Command(rawValue: commandString), commandToPerform != .help else {
             print("")
-            print("Unknown command \(commandString).")
+            print("Unknown command '\(commandString)'.")
             print("")
             print(help)
             print("")
