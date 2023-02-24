@@ -71,12 +71,19 @@ import PackagePlugin
         var exportPath = "."
         var comparisonBaseline = "default"
 
+        if argumentExtractor.unextractedOptionsOrFlags.count > 0 {
+            print("Unknown option/flag specfied: \(argumentExtractor.unextractedOptionsOrFlags)")
+            return
+        }
         // Remaining positional arguments are various action verbs for the plugin
         var positionalArguments = argumentExtractor.remainingArguments
 
         let commandString = positionalArguments.count > 0 ? positionalArguments.removeFirst() : Command.run.rawValue
 
         guard let commandToPerform = Command(rawValue: commandString), commandToPerform != .help else {
+            print("")
+            print("Unknown command \(commandString).")
+            print("")
             print(help)
             print("")
             print("Please visit https://github.com/ordo-one/package-benchmark for more in-depth documentation")
