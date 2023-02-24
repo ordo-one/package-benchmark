@@ -52,9 +52,3 @@ For more details on configuring benchmarks, see [LINK TBD].
 ### Supporting Functions
 
 - ``Benchmark/blackHole(_:)``
-
-### Plugin Interacting with Benchmarks
-
-- ``Benchmark/BenchmarkCommandRequest``
-- ``Benchmark/BenchmarkResult``
-- ``Benchmark/BenchmarkCommandReply``

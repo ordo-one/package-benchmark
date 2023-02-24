@@ -17,6 +17,9 @@ public dynamic func registerBenchmarks() {
 }
 
 // Command sent from benchmark runner to the benchmark under measurement
+#if swift(>=5.8)
+@_documentation(visibility: internal)
+#endif
 public enum BenchmarkCommandRequest: Codable {
     case list
     case run(benchmark: Benchmark)
@@ -24,6 +27,9 @@ public enum BenchmarkCommandRequest: Codable {
 }
 
 // Replies from benchmark under measure to benchmark runner
+#if swift(>=5.8)
+@_documentation(visibility: internal)
+#endif
 public enum BenchmarkCommandReply: Codable {
     case list(benchmark: Benchmark)
     case ready

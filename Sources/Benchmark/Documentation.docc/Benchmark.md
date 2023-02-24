@@ -33,23 +33,14 @@
 
 - ``Benchmark/Benchmark/measurement(_:_:)``
 - ``Benchmark/Benchmark/customMetricMeasurement``
-- ``Benchmark/Benchmark/BenchmarkCustomMetricMeasurement``
-
-### Synchronizing Benchmarks
-
-- ``Benchmark/Benchmark/measurementPostSynchronization``
-- ``Benchmark/Benchmark/measurementPreSynchronization``
 
 ### Decoding Benchmarks
 
 - ``Benchmark/Benchmark/init(from:)``
 
-### Supporting Types
+### Comparing Benchmarks
 
-- ``Benchmark/Benchmark/BenchmarkAsyncClosure``
-- ``Benchmark/Benchmark/BenchmarkClosure``
-- ``Benchmark/Benchmark/BenchmarkMeasurementSynchronization``
+- ``Benchmark/Benchmark/!=(_:_:)``
+- ``Benchmark/Benchmark/==(_:_:)``
+- ``Benchmark/Benchmark/hash(into:)``
 
-### Benchmark Plugin Integration
-
-- ``Benchmark/Benchmark/run()``

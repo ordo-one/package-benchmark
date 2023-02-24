@@ -13,9 +13,21 @@ import Statistics
 
 /// Defines a benchmark
 public final class Benchmark: Codable, Hashable {
+    #if swift(>=5.8)
+    @_documentation(visibility: internal)
+    #endif
     public typealias BenchmarkClosure = (_ benchmark: Benchmark) -> Void
+    #if swift(>=5.8)
+    @_documentation(visibility: internal)
+    #endif
     public typealias BenchmarkAsyncClosure = (_ benchmark: Benchmark) async -> Void
+    #if swift(>=5.8)
+    @_documentation(visibility: internal)
+    #endif
     public typealias BenchmarkMeasurementSynchronization = () -> Void
+    #if swift(>=5.8)
+    @_documentation(visibility: internal)
+    #endif
     public typealias BenchmarkCustomMetricMeasurement = (BenchmarkMetric, Int) -> Void
 
     public static var benchmarks: [Benchmark] = [] // Bookkeeping of all registered benchmarks
@@ -41,7 +53,13 @@ public final class Benchmark: Codable, Hashable {
     var asyncClosure: BenchmarkAsyncClosure? // The actual benchmark to run
 
     // Hooks for benchmark infrastructure to capture metrics of actual measurement() block without preamble:
+    #if swift(>=5.8)
+    @_documentation(visibility: internal)
+    #endif
     public var measurementPreSynchronization: BenchmarkMeasurementSynchronization?
+    #if swift(>=5.8)
+    @_documentation(visibility: internal)
+    #endif
     public var measurementPostSynchronization: BenchmarkMeasurementSynchronization?
 
     // Hook for custom metrics capturing
@@ -209,6 +227,9 @@ public final class Benchmark: Codable, Hashable {
     }
 
     // Public but should only be used by BenchmarkRunner
+    #if swift(>=5.8)
+    @_documentation(visibility: internal)
+    #endif
     public func run() {
         if closure != nil {
             startMeasurement()

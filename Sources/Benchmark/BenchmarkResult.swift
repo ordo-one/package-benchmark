@@ -34,6 +34,9 @@ public enum BenchmarkTimeUnits: Int, Codable, CustomStringConvertible {
     }
 }
 
+#if swift(>=5.8)
+@_documentation(visibility: internal)
+#endif
 public struct BenchmarkResult: Codable, Comparable, Equatable {
     public init(metric: BenchmarkMetric,
                 timeUnits: BenchmarkTimeUnits,
