@@ -164,7 +164,7 @@ import PackagePlugin
             .filter { benchmark in
                 let path = benchmark.directory.removingLastComponent()
                 return path.lastComponent == "Benchmarks" ? true : false
-            }
+            } 
             .filter { benchmark in
                 swiftSourceModuleTargets.first(where: { $0.name == benchmark.name }) != nil ? true : false
             }
