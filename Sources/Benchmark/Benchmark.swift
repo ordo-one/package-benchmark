@@ -32,6 +32,9 @@ public final class Benchmark: Codable, Hashable {
     /// Convenience range to iterate over for benchmarks
     public var throughputIterations: Range<Int> { 0 ..< configuration.throughputScalingFactor.rawValue }
 
+    /// Some internal state for display purposes of the benchmark by the BenchmarkTool
+    public var target: String
+    public var executablePath: String?
     /// closure: The actual benchmark closure that will be measured
     var closure: BenchmarkClosure? // The actual benchmark to run
     /// asyncClosure: The actual benchmark (async) closure that will be measured
@@ -63,6 +66,8 @@ public final class Benchmark: Codable, Hashable {
 
     enum CodingKeys: String, CodingKey {
         case name
+        case target
+        case executablePath
         case configuration
         case failureReason
     }
@@ -88,6 +93,7 @@ public final class Benchmark: Codable, Hashable {
         if configuration.skip {
             return nil
         }
+        target = ""
         self.name = name
         self.configuration = configuration
         self.closure = closure
@@ -108,6 +114,7 @@ public final class Benchmark: Codable, Hashable {
         if configuration.skip {
             return nil
         }
+        target = ""
         self.name = name
         self.configuration = configuration
         asyncClosure = closure
@@ -246,7 +253,7 @@ public extension Benchmark {
                     desiredIterations: Int = defaultConfiguration.desiredIterations,
                     skip: Bool = defaultConfiguration.skip,
                     thresholds: [BenchmarkMetric: BenchmarkResult.PercentileThresholds]? =
-                    defaultConfiguration.thresholds) {
+                        defaultConfiguration.thresholds) {
             self.metrics = metrics
             self.timeUnits = timeUnits
             self.warmupIterations = warmupIterations
@@ -256,6 +263,7 @@ public extension Benchmark {
             self.skip = skip
             self.thresholds = thresholds
         }
+
         // swiftlint:disable nesting
         enum CodingKeys: String, CodingKey {
             case metrics

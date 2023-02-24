@@ -12,14 +12,26 @@ import ArgumentParser
 @_exported import Benchmark
 import DateTime
 import ExtrasJSON
+import Progress
 @_exported import Statistics
 import SystemPackage
+#if canImport(Darwin)
+    import Darwin
+#elseif canImport(Glibc)
+    import Glibc
+#else
+    #error("Unsupported Platform")
+#endif
 
 // @main must be done in actual benchmark to avoid linker errors unfortunately
+// swiftlint: disable type_body_length
 public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
     static var testReadWrite: BenchmarkRunnerReadWrite?
 
     public init() {}
+
+    @Option(name: .shortAndLong, help: "Whether to supress progress output.")
+    var quiet = false
 
     @Option(name: .shortAndLong, help: "The input pipe filedescriptor used for communication with host process.")
     var inputFD: Int32?
@@ -236,6 +248,22 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
                         operatingSystemStatsProducer.startSampling(5_000) // ~5 ms
                     }
 
+                    var progressBar: ProgressBar?
+
+                    if quiet == false {
+                        let progressString = "| \(benchmarkToRun.target):\(benchmarkToRun.name)"
+                        progressBar = ProgressBar(count: benchmark.configuration.desiredIterations,
+                                                  configuration: [ProgressPercent(),
+                                                                  ProgressBarLine(barLength: 60),
+                                                                  ProgressTimeEstimates(),
+                                                                  ProgressString(string: progressString)])
+                        if var progressBar {
+                            progressBar.setValue(0)
+                        }
+                        fflush(stdout)
+                    }
+                    var currentPercentage = 0
+
                     // Run the benchmark at a minimum the desired iterations/runtime --
                     while iterations <= benchmark.configuration.desiredIterations ||
                         accummulatedRuntime <= benchmark.configuration.desiredDuration {
@@ -256,6 +284,28 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
                         benchmark.run()
 
                         iterations += 1
+
+                        if var progressBar {
+                            let iterationsPercentage = 100.0 * Double(iterations) /
+                                Double(benchmark.configuration.desiredIterations)
+
+                            let timePercentage = 100.0 * (accummulatedRuntime /
+                                benchmark.configuration.desiredDuration)
+
+                            let maxPercentage = max(iterationsPercentage, timePercentage)
+
+                            if Int(maxPercentage) > currentPercentage {
+                                currentPercentage = Int(maxPercentage)
+                                progressBar.setValue(Int((maxPercentage / 100) *
+                                        Double(benchmark.configuration.desiredIterations)))
+                                fflush(stdout)
+                            }
+                        }
+                    }
+
+                    if var progressBar {
+                        progressBar.setValue(benchmark.configuration.desiredIterations)
+                        fflush(stdout)
                     }
 
                     if benchmark.configuration.metrics.contains(.threads) ||
@@ -287,7 +337,8 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
                                                          measurements: value.measurementCount,
                                                          warmupIterations: benchmark.configuration.warmupIterations,
                                                          thresholds: benchmark.configuration.thresholds?[key],
-                                                         percentiles: percentiles)
+                                                         percentiles: percentiles,
+                                                         statistics: value)
                             results.append(result)
                         }
                     }

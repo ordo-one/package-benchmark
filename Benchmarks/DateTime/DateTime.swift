@@ -13,23 +13,25 @@ import BenchmarkSupport
 
 @_dynamicReplacement(for: registerBenchmarks)
 func benchmarks() {
-    Benchmark.defaultConfiguration = .init(throughputScalingFactor: .kilo,
-                                           desiredDuration: .seconds(2),
+    Benchmark.defaultConfiguration = .init(metrics: [.throughput, .wallClock],
+                                           warmupIterations: 10,
+                                           throughputScalingFactor: .kilo,
+                                           desiredDuration: .seconds(1),
                                            desiredIterations: .kilo(10))
 
-    Benchmark("InternalUTCClock.now") { benchmark in
+    Benchmark("InternalUTCClock-now") { benchmark in
         for _ in benchmark.throughputIterations {
             BenchmarkSupport.blackHole(InternalUTCClock.now)
         }
     }
 
-    Benchmark("BenchmarkClock.now") { benchmark in
+    Benchmark("BenchmarkClock-now") { benchmark in
         for _ in benchmark.throughputIterations {
             BenchmarkSupport.blackHole(BenchmarkClock.now)
         }
     }
 
-    Benchmark("Foundation.Date") { benchmark in
+    Benchmark("Foundation-Date") { benchmark in
         for _ in benchmark.throughputIterations {
             BenchmarkSupport.blackHole(Foundation.Date())
         }

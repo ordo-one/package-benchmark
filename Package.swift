@@ -17,11 +17,12 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-argument-parser", .upToNextMajor(from: "1.0.0")),
         .package(url: "https://github.com/apple/swift-numerics", from: "1.0.0"),
         .package(url: "https://github.com/swift-extras/swift-extras-json", .upToNextMajor(from: "0.6.0")),
-        .package(url: "https://github.com/SwiftPackageIndex/SPIManifest", from: "0.12.0"),
+//        .package(url: "https://github.com/SwiftPackageIndex/SPIManifest", from: "0.12.0"),
         .package(url: "https://github.com/ordo-one/TextTable", .upToNextMajor(from: "0.0.1")),
         .package(url: "https://github.com/ordo-one/package-jemalloc", .upToNextMajor(from: "1.0.0")),
         .package(url: "https://github.com/ordo-one/package-datetime", .upToNextMajor(from: "0.0.0")),
         .package(url: "https://github.com/ordo-one/package-histogram", .upToNextMajor(from: "0.0.1")),
+        .package(url: "https://github.com/ordo-one/Progress.swift", .upToNextMajor(from: "1.0.0")),
     ],
     targets: [
         // Plugin used by users of the package
@@ -50,6 +51,15 @@ let package = Package(
                 "Benchmark",
             ],
             path: "Plugins/BenchmarkTool"
+        ),
+
+        // Tool that simply generates the man page for the Benchmark-Plugin as we can't use SAP in it... :-/
+        .executableTarget(
+            name: "BenchmarkHelpGenerator",
+            dependencies: [
+                .product(name: "ArgumentParser", package: "swift-argument-parser"),
+            ],
+            path: "Plugins/BenchmarkHelpGenerator"
         ),
 
         // Internal statistics support
@@ -123,6 +133,7 @@ let package = Package(
                 .product(name: "SystemPackage", package: "swift-system"),
                 .product(name: "jemalloc", package: "package-jemalloc"),
                 .product(name: "DateTime", package: "package-datetime"),
+                .product(name: "Progress", package: "Progress.swift"),
                 "Statistics",
                 "Benchmark",
                 .byNameItem(name: "CDarwinOperatingSystemStats", condition: .when(platforms: [.macOS])),

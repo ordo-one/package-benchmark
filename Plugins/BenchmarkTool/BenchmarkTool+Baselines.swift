@@ -13,6 +13,7 @@
 import Benchmark
 import ExtrasJSON
 import SystemPackage
+import Foundation
 
 #if canImport(Darwin)
     import Darwin
@@ -63,20 +64,181 @@ struct BenchmarkIdentifier: Codable, Hashable {
     }
 }
 
+extension Sequence where Iterator.Element: Hashable {
+    func unique() -> [Iterator.Element] {
+        var seen: Set<Iterator.Element> = []
+        return filter { seen.insert($0).inserted }
+    }
+}
+
+typealias BenchmarkResultsByIdentifier = [BenchmarkIdentifier: [BenchmarkResult]]
 struct BenchmarkBaseline: Codable {
-    internal init(machine: BenchmarkMachine, results: [BenchmarkIdentifier: [BenchmarkResult]]) {
+    /// Used for writing to tables/exports
+    struct ResultsEntry {
+        var description: String
+        var metrics: BenchmarkResult
+    }
+
+    internal init(baselineName: String, machine: BenchmarkMachine, results: [BenchmarkIdentifier: [BenchmarkResult]]) {
+        self.baselineName = baselineName
         self.machine = machine
         self.results = results
     }
 
+//    @discardableResult
+    mutating func merge(_ otherBaseline: BenchmarkBaseline) -> BenchmarkBaseline {
+        if machine != otherBaseline.machine {
+            print("Warning: Merging baselines from two different machine configurations")
+        }
+        results.merge(otherBaseline.results) { first, _ in first }
+
+        return self
+    }
+
+    var baselineName: String
     var machine: BenchmarkMachine
-    var results: [BenchmarkIdentifier: [BenchmarkResult]]
+    var results: BenchmarkResultsByIdentifier
+
+    var benchmarkIdentifiers: [BenchmarkIdentifier] {
+        Array(results.keys).sorted(by: { ($0.target, $0.name) < ($1.target, $1.name) })
+    }
+
+    var targets: [String] {
+        benchmarkIdentifiers.map(\.target).unique().sorted()
+    }
+
+    var benchmarkNames: [String] {
+        benchmarkIdentifiers.map(\.name).unique().sorted()
+    }
+
+    var benchmarkMetrics: [BenchmarkMetric] {
+        var results: [BenchmarkMetric] = []
+        self.results.forEach { _, resultVector in
+            resultVector.forEach {
+                results.append($0.metric)
+            }
+        }
+
+        return results.unique().sorted(by: { $0.description < $1.description })
+    }
+
+    func resultEntriesMatching(_ closure: (BenchmarkIdentifier, BenchmarkResult) -> (Bool, String)) -> [ResultsEntry] {
+        var results: [ResultsEntry] = []
+        self.results.forEach { identifier, resultVector in
+            resultVector.forEach {
+                let (include, description) = closure(identifier, $0)
+                if include {
+                    results.append(ResultsEntry(description: description, metrics: $0))
+                }
+            }
+        }
+
+        return results.sorted(by: { $0.description < $1.description })
+    }
+
+    func metricsMatching(_ closure: (BenchmarkIdentifier, BenchmarkResult) -> Bool) -> [BenchmarkMetric] {
+        var results: [BenchmarkMetric] = []
+        self.results.forEach { identifier, resultVector in
+            resultVector.forEach {
+                if closure(identifier, $0) {
+                    results.append($0.metric)
+                }
+            }
+        }
+
+        return results.sorted(by: { $0.description < $1.description })
+    }
+
+    func resultsMatching(_ closure: (BenchmarkIdentifier, BenchmarkResult) -> Bool) -> [BenchmarkResult] {
+        var results: [BenchmarkResult] = []
+        self.results.forEach { identifier, resultVector in
+            resultVector.forEach {
+                if closure(identifier, $0) {
+                    results.append($0)
+                }
+            }
+        }
+
+        return results.sorted(by: { $0.metric.description < $1.metric.description })
+    }
+
+    func resultsByTarget(_ target: String) -> [String: [BenchmarkResult]] {
+        let filteredResults = results.filter { $0.key.target == target }.sorted(by: { $0.key.name < $1.key.name })
+        let resultsPerTarget = Dictionary(uniqueKeysWithValues: filteredResults.map { key, value in (key.name, value) })
+
+        return resultsPerTarget
+    }
 }
 
 let baselinesDirectory: String = ".benchmarkBaselines"
 
 extension BenchmarkTool {
-    func write(_ baseline: BenchmarkBaseline,
+    func printAllBaselines() {
+        var storagePath: FilePath = FilePath(baselineStoragePath)
+        storagePath.append(baselinesDirectory) // package/.benchmarkBaselines
+        for file in storagePath.directoryEntries {
+            if file.ends(with: ".") == false &&
+                file.ends(with: "..")  == false {
+                var subDirectory = storagePath
+                subDirectory.append(file.lastComponent!)
+                if let directoryName = file.lastComponent {
+                    let string = "Baselines for \(directoryName.description)"
+                    let separator = String(repeating: "=", count: string.count)
+                    print(string)
+                    print(separator)
+                    for file in subDirectory.directoryEntries {
+                        if let subdirectoryName = file.lastComponent {
+                            if file.ends(with: ".") == false &&
+                                file.ends(with: "..")  == false {
+                                print("\(subdirectoryName.description)")
+                            }
+                        }
+                    }
+                    print("")
+                }
+            }
+        }
+    }
+
+    func removeBaselinesNamed(target: String, baselineName: String) {
+        var storagePath: FilePath = FilePath(baselineStoragePath)
+        let filemanager = FileManager.default
+
+        storagePath.append(baselinesDirectory) // package/.benchmarkBaselines
+        for file in storagePath.directoryEntries {
+            if file.ends(with: ".") == false &&
+                file.ends(with: "..")  == false {
+                if target == file.lastComponent!.description {
+                    var subDirectory = storagePath
+                    subDirectory.append(file.lastComponent!)
+                    if file.lastComponent != nil {
+                        for file in subDirectory.directoryEntries {
+                            if let subdirectoryName = file.lastComponent {
+                                if file.ends(with: ".") == false &&
+                                    file.ends(with: "..")  == false {
+                                    if subdirectoryName.description == baselineName {
+                                        do {
+                                            try filemanager.removeItem(atPath: file.description)
+                                        } catch {
+                                            print("Failed to remove file \(file), error \(error)")
+                                            print("Give benchmark plugin permissions to delete files by running with e.g.:")
+                                            print("")
+                                            print("swift package --allow-writing-to-package-directory benchmark baseline delete")
+                                            print("")
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    func write(baseline: BenchmarkBaseline,
+               baselineName: String,
+               target: String,
                hostIdentifier: String? = nil) throws {
         // Set up desired output path and create any intermediate directories for structure as required:
 
@@ -111,18 +273,12 @@ extension BenchmarkTool {
          │       └── ...
          └── ...
          */
-
         var outputPath = FilePath(baselineStoragePath) // package
         var subPath = FilePath() // subpath rooted in package used for directory creation
 
         subPath.append(baselinesDirectory) // package/.benchmarkBaselines
-        subPath.append(FilePath.Component(target)!) // package/.benchmarkBaselines/myTarget1
-
-        if let baselineIdentifier = baselineName {
-            subPath.append(baselineIdentifier) // package/.benchmarkBaselines/myTarget1/named1
-        } else {
-            subPath.append("default") // // package/.benchmarkBaselines/myTarget1/default
-        }
+        subPath.append("\(target)") // package/.benchmarkBaselines/myTarget1
+        subPath.append(baselineName) // package/.benchmarkBaselines/myTarget1/named1
 
         outputPath.createSubPath(subPath) // Create destination subpath if needed
 
@@ -161,7 +317,7 @@ extension BenchmarkTool {
                 print("Lacking permissions to write to \(outputPath)")
                 print("Give benchmark plugin permissions by running with e.g.:")
                 print("")
-                print("swift package --allow-writing-to-package-directory benchmark update-baseline")
+                print("swift package --allow-writing-to-package-directory benchmark baseline update")
                 print("")
             } else {
                 print("Failed to open file \(outputPath), errno = [\(errno)]")
@@ -170,6 +326,7 @@ extension BenchmarkTool {
     }
 
     func read(hostIdentifier: String? = nil,
+              target: String,
               baselineIdentifier: String? = nil) throws -> BenchmarkBaseline? {
         var path = FilePath(baselineStoragePath)
         path.append(baselinesDirectory) // package/.benchmarkBaselines
@@ -196,28 +353,34 @@ extension BenchmarkTool {
             do {
                 try fd.closeAfter {
                     do {
-                        let readBytes = try [UInt8](unsafeUninitializedCapacity: 64 * 1_024 * 1_024) { buf, count in
-                            count = try fd.read(into: UnsafeMutableRawBufferPointer(buf))
+                        var readBytes = [UInt8]()
+                        let bufferSize = 16 * 1_024 * 1_024
+                        var done = false
+
+                        while done == false { // readBytes.count < bufferLength {
+                            let nextBytes = try [UInt8](unsafeUninitializedCapacity: bufferSize) { buf, count in
+                                count = try fd.read(into: UnsafeMutableRawBufferPointer(buf))
+                                if count == 0 {
+                                    done = true
+                                }
+                            }
+                            readBytes.append(contentsOf: nextBytes)
                         }
 
                         baseline = try XJSONDecoder().decode(BenchmarkBaseline.self, from: readBytes)
 
-                        //                        print("Read baseline: \(baseline!)")
                     } catch {
-                        print("Failed to open file for reading \(path)")
+                        print("Failed to open file for reading \(path) [\(error)]")
                     }
                 }
-
             } catch {
                 print("Failed to close fd for \(path) after reading.")
             }
-
         } catch {
             if errno != ENOENT { // file not found is ok, e.g. when no baselines exist
                 print("Failed to open file \(path), errno = [\(errno)]")
             }
         }
-
         return baseline
     }
 }

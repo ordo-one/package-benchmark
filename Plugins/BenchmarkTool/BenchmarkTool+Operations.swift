@@ -15,13 +15,15 @@ import ExtrasJSON
 import SystemPackage
 
 extension BenchmarkTool {
-    mutating func queryBenchmarks() throws {
+    mutating func queryBenchmarks(_ benchmarkPath: String) throws {
         try write(.list)
         outerloop: while true {
             let benchmarkReply = try read()
 
             switch benchmarkReply {
             case let .list(benchmark):
+                benchmark.executablePath = benchmarkPath
+                benchmark.target = FilePath(benchmarkPath).lastComponent!.description
                 benchmarks.append(benchmark)
             case .end:
                 break outerloop
@@ -31,7 +33,7 @@ extension BenchmarkTool {
         }
     }
 
-    mutating func runBenchmark(_ benchmark: Benchmark) throws -> BenchmarkResults {
+    mutating func runBenchmark(target: String, benchmark: Benchmark) throws -> BenchmarkResults {
         var benchmarkResults: BenchmarkResults = [:]
 
         try write(.run(benchmark: benchmark))
@@ -42,7 +44,6 @@ extension BenchmarkTool {
             switch benchmarkReply {
             case let .result(benchmark: benchmark, results: results):
                 let filteredResults = results.filter { benchmark.configuration.metrics.contains($0.metric) }
-
                 benchmarkResults[BenchmarkIdentifier(target: target, name: benchmark.name)] = filteredResults
             case .end:
                 break outerloop
@@ -61,57 +62,114 @@ extension BenchmarkTool {
         return benchmarkResults
     }
 
-    mutating func postProcessBenchmarkResults(_ benchmarkResults: BenchmarkResults) throws {
-        let benchmarkMachine = benchmarkMachine()
+    func cleanupStringForShellSafety(_ string: String) -> String {
+        var cleanedString = string.replacingOccurrences(of: "/", with: "_")
+        cleanedString = cleanedString.replacingOccurrences(of: " ", with: "_")
+        return cleanedString
+    }
 
-        if benchmarkResults.isEmpty {
-            return
-        }
-
+    mutating func postProcessBenchmarkResults() throws {
         switch command {
-        case .run:
-            prettyPrint(BenchmarkBaseline(machine: benchmarkMachine, results: benchmarkResults))
-        case .compare:
-            prettyPrintDelta(BenchmarkBaseline(machine: benchmarkMachine, results: benchmarkResults))
-
-            guard let currentBaseline else {
-                print("No baseline available to compare with.")
+        case .baseline:
+            if delete > 0 {
+                benchmarkExecutablePaths.forEach { path in
+                    let target = FilePath(path).lastComponent!.description
+                    print("")
+                    baseline.forEach {
+                        print("Removing baseline for \(target): '\($0)'")
+                        removeBaselinesNamed(target: target, baselineName: $0)
+                    }
+                }
                 return
             }
 
-            if BenchmarkBaseline(machine: benchmarkMachine,
-                                 results: benchmarkResults).betterResultsOrEqual(than: currentBaseline,
-                                                                                 printOutput: true) {
-                print("Current run of \(target) is BETTER (or equal) than the '\(baselineName ?? "default")' baseline thresholds.")
-            } else {
-                print("Current run is \(target) WORSE than the '\(baselineName ?? "default")' baseline thresholds.")
-                benchmarkFailure = true
+            if listBaselines > 0 {
+                print("")
+                printAllBaselines()
+                return
             }
 
-        case .updateBaseline:
-            if quiet == false {
-                prettyPrint(BenchmarkBaseline(machine: benchmarkMachine, results: benchmarkResults),
-                            header: "Updating baselines")
+            if let comparisonBaseline {
+                guard benchmarkBaselines.count > 0 else {
+                    print("Only had \(benchmarkBaselines.count) baselines, can't compare.")
+                    return
+                }
+
+                let currentBaseline = benchmarkBaselines[0]
+                let baselineName = baseline[0] == "default" ? "Current baseline" : baseline[0]
+                let comparingBaselineName = compare ?? "unknown"
+
+                prettyPrintDelta(currentBaseline: currentBaseline, baseline: comparisonBaseline)
+
+                if currentBaseline.betterResultsOrEqual(than: comparisonBaseline, printOutput: true) {
+                    print("New baseline '\(comparingBaselineName)' is BETTER (or equal) than the '\(baselineName)' baseline thresholds.")
+                    print("")
+
+                } else {
+                    failBenchmark("New baseline '\(comparingBaselineName)' is WORSE than the '\(baselineName)' baseline thresholds.")
+                }
+
+                return
             }
-            try write(BenchmarkBaseline(machine: benchmarkMachine, results: benchmarkResults))
-        case .export:
-            if exportFormat == .influx {
-                let exportStruct = saveExportableResults(BenchmarkBaseline(machine: benchmarkMachine, results: benchmarkResults))
-                let csvString = convertToCSV(exportableBenchmark: exportStruct)
-                try write(csvString)
+
+            if update > 0 {
+                guard benchmarkBaselines.count > 0 else {
+                    print("Only had \(benchmarkBaselines.count) baselines, can't update.")
+                    return
+                }
+
+                let baseline = benchmarkBaselines[0]
+                let baselineName = self.baseline.first ?? "default"
+
+                if quiet == 0 {
+                    prettyPrint(baseline, header: "Updating baseline '\(baselineName)'")
+                }
+
+                try baseline.targets.forEach { target in
+                    let results = baseline.results.filter { $0.key.target == target }
+                    let subset = BenchmarkBaseline(baselineName: baselineName == "default" ? "Current baseline" : baselineName,
+                                                   machine: baseline.machine,
+                                                   results: results)
+                    try write(baseline: subset,
+                              baselineName: baselineName,
+                              target: target)
+                }
+                return
+            }
+
+            if benchmarkBaselines.isEmpty {
+                print("No baseline found.")
             } else {
-                print("Export type not supported.")
+                try benchmarkBaselines.forEach { baseline in
+                    try exportResults(baseline: baseline)
+                }
             }
-        default:
-            print("Unexpected command \(command)")
+
+            return
+        case .run:
+
+            guard let baseline = benchmarkBaselines.first else {
+                fatalError("Internal error, no baseline data after benchmark run.")
+            }
+
+            try exportResults(baseline: baseline)
+        case .query:
+            break
+        case .list:
+            break
         }
     }
 
     func listBenchmarks() throws {
-        print("Target '\(FilePath(benchmarkExecutablePath).lastComponent!)' available benchmarks:")
-        benchmarks.forEach { benchmark in
-            print("\(benchmark.name)")
-        }
         print("")
+        benchmarkExecutablePaths.forEach { benchmarkExecutablePath in
+            print("Target '\(FilePath(benchmarkExecutablePath).lastComponent!)' available benchmarks:")
+            benchmarks.forEach { benchmark in
+                if benchmark.executablePath == benchmarkExecutablePath {
+                    print("\(benchmark.name)")
+                }
+            }
+            print("")
+        }
     }
 }

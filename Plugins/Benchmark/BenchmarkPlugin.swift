@@ -23,6 +23,27 @@ import PackagePlugin
 
 @available(macOS 13.0, *)
 @main struct Benchmark: CommandPlugin {
+    enum Command: String {
+        case run
+        case list
+        case baseline
+        case help
+    }
+
+    enum Format: String {
+        case text
+        case markdown
+        case influx
+        case percentiles
+        case tsv
+        case jmh
+    }
+
+    enum Grouping: String {
+        case metric
+        case benchmark
+    }
+
     func withCStrings(_ strings: [String], scoped: ([UnsafeMutablePointer<CChar>?]) throws -> Void) rethrows {
         let cStrings = strings.map { strdup($0) }
         try scoped(cStrings + [nil])
@@ -32,27 +53,67 @@ import PackagePlugin
     func performCommand(context: PluginContext, arguments: [String]) throws {
         // Get specific target(s) to run benchmarks for if specified on command line
         var argumentExtractor = ArgumentExtractor(arguments)
+        let filterSpecified = argumentExtractor.extractOption(named: "filter")
+        let skipSpecified = argumentExtractor.extractOption(named: "skip")
         let specifiedTargets = try argumentExtractor.extractSpecifiedTargets(in: context.package, withOption: "target")
         let skipTargets = try argumentExtractor.extractSpecifiedTargets(in: context.package, withOption: "skip-target")
         let outputFormats = argumentExtractor.extractOption(named: "format")
-        let groupingToUse = argumentExtractor.extractOption(named: "grouping")
-        let filterSpecified = argumentExtractor.extractOption(named: "filter")
-        let skipSpecified = argumentExtractor.extractOption(named: "skip")
+        let pathSpecified = argumentExtractor.extractOption(named: "path") // export path
+        let compareSpecified = argumentExtractor.extractOption(named: "compare")
+//        let updateBaseline = argumentExtractor.extractFlag(named: "update")
+//        let deleteBaseline = argumentExtractor.extractFlag(named: "delete")
         let quietRunning = argumentExtractor.extractFlag(named: "quiet")
-        var outputFormat = "text"
-        var grouping = "test"
+        let noProgress = argumentExtractor.extractFlag(named: "no-progress")
+        let groupingToUse = argumentExtractor.extractOption(named: "grouping")
+        let debug = argumentExtractor.extractFlag(named: "debug")
+        var outputFormat: Format = .text
+        var grouping = "benchmark"
+        var exportPath = "."
+        var comparisonBaseline = "default"
+
+        if argumentExtractor.unextractedOptionsOrFlags.count > 0 {
+            print("Unknown option/flag specfied: \(argumentExtractor.unextractedOptionsOrFlags)")
+            throw MyError.invalidArgument
+        }
+
+        // Remaining positional arguments are various action verbs for the plugin
+        var positionalArguments = argumentExtractor.remainingArguments
+
+        let commandString = positionalArguments.count > 0 ? positionalArguments.removeFirst() : Command.run.rawValue
+
+        guard let commandToPerform = Command(rawValue: commandString), commandToPerform != .help else {
+            if commandString != "help" {
+                print("")
+                print("Unknown command '\(commandString)'.")
+            }
+            print("")
+            print(help)
+            print("")
+            print("Please visit https://github.com/ordo-one/package-benchmark for more in-depth documentation")
+            print("")
+            return
+        }
+
+        if pathSpecified.count > 0 {
+            exportPath = pathSpecified.first!
+            if pathSpecified.count > 1 {
+                print("Only a single output path may be specified, will use the first one specified '\(exportPath)'")
+            }
+        }
+
+        if compareSpecified.count > 0 {
+            comparisonBaseline = compareSpecified.first!
+            if compareSpecified.count > 1 {
+                print("Only a single comparison baseline may be specified, will use the first one specified '\(comparisonBaseline)'")
+            }
+        }
 
         if outputFormats.count > 0 {
-            if let format = outputFormats.first {
-                switch format {
-                case "markdown":
-                    fallthrough
-                case "text":
-                    outputFormat = format
-                default:
-                    print("Unknown output format '\(format)', valid output formats are 'text' and 'markdown'")
-                    return
-                }
+            if let format = Format(rawValue: outputFormats.first!) {
+                outputFormat = format
+            } else {
+                print("Unknown output format '\(outputFormats.first!)'")
+                return
             }
             if outputFormats.count > 1 {
                 print("Only a single output format may be specified, will use the first one specified '\(outputFormat)'")
@@ -60,46 +121,15 @@ import PackagePlugin
         }
 
         if groupingToUse.count > 0 {
-            if let group = groupingToUse.first {
-                switch group {
-                case "test":
-                    fallthrough
-                case "metric":
-                    grouping = "metric"
-                default:
-                    print("Unknown grouping '\(group)', valid groupings are 'metric' and 'test'")
-                    return
-                }
+            if let group = Grouping(rawValue: groupingToUse.first!) {
+                grouping = group.rawValue
+            } else {
+                print("Unknown grouping '\(groupingToUse.first!)', valid groupings are 'metric' and 'benchmark'")
+                return
             }
             if groupingToUse.count > 1 {
                 print("Only a single grouping may be specified, will use the first one specified '\(grouping)'")
             }
-        }
-
-        // Build all targets
-        if outputFormat == "text" {
-            if quietRunning == 0 {
-                print("Building targets in release mode for benchmark run...")
-                fflush(nil)
-            }
-        }
-
-        let buildResult = try packageManager.build(
-            .all(includingTests: false),
-            parameters: .init(configuration: .release)
-        )
-
-        if outputFormat == "text" {
-            if quietRunning == 0 {
-                print("Build complete! Running benchmarks...")
-                print("")
-            }
-        }
-
-        guard buildResult.succeeded else {
-            print(buildResult.logText)
-            print("Benchmark failed to run due to build error.")
-            return
         }
 
         let swiftSourceModuleTargets: [SwiftSourceModuleTarget]
@@ -122,104 +152,169 @@ import PackagePlugin
                 skipTargets.first(where: { $0.name == benchmark.name }) == nil ? true : false
             }
 
-        // Filter out all executable products which are Benchmarks we should run
-        let benchmarks = buildResult.builtArtifacts
-            .filter { benchmark in
-                filteredTargets.first(where: { $0.name == benchmark.path.lastComponent }) != nil ? true : false
+        // Build the targets
+        if outputFormat == .text {
+            if quietRunning == 0 {
+                print("Building benchmark targets in release mode for benchmark run...")
+                fflush(nil)
             }
-
-        // Remaining positional arguments are various action verbs for the plugin
-        var positionalArguments = argumentExtractor.remainingArguments
-
-        let commandToPerform = positionalArguments.count > 0 ? positionalArguments.removeFirst() : "run" // default
+        }
 
         let benchmarkTool = try context.tool(named: "BenchmarkTool")
 
-        var firstBenchmarkTool = true
+        var args: [String] = [benchmarkTool.path.lastComponent.description,
+                              "--command", commandToPerform.rawValue,
+                              "--baseline-storage-path", context.package.directory.string,
+                              "--format", outputFormat.rawValue,
+                              "--grouping", grouping]
 
-        var benchmarkFailure = false
-        // Run the benchmarkTool for each target, constructing proper argument list for the BenchmarkTool
-        benchmarks.forEach { benchmark in
-            var pid: pid_t = 0
-
-            var args: [String] = [benchmarkTool.path.lastComponent.description,
-                                  "--target", benchmark.path.lastComponent.description,
-                                  "--benchmark-executable-path", benchmark.path.string,
-                                  "--baseline-storage-path", context.package.directory.string,
-                                  "--baseline-comparison-path", context.package.directory.string,
-                                  "--format", outputFormat,
-                                  "--grouping", grouping,
-                                  "--quiet", quietRunning > 0 ? true.description : false.description,
-                                  "--first-benchmark-tool", firstBenchmarkTool.description]
-
-            filterSpecified.forEach { filter in
-                args.append(contentsOf: ["--filter", filter])
+        try filteredTargets.forEach { target in
+            if quietRunning == 0 {
+                print("Building \(target.name)")
             }
 
-            skipSpecified.forEach { skip in
-                args.append(contentsOf: ["--skip", skip])
-            }
+            let buildResult = try packageManager.build(
+                .product(target.name), // .all(includingTests: false),
+                parameters: .init(configuration: .release)
+            )
 
-            switch commandToPerform {
-            case "list":
-                args.append(contentsOf: ["--command", "list"])
-            case "run":
-                args.append(contentsOf: ["--command", "run"])
-            case "compare":
-                args.append(contentsOf: ["--command", "compare"])
-                if positionalArguments.count > 0 {
-                    args.append(contentsOf: ["--baseline-name", positionalArguments[0]])
-                }
-                if positionalArguments.count > 1 {
-                    args.append(contentsOf: ["--baseline-name-second", positionalArguments[1]])
-                }
-            case "update-baseline":
-                args.append(contentsOf: ["--command", "update-baseline"])
-                if positionalArguments.count > 0 {
-                    args.append(contentsOf: ["--baseline-name", positionalArguments[0]])
-                }
-            case "export":
-                args.append(contentsOf: ["--command", "export"])
-                if positionalArguments.count > 0 {
-                    args.append(contentsOf: ["--export-format", positionalArguments[0]])
-                }
-            case "baseline":
-                args.append(contentsOf: ["--command", "baseline"])
-                if positionalArguments.count > 0 {
-                    args.append(contentsOf: ["--baseline-name", positionalArguments[0]])
-                }
-            default:
-                print("Unknown command/option \(commandToPerform)")
+            guard buildResult.succeeded else {
+                print(buildResult.logText)
+                print("Benchmark failed to run due to build error.")
                 return
             }
 
-            withCStrings(args) { cArgs in
-                var status = posix_spawn(&pid, benchmarkTool.path.string, nil, nil, cArgs, environ)
-
-                if status == 0 {
-                    if waitpid(pid, &status, 0) != -1 {
-                        if status != 0 {
-                            benchmarkFailure = true
-                        }
-                    } else {
-                        print("BenchmarkTool returned a non-zero exit code, errno = \(errno)")
-                        exit(errno)
-                    }
-                } else {
-                    print("Failed to run BenchmarkTool, posix_spawn() returned [\(status)]")
+            // Filter out all executable products which are Benchmarks we should run
+            let benchmarks = buildResult.builtArtifacts
+                .filter { benchmark in
+                    filteredTargets.first(where: { $0.name == benchmark.path.lastComponent }) != nil ? true : false
                 }
+
+            if benchmarks.isEmpty {
+                throw ArgumentParsingError.noMatchingTargetsForRegex
             }
 
-            firstBenchmarkTool = false
+            benchmarks.forEach { benchmark in
+                args.append(contentsOf: ["--benchmark-executable-paths", benchmark.path.string])
+            }
         }
-        if benchmarkFailure {
-            print("One or more benchmark suites had a threshold violation or crashed during runtime.")
-            throw MyError.benchmarkDeviationOrBenchmarkFailed
+
+        if outputFormat == .text {
+            if quietRunning == 0 {
+                print("Build complete!")
+            }
+        }
+
+        if quietRunning > 0 {
+            args.append(contentsOf: ["--quiet"])
+        }
+
+        if noProgress > 0 {
+            args.append(contentsOf: ["--no-progress"])
+        }
+
+        if compareSpecified.count > 0 {
+            args.append(contentsOf: ["--compare", comparisonBaseline])
+        }
+
+        filterSpecified.forEach { filter in
+            args.append(contentsOf: ["--filter", filter])
+        }
+
+        skipSpecified.forEach { skip in
+            args.append(contentsOf: ["--skip", skip])
+        }
+
+        if pathSpecified.count > 0 {
+            args.append(contentsOf: ["--path", exportPath])
+        }
+
+        if commandToPerform == .run, positionalArguments.count > 0 {
+            print("Can't specify baselines for normal run operation, superfluous arguments [\(positionalArguments)]")
+            return
+        }
+
+        if commandToPerform == .baseline {
+            if let firstBaselineArgument = positionalArguments.first {
+                switch firstBaselineArgument {
+                case "update":
+                    positionalArguments.removeFirst()
+                    args.append(contentsOf: ["--update"])
+
+                    if positionalArguments.count > 1 {
+                        print("Only a single baseline may be specified for update operations \(positionalArguments)")
+                        return
+                    }
+                case "delete":
+                    positionalArguments.removeFirst()
+                    args.append(contentsOf: ["--delete"])
+                case "compare":
+                    positionalArguments.removeFirst()
+                    if positionalArguments.count > 2 {
+                        print("Multiple baselines can't be compared, only one or two baselines may be specified for comparisons \(positionalArguments)")
+                        throw MyError.invalidArgument
+                    }
+
+                    // This will be the second if two, the first otherwise
+                    args.append(contentsOf: ["--compare", positionalArguments.removeLast()])
+                case "read": // to allow for a baseline named 'update'
+                    positionalArguments.removeFirst()
+                case "list":
+                    positionalArguments.removeFirst()
+                    args.append(contentsOf: ["--list-baselines"])
+                default:
+                    break
+                }
+            }
+        }
+
+        if commandToPerform == .baseline, positionalArguments.count == 0 {
+            args.append(contentsOf: ["--baseline", "default"])
+        } else {
+            positionalArguments.forEach { baseline in
+                args.append(contentsOf: ["--baseline", baseline])
+            }
+        }
+
+        try withCStrings(args) { cArgs in
+            let newPath = benchmarkTool.path
+            // This doesn't work for external dependents
+            // https://forums.swift.org/t/swiftpm-always-rebuilds-command-plugins-in-release-configuration/63225
+//            let toolname = benchmarkTool.path.lastComponent
+//            let newPath = benchmarkTool.path.removingLastComponent().removingLastComponent()
+//                .appending(subpath: "release").appending(subpath: toolname)
+
+            if debug > 0 {
+                print("To debug, start BenchmarkTool in LLDB using:")
+                print("lldb \(newPath.string)")
+                print("")
+                print("Then launch BenchmarkTool with:")
+                print("run \(args.dropFirst().joined(separator: " "))")
+                print("")
+                return
+            }
+
+            var pid: pid_t = 0
+            var status = posix_spawn(&pid, newPath.string, nil, nil, cArgs, environ)
+
+            if status == 0 {
+                if waitpid(pid, &status, 0) != -1 {
+                    if status != 0 {
+                        print("One or more benchmark suites had a threshold violation or crashed during runtime.")
+                        throw MyError.benchmarkDeviationOrBenchmarkFailed
+                    }
+                } else {
+                    print("waitpid() for pid \(pid) returned a non-zero exit code \(status), errno = \(errno)")
+                    exit(errno)
+                }
+            } else {
+                print("Failed to run BenchmarkTool, posix_spawn() returned [\(status)]")
+            }
         }
     }
 
     enum MyError: Error {
         case benchmarkDeviationOrBenchmarkFailed
-        case invalidArguments
+        case invalidArgument
     }
 }

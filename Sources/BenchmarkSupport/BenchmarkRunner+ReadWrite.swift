@@ -38,7 +38,10 @@ extension BenchmarkRunner {
 
         // JSON serialization
         try bytesArray.withUnsafeBufferPointer {
-            _ = try output.write(UnsafeRawBufferPointer($0))
+            let written = try output.write(UnsafeRawBufferPointer($0))
+            if count != written {
+                fatalError("count != written \(count) ---- \(written)")
+            }
         }
     }
 
@@ -55,8 +58,13 @@ extension BenchmarkRunner {
         }
 
         // JSON serialization
-        let readBytes = try [UInt8](unsafeUninitializedCapacity: bufferLength) { buf, count in
-            count = try input.read(into: UnsafeMutableRawBufferPointer(buf))
+        var readBytes = [UInt8]()
+
+        while readBytes.count < bufferLength {
+            let nextBytes = try [UInt8](unsafeUninitializedCapacity: bufferLength - readBytes.count) { buf, count in
+                count = try input.read(into: UnsafeMutableRawBufferPointer(buf))
+            }
+            readBytes.append(contentsOf: nextBytes)
         }
 
         let request = try XJSONDecoder().decode(BenchmarkCommandRequest.self, from: readBytes)

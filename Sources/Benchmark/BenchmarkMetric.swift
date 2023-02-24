@@ -154,3 +154,57 @@ public extension BenchmarkMetric {
         }
     }
 }
+// swiftlint:disable cyclomatic_complexity
+// As we can't have raw values and associated data we add this...
+extension BenchmarkMetric {
+    init(_ textualMetric: String) {
+        switch textualMetric {
+        case "cpuUser":
+            self = BenchmarkMetric.cpuUser
+        case "cpuSystem":
+            self = BenchmarkMetric.cpuSystem
+        case "cpuTotal":
+            self = BenchmarkMetric.cpuTotal
+        case "wallClock":
+            self = BenchmarkMetric.wallClock
+        case "throughput":
+            self = BenchmarkMetric.throughput
+        case "peakMemoryResident":
+            self = BenchmarkMetric.peakMemoryResident
+        case "peakMemoryVirtual":
+            self = BenchmarkMetric.peakMemoryVirtual
+        case "mallocCountSmall":
+            self = BenchmarkMetric.mallocCountSmall
+        case "mallocCountLarge":
+            self = BenchmarkMetric.mallocCountLarge
+        case "mallocCountTotal":
+            self = BenchmarkMetric.mallocCountTotal
+        case "allocatedResidentMemory":
+            self = BenchmarkMetric.allocatedResidentMemory
+        case "memoryLeaked":
+            self = BenchmarkMetric.memoryLeaked
+        case "syscalls":
+            self = BenchmarkMetric.syscalls
+        case "contextSwitches":
+            self = BenchmarkMetric.contextSwitches
+        case "threads":
+            self = BenchmarkMetric.threads
+        case "threadsRunning":
+            self = BenchmarkMetric.threadsRunning
+        case "readSyscalls":
+            self = BenchmarkMetric.readSyscalls
+        case "writeSyscalls":
+            self = BenchmarkMetric.writeSyscalls
+        case "readBytesLogical":
+            self = BenchmarkMetric.readBytesLogical
+        case "writeBytesLogical":
+            self = BenchmarkMetric.writeBytesLogical
+        case "readBytesPhysical":
+            self = BenchmarkMetric.readBytesPhysical
+        case "writeBytesPhysical":
+            self = BenchmarkMetric.writeBytesPhysical
+        default:
+            self = BenchmarkMetric.custom(textualMetric)
+        }
+    }
+}

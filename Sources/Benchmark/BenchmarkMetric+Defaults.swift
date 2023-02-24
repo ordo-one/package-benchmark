@@ -20,6 +20,7 @@ public extension BenchmarkMetric {
 
     static var extended: [BenchmarkMetric] {
         [.wallClock,
+         .cpuUser,
          .cpuTotal,
          .mallocCountTotal,
          .throughput,

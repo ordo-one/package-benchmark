@@ -31,15 +31,18 @@ extension ArgumentExtractor {
         var anyMatching = false
 
         try package.targets.forEach { target in
-            for specifiedTarget in specifiedTargets {
-                let regex = try Regex(specifiedTarget)
+            let path = target.directory.removingLastComponent()
+            if path.lastComponent == "Benchmarks" {
+                for specifiedTarget in specifiedTargets {
+                    let regex = try Regex(specifiedTarget)
 
-                if target.name.wholeMatch(of: regex) != nil {
-                    if let swiftSourceModuleTarget = target as? SwiftSourceModuleTarget {
-                        if swiftSourceModuleTarget.kind != .test {
-                            targets.append(swiftSourceModuleTarget)
-                            anyMatching = true
-                            break
+                    if target.name.wholeMatch(of: regex) != nil {
+                        if let swiftSourceModuleTarget = target as? SwiftSourceModuleTarget {
+                            if swiftSourceModuleTarget.kind != .test {
+                                targets.append(swiftSourceModuleTarget)
+                                anyMatching = true
+                                break
+                            }
                         }
                     }
                 }

@@ -72,7 +72,7 @@ func benchmarks() {
     }
 
     Benchmark("Mean",
-              configuration: .init(metrics: [.wallClock, .throughput], throughputScalingFactor: .kilo)) { benchmark in
+              configuration: .init(metrics: BenchmarkMetric.all, throughputScalingFactor: .kilo)) { benchmark in
         let maxValue: UInt64 = 1_000_000
 
         var histogram = Histogram<UInt64>(highestTrackableValue: maxValue, numberOfSignificantValueDigits: .three)
