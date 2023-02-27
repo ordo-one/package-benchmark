@@ -89,9 +89,9 @@ public extension Benchmark {
         /// `benchmark.throughputScalingFactor.rawvalue` for the number of iterations.
         public var throughputScalingFactor: StatisticsUnits
         /// The target wall clock runtime for the benchmark, currenty defaults to `.seconds(1)` if not set
-        public var desiredDuration: Duration
+        public var maxDuration: Duration
         /// The target number of iterations for the benchmark., currently defaults to 100K iterations if not set
-        public var desiredIterations: Int
+        public var maxIterations: Int
         /// Whether to skip this test (convenience for not having to comment out tests that have issues)
         public var skip = false
         /// Customized CI failure thresholds for a given metric for the Benchmark

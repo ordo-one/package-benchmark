@@ -247,6 +247,7 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
 
                     if quiet == false {
                         let progressString = "| \(benchmarkToRun.target):\(benchmarkToRun.name)"
+
                         progressBar = ProgressBar(count: 100,
                                                   configuration: [ProgressPercent(),
                                                                   ProgressBarLine(barLength: 60),
@@ -260,6 +261,7 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
                     var currentPercentage = 0
 
                     // Run the benchmark at a minimum the desired iterations/runtime --
+
                     while iterations <= benchmark.configuration.desiredIterations ||
                             wallClockDuration <= benchmark.configuration.desiredDuration {
                         // and at a maximum the same...
@@ -282,7 +284,7 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
 
                         if var progressBar {
                             let iterationsPercentage = 100.0 * Double(iterations) /
-                                Double(benchmark.configuration.desiredIterations)
+                                Double(benchmark.configuration.maxIterations)
 
                             let timePercentage = 100.0 * (wallClockDuration /
                                 benchmark.configuration.desiredDuration)
@@ -291,7 +293,9 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
 
                             if Int(maxPercentage) > currentPercentage {
                                 currentPercentage = Int(maxPercentage)
+                                
                                 progressBar.setValue(currentPercentage)
+
                                 fflush(stdout)
                             }
                         }
