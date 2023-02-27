@@ -262,11 +262,11 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
 
                     // Run the benchmark at a minimum the desired iterations/runtime --
 
-                    while iterations <= benchmark.configuration.desiredIterations ||
-                            wallClockDuration <= benchmark.configuration.desiredDuration {
+                    while iterations <= benchmark.configuration.maxIterations ||
+                            wallClockDuration <= benchmark.configuration.maxDuration {
                         // and at a maximum the same...
-                        guard wallClockDuration < benchmark.configuration.desiredDuration,
-                              iterations < benchmark.configuration.desiredIterations
+                        guard wallClockDuration < benchmark.configuration.maxDuration,
+                              iterations < benchmark.configuration.maxIterations
                         else {
                             break
                         }
@@ -287,13 +287,12 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
                                 Double(benchmark.configuration.maxIterations)
 
                             let timePercentage = 100.0 * (wallClockDuration /
-                                benchmark.configuration.desiredDuration)
+                                benchmark.configuration.maxDuration)
 
                             let maxPercentage = max(iterationsPercentage, timePercentage)
 
                             if Int(maxPercentage) > currentPercentage {
                                 currentPercentage = Int(maxPercentage)
-                                
                                 progressBar.setValue(currentPercentage)
 
                                 fflush(stdout)
