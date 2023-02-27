@@ -55,8 +55,8 @@ public final class Benchmark: Codable, Hashable {
                                                                   timeUnits: .automatic,
                                                                   warmupIterations: 3,
                                                                   throughputScalingFactor: .count,
-                                                                  desiredDuration: .seconds(1),
-                                                                  desiredIterations: 100_000,
+                                                                  maxDuration: .seconds(1),
+                                                                  maxIterations: 10_000,
                                                                   skip: false,
                                                                   thresholds: nil)
 
@@ -236,10 +236,10 @@ public extension Benchmark {
         /// E.g. `.kilo`will scale results with 1000. Any iteration done in the benchmark should use
         /// `benchmark.throughputScalingFactor.rawvalue` for the number of iterations.
         public var throughputScalingFactor: StatisticsUnits
-        /// The target wall clock runtime for the benchmark, currenty defaults to `.seconds(1)` if not set
-        public var desiredDuration: Duration
-        /// The target number of iterations for the benchmark., currently defaults to 100K iterations if not set
-        public var desiredIterations: Int
+        /// The maximum wall clock runtime for the benchmark, currenty defaults to `.seconds(1)` if not set
+        public var maxDuration: Duration
+        /// The maximum number of iterations for the benchmark., currently defaults to 10K iterations if not set
+        public var maxIterations: Int
         /// Whether to skip this test (convenience for not having to comment out tests that have issues)
         public var skip = false
         /// Customized CI failure thresholds for a given metric for the Benchmark
@@ -249,8 +249,8 @@ public extension Benchmark {
                     timeUnits: BenchmarkTimeUnits = defaultConfiguration.timeUnits,
                     warmupIterations: Int = defaultConfiguration.warmupIterations,
                     throughputScalingFactor: StatisticsUnits = defaultConfiguration.throughputScalingFactor,
-                    desiredDuration: Duration = defaultConfiguration.desiredDuration,
-                    desiredIterations: Int = defaultConfiguration.desiredIterations,
+                    maxDuration: Duration = defaultConfiguration.maxDuration,
+                    maxIterations: Int = defaultConfiguration.maxIterations,
                     skip: Bool = defaultConfiguration.skip,
                     thresholds: [BenchmarkMetric: BenchmarkResult.PercentileThresholds]? =
                         defaultConfiguration.thresholds) {
@@ -258,8 +258,8 @@ public extension Benchmark {
             self.timeUnits = timeUnits
             self.warmupIterations = warmupIterations
             self.throughputScalingFactor = throughputScalingFactor
-            self.desiredDuration = desiredDuration
-            self.desiredIterations = desiredIterations
+            self.maxDuration = maxDuration
+            self.maxIterations = maxIterations
             self.skip = skip
             self.thresholds = thresholds
         }
@@ -270,8 +270,8 @@ public extension Benchmark {
             case timeUnits
             case warmupIterations
             case throughputScalingFactor
-            case desiredDuration
-            case desiredIterations
+            case maxDuration
+            case maxIterations
             case thresholds
         }
     }
