@@ -10,6 +10,9 @@
 
 // Convenience sets of metrics
 public extension BenchmarkMetric {
+    /// The default collection of metrics used for a benchmark.
+    ///
+    /// The defaults include ``wallClock``, ``cpuTotal``, ``mallocCountTotal``, ``throughput``, and ``peakMemoryResident``.
     static var `default`: [BenchmarkMetric] {
         [.wallClock,
          .cpuTotal,
@@ -17,7 +20,8 @@ public extension BenchmarkMetric {
          .throughput,
          .peakMemoryResident]
     }
-
+    
+    /// A collection of extended system benchmarks.
     static var extended: [BenchmarkMetric] {
         [.wallClock,
          .cpuUser,
@@ -28,7 +32,8 @@ public extension BenchmarkMetric {
          .memoryLeaked,
          .syscalls]
     }
-
+    
+    /// A collection of memory benchmarks.
     static var memory: [BenchmarkMetric] {
         [.peakMemoryResident,
          .peakMemoryVirtual,
@@ -38,7 +43,8 @@ public extension BenchmarkMetric {
          .memoryLeaked,
          .allocatedResidentMemory]
     }
-
+    
+    /// A collection of system benchmarks.
     static var system: [BenchmarkMetric] {
         [.wallClock,
          .syscalls,
@@ -47,7 +53,8 @@ public extension BenchmarkMetric {
          .threadsRunning,
          .cpuSystem]
     }
-
+    
+    /// A collection of disk benchmarks.
     static var disk: [BenchmarkMetric] {
         [.readSyscalls,
          .writeSyscalls,
@@ -56,7 +63,8 @@ public extension BenchmarkMetric {
          .readBytesPhysical,
          .writeBytesPhysical]
     }
-
+    
+    /// A collection of all benchmarks supported by this library.
     static var all: [BenchmarkMetric] {
         [.cpuUser,
          .cpuSystem,

@@ -30,6 +30,9 @@ public final class Benchmark: Codable, Hashable {
     #endif
     public typealias BenchmarkCustomMetricMeasurement = (BenchmarkMetric, Int) -> Void
 
+    #if swift(>=5.8)
+    @_documentation(visibility: internal)
+    #endif
     public static var benchmarks: [Benchmark] = [] // Bookkeeping of all registered benchmarks
 
     /// The name used for display purposes of the benchmark (also used for matching when comparing to baselines)
@@ -45,7 +48,13 @@ public final class Benchmark: Codable, Hashable {
     public var throughputIterations: Range<Int> { 0 ..< configuration.throughputScalingFactor.rawValue }
 
     /// Some internal state for display purposes of the benchmark by the BenchmarkTool
+    #if swift(>=5.8)
+    @_documentation(visibility: internal)
+    #endif
     public var target: String
+    #if swift(>=5.8)
+    @_documentation(visibility: internal)
+    #endif
     public var executablePath: String?
     /// closure: The actual benchmark closure that will be measured
     var closure: BenchmarkClosure? // The actual benchmark to run
@@ -90,10 +99,16 @@ public final class Benchmark: Codable, Hashable {
         case failureReason
     }
 
+#if swift(>=5.8)
+@_documentation(visibility: internal)
+#endif
     public func hash(into hasher: inout Hasher) {
         hasher.combine(name)
     }
 
+#if swift(>=5.8)
+@_documentation(visibility: internal)
+#endif
     public static func == (lhs: Benchmark, rhs: Benchmark) -> Bool {
         lhs.name == rhs.name
     }
@@ -244,6 +259,7 @@ public final class Benchmark: Codable, Hashable {
 }
 
 public extension Benchmark {
+    /// The configuration settings for running a benchmark.
     struct Configuration: Codable {
         /// Defines the metrics that should be measured for the benchmark
         public var metrics: [BenchmarkMetric]

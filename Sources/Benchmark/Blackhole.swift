@@ -11,11 +11,23 @@
 
 // Borrowed from Swift Collections Benchmark, thanks!
 
-/// Do nothing and immediately return.
+/// A function to foil compiler optimizations that would otherwise optimize out code you want to benchmark.
 ///
-/// Some compiler optimizations can eliminate operations whose results don't
-/// get used, and this could potentially interfere with the accuracy of a
-/// benchmark. To defeat these optimizations, pass such unused results to
-/// this function so that the compiler considers them used.
+/// The function wraps another object or function, does nothing, and returns.
+/// If you want to benchmark the time is takes to create an instance and you don't maintain a reference to it, the compiler may optimize it out entirely, thinking it is unused.
+/// To prevent the compiler from removing the code you want to measure, wrap the creation of the instance with `blackHole`.
+/// For example, the following code benchmarks the time it takes to create an instance of `Date`, and wraps the creation of the instance to prevent the compiler from optimizing it away:
+///
+/// ```swift
+/// Benchmark("Foundation Date()",
+///     configuration: .init(
+///         metrics: [.throughput, .wallClock],
+///         throughputScalingFactor: .mega)
+/// ) { benchmark in
+///     for _ in benchmark.throughputIterations {
+///         blackHole(Date())
+///     }
+/// }
+/// ```
 @inline(never)
 public func blackHole(_: some Any) {}

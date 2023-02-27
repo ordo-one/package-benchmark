@@ -27,7 +27,6 @@
 - ``Benchmark/Benchmark/currentIteration``
 - ``Benchmark/Benchmark/error(_:)``
 - ``Benchmark/Benchmark/failureReason``
-- ``Benchmark/Benchmark/benchmarks``
 
 ### Collecting Custom Metrics
 
@@ -41,6 +40,4 @@
 ### Comparing Benchmarks
 
 - ``Benchmark/Benchmark/!=(_:_:)``
-- ``Benchmark/Benchmark/==(_:_:)``
-- ``Benchmark/Benchmark/hash(into:)``
 
