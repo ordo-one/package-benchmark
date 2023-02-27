@@ -17,8 +17,8 @@ extension BenchmarkRunner {}
 @_dynamicReplacement(for: registerBenchmarks)
 func benchmarks() {
     Benchmark.defaultConfiguration = .init(throughputScalingFactor: .mega,
-                                           desiredDuration: .seconds(1),
-                                           desiredIterations: .kilo(1))
+                                           maxDuration: .seconds(1),
+                                           maxIterations: .kilo(1))
 
     Benchmark("Record",
               configuration: .init(metrics: [.wallClock, .throughput] + BenchmarkMetric.memory)) { benchmark in

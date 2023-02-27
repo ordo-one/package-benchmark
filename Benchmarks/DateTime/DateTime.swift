@@ -16,8 +16,8 @@ func benchmarks() {
     Benchmark.defaultConfiguration = .init(metrics: [.throughput, .wallClock],
                                            warmupIterations: 10,
                                            throughputScalingFactor: .kilo,
-                                           desiredDuration: .seconds(1),
-                                           desiredIterations: .kilo(10))
+                                           maxDuration: .seconds(1),
+                                           maxIterations: .kilo(10))
 
     Benchmark("InternalUTCClock-now") { benchmark in
         for _ in benchmark.throughputIterations {
