@@ -30,7 +30,7 @@ public final class Benchmark: Codable, Hashable {
     public var currentIteration: Int = 0
 
     /// Convenience range to iterate over for benchmarks
-    public var throughputIterations: Range<Int> { 0 ..< configuration.throughputScalingFactor.rawValue }
+    public var scaledIterations: Range<Int> { 0 ..< configuration.scalingFactor.rawValue }
 
     /// Some internal state for display purposes of the benchmark by the BenchmarkTool
     public var target: String
@@ -54,7 +54,7 @@ public final class Benchmark: Codable, Hashable {
     public static var defaultConfiguration: Configuration = .init(metrics: BenchmarkMetric.default,
                                                                   timeUnits: .automatic,
                                                                   warmupIterations: 3,
-                                                                  throughputScalingFactor: .count,
+                                                                  scalingFactor: .none,
                                                                   maxDuration: .seconds(1),
                                                                   maxIterations: 10_000,
                                                                   skip: false,
@@ -223,6 +223,26 @@ public final class Benchmark: Codable, Hashable {
 }
 
 public extension Benchmark {
+    enum ScalingFactor: Int, Codable {
+        case none = 1 // e.g. nanoseconds, or count
+        case kilo = 1_000 // microseconds
+        case mega = 1_000_000 // milliseconds
+        case giga = 1_000_000_000 // seconds
+
+        public var description: String {
+            switch self {
+            case .none:
+                return "#"
+            case .kilo:
+                return "K"
+            case .mega:
+                return "M"
+            case .giga:
+                return "G"
+            }
+        }
+    }
+
     struct Configuration: Codable {
         /// Defines the metrics that should be measured for the benchmark
         public var metrics: [BenchmarkMetric]
@@ -232,10 +252,10 @@ public extension Benchmark {
         /// Specifies a number of warmup iterations should be performed before the measurement to
         /// reduce outliers due to e.g. cache population
         public var warmupIterations: Int
-        /// Specifies the number of logical subiterations being done, scaling throughput measurements accordingly.
-        /// E.g. `.kilo`will scale results with 1000. Any iteration done in the benchmark should use
-        /// `benchmark.throughputScalingFactor.rawvalue` for the number of iterations.
-        public var throughputScalingFactor: StatisticsUnits
+        /// Specifies the number of logical subiterations being done, supporting scaling of metricsi accordingly.
+        /// E.g. `.kilo`will scale results with 1000. Any subiteration done in the benchmark should use
+        /// `for _ in benchmark.scaledIterations` for the number of iterations.
+        public var scalingFactor: ScalingFactor
         /// The maximum wall clock runtime for the benchmark, currenty defaults to `.seconds(1)` if not set
         public var maxDuration: Duration
         /// The maximum number of iterations for the benchmark., currently defaults to 10K iterations if not set
@@ -248,7 +268,7 @@ public extension Benchmark {
         public init(metrics: [BenchmarkMetric] = defaultConfiguration.metrics,
                     timeUnits: BenchmarkTimeUnits = defaultConfiguration.timeUnits,
                     warmupIterations: Int = defaultConfiguration.warmupIterations,
-                    throughputScalingFactor: StatisticsUnits = defaultConfiguration.throughputScalingFactor,
+                    scalingFactor: ScalingFactor = defaultConfiguration.scalingFactor,
                     maxDuration: Duration = defaultConfiguration.maxDuration,
                     maxIterations: Int = defaultConfiguration.maxIterations,
                     skip: Bool = defaultConfiguration.skip,
@@ -257,7 +277,7 @@ public extension Benchmark {
             self.metrics = metrics
             self.timeUnits = timeUnits
             self.warmupIterations = warmupIterations
-            self.throughputScalingFactor = throughputScalingFactor
+            self.scalingFactor = scalingFactor
             self.maxDuration = maxDuration
             self.maxIterations = maxIterations
             self.skip = skip
@@ -269,10 +289,11 @@ public extension Benchmark {
             case metrics
             case timeUnits
             case warmupIterations
-            case throughputScalingFactor
+            case scalingFactor
             case maxDuration
             case maxIterations
             case thresholds
         }
     }
 }
+

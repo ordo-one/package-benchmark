@@ -16,7 +16,8 @@ extension BenchmarkRunner {}
 // swiftlint disable: attributes
 @_dynamicReplacement(for: registerBenchmarks)
 func benchmarks() {
-    Benchmark.defaultConfiguration = .init(throughputScalingFactor: .mega,
+
+    Benchmark.defaultConfiguration = .init(scalingFactor: .mega,
                                            maxDuration: .seconds(1),
                                            maxIterations: .kilo(1))
 
@@ -31,7 +32,7 @@ func benchmarks() {
 
         benchmark.startMeasurement()
 
-        for i in benchmark.throughputIterations {
+        for i in benchmark.scaledIterations {
             blackHole(histogram.record(values[i % numValues]))
         }
     }
@@ -45,14 +46,14 @@ func benchmarks() {
 
         benchmark.startMeasurement()
 
-        for i in benchmark.throughputIterations {
+        for i in benchmark.scaledIterations {
             blackHole(histogram.record(values[i % numValues]))
         }
     }
 
     Benchmark("ValueAtPercentile",
               configuration: .init(metrics: [.wallClock, .throughput] + BenchmarkMetric.memory,
-                                   throughputScalingFactor: .kilo)) { benchmark in
+                                   scalingFactor: .kilo)) { benchmark in
         let maxValue: UInt64 = 1_000_000
 
         var histogram = Histogram<UInt64>(highestTrackableValue: maxValue, numberOfSignificantValueDigits: .three)
@@ -66,13 +67,13 @@ func benchmarks() {
 
         benchmark.startMeasurement()
 
-        for i in benchmark.throughputIterations {
+        for i in benchmark.scaledIterations {
             blackHole(histogram.valueAtPercentile(percentiles[i % percentiles.count]))
         }
     }
 
     Benchmark("Mean",
-              configuration: .init(metrics: BenchmarkMetric.all, throughputScalingFactor: .kilo)) { benchmark in
+              configuration: .init(metrics: BenchmarkMetric.all, scalingFactor: .kilo)) { benchmark in
         let maxValue: UInt64 = 1_000_000
 
         var histogram = Histogram<UInt64>(highestTrackableValue: maxValue, numberOfSignificantValueDigits: .three)
@@ -84,7 +85,7 @@ func benchmarks() {
 
         benchmark.startMeasurement()
 
-        for _ in benchmark.throughputIterations {
+        for _ in benchmark.scaledIterations {
             blackHole(histogram.mean)
         }
     }
