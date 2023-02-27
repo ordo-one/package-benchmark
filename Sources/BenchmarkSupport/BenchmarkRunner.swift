@@ -24,7 +24,6 @@ import SystemPackage
 #endif
 
 // @main must be done in actual benchmark to avoid linker errors unfortunately
-// swiftlint: disable type_body_length
 public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
     static var testReadWrite: BenchmarkRunnerReadWrite?
 
@@ -113,14 +112,12 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
                     }
 
                     var iterations = 0
-                    var accummulatedRuntime: Duration = .zero
-                    // accummulatedWallclock may be less than total runtime as it skips 0 measurements
-                    var accummulatedWallclock: Duration = .zero
-                    var accummulatedWallclockMeasurements = 0
+                    var wallClockDuration: Duration = .zero
                     var startMallocStats = MallocStats()
                     var stopMallocStats = MallocStats()
                     var startOperatingSystemStats = OperatingSystemStats()
                     var stopOperatingSystemStats = OperatingSystemStats()
+                    let initialStartTime = BenchmarkClock.now
                     var startTime = BenchmarkClock.now
                     var stopTime = BenchmarkClock.now
 
@@ -152,10 +149,10 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
                         var delta = 0
                         let runningTime: Duration = startTime.duration(to: stopTime)
 
+                        wallClockDuration = initialStartTime.duration(to: stopTime)
+
                         if runningTime > .zero { // macOS sometimes gives us identical timestamps so let's skip those.
                             statistics[.wallClock]?.add(Int(runningTime.nanoseconds()))
-                            accummulatedWallclock += runningTime
-                            accummulatedWallclockMeasurements += 1
 
                             var roundedThroughput =
                                 Double(benchmark.configuration.throughputScalingFactor.rawValue * 1_000_000_000)
@@ -167,8 +164,6 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
                             if throughput > 0 {
                                 statistics[.throughput]?.add(throughput)
                             }
-
-                            accummulatedRuntime += runningTime
                         }
 
                         if mallocStatsRequested {
@@ -252,7 +247,7 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
 
                     if quiet == false {
                         let progressString = "| \(benchmarkToRun.target):\(benchmarkToRun.name)"
-                        progressBar = ProgressBar(count: benchmark.configuration.desiredIterations,
+                        progressBar = ProgressBar(count: 100,
                                                   configuration: [ProgressPercent(),
                                                                   ProgressBarLine(barLength: 60),
                                                                   ProgressTimeEstimates(),
@@ -266,9 +261,9 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
 
                     // Run the benchmark at a minimum the desired iterations/runtime --
                     while iterations <= benchmark.configuration.desiredIterations ||
-                        accummulatedRuntime <= benchmark.configuration.desiredDuration {
+                            wallClockDuration <= benchmark.configuration.desiredDuration {
                         // and at a maximum the same...
-                        guard accummulatedRuntime < benchmark.configuration.desiredDuration,
+                        guard wallClockDuration < benchmark.configuration.desiredDuration,
                               iterations < benchmark.configuration.desiredIterations
                         else {
                             break
@@ -289,22 +284,21 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
                             let iterationsPercentage = 100.0 * Double(iterations) /
                                 Double(benchmark.configuration.desiredIterations)
 
-                            let timePercentage = 100.0 * (accummulatedRuntime /
+                            let timePercentage = 100.0 * (wallClockDuration /
                                 benchmark.configuration.desiredDuration)
 
                             let maxPercentage = max(iterationsPercentage, timePercentage)
 
                             if Int(maxPercentage) > currentPercentage {
                                 currentPercentage = Int(maxPercentage)
-                                progressBar.setValue(Int((maxPercentage / 100) *
-                                        Double(benchmark.configuration.desiredIterations)))
+                                progressBar.setValue(currentPercentage)
                                 fflush(stdout)
                             }
                         }
                     }
 
                     if var progressBar {
-                        progressBar.setValue(benchmark.configuration.desiredIterations)
+                        progressBar.setValue(100)
                         fflush(stdout)
                     }
 
