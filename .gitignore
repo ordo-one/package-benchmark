@@ -52,6 +52,9 @@ playground.xcworkspace
 .DS_Store
 .build/
 
+# DocC local builds
+Sources/Benchmark/Documentation.docc/.docc-build/
+
 # CocoaPods
 #
 # We recommend against adding the Pods directory to your .gitignore. However
