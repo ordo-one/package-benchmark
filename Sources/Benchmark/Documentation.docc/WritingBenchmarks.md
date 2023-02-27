@@ -124,10 +124,10 @@ public extension Benchmark {
         public var throughputScalingFactor: StatisticsUnits
         /// The target wall clock runtime for the benchmark. 
         /// Defaults to `.seconds(1)` if not set.
-        public var desiredDuration: Duration
+        public var maxDuration: Duration
         /// The target number of iterations for the benchmark.
         /// Defaults to 100K iterations if not set.
-        public var desiredIterations: Int
+        public var maxIterations: Int
         /// Whether to skip this test (convenience for not 
         /// having to comment out tests that have issues)
         public var skip = false
