@@ -223,25 +223,6 @@ public final class Benchmark: Codable, Hashable {
 }
 
 public extension Benchmark {
-    enum ScalingFactor: Int, Codable {
-        case none = 1 // e.g. nanoseconds, or count
-        case kilo = 1_000 // microseconds
-        case mega = 1_000_000 // milliseconds
-        case giga = 1_000_000_000 // seconds
-
-        public var description: String {
-            switch self {
-            case .none:
-                return "#"
-            case .kilo:
-                return "K"
-            case .mega:
-                return "M"
-            case .giga:
-                return "G"
-            }
-        }
-    }
 
     struct Configuration: Codable {
         /// Defines the metrics that should be measured for the benchmark
@@ -255,7 +236,7 @@ public extension Benchmark {
         /// Specifies the number of logical subiterations being done, supporting scaling of metricsi accordingly.
         /// E.g. `.kilo`will scale results with 1000. Any subiteration done in the benchmark should use
         /// `for _ in benchmark.scaledIterations` for the number of iterations.
-        public var scalingFactor: ScalingFactor
+        public var scalingFactor: BenchmarkScalingFactor
         /// The maximum wall clock runtime for the benchmark, currenty defaults to `.seconds(1)` if not set
         public var maxDuration: Duration
         /// The maximum number of iterations for the benchmark., currently defaults to 10K iterations if not set
@@ -268,7 +249,7 @@ public extension Benchmark {
         public init(metrics: [BenchmarkMetric] = defaultConfiguration.metrics,
                     timeUnits: BenchmarkTimeUnits = defaultConfiguration.timeUnits,
                     warmupIterations: Int = defaultConfiguration.warmupIterations,
-                    scalingFactor: ScalingFactor = defaultConfiguration.scalingFactor,
+                    scalingFactor: BenchmarkScalingFactor = defaultConfiguration.scalingFactor,
                     maxDuration: Duration = defaultConfiguration.maxDuration,
                     maxIterations: Int = defaultConfiguration.maxIterations,
                     skip: Bool = defaultConfiguration.skip,

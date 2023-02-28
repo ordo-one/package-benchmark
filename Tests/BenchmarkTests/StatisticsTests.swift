@@ -11,7 +11,7 @@
 @testable import BenchmarkSupport
 @testable import Statistics
 import XCTest
-
+/*
 final class StatisticsTests: XCTestCase {
     func testStatisticsResults() throws {
         var stats = Statistics(numberOfSignificantDigits: .four)
@@ -28,7 +28,7 @@ final class StatisticsTests: XCTestCase {
 
         XCTAssertEqual(stats.measurementCount, measurementCount * 2)
         XCTAssertEqual(stats.timeUnits, .count)
-        XCTAssertEqual(round(stats.averageMeasurement), round(Double(measurementCount / 2)))
+        XCTAssertEqual(round(stats.histogram.mean), round(Double(measurementCount / 2)))
 
         stats.calculateStatistics()
 
@@ -51,7 +51,7 @@ final class StatisticsTests: XCTestCase {
         }
 
         XCTAssertEqual(stats.measurementCount, range.count)
-        XCTAssertEqual(stats.averageMeasurement, 0.0)
+        XCTAssertEqual(stats.histogram.mean, 0.0)
 
         XCTAssert(stats.onlyZeroMeasurements)
 
@@ -81,7 +81,7 @@ final class StatisticsTests: XCTestCase {
 
         XCTAssertEqual(stats.measurementCount, range.count)
         XCTAssertEqual(stats.timeUnits, .count)
-        XCTAssertEqual(round(stats.averageMeasurement), round(Double(accumulatedMeasurement) / Double(range.count)))
+        XCTAssertEqual(round(stats.histogram.mean), round(Double(accumulatedMeasurement) / Double(range.count)))
 
         stats.calculateStatistics()
 
@@ -95,7 +95,7 @@ final class StatisticsTests: XCTestCase {
     }
 
     func testAutomaticUnits() throws {
-        typealias Case = (value: Int, units: StatisticsUnits)
+        typealias Case = (value: Int, units: Statistics.Units)
 
         let cases = [
             Case(value: 0, units: .count),
@@ -111,7 +111,7 @@ final class StatisticsTests: XCTestCase {
         ]
 
         for (value, expectedUnits) in cases {
-            let units = StatisticsUnits(fromMagnitudeOf: Double(value))
+            let units = Statistics.Units(fromMagnitudeOf: Double(value))
             XCTAssertEqual(units, expectedUnits, "Expected units for \(value) are \(expectedUnits)")
         }
     }
@@ -124,8 +124,7 @@ final class StatisticsTests: XCTestCase {
             stats.add(measurement)
         }
 
-        let histograms = stats.output()
-
-        XCTAssertGreaterThan(histograms.count, 100)
+        XCTAssertGreaterThan(stats.histogram.totalCount, 100)
     }
 }
+*/

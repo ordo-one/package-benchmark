@@ -80,6 +80,9 @@ struct BenchmarkTool: AsyncParsableCommand {
     @Flag(name: .long, help: "True if we should supress progress in benchmark run")
     var noProgress: Int
 
+    @Flag(name: .long, help: "True if we should scale time units, syscall rate, etc to scalingFactor")
+    var scale: Int
+
     @Option(name: .long, help: "The named baseline(s) we should display, update, delete or compare with")
     var baseline: [String] = []
 

@@ -43,7 +43,20 @@ import PackagePlugin
         case metric
         case benchmark
     }
+/*
+    enum TimeUnit: String {
+        case automatic
+        case s
+        case ms
+        case us
+        case ns
+    }
 
+    enum Scale: String {
+        case automatic
+        case scaled
+    }
+*/
     func withCStrings(_ strings: [String], scoped: ([UnsafeMutablePointer<CChar>?]) throws -> Void) rethrows {
         let cStrings = strings.map { strdup($0) }
         try scoped(cStrings + [nil])
@@ -66,6 +79,7 @@ import PackagePlugin
         let noProgress = argumentExtractor.extractFlag(named: "no-progress")
         let groupingToUse = argumentExtractor.extractOption(named: "grouping")
         let debug = argumentExtractor.extractFlag(named: "debug")
+        let scale = argumentExtractor.extractFlag(named: "scale")
         var outputFormat: Format = .text
         var grouping = "benchmark"
         var exportPath = "."
@@ -211,6 +225,10 @@ import PackagePlugin
 
         if noProgress > 0 {
             args.append(contentsOf: ["--no-progress"])
+        }
+
+        if scale > 0 {
+            args.append(contentsOf: ["--scale"])
         }
 
         if compareSpecified.count > 0 {

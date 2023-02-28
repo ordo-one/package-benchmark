@@ -18,7 +18,7 @@ import Statistics
 
 extension JMHPrimaryMetric {
     init(_ result: BenchmarkResult) {
-        let histogram = result.statistics!.histogram
+        let histogram = result.statistics.histogram
 
         // TODO: Must validate the calculation of scoreError
         // below was cobbled together according to https://stackoverflow.com/a/24725075
@@ -35,18 +35,18 @@ extension JMHPrimaryMetric {
         let factor = result.metric.countable() == false ? 1_000 : 1
 
         for p in percentiles {
-            percentileValues[String(p)] = roundToDecimalplaces(Double(histogram.valueAtPercentile(p)) / Double(factor), 3)
+            percentileValues[String(p)] = Statistics.roundToDecimalplaces(Double(histogram.valueAtPercentile(p)) / Double(factor), 3)
         }
 
         for value in histogram.recordedValues() {
             for _ in 0 ..< value.count {
-                recordedValues.append(roundToDecimalplaces(Double(value.value) / Double(factor), 3))
+                recordedValues.append(Statistics.roundToDecimalplaces(Double(value.value) / Double(factor), 3))
             }
         }
 
-        self.score = roundToDecimalplaces(score / Double(factor), 3)
-        scoreError = roundToDecimalplaces(error / Double(factor), 3)
-        scoreConfidence = [roundToDecimalplaces(score - error) / Double(factor), roundToDecimalplaces(score + error) / Double(factor)]
+        self.score = Statistics.roundToDecimalplaces(score / Double(factor), 3)
+        scoreError = Statistics.roundToDecimalplaces(error / Double(factor), 3)
+        scoreConfidence = [Statistics.roundToDecimalplaces(score - error) / Double(factor), Statistics.roundToDecimalplaces(score + error) / Double(factor)]
         scorePercentiles = percentileValues
         if result.metric.countable() {
             scoreUnit = result.metric == .throughput ? "# / s" : "#"
@@ -92,7 +92,7 @@ extension BenchmarkTool {
                                      warmupIterations: primaryResult.warmupIterations,
                                      warmupTime: "1 s",
                                      warmupBatchSize: 1,
-                                     measurementIterations: primaryResult.measurements,
+                                     measurementIterations: primaryResult.statistics.measurementCount,
                                      measurementTime: "1 s",
                                      measurementBatchSize: 1,
                                      primaryMetric: primaryMetrics,

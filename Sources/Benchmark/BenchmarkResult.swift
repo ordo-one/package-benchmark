@@ -34,31 +34,77 @@ public enum BenchmarkTimeUnits: Int, Codable, CustomStringConvertible {
     }
 }
 
+public enum BenchmarkScalingFactor: Int, Codable {
+    case automatic // will pick scaling factor automatically
+    case none = 1 // e.g. nanoseconds, or count
+    case kilo = 1_000 // microseconds
+    case mega = 1_000_000 // milliseconds
+    case giga = 1_000_000_000 // seconds
+
+    public var description: String {
+        switch self {
+        case .automatic:
+            return "#"
+        case .none:
+            return "#"
+        case .kilo:
+            return "K"
+        case .mega:
+            return "M"
+        case .giga:
+            return "G"
+        }
+    }
+}
+
+// How we should scale a result for a given time unit (all results counted in nanos)
+public extension BenchmarkScalingFactor {
+    init(_ units:BenchmarkTimeUnits) {
+        switch units {
+        case .nanoseconds:
+            self = .none
+        case .microseconds:
+            self = .kilo
+        case .milliseconds:
+            self = .mega
+        case .seconds:
+            self = .giga
+        case .automatic:
+            self = .automatic
+        }
+    }
+}
+
 public struct BenchmarkResult: Codable, Comparable, Equatable {
+    
     public init(metric: BenchmarkMetric,
                 timeUnits: BenchmarkTimeUnits,
-                measurements: Int,
+                scalingFactor: BenchmarkScalingFactor,
+//                measurements: Int,
                 warmupIterations: Int,
                 thresholds: PercentileThresholds? = nil,
-                percentiles: [BenchmarkResult.Percentile: Int],
-                statistics: Statistics? = nil) {
+//                percentiles: [Statistics.Percentile: Int],
+                statistics: Statistics) {
         self.metric = metric
         self.timeUnits = timeUnits
-        self.measurements = measurements
+        self.scalingFactor = scalingFactor
+//        self.measurements = measurements
         self.warmupIterations = warmupIterations
         self.thresholds = thresholds
-        self.percentiles = percentiles
+//        self.percentiles = percentiles
         self.statistics = statistics
     }
 
     public var metric: BenchmarkMetric
     public var timeUnits: BenchmarkTimeUnits
-    public var measurements: Int
+    public var scalingFactor: BenchmarkScalingFactor
+//    public var measurements: Int
     public var warmupIterations: Int
     public var thresholds: PercentileThresholds?
-    public var percentiles: [BenchmarkResult.Percentile: Int]
-    public var statistics: Statistics?
+//    public var percentiles: [Statistics.Percentile: Int]
+    public var statistics: Statistics
 
+    /*
     public mutating func scaleResults(to otherResult: BenchmarkResult) {
         guard timeUnits != otherResult.timeUnits else {
             return
@@ -71,10 +117,10 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
 
         timeUnits = otherResult.timeUnits
     }
-
+*/
     public var unitDescription: String {
         if metric.countable() {
-            let statisticsUnit = StatisticsUnits(timeUnits)
+            let statisticsUnit = Statistics.Units(timeUnits)
             if statisticsUnit == .count {
                 return ""
             }
@@ -85,7 +131,7 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
 
     public var unitDescriptionPretty: String {
         if metric.countable() {
-            let statisticsUnit = StatisticsUnits(timeUnits)
+            let statisticsUnit = Statistics.Units(timeUnits)
             if statisticsUnit == .count {
                 return ""
             }
@@ -94,23 +140,41 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
         return "(\(timeUnits.description))"
     }
 
-    public static func == (lhs: BenchmarkResult, rhsRaw: BenchmarkResult) -> Bool {
-        var rhs = rhsRaw
+    public static func == (lhs: BenchmarkResult, rhs: BenchmarkResult) -> Bool {
+//        var rhs = rhsRaw
 
+        return lhs.metric == rhs.metric && lhs.statistics.histogram == rhs.statistics.histogram
+/*
         rhs.scaleResults(to: lhs)
 
         return lhs.metric == rhs.metric &&
             lhs.timeUnits == rhs.timeUnits &&
-            lhs.percentiles == rhs.percentiles
+            lhs.percentiles == rhs.percentiles */
     }
 
-    public static func < (lhs: BenchmarkResult, rhsRaw: BenchmarkResult) -> Bool {
-        var rhs = rhsRaw
+    public static func < (lhs: BenchmarkResult, rhs: BenchmarkResult) -> Bool {
+//        var rhs = rhsRaw
 
         guard lhs.metric == rhs.metric else {
             return false
         }
+        let reversedComparison = lhs.metric.polarity() == .prefersLarger
 
+        // TODO: Should add proper comparison to Histograms instead
+
+        if reversedComparison {
+            if lhs.statistics.histogram.mean > rhs.statistics.histogram.mean {
+                return true
+            }
+        } else {
+            if lhs.statistics.histogram.mean < rhs.statistics.histogram.mean {
+                return true
+            }
+        }
+
+        return false
+    }
+/*
         rhs.scaleResults(to: lhs)
 
         let reversedComparison = lhs.metric.polarity() == .prefersLarger
@@ -134,6 +198,7 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
 
         return allIsLess
     }
+*/
 
     // swiftlint:disable function_body_length
     public func betterResultsOrEqual(than otherResult: BenchmarkResult,
@@ -149,11 +214,11 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
             return false
         }
 
-        rhs.scaleResults(to: lhs)
+//        rhs.scaleResults(to: lhs)
         // swiftlint:disable function_parameter_count
         func worseResult(_ lhs: Int,
                          _ rhs: Int,
-                         _ percentile: BenchmarkResult.Percentile,
+                         _ percentile: Statistics.Percentile,
                          _ thresholds: BenchmarkResult.PercentileThresholds,
                          _ scalingFactor: Int,
                          _ printOutput: Bool) -> Bool {
@@ -167,7 +232,7 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
                 if reverseComparison ? relativeDifference > threshold : -relativeDifference > threshold {
                     if printOutput {
                         print("`\(metric.description)` relative threshold violated, [\(percentile)] result" +
-                            " (\(roundToDecimalplaces(abs(relativeDifference), 1))) > threshold (\(threshold))")
+                              " (\(Statistics.roundToDecimalplaces(abs(relativeDifference), 1))) > threshold (\(threshold))")
                     }
                     thresholdViolated = true
                 }
@@ -186,9 +251,16 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
             return thresholdViolated
         }
 
-        var worse = false
+// TODO: Should compare actual percentiles in use here instead
 
-        lhs.percentiles.forEach { percentile, lhsPercentile in
+        if lhs.statistics.histogram.mean < rhs.statistics.histogram.mean {
+            return false
+        }
+        /*
+        var worse = false
+        let percentiles = lhs.statistics.percentiles
+
+        percentiles.forEach { lhsPercentile in
             if let rhsPercentile = rhs.percentiles[percentile] {
                 worse = worseResult(lhsPercentile,
                                     rhsPercentile,
@@ -204,12 +276,12 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
         if worse {
             return false
         }
-
+*/
         return true
     }
 }
 
-public extension StatisticsUnits {
+public extension Statistics.Units {
     init(_ timeUnits: BenchmarkTimeUnits) {
         switch timeUnits {
         case .nanoseconds:
@@ -226,7 +298,7 @@ public extension StatisticsUnits {
     }
 }
 
-public extension StatisticsUnits {
+public extension Statistics.Units {
     init(_ timeUnits: BenchmarkTimeUnits?) {
         switch timeUnits {
         case .nanoseconds:
@@ -246,7 +318,7 @@ public extension StatisticsUnits {
 }
 
 public extension BenchmarkTimeUnits {
-    init(_ timeUnits: StatisticsUnits) {
+    init(_ timeUnits: Statistics.Units) {
         switch timeUnits {
         case .count:
             self = .nanoseconds

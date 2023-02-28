@@ -17,7 +17,17 @@ public struct Statistics: Codable {
     private static let numberPadding = 10
     public static let defaultMaximumMeasurement = 100_000_000 // 1/10 second in nanoseconds
     public static let defaultPercentilesToCalculate = [0.0, 25.0, 50.0, 75.0, 90.0, 99.0, 100.0]
-    
+
+    public enum Percentile: Int, Codable {
+        case p0 = 0
+        case p25 = 1
+        case p50 = 2
+        case p75 = 3
+        case p90 = 4
+        case p99 = 5
+        case p100 = 6
+    }
+
     public enum Units: Int, Codable {
         case count = 1 // e.g. nanoseconds
         case kilo = 1_000 // microseconds
