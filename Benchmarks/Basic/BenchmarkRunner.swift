@@ -15,7 +15,7 @@ extension BenchmarkRunner {}
 // swiftlint disable: attributes
 @_dynamicReplacement(for: registerBenchmarks)
 func benchmarks() {
-    Benchmark.defaultConfiguration = .init(maxDuration: .seconds(2),
+    Benchmark.defaultConfiguration = .init(maxDuration: .seconds(1),
                                            maxIterations: Int.max)
 
     Benchmark("Basic",

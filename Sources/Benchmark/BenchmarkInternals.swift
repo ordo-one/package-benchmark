@@ -11,12 +11,26 @@
 
 // Internal Benchmark framework definitions used for communication with host process etc
 
-// Entry point for defining benchmarks, but be overridden by actual benchmark
+
+/// The entry point for defining benchmarks, expected to be overridden by benchmarks you write.
+///
+/// Annotate a function that returns your benchmarks with `@_dynamicReplacement(for: registerBenchmarks)`
+/// to override this function. The following code shows a minimal benchmark structure.
+/// ```swift
+/// @_dynamicReplacement(for: registerBenchmarks)
+/// func benchmarks() {
+///     Benchmark("Minimal benchmark") { benchmark in
+///     }
+/// }
+/// ```
 public dynamic func registerBenchmarks() {
     print("This function must be dynamically replaced using @_dynamicReplacement")
 }
 
 // Command sent from benchmark runner to the benchmark under measurement
+#if swift(>=5.8)
+@_documentation(visibility: internal)
+#endif
 public enum BenchmarkCommandRequest: Codable {
     case list
     case run(benchmark: Benchmark)
@@ -24,6 +38,9 @@ public enum BenchmarkCommandRequest: Codable {
 }
 
 // Replies from benchmark under measure to benchmark runner
+#if swift(>=5.8)
+@_documentation(visibility: internal)
+#endif
 public enum BenchmarkCommandReply: Codable {
     case list(benchmark: Benchmark)
     case ready

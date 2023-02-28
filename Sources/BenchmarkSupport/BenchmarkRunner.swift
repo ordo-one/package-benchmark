@@ -289,7 +289,7 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
                             Double(benchmark.configuration.maxIterations)
 
                             let timePercentage = 100.0 * (wallClockDuration /
-                                                          (benchmark.configuration.maxDuration))
+                                                          benchmark.configuration.maxDuration)
 
                             let maxPercentage = max(iterationsPercentage, timePercentage)
 
