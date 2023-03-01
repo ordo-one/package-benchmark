@@ -84,6 +84,9 @@ struct Benchmark: AsyncParsableCommand {
     @Flag(name: .long, help: "Specifies that output should be supressed (useful for if you just want to check return code)")
     var quiet: Int
 
+    @Flag(name: .long, help: "Specifies that some of the text output should be scaled using the scalingFactor (denoted by '*' in output)")
+    var scale: Int
+
     @Flag(name: .long, help: "Specifies that benchmark progress information should not be displayed")
     var noProgress: Int
 
