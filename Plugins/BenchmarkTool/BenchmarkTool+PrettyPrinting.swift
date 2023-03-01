@@ -9,14 +9,13 @@
 //
 
 import Benchmark
+import Statistics
 import SystemPackage
 import TextTable
-import Statistics
 
-fileprivate let percentileWidth = 8
+private let percentileWidth = 8
 
 extension BenchmarkTool {
-
     private func printMarkdown(_ markdown: String, terminator: String = "\n") {
         if format == .markdown {
             print(markdown, terminator: terminator)
@@ -60,24 +59,24 @@ extension BenchmarkTool {
 
     fileprivate struct ScaledResults {
         fileprivate struct Percentiles {
-            var p0:Int = 0
-            var p25:Int = 0
-            var p50:Int = 0
-            var p75:Int = 0
-            var p90:Int = 0
-            var p99:Int = 0
-            var p100:Int = 0
+            var p0: Int = 0
+            var p25: Int = 0
+            var p50: Int = 0
+            var p75: Int = 0
+            var p90: Int = 0
+            var p99: Int = 0
+            var p100: Int = 0
         }
+
         var description: String
         var percentiles: Percentiles
-        var samples:Int
+        var samples: Int
     }
 
     private func _prettyPrint(title: String,
                               key: String,
                               results: [BenchmarkBaseline.ResultsEntry],
                               width: Int = 30) {
-
         let table = TextTable<ScaledResults> {
             [Column(title: title, value: "\($0.description)", width: width, align: .left),
              Column(title: "p0", value: $0.percentiles.p0, width: percentileWidth, align: .right),
@@ -99,7 +98,7 @@ extension BenchmarkTool {
 
             var adjustmentFunction: (Int) -> Int
 
-            if self.scale > 0 && result.metrics.metric.useScalingFactor {
+            if self.scale > 0, result.metrics.metric.useScalingFactor {
                 description = "\(result.metrics.metric.description) \(result.metrics.scaledUnitDescriptionPretty)"
                 adjustmentFunction = result.metrics.scale
             } else {
@@ -265,7 +264,7 @@ extension BenchmarkTool {
                                 var adjustmentFunction: (Int) -> Int
                                 let samples = result.statistics.measurementCount - base.statistics.measurementCount
 
-                                if self.scale > 0 && base.metric.useScalingFactor {
+                                if self.scale > 0, base.metric.useScalingFactor {
                                     adjustmentFunction = base.scale
                                 } else {
                                     adjustmentFunction = base.normalize
@@ -283,7 +282,7 @@ extension BenchmarkTool {
                                                                    percentiles: basePercentiles,
                                                                    samples: base.statistics.measurementCount))
 
-                                if self.scale > 0 && result.metric.useScalingFactor {
+                                if self.scale > 0, result.metric.useScalingFactor {
                                     adjustmentFunction = result.scale
                                 } else {
                                     adjustmentFunction = result.normalize
@@ -323,28 +322,27 @@ extension BenchmarkTool {
                                                                                  resultPercentiles.p0,
                                                                                  reversedPolarity)
                                 percentageDeltaPercentiles.p25 = formatTableEntry(basePercentiles.p25,
-                                                                                 resultPercentiles.p25,
-                                                                                 reversedPolarity)
+                                                                                  resultPercentiles.p25,
+                                                                                  reversedPolarity)
                                 percentageDeltaPercentiles.p50 = formatTableEntry(basePercentiles.p50,
-                                                                                 resultPercentiles.p50,
-                                                                                 reversedPolarity)
+                                                                                  resultPercentiles.p50,
+                                                                                  reversedPolarity)
                                 percentageDeltaPercentiles.p75 = formatTableEntry(basePercentiles.p75,
-                                                                                 resultPercentiles.p75,
-                                                                                 reversedPolarity)
+                                                                                  resultPercentiles.p75,
+                                                                                  reversedPolarity)
                                 percentageDeltaPercentiles.p90 = formatTableEntry(basePercentiles.p90,
-                                                                                 resultPercentiles.p90,
-                                                                                 reversedPolarity)
+                                                                                  resultPercentiles.p90,
+                                                                                  reversedPolarity)
                                 percentageDeltaPercentiles.p99 = formatTableEntry(basePercentiles.p99,
-                                                                                 resultPercentiles.p99,
-                                                                                 reversedPolarity)
+                                                                                  resultPercentiles.p99,
+                                                                                  reversedPolarity)
                                 percentageDeltaPercentiles.p100 = formatTableEntry(basePercentiles.p100,
-                                                                                 resultPercentiles.p100,
-                                                                                 reversedPolarity)
+                                                                                   resultPercentiles.p100,
+                                                                                   reversedPolarity)
 
                                 scaledResults.append(ScaledResults(description: "Improvement %",
                                                                    percentiles: percentageDeltaPercentiles,
                                                                    samples: samples))
-
 
                                 printMarkdown("```")
                                 table.print(scaledResults, style: Style.fancy)

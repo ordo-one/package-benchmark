@@ -12,8 +12,8 @@
 
 import Benchmark
 import ExtrasJSON
-import SystemPackage
 import Foundation
+import SystemPackage
 
 #if canImport(Darwin)
     import Darwin
@@ -174,11 +174,11 @@ let baselinesDirectory: String = ".benchmarkBaselines"
 
 extension BenchmarkTool {
     func printAllBaselines() {
-        var storagePath: FilePath = FilePath(baselineStoragePath)
+        var storagePath = FilePath(baselineStoragePath)
         storagePath.append(baselinesDirectory) // package/.benchmarkBaselines
         for file in storagePath.directoryEntries {
-            if file.ends(with: ".") == false &&
-                file.ends(with: "..")  == false {
+            if file.ends(with: ".") == false,
+               file.ends(with: "..") == false {
                 var subDirectory = storagePath
                 subDirectory.append(file.lastComponent!)
                 if let directoryName = file.lastComponent {
@@ -188,8 +188,8 @@ extension BenchmarkTool {
                     print(separator)
                     for file in subDirectory.directoryEntries {
                         if let subdirectoryName = file.lastComponent {
-                            if file.ends(with: ".") == false &&
-                                file.ends(with: "..")  == false {
+                            if file.ends(with: ".") == false,
+                               file.ends(with: "..") == false {
                                 print("\(subdirectoryName.description)")
                             }
                         }
@@ -201,21 +201,21 @@ extension BenchmarkTool {
     }
 
     func removeBaselinesNamed(target: String, baselineName: String) {
-        var storagePath: FilePath = FilePath(baselineStoragePath)
+        var storagePath = FilePath(baselineStoragePath)
         let filemanager = FileManager.default
 
         storagePath.append(baselinesDirectory) // package/.benchmarkBaselines
         for file in storagePath.directoryEntries {
-            if file.ends(with: ".") == false &&
-                file.ends(with: "..")  == false {
+            if file.ends(with: ".") == false,
+               file.ends(with: "..") == false {
                 if target == file.lastComponent!.description {
                     var subDirectory = storagePath
                     subDirectory.append(file.lastComponent!)
                     if file.lastComponent != nil {
                         for file in subDirectory.directoryEntries {
                             if let subdirectoryName = file.lastComponent {
-                                if file.ends(with: ".") == false &&
-                                    file.ends(with: "..")  == false {
+                                if file.ends(with: ".") == false,
+                                   file.ends(with: "..") == false {
                                     if subdirectoryName.description == baselineName {
                                         do {
                                             try filemanager.removeItem(atPath: file.description)

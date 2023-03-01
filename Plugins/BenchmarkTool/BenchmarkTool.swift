@@ -175,7 +175,7 @@ struct BenchmarkTool: AsyncParsableCommand {
     }
 
     mutating func run() async throws {
-        if command == .baseline && delete == 0 && listBaselines == 0 && update == 0 { // don't need to read baseline
+        if command == .baseline, delete == 0, listBaselines == 0, update == 0 { // don't need to read baseline
             try readBaselines()
         }
 
@@ -193,7 +193,7 @@ struct BenchmarkTool: AsyncParsableCommand {
             }
         }
 
-        if delete > 0 { 
+        if delete > 0 {
             try postProcessBenchmarkResults()
             return
         }

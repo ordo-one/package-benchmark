@@ -63,11 +63,11 @@ public enum BenchmarkMetric: Hashable, Equatable, Codable, CustomStringConvertib
 
     /// Used internally as placeholders for formatting deltas in an easy way, please don't use
     #if swift(>=5.8)
-    @_documentation(visibility: internal)
+        @_documentation(visibility: internal)
     #endif
     case delta
     #if swift(>=5.8)
-    @_documentation(visibility: internal)
+        @_documentation(visibility: internal)
     #endif
     case deltaPercentage
 }
@@ -180,10 +180,11 @@ public extension BenchmarkMetric {
         }
     }
 }
+
 // swiftlint:disable cyclomatic_complexity
 // As we can't have raw values and associated data we add this...
 #if swift(>=5.8)
-@_documentation(visibility: internal)
+    @_documentation(visibility: internal)
 #endif
 extension BenchmarkMetric {
     init(_ textualMetric: String) {

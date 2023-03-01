@@ -14,24 +14,24 @@ import Statistics
 /// Defines a benchmark
 public final class Benchmark: Codable, Hashable {
     #if swift(>=5.8)
-    @_documentation(visibility: internal)
+        @_documentation(visibility: internal)
     #endif
     public typealias BenchmarkClosure = (_ benchmark: Benchmark) -> Void
     #if swift(>=5.8)
-    @_documentation(visibility: internal)
+        @_documentation(visibility: internal)
     #endif
     public typealias BenchmarkAsyncClosure = (_ benchmark: Benchmark) async -> Void
     #if swift(>=5.8)
-    @_documentation(visibility: internal)
+        @_documentation(visibility: internal)
     #endif
     public typealias BenchmarkMeasurementSynchronization = () -> Void
     #if swift(>=5.8)
-    @_documentation(visibility: internal)
+        @_documentation(visibility: internal)
     #endif
     public typealias BenchmarkCustomMetricMeasurement = (BenchmarkMetric, Int) -> Void
 
     #if swift(>=5.8)
-    @_documentation(visibility: internal)
+        @_documentation(visibility: internal)
     #endif
     public static var benchmarks: [Benchmark] = [] // Bookkeeping of all registered benchmarks
 
@@ -49,11 +49,11 @@ public final class Benchmark: Codable, Hashable {
 
     /// Some internal state for display purposes of the benchmark by the BenchmarkTool
     #if swift(>=5.8)
-    @_documentation(visibility: internal)
+        @_documentation(visibility: internal)
     #endif
     public var target: String
     #if swift(>=5.8)
-    @_documentation(visibility: internal)
+        @_documentation(visibility: internal)
     #endif
     public var executablePath: String?
     /// closure: The actual benchmark closure that will be measured
@@ -63,11 +63,11 @@ public final class Benchmark: Codable, Hashable {
 
     // Hooks for benchmark infrastructure to capture metrics of actual measurement() block without preamble:
     #if swift(>=5.8)
-    @_documentation(visibility: internal)
+        @_documentation(visibility: internal)
     #endif
     public var measurementPreSynchronization: BenchmarkMeasurementSynchronization?
     #if swift(>=5.8)
-    @_documentation(visibility: internal)
+        @_documentation(visibility: internal)
     #endif
     public var measurementPostSynchronization: BenchmarkMeasurementSynchronization?
 
@@ -99,16 +99,16 @@ public final class Benchmark: Codable, Hashable {
         case failureReason
     }
 
-#if swift(>=5.8)
-@_documentation(visibility: internal)
-#endif
+    #if swift(>=5.8)
+        @_documentation(visibility: internal)
+    #endif
     public func hash(into hasher: inout Hasher) {
         hasher.combine(name)
     }
 
-#if swift(>=5.8)
-@_documentation(visibility: internal)
-#endif
+    #if swift(>=5.8)
+        @_documentation(visibility: internal)
+    #endif
     public static func == (lhs: Benchmark, rhs: Benchmark) -> Bool {
         lhs.name == rhs.name
     }
@@ -243,7 +243,7 @@ public final class Benchmark: Codable, Hashable {
 
     // Public but should only be used by BenchmarkRunner
     #if swift(>=5.8)
-    @_documentation(visibility: internal)
+        @_documentation(visibility: internal)
     #endif
     public func run() {
         if closure != nil {
@@ -313,4 +313,3 @@ public extension Benchmark {
         }
     }
 }
-

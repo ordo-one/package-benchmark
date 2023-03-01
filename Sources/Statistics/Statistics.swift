@@ -60,9 +60,8 @@ public struct Statistics: Codable {
     internal var _cachedPercentilesHistogramCount: UInt64 = 0
 
     public mutating func percentiles(for percentilesToCalculate: [Double] = defaultPercentilesToCalculate) -> [Int] {
-
         if percentilesToCalculate == Self.defaultPercentilesToCalculate {
-            if _cachedPercentilesHistogramCount == histogram.totalCount && _cachedPercentiles.count > 0 {
+            if _cachedPercentilesHistogramCount == histogram.totalCount, _cachedPercentiles.count > 0 {
                 return _cachedPercentiles
             }
         }
@@ -90,13 +89,17 @@ public struct Statistics: Codable {
     public let timeUnits: Statistics.Units
     public var histogram: Histogram<UInt>
 
+    public var onlyZeroMeasurements: Bool {
+        histogram.countForValue(0) == histogram.totalCount
+    }
+
     // Returns the actual units to use (either specified, or automatic)
     public func units() -> Statistics.Units {
         if timeUnits != .automatic {
             return timeUnits
         }
 
-        if histogram.countForValue(0) == histogram.totalCount {
+        if onlyZeroMeasurements {
             return .count
         }
 
@@ -130,7 +133,7 @@ public struct Statistics: Codable {
     public mutating func add(_ measurement: Int) {
         guard measurement >= 0 else {
             return // We sometimes got a <0 measurement, should run with fatalError and try to see how that could occur
-                   //            fatalError()
+                //            fatalError()
         }
 
         histogram.record(UInt64(measurement))
@@ -144,4 +147,3 @@ public struct Statistics: Codable {
         return original / factor
     }
 }
-

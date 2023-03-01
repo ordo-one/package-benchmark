@@ -25,8 +25,8 @@ func benchmarks() {
 
     Benchmark("Scaled metrics",
               configuration: .init(metrics: BenchmarkMetric.all, scalingFactor: .kilo)) { benchmark in
-        for _ in benchmark.scaledIterations  {
-           blackHole(Int.random(in: benchmark.scaledIterations))
+        for _ in benchmark.scaledIterations {
+            blackHole(Int.random(in: benchmark.scaledIterations))
         }
     }
 

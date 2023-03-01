@@ -101,7 +101,7 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
                                 statistics[metric] = Statistics(prefersLarger: metric.polarity == .prefersLarger)
                             }
                         }
-                        
+
                         if mallocStatsProducerNeeded(metric) {
                             mallocStatsRequested = true
                         }
@@ -155,8 +155,8 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
                             statistics[.wallClock]?.add(Int(runningTime.nanoseconds()))
 
                             var roundedThroughput =
-                            Double(1_000_000_000)
-                            / Double(runningTime.nanoseconds())
+                                Double(1_000_000_000)
+                                    / Double(runningTime.nanoseconds())
                             roundedThroughput.round(.toNearestOrAwayFromZero)
 
                             let throughput = Int(roundedThroughput)
@@ -264,7 +264,7 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
                     // Run the benchmark at a minimum the desired iterations/runtime --
 
                     while iterations <= benchmark.configuration.maxIterations ||
-                            wallClockDuration <= benchmark.configuration.maxDuration {
+                        wallClockDuration <= benchmark.configuration.maxDuration {
                         // and at a maximum the same...
                         guard wallClockDuration < benchmark.configuration.maxDuration,
                               iterations < benchmark.configuration.maxIterations
@@ -283,20 +283,19 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
 
                         iterations += 1
 
-
                         if var progressBar {
                             let iterationsPercentage = 100.0 * Double(iterations) /
-                            Double(benchmark.configuration.maxIterations)
+                                Double(benchmark.configuration.maxIterations)
 
                             let timePercentage = 100.0 * (wallClockDuration /
-                                                          benchmark.configuration.maxDuration)
+                                benchmark.configuration.maxDuration)
 
                             let maxPercentage = max(iterationsPercentage, timePercentage)
 
                             if Int(maxPercentage) > nextPercentageToUpdateProgressBar {
                                 progressBar.setValue(Int(maxPercentage))
                                 fflush(stdout)
-                                nextPercentageToUpdateProgressBar = Int(maxPercentage) + Int.random(in: 3...9)
+                                nextPercentageToUpdateProgressBar = Int(maxPercentage) + Int.random(in: 3 ... 9)
                             }
                         }
                     }
