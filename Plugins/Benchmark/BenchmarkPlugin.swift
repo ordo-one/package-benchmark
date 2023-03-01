@@ -43,20 +43,7 @@ import PackagePlugin
         case metric
         case benchmark
     }
-/*
-    enum TimeUnit: String {
-        case automatic
-        case s
-        case ms
-        case us
-        case ns
-    }
 
-    enum Scale: String {
-        case automatic
-        case scaled
-    }
-*/
     func withCStrings(_ strings: [String], scoped: ([UnsafeMutablePointer<CChar>?]) throws -> Void) rethrows {
         let cStrings = strings.map { strdup($0) }
         try scoped(cStrings + [nil])

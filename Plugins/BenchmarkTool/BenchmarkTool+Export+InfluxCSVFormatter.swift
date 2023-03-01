@@ -29,7 +29,6 @@ struct TestMetricData: Codable {
     var units: String
     var average: Double
     var metricsdata: [Int]
-//    var percentiles: [Statistics.Percentile: Int]
 }
 
 class InfluxCSVFormatter {
@@ -174,7 +173,9 @@ extension BenchmarkTool {
                                 testName _: String) -> TestMetricData {
         var testData: [Int] = []
 
-        test.statistics.percentiles().forEach { result in
+        var percentiles = test.statistics
+
+        percentiles.percentiles().forEach { result in
             testData.append(result)
         }
 
@@ -186,6 +187,5 @@ extension BenchmarkTool {
                               units: test.unitDescription,
                               average: averageValue,
                               metricsdata: testData)
-//                              percentiles: test.percentiles)
     }
 }

@@ -247,10 +247,15 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
         return statistics.timeUnits == .automatic ? "(\(self.scaledTimeUnits.description)) *" : "(\(self.timeUnits.description)) *"
     }
 
-    public static func == (lhs: BenchmarkResult, rhsRaw: BenchmarkResult) -> Bool {
+    public static func == (lhsRaw: BenchmarkResult, rhsRaw: BenchmarkResult) -> Bool {
+        var lhs = lhsRaw
         var rhs = rhsRaw
 
         guard lhs.metric == rhs.metric else {
+            return false
+        }
+
+        if lhs.statistics.measurementCount != rhs.statistics.measurementCount {
             return false
         }
 
@@ -262,7 +267,8 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
         return lhsPercentiles == rhsPercentiles
     }
 
-    public static func < (lhs: BenchmarkResult, rhsRaw: BenchmarkResult) -> Bool {
+    public static func < (lhsRaw: BenchmarkResult, rhsRaw: BenchmarkResult) -> Bool {
+        var lhs = lhsRaw
         var rhs = rhsRaw
         let reversedComparison = lhs.metric.polarity == .prefersLarger
         var allIsLess = true
@@ -340,7 +346,6 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
         let rhsPercentiles = rhs.statistics.percentiles()
 
         var worse = false
-        let percentiles = lhs.statistics.percentiles
 
         for percentile in 0..<lhsPercentiles.count {
                 worse = worseResult(lhsPercentiles[percentile],

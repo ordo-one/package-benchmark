@@ -284,8 +284,6 @@ extension BenchmarkTool {
 
         outputPath.append(subPath.components)
 
-        print("Writing baseline to \(outputPath), \(baselineName)")
-
         if let hostIdentifier {
             outputPath.append("\(hostIdentifier).results.json")
         } else {

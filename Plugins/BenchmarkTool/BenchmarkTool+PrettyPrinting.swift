@@ -93,7 +93,8 @@ extension BenchmarkTool {
         var scaledResults: [ScaledResults] = []
         results.forEach { result in
             let description: String
-            let percentiles = result.metrics.statistics.percentiles()
+            var metrics = result.metrics
+            let percentiles = metrics.statistics.percentiles()
             var resultPercentiles = ScaledResults.Percentiles()
 
             var adjustmentFunction: (Int) -> Int
@@ -216,7 +217,7 @@ extension BenchmarkTool {
 
                     value.forEach { currentResult in
                         var result = currentResult
-                        if let base = baselineComparison.first(where: { $0.metric == result.metric }) {
+                        if var base = baselineComparison.first(where: { $0.metric == result.metric }) {
                             if result == base {
                                 //                            print(" \(result.metric) results were identical.")
                                 //                            print("")

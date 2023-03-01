@@ -56,7 +56,17 @@ public struct Statistics: Codable {
         }
     }
 
-    public func percentiles(for percentilesToCalculate: [Double] = defaultPercentilesToCalculate) -> [Int] {
+    internal var _cachedPercentiles: [Int] = []
+    internal var _cachedPercentilesHistogramCount: UInt64 = 0
+
+    public mutating func percentiles(for percentilesToCalculate: [Double] = defaultPercentilesToCalculate) -> [Int] {
+
+        if percentilesToCalculate == Self.defaultPercentilesToCalculate {
+            if _cachedPercentilesHistogramCount == histogram.totalCount && _cachedPercentiles.count > 0 {
+                return _cachedPercentiles
+            }
+        }
+
         var percentileResults: [Int] = []
 
         for var p in percentilesToCalculate {
@@ -66,6 +76,11 @@ public struct Statistics: Codable {
 
             let value = histogram.valueAtPercentile(p)
             percentileResults.append(Int(value))
+        }
+
+        if percentilesToCalculate == Self.defaultPercentilesToCalculate {
+            _cachedPercentilesHistogramCount = histogram.totalCount
+            _cachedPercentiles = percentileResults
         }
 
         return percentileResults
