@@ -251,7 +251,9 @@ struct BenchmarkTool: AsyncParsableCommand {
         }
 
         // Insert benchmark run at first position of baselines
-        baseline.insert("default", at: 0)
+        if comparisonBaseline != nil {
+            baseline.insert("default", at: 0)
+        }
         benchmarkBaselines.insert(BenchmarkBaseline(baselineName: "Current baseline",
                                                     machine: benchmarkMachine(),
                                                     results: benchmarkResults), at: 0)

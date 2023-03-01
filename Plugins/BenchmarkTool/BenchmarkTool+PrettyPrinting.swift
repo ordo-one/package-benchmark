@@ -282,7 +282,7 @@ extension BenchmarkTool {
                                 let title = "\(result.metric.description) \(result.unitDescriptionPretty)"
                                 let width = 40
                                 let table = TextTable<ScaledResults> {
-                                    [Column(title: title, value: "\($0.description)", width: width, align: .left),
+                                    [Column(title: title, value: "\($0.description)", width: width, align: .center),
                                      Column(title: "p0", value: $0.p0, width: percentileWidth, align: .right),
                                      Column(title: "p25", value: $0.p25, width: percentileWidth, align: .right),
                                      Column(title: "p50", value: $0.p50, width: percentileWidth, align: .right),
@@ -304,21 +304,21 @@ extension BenchmarkTool {
                                 var p0, p25, p50, p75, p90, p99, p100: Int
 
                                 if self.scale > 0 && base.metric.useScalingFactor {
-                                    p0 = base.scale(percentiles[0])
-                                    p25 = base.scale(percentiles[1])
-                                    p50 = base.scale(percentiles[2])
-                                    p75 = base.scale(percentiles[3])
-                                    p90 = base.scale(percentiles[4])
-                                    p99 = base.scale(percentiles[5])
-                                    p100 = base.scale(percentiles[6])
+                                    p0 = base.scale(basePercentiles[0])
+                                    p25 = base.scale(basePercentiles[1])
+                                    p50 = base.scale(basePercentiles[2])
+                                    p75 = base.scale(basePercentiles[3])
+                                    p90 = base.scale(basePercentiles[4])
+                                    p99 = base.scale(basePercentiles[5])
+                                    p100 = base.scale(basePercentiles[6])
                                 } else {
-                                    p0 = base.normalize(percentiles[0])
-                                    p25 = base.normalize(percentiles[1])
-                                    p50 = base.normalize(percentiles[2])
-                                    p75 = base.normalize(percentiles[3])
-                                    p90 = base.normalize(percentiles[4])
-                                    p99 = base.normalize(percentiles[5])
-                                    p100 = base.normalize(percentiles[6])
+                                    p0 = base.normalize(basePercentiles[0])
+                                    p25 = base.normalize(basePercentiles[1])
+                                    p50 = base.normalize(basePercentiles[2])
+                                    p75 = base.normalize(basePercentiles[3])
+                                    p90 = base.normalize(basePercentiles[4])
+                                    p99 = base.normalize(basePercentiles[5])
+                                    p100 = base.normalize(basePercentiles[6])
                                 }
                                 scaledResults.append(ScaledResults(description: baseBaselineName,
                                                                    p0: p0,
@@ -365,21 +365,21 @@ extension BenchmarkTool {
 
 
                                 if self.scale > 0 && result.metric.useScalingFactor {
-                                    p0 = result.scale(percentiles[0]) - base.scale(percentiles[0])
-                                    p25 = result.scale(percentiles[1]) - base.scale(percentiles[1])
-                                    p50 = result.scale(percentiles[2]) - base.scale(percentiles[2])
-                                    p75 = result.scale(percentiles[3]) - base.scale(percentiles[3])
-                                    p90 = result.scale(percentiles[4]) - base.scale(percentiles[4])
-                                    p99 = result.scale(percentiles[5]) - base.scale(percentiles[5])
-                                    p100 = result.scale(percentiles[6]) - base.scale(percentiles[6])
+                                    p0 = result.scale(percentiles[0]) - base.scale(basePercentiles[0])
+                                    p25 = result.scale(percentiles[1]) - base.scale(basePercentiles[1])
+                                    p50 = result.scale(percentiles[2]) - base.scale(basePercentiles[2])
+                                    p75 = result.scale(percentiles[3]) - base.scale(basePercentiles[3])
+                                    p90 = result.scale(percentiles[4]) - base.scale(basePercentiles[4])
+                                    p99 = result.scale(percentiles[5]) - base.scale(basePercentiles[5])
+                                    p100 = result.scale(percentiles[6]) - base.scale(basePercentiles[6])
                                 } else {
-                                    p0 = result.normalize(percentiles[0]) - base.normalize(percentiles[0])
-                                    p25 = result.normalize(percentiles[1]) - base.normalize(percentiles[1])
-                                    p50 = result.normalize(percentiles[2]) - base.normalize(percentiles[2])
-                                    p75 = result.normalize(percentiles[3]) - base.normalize(percentiles[3])
-                                    p90 = result.normalize(percentiles[4]) - base.normalize(percentiles[4])
-                                    p99 = result.normalize(percentiles[5]) - base.normalize(percentiles[5])
-                                    p100 = result.normalize(percentiles[6]) - base.normalize(percentiles[6])
+                                    p0 = result.normalize(percentiles[0]) - base.normalize(basePercentiles[0])
+                                    p25 = result.normalize(percentiles[1]) - base.normalize(basePercentiles[1])
+                                    p50 = result.normalize(percentiles[2]) - base.normalize(basePercentiles[2])
+                                    p75 = result.normalize(percentiles[3]) - base.normalize(basePercentiles[3])
+                                    p90 = result.normalize(percentiles[4]) - base.normalize(basePercentiles[4])
+                                    p99 = result.normalize(percentiles[5]) - base.normalize(basePercentiles[5])
+                                    p100 = result.normalize(percentiles[6]) - base.normalize(basePercentiles[6])
                                 }
 
                                 let samples = result.statistics.measurementCount - base.statistics.measurementCount
@@ -397,47 +397,47 @@ extension BenchmarkTool {
 
 
                                 if self.scale > 0 && result.metric.useScalingFactor {
-                                    p0 = formatTableEntry(base.scale(percentiles[0]),
+                                    p0 = formatTableEntry(base.scale(basePercentiles[0]),
                                                                      result.scale(percentiles[0]),
                                                                                   reversedPolarity)
-                                    p25 = formatTableEntry(base.scale(percentiles[1]),
+                                    p25 = formatTableEntry(base.scale(basePercentiles[1]),
                                                                      result.scale(percentiles[1]),
                                                                                   reversedPolarity)
-                                    p50 = formatTableEntry(base.scale(percentiles[2]),
+                                    p50 = formatTableEntry(base.scale(basePercentiles[2]),
                                                                      result.scale(percentiles[2]),
                                                                                   reversedPolarity)
-                                    p75 = formatTableEntry(base.scale(percentiles[3]),
+                                    p75 = formatTableEntry(base.scale(basePercentiles[3]),
                                                                      result.scale(percentiles[3]),
                                                                                   reversedPolarity)
-                                    p90 = formatTableEntry(base.scale(percentiles[4]),
+                                    p90 = formatTableEntry(base.scale(basePercentiles[4]),
                                                                      result.scale(percentiles[4]),
                                                                                   reversedPolarity)
-                                    p99 = formatTableEntry(base.scale(percentiles[5]),
+                                    p99 = formatTableEntry(base.scale(basePercentiles[5]),
                                                                      result.scale(percentiles[5]),
                                                                                   reversedPolarity)
-                                    p100 = formatTableEntry(base.scale(percentiles[6]),
+                                    p100 = formatTableEntry(base.scale(basePercentiles[6]),
                                                                      result.scale(percentiles[6]),
                                                                                   reversedPolarity)
                                 } else {
-                                    p0 = formatTableEntry(base.normalize(percentiles[0]),
+                                    p0 = formatTableEntry(base.normalize(basePercentiles[0]),
                                                                      result.normalize(percentiles[0]),
                                                                                   reversedPolarity)
-                                    p25 = formatTableEntry(base.normalize(percentiles[1]),
+                                    p25 = formatTableEntry(base.normalize(basePercentiles[1]),
                                                                       result.normalize(percentiles[1]),
                                                                                    reversedPolarity)
-                                    p50 = formatTableEntry(base.normalize(percentiles[2]),
+                                    p50 = formatTableEntry(base.normalize(basePercentiles[2]),
                                                                       result.normalize(percentiles[2]),
                                                                                    reversedPolarity)
-                                    p75 = formatTableEntry(base.normalize(percentiles[3]),
+                                    p75 = formatTableEntry(base.normalize(basePercentiles[3]),
                                                                       result.normalize(percentiles[3]),
                                                                                    reversedPolarity)
-                                    p90 = formatTableEntry(base.normalize(percentiles[4]),
+                                    p90 = formatTableEntry(base.normalize(basePercentiles[4]),
                                                                       result.normalize(percentiles[4]),
                                                                                    reversedPolarity)
-                                    p99 = formatTableEntry(base.normalize(percentiles[5]),
+                                    p99 = formatTableEntry(base.normalize(basePercentiles[5]),
                                                                       result.normalize(percentiles[5]),
                                                                                    reversedPolarity)
-                                    p100 = formatTableEntry(base.normalize(percentiles[6]),
+                                    p100 = formatTableEntry(base.normalize(basePercentiles[6]),
                                                                        result.normalize(percentiles[6]),
                                                                                     reversedPolarity)
                                 }
