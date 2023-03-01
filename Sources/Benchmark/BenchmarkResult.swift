@@ -208,20 +208,6 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
         return value / self.timeUnits.divisor
     }
 
-    /*
-    public mutating func scaleResults(to otherResult: BenchmarkResult) {
-        guard timeUnits != otherResult.timeUnits else {
-            return
-        }
-        let ratio = Double(otherResult.timeUnits.rawValue) / Double(timeUnits.rawValue)
-
-        percentiles.forEach { percentile, value in
-            self.percentiles[percentile] = Int(ratio * Double(value))
-        }
-
-        timeUnits = otherResult.timeUnits
-    }
-*/
     public var unitDescription: String {
         if metric.countable {
             let statisticsUnit = Statistics.Units(timeUnits)
@@ -261,65 +247,42 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
         return statistics.timeUnits == .automatic ? "(\(self.scaledTimeUnits.description)) *" : "(\(self.timeUnits.description)) *"
     }
 
-    public static func == (lhs: BenchmarkResult, rhs: BenchmarkResult) -> Bool {
-//        var rhs = rhsRaw
-
-        return lhs.metric == rhs.metric && lhs.statistics.histogram == rhs.statistics.histogram
-/*
-        rhs.scaleResults(to: lhs)
-
-        return lhs.metric == rhs.metric &&
-            lhs.timeUnits == rhs.timeUnits &&
-            lhs.percentiles == rhs.percentiles */
-    }
-
-    public static func < (lhs: BenchmarkResult, rhs: BenchmarkResult) -> Bool {
-//        var rhs = rhsRaw
+    public static func == (lhs: BenchmarkResult, rhsRaw: BenchmarkResult) -> Bool {
+        var rhs = rhsRaw
 
         guard lhs.metric == rhs.metric else {
             return false
         }
-        let reversedComparison = lhs.metric.polarity == .prefersLarger
 
-        // TODO: Should add proper comparison to Histograms instead
+        rhs.timeUnits = lhs.timeUnits  // Rescale result to base if needed
 
-        if reversedComparison {
-            if lhs.statistics.histogram.mean > rhs.statistics.histogram.mean {
-                return true
-            }
-        } else {
-            if lhs.statistics.histogram.mean < rhs.statistics.histogram.mean {
-                return true
-            }
-        }
+        let lhsPercentiles = lhs.statistics.percentiles()
+        let rhsPercentiles = rhs.statistics.percentiles()
 
-        return false
+        return lhsPercentiles == rhsPercentiles
     }
-/*
-        rhs.scaleResults(to: lhs)
 
+    public static func < (lhs: BenchmarkResult, rhsRaw: BenchmarkResult) -> Bool {
+        var rhs = rhsRaw
         let reversedComparison = lhs.metric.polarity == .prefersLarger
         var allIsLess = true
+        let lhsPercentiles = lhs.statistics.percentiles()
+        let rhsPercentiles = rhs.statistics.percentiles()
 
-        lhs.percentiles.forEach { percentile, value in
-            if let rhsPercentile = rhs.percentiles[percentile] {
-                if reversedComparison {
-                    if value < rhsPercentile {
-                        allIsLess = false
-                    }
-                } else {
-                    if value > rhsPercentile {
-                        allIsLess = false
-                    }
+        for percentile in 0..<lhsPercentiles.count {
+            if reversedComparison {
+                if lhsPercentiles[percentile] < rhsPercentiles[percentile] {
+                    allIsLess = false
                 }
             } else {
-                allIsLess = false
+                if lhsPercentiles[percentile] > rhsPercentiles[percentile] {
+                    allIsLess = false
+                }
             }
         }
 
         return allIsLess
     }
-*/
 
     // swiftlint:disable function_body_length
     public func betterResultsOrEqual(than otherResult: BenchmarkResult,
@@ -335,7 +298,8 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
             return false
         }
 
-//        rhs.scaleResults(to: lhs)
+        rhs.timeUnits = lhs.timeUnits
+
         // swiftlint:disable function_parameter_count
         func worseResult(_ lhs: Int,
                          _ rhs: Int,
@@ -372,32 +336,25 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
             return thresholdViolated
         }
 
-// TODO: Should compare actual percentiles in use here instead
+        let lhsPercentiles = lhs.statistics.percentiles()
+        let rhsPercentiles = rhs.statistics.percentiles()
 
-        if lhs.statistics.histogram.mean < rhs.statistics.histogram.mean {
-            return false
-        }
-        /*
         var worse = false
         let percentiles = lhs.statistics.percentiles
 
-        percentiles.forEach { lhsPercentile in
-            if let rhsPercentile = rhs.percentiles[percentile] {
-                worse = worseResult(lhsPercentile,
-                                    rhsPercentile,
-                                    percentile,
+        for percentile in 0..<lhsPercentiles.count {
+                worse = worseResult(lhsPercentiles[percentile],
+                                    rhsPercentiles[percentile],
+                                    BenchmarkResult.Percentile(rawValue: percentile)!,
                                     thresholds,
                                     lhs.timeUnits.rawValue,
                                     printOutput) || worse
-            } else {
-                print("\(rhs.metric) missing value for percentile \(percentile), skipping it.")
-            }
         }
 
         if worse {
             return false
         }
-*/
+
         return true
     }
 }

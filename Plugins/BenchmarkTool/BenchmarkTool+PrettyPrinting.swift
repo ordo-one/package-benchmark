@@ -13,7 +13,7 @@ import SystemPackage
 import TextTable
 import Statistics
 
-fileprivate let percentileWidth = 10
+fileprivate let percentileWidth = 8
 
 extension BenchmarkTool {
 
@@ -57,53 +57,20 @@ extension BenchmarkTool {
         printMarkdown("```")
         printText("")
     }
- /*
-    private func scaledPercentile(_ result: BenchmarkResult, _ percentile: BenchmarkResult.Percentile) -> Int? {
-        let percentiles = result.statistics.percentiles()
-        let percentileValue = percentiles[percentile.rawValue]
 
-        if self.scale == 0 || result.scaledTimeUnits == result.timeUnits {
-            return percentileValue / BenchmarkScalingFactor(result.timeUnits).rawValue
-        }
-
-        if result.scaledTimeUnits == result.timeUnits {
-            return percentileValue
-        }
-
-        guard result.metric.useScalingFactor else {
-            if result.scaledTimeUnits == result.timeUnits {
-                return percentileValue
-            }
-            return percentileValue / BenchmarkScalingFactor(result.timeUnits).rawValue
-        }
-/*
-        guard result.metric.useScaleFactor || result.scaledScalingFactor != .none else {
-            if result.scaledTimeUnits == result.timeUnits {
-                return percentileValue
-            }
-            return percentileValue / BenchmarkScalingFactor(result.timeUnits).rawValue
-        }
-*/
-//        let scaledDivisor = result.scaledScalingFactor == .none ? BenchmarkScalingFactor(result.timeUnits) : BenchmarkScalingFactor(result.scaledTimeUnits)
-        let scaledDivisor = BenchmarkScalingFactor(result.scaledTimeUnits)
-        let scaledResult = percentileValue // result.scaledScalingFactor.rawValue / scaledDivisor.rawValue
-
-//        Throughput (scaled / s),mega, mega, p90, 11911823359, 1000
-//print("\(percentileValue) / \(result.scaledScalingFactor.rawValue) / \(scaledDivisor.rawValue)")
-//        print("\(result.metric),\(scaledDivisor), \(result.scaledScalingFactor), \(percentile), \(percentileValue), \(result.scalingFactor.rawValue)")
-        return scaledResult
-    }
-*/
     fileprivate struct ScaledResults {
-        let description: String
-        let p0:Int
-        let p25:Int
-        let p50:Int
-        let p75:Int
-        let p90:Int
-        let p99:Int
-        let p100:Int
-        let samples:Int
+        fileprivate struct Percentiles {
+            var p0:Int = 0
+            var p25:Int = 0
+            var p50:Int = 0
+            var p75:Int = 0
+            var p90:Int = 0
+            var p99:Int = 0
+            var p100:Int = 0
+        }
+        var description: String
+        var percentiles: Percentiles
+        var samples:Int
     }
 
     private func _prettyPrint(title: String,
@@ -113,13 +80,13 @@ extension BenchmarkTool {
 
         let table = TextTable<ScaledResults> {
             [Column(title: title, value: "\($0.description)", width: width, align: .left),
-             Column(title: "p0", value: $0.p0, width: percentileWidth, align: .right),
-             Column(title: "p25", value: $0.p25, width: percentileWidth, align: .right),
-             Column(title: "p50", value: $0.p50, width: percentileWidth, align: .right),
-             Column(title: "p75", value: $0.p75, width: percentileWidth, align: .right),
-             Column(title: "p90", value: $0.p90, width: percentileWidth, align: .right),
-             Column(title: "p99", value: $0.p99, width: percentileWidth, align: .right),
-             Column(title: "p100", value: $0.p100, width: percentileWidth, align: .right),
+             Column(title: "p0", value: $0.percentiles.p0, width: percentileWidth, align: .right),
+             Column(title: "p25", value: $0.percentiles.p25, width: percentileWidth, align: .right),
+             Column(title: "p50", value: $0.percentiles.p50, width: percentileWidth, align: .right),
+             Column(title: "p75", value: $0.percentiles.p75, width: percentileWidth, align: .right),
+             Column(title: "p90", value: $0.percentiles.p90, width: percentileWidth, align: .right),
+             Column(title: "p99", value: $0.percentiles.p99, width: percentileWidth, align: .right),
+             Column(title: "p100", value: $0.percentiles.p100, width: percentileWidth, align: .right),
              Column(title: "Samples", value: $0.samples, width: percentileWidth, align: .right)]
         }
 
@@ -127,39 +94,30 @@ extension BenchmarkTool {
         results.forEach { result in
             let description: String
             let percentiles = result.metrics.statistics.percentiles()
-            let p0, p25, p50, p75, p90, p99, p100: Int
+            var resultPercentiles = ScaledResults.Percentiles()
+
+            var adjustmentFunction: (Int) -> Int
 
             if self.scale > 0 && result.metrics.metric.useScalingFactor {
                 description = "\(result.metrics.metric.description) \(result.metrics.scaledUnitDescriptionPretty)"
-                p0 = result.metrics.scale(percentiles[0])
-                p25 = result.metrics.scale(percentiles[1])
-                p50 = result.metrics.scale(percentiles[2])
-                p75 = result.metrics.scale(percentiles[3])
-                p90 = result.metrics.scale(percentiles[4])
-                p99 = result.metrics.scale(percentiles[5])
-                p100 = result.metrics.scale(percentiles[6])
+                adjustmentFunction = result.metrics.scale
             } else {
                 description = "\(result.metrics.metric.description) \(result.metrics.unitDescriptionPretty)"
-                p0 = result.metrics.normalize(percentiles[0])
-                p25 = result.metrics.normalize(percentiles[1])
-                p50 = result.metrics.normalize(percentiles[2])
-                p75 = result.metrics.normalize(percentiles[3])
-                p90 = result.metrics.normalize(percentiles[4])
-                p99 = result.metrics.normalize(percentiles[5])
-                p100 = result.metrics.normalize(percentiles[6])
+                adjustmentFunction = result.metrics.normalize
             }
 
+            resultPercentiles.p0 = adjustmentFunction(percentiles[0])
+            resultPercentiles.p25 = adjustmentFunction(percentiles[1])
+            resultPercentiles.p50 = adjustmentFunction(percentiles[2])
+            resultPercentiles.p75 = adjustmentFunction(percentiles[3])
+            resultPercentiles.p90 = adjustmentFunction(percentiles[4])
+            resultPercentiles.p99 = adjustmentFunction(percentiles[5])
+            resultPercentiles.p100 = adjustmentFunction(percentiles[6])
+
             scaledResults.append(ScaledResults(description: description,
-                                               p0: p0,
-                                               p25: p25,
-                                               p50: p50,
-                                               p75: p75,
-                                               p90: p90,
-                                               p99: p99,
-                                               p100: p100,
+                                               percentiles: resultPercentiles,
                                                samples: result.metrics.statistics.measurementCount))
         }
-
 
         printMarkdown("### ", terminator: "")
         print("\(key)")
@@ -224,7 +182,7 @@ extension BenchmarkTool {
     func prettyPrintDelta(currentBaseline: BenchmarkBaseline,
                           baseline: BenchmarkBaseline,
                           hostIdentifier _: String? = nil) {
-        printMachine(baseline.machine, "Comparing results with baseline")
+        printMachine(baseline.machine, "Comparing results from '\(baseline.baselineName)' with '\(currentBaseline.baselineName)'")
         if currentBaseline.machine != baseline.machine {
             print("Warning: Machine configuration is different when comparing baselines, other config:")
             printMachine(currentBaseline.machine, "")
@@ -283,13 +241,13 @@ extension BenchmarkTool {
                                 let width = 40
                                 let table = TextTable<ScaledResults> {
                                     [Column(title: title, value: "\($0.description)", width: width, align: .center),
-                                     Column(title: "p0", value: $0.p0, width: percentileWidth, align: .right),
-                                     Column(title: "p25", value: $0.p25, width: percentileWidth, align: .right),
-                                     Column(title: "p50", value: $0.p50, width: percentileWidth, align: .right),
-                                     Column(title: "p75", value: $0.p75, width: percentileWidth, align: .right),
-                                     Column(title: "p90", value: $0.p90, width: percentileWidth, align: .right),
-                                     Column(title: "p99", value: $0.p99, width: percentileWidth, align: .right),
-                                     Column(title: "p100", value: $0.p100, width: percentileWidth, align: .right),
+                                     Column(title: "p0", value: $0.percentiles.p0, width: percentileWidth, align: .right),
+                                     Column(title: "p25", value: $0.percentiles.p25, width: percentileWidth, align: .right),
+                                     Column(title: "p50", value: $0.percentiles.p50, width: percentileWidth, align: .right),
+                                     Column(title: "p75", value: $0.percentiles.p75, width: percentileWidth, align: .right),
+                                     Column(title: "p90", value: $0.percentiles.p90, width: percentileWidth, align: .right),
+                                     Column(title: "p99", value: $0.percentiles.p99, width: percentileWidth, align: .right),
+                                     Column(title: "p100", value: $0.percentiles.p100, width: percentileWidth, align: .right),
                                      Column(title: "Samples", value: $0.samples, width: percentileWidth, align: .right)]
                                 }
 
@@ -299,164 +257,97 @@ extension BenchmarkTool {
                                 var scaledResults: [ScaledResults] = []
 
                                 let percentiles = result.statistics.percentiles()
-                                let basePercentiles = base.statistics.percentiles()
+                                let percentilesBase = base.statistics.percentiles()
 
-                                var p0, p25, p50, p75, p90, p99, p100: Int
+                                var resultPercentiles = ScaledResults.Percentiles()
+                                var basePercentiles = ScaledResults.Percentiles()
+                                var adjustmentFunction: (Int) -> Int
+                                let samples = result.statistics.measurementCount - base.statistics.measurementCount
 
                                 if self.scale > 0 && base.metric.useScalingFactor {
-                                    p0 = base.scale(basePercentiles[0])
-                                    p25 = base.scale(basePercentiles[1])
-                                    p50 = base.scale(basePercentiles[2])
-                                    p75 = base.scale(basePercentiles[3])
-                                    p90 = base.scale(basePercentiles[4])
-                                    p99 = base.scale(basePercentiles[5])
-                                    p100 = base.scale(basePercentiles[6])
+                                    adjustmentFunction = base.scale
                                 } else {
-                                    p0 = base.normalize(basePercentiles[0])
-                                    p25 = base.normalize(basePercentiles[1])
-                                    p50 = base.normalize(basePercentiles[2])
-                                    p75 = base.normalize(basePercentiles[3])
-                                    p90 = base.normalize(basePercentiles[4])
-                                    p99 = base.normalize(basePercentiles[5])
-                                    p100 = base.normalize(basePercentiles[6])
+                                    adjustmentFunction = base.normalize
                                 }
+
+                                basePercentiles.p0 = adjustmentFunction(percentilesBase[0])
+                                basePercentiles.p25 = adjustmentFunction(percentilesBase[1])
+                                basePercentiles.p50 = adjustmentFunction(percentilesBase[2])
+                                basePercentiles.p75 = adjustmentFunction(percentilesBase[3])
+                                basePercentiles.p90 = adjustmentFunction(percentilesBase[4])
+                                basePercentiles.p99 = adjustmentFunction(percentilesBase[5])
+                                basePercentiles.p100 = adjustmentFunction(percentilesBase[6])
+
                                 scaledResults.append(ScaledResults(description: baseBaselineName,
-                                                                   p0: p0,
-                                                                   p25: p25,
-                                                                   p50: p50,
-                                                                   p75: p75,
-                                                                   p90: p90,
-                                                                   p99: p99,
-                                                                   p100: p100,
+                                                                   percentiles: basePercentiles,
                                                                    samples: base.statistics.measurementCount))
 
-
                                 if self.scale > 0 && result.metric.useScalingFactor {
-                                    p0 = result.scale(percentiles[0])
-                                    p25 = result.scale(percentiles[1])
-                                    p50 = result.scale(percentiles[2])
-                                    p75 = result.scale(percentiles[3])
-                                    p90 = result.scale(percentiles[4])
-                                    p99 = result.scale(percentiles[5])
-                                    p100 = result.scale(percentiles[6])
+                                    adjustmentFunction = result.scale
                                 } else {
-                                    p0 = result.normalize(percentiles[0])
-                                    p25 = result.normalize(percentiles[1])
-                                    p50 = result.normalize(percentiles[2])
-                                    p75 = result.normalize(percentiles[3])
-                                    p90 = result.normalize(percentiles[4])
-                                    p99 = result.normalize(percentiles[5])
-                                    p100 = result.normalize(percentiles[6])
+                                    adjustmentFunction = result.normalize
                                 }
+
+                                resultPercentiles.p0 = adjustmentFunction(percentiles[0])
+                                resultPercentiles.p25 = adjustmentFunction(percentiles[1])
+                                resultPercentiles.p50 = adjustmentFunction(percentiles[2])
+                                resultPercentiles.p75 = adjustmentFunction(percentiles[3])
+                                resultPercentiles.p90 = adjustmentFunction(percentiles[4])
+                                resultPercentiles.p99 = adjustmentFunction(percentiles[5])
+                                resultPercentiles.p100 = adjustmentFunction(percentiles[6])
 
                                 scaledResults.append(ScaledResults(description: comparisonBaselineName,
-                                                                   p0: p0,
-                                                                   p25: p25,
-                                                                   p50: p50,
-                                                                   p75: p75,
-                                                                   p90: p90,
-                                                                   p99: p99,
-                                                                   p100: p100,
+                                                                   percentiles: resultPercentiles,
                                                                    samples: result.statistics.measurementCount))
 
+                                var deltaPercentiles = ScaledResults.Percentiles()
 
+                                deltaPercentiles.p0 = resultPercentiles.p0 - basePercentiles.p0
+                                deltaPercentiles.p25 = resultPercentiles.p25 - basePercentiles.p25
+                                deltaPercentiles.p50 = resultPercentiles.p50 - basePercentiles.p50
+                                deltaPercentiles.p75 = resultPercentiles.p75 - basePercentiles.p75
+                                deltaPercentiles.p90 = resultPercentiles.p90 - basePercentiles.p90
+                                deltaPercentiles.p99 = resultPercentiles.p99 - basePercentiles.p99
+                                deltaPercentiles.p100 = resultPercentiles.p100 - basePercentiles.p100
 
-
-
-
-                                if self.scale > 0 && result.metric.useScalingFactor {
-                                    p0 = result.scale(percentiles[0]) - base.scale(basePercentiles[0])
-                                    p25 = result.scale(percentiles[1]) - base.scale(basePercentiles[1])
-                                    p50 = result.scale(percentiles[2]) - base.scale(basePercentiles[2])
-                                    p75 = result.scale(percentiles[3]) - base.scale(basePercentiles[3])
-                                    p90 = result.scale(percentiles[4]) - base.scale(basePercentiles[4])
-                                    p99 = result.scale(percentiles[5]) - base.scale(basePercentiles[5])
-                                    p100 = result.scale(percentiles[6]) - base.scale(basePercentiles[6])
-                                } else {
-                                    p0 = result.normalize(percentiles[0]) - base.normalize(basePercentiles[0])
-                                    p25 = result.normalize(percentiles[1]) - base.normalize(basePercentiles[1])
-                                    p50 = result.normalize(percentiles[2]) - base.normalize(basePercentiles[2])
-                                    p75 = result.normalize(percentiles[3]) - base.normalize(basePercentiles[3])
-                                    p90 = result.normalize(percentiles[4]) - base.normalize(basePercentiles[4])
-                                    p99 = result.normalize(percentiles[5]) - base.normalize(basePercentiles[5])
-                                    p100 = result.normalize(percentiles[6]) - base.normalize(basePercentiles[6])
-                                }
-
-                                let samples = result.statistics.measurementCount - base.statistics.measurementCount
                                 scaledResults.append(ScaledResults(description: BenchmarkMetric.delta.description,
-                                                                   p0: p0,
-                                                                   p25: p25,
-                                                                   p50: p50,
-                                                                   p75: p75,
-                                                                   p90: p90,
-                                                                   p99: p99,
-                                                                   p100: p100,
+                                                                   percentiles: deltaPercentiles,
                                                                    samples: samples))
 
                                 let reversedPolarity = base.metric.polarity == .prefersLarger
 
+                                var percentageDeltaPercentiles = ScaledResults.Percentiles()
 
-                                if self.scale > 0 && result.metric.useScalingFactor {
-                                    p0 = formatTableEntry(base.scale(basePercentiles[0]),
-                                                                     result.scale(percentiles[0]),
-                                                                                  reversedPolarity)
-                                    p25 = formatTableEntry(base.scale(basePercentiles[1]),
-                                                                     result.scale(percentiles[1]),
-                                                                                  reversedPolarity)
-                                    p50 = formatTableEntry(base.scale(basePercentiles[2]),
-                                                                     result.scale(percentiles[2]),
-                                                                                  reversedPolarity)
-                                    p75 = formatTableEntry(base.scale(basePercentiles[3]),
-                                                                     result.scale(percentiles[3]),
-                                                                                  reversedPolarity)
-                                    p90 = formatTableEntry(base.scale(basePercentiles[4]),
-                                                                     result.scale(percentiles[4]),
-                                                                                  reversedPolarity)
-                                    p99 = formatTableEntry(base.scale(basePercentiles[5]),
-                                                                     result.scale(percentiles[5]),
-                                                                                  reversedPolarity)
-                                    p100 = formatTableEntry(base.scale(basePercentiles[6]),
-                                                                     result.scale(percentiles[6]),
-                                                                                  reversedPolarity)
-                                } else {
-                                    p0 = formatTableEntry(base.normalize(basePercentiles[0]),
-                                                                     result.normalize(percentiles[0]),
-                                                                                  reversedPolarity)
-                                    p25 = formatTableEntry(base.normalize(basePercentiles[1]),
-                                                                      result.normalize(percentiles[1]),
-                                                                                   reversedPolarity)
-                                    p50 = formatTableEntry(base.normalize(basePercentiles[2]),
-                                                                      result.normalize(percentiles[2]),
-                                                                                   reversedPolarity)
-                                    p75 = formatTableEntry(base.normalize(basePercentiles[3]),
-                                                                      result.normalize(percentiles[3]),
-                                                                                   reversedPolarity)
-                                    p90 = formatTableEntry(base.normalize(basePercentiles[4]),
-                                                                      result.normalize(percentiles[4]),
-                                                                                   reversedPolarity)
-                                    p99 = formatTableEntry(base.normalize(basePercentiles[5]),
-                                                                      result.normalize(percentiles[5]),
-                                                                                   reversedPolarity)
-                                    p100 = formatTableEntry(base.normalize(basePercentiles[6]),
-                                                                       result.normalize(percentiles[6]),
-                                                                                    reversedPolarity)
-                                }
+                                percentageDeltaPercentiles.p0 = formatTableEntry(basePercentiles.p0,
+                                                                                 resultPercentiles.p0,
+                                                                                 reversedPolarity)
+                                percentageDeltaPercentiles.p25 = formatTableEntry(basePercentiles.p25,
+                                                                                 resultPercentiles.p25,
+                                                                                 reversedPolarity)
+                                percentageDeltaPercentiles.p50 = formatTableEntry(basePercentiles.p50,
+                                                                                 resultPercentiles.p50,
+                                                                                 reversedPolarity)
+                                percentageDeltaPercentiles.p75 = formatTableEntry(basePercentiles.p75,
+                                                                                 resultPercentiles.p75,
+                                                                                 reversedPolarity)
+                                percentageDeltaPercentiles.p90 = formatTableEntry(basePercentiles.p90,
+                                                                                 resultPercentiles.p90,
+                                                                                 reversedPolarity)
+                                percentageDeltaPercentiles.p99 = formatTableEntry(basePercentiles.p99,
+                                                                                 resultPercentiles.p99,
+                                                                                 reversedPolarity)
+                                percentageDeltaPercentiles.p100 = formatTableEntry(basePercentiles.p100,
+                                                                                 resultPercentiles.p100,
+                                                                                 reversedPolarity)
 
                                 scaledResults.append(ScaledResults(description: "Improvement %",
-                                                                   p0: p0,
-                                                                   p25: p25,
-                                                                   p50: p50,
-                                                                   p75: p75,
-                                                                   p90: p90,
-                                                                   p99: p99,
-                                                                   p100: p100,
+                                                                   percentiles: percentageDeltaPercentiles,
                                                                    samples: samples))
 
 
                                 printMarkdown("```")
                                 table.print(scaledResults, style: Style.fancy)
                                 printMarkdown("```")
-
 
                                 if format == .markdown {
                                     if hideResults {
