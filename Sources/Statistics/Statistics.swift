@@ -14,19 +14,8 @@ import Numerics
 
 /// A type that provides distribution / percentile calculations of latency measurements
 public struct Statistics: Codable {
-    private static let numberPadding = 10
-    public static let defaultMaximumMeasurement = 100_000_000 // 1/10 second in nanoseconds
+    public static let defaultMaximumMeasurement = 1_000_000_000 // 1 second in nanoseconds
     public static let defaultPercentilesToCalculate = [0.0, 25.0, 50.0, 75.0, 90.0, 99.0, 100.0]
-
-    public enum Percentile: Int, Codable {
-        case p0 = 0
-        case p25 = 1
-        case p50 = 2
-        case p75 = 3
-        case p90 = 4
-        case p99 = 5
-        case p100 = 6
-    }
 
     public enum Units: Int, Codable {
         case count = 1 // e.g. nanoseconds
@@ -67,7 +56,6 @@ public struct Statistics: Codable {
         }
     }
 
-
     public func percentiles(for percentilesToCalculate: [Double] = defaultPercentilesToCalculate) -> [Int] {
         var percentileResults: [Int] = []
 
@@ -84,13 +72,13 @@ public struct Statistics: Codable {
     }
 
     public let prefersLarger: Bool
-    private let _timeUnits: Statistics.Units
+    public let timeUnits: Statistics.Units
     public var histogram: Histogram<UInt>
 
-    public var timeUnits: Statistics.Units {
-        // set timeUnits for proper scaling
-        if _timeUnits != .automatic {
-            return _timeUnits
+    // Returns the actual units to use (either specified, or automatic)
+    public func units() -> Statistics.Units {
+        if timeUnits != .automatic {
+            return timeUnits
         }
 
         if histogram.countForValue(0) == histogram.totalCount {
@@ -113,7 +101,7 @@ public struct Statistics: Codable {
                 units: Statistics.Units = .automatic,
                 prefersLarger: Bool = false) {
         self.prefersLarger = prefersLarger
-        _timeUnits = units
+        timeUnits = units
 
         histogram = Histogram(highestTrackableValue: UInt64(maximumMeasurement),
                               numberOfSignificantValueDigits: numberOfSignificantDigits)

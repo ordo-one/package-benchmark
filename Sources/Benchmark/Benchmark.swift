@@ -80,7 +80,7 @@ public final class Benchmark: Codable, Hashable {
     /// Hook for setting defaults for a whole benchmark suite
     public static var defaultConfiguration: Configuration = .init(metrics: BenchmarkMetric.default,
                                                                   timeUnits: .automatic,
-                                                                  warmupIterations: 3,
+                                                                  warmupIterations: 1,
                                                                   scalingFactor: .none,
                                                                   maxDuration: .seconds(1),
                                                                   maxIterations: 10_000,

@@ -98,7 +98,7 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
                             statistics[metric] = Statistics(units: units)
                         default:
                             if operatingSystemStatsProducer.metricSupported(metric) == true {
-                                statistics[metric] = Statistics(prefersLarger: metric.polarity() == .prefersLarger)
+                                statistics[metric] = Statistics(prefersLarger: metric.polarity == .prefersLarger)
                             }
                         }
                         
@@ -155,8 +155,8 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
                             statistics[.wallClock]?.add(Int(runningTime.nanoseconds()))
 
                             var roundedThroughput =
-                                Double(benchmark.configuration.scalingFactor.rawValue * 1_000_000_000)
-                                    / Double(runningTime.nanoseconds())
+                            Double(1_000_000_000)
+                            / Double(runningTime.nanoseconds())
                             roundedThroughput.round(.toNearestOrAwayFromZero)
 
                             let throughput = Int(roundedThroughput)
@@ -311,33 +311,15 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
                         operatingSystemStatsProducer.stopSampling()
                     }
 
-                    // calculate percentiles
-  /*                  statistics.keys.forEach { metric in
-                        statistics[metric]?.calculateStatistics()
-                    }
-*/
                     // construct metric result array
                     var results: [BenchmarkResult] = []
                     statistics.forEach { key, value in
                         if value.measurementCount > 0 {
-                            /*
-                             var percentiles: [Statistics.Percentile: Int] = [:]
-
-                            percentiles = [.p0: value.percentileResults[0] ?? 0,
-                                           .p25: value.percentileResults[1] ?? 0,
-                                           .p50: value.percentileResults[2] ?? 0,
-                                           .p75: value.percentileResults[3] ?? 0,
-                                           .p90: value.percentileResults[4] ?? 0,
-                                           .p99: value.percentileResults[5] ?? 0,
-                                           .p100: value.percentileResults[6] ?? 0]
-*/
                             let result = BenchmarkResult(metric: key,
                                                          timeUnits: BenchmarkTimeUnits(value.timeUnits),
                                                          scalingFactor: benchmark.configuration.scalingFactor,
-//                                                         measurements: value.measurementCount,
                                                          warmupIterations: benchmark.configuration.warmupIterations,
                                                          thresholds: benchmark.configuration.thresholds?[key],
-//                                                         percentiles: percentiles,
                                                          statistics: value)
                             results.append(result)
                         }

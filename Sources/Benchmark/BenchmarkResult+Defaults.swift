@@ -18,10 +18,22 @@
 import Statistics
 
 public extension BenchmarkResult {
+    enum Percentile: Int, Codable {
+        case p0 = 0
+        case p25 = 1
+        case p50 = 2
+        case p75 = 3
+        case p90 = 4
+        case p99 = 5
+        case p100 = 6
+    }
+}
+
+public extension BenchmarkResult {
     typealias PercentileRelativeThreshold = Double
     typealias PercentileAbsoluteThreshold = Int
-    typealias PercentileRelativeThresholds = [Statistics.Percentile: PercentileRelativeThreshold]
-    typealias PercentileAbsoluteThresholds = [Statistics.Percentile: PercentileAbsoluteThreshold]
+    typealias PercentileRelativeThresholds = [BenchmarkResult.Percentile: PercentileRelativeThreshold]
+    typealias PercentileAbsoluteThresholds = [BenchmarkResult.Percentile: PercentileAbsoluteThreshold]
 
     struct PercentileThresholds: Codable {
         public init(relative: BenchmarkResult.PercentileRelativeThresholds = .none,

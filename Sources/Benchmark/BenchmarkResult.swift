@@ -18,6 +18,22 @@ public enum BenchmarkTimeUnits: Int, Codable, CustomStringConvertible {
     case seconds = 1
     case automatic // will pick time unit above automatically
 
+    /// Divisor of raw data to the desired time unit representation
+    public var divisor: Int {
+        switch self {
+        case .nanoseconds:
+            return 1
+        case .microseconds:
+            return 1_000
+        case .milliseconds:
+            return 1_000_000
+        case .seconds:
+            return 1_000_000_000
+        case .automatic:
+            fatalError("Should never extract scalingFactor for .automatic")
+        }
+    }
+
     public var description: String {
         switch self {
         case .nanoseconds:
@@ -35,7 +51,6 @@ public enum BenchmarkTimeUnits: Int, Codable, CustomStringConvertible {
 }
 
 public enum BenchmarkScalingFactor: Int, Codable {
-    case automatic // will pick scaling factor automatically
     case none = 1 // e.g. nanoseconds, or count
     case kilo = 1_000 // microseconds
     case mega = 1_000_000 // milliseconds
@@ -43,8 +58,6 @@ public enum BenchmarkScalingFactor: Int, Codable {
 
     public var description: String {
         switch self {
-        case .automatic:
-            return "#"
         case .none:
             return "#"
         case .kilo:
@@ -61,7 +74,7 @@ public enum BenchmarkScalingFactor: Int, Codable {
 public extension BenchmarkScalingFactor {
     init(_ units:BenchmarkTimeUnits) {
         switch units {
-        case .nanoseconds:
+        case .automatic, .nanoseconds:
             self = .none
         case .microseconds:
             self = .kilo
@@ -69,8 +82,6 @@ public extension BenchmarkScalingFactor {
             self = .mega
         case .seconds:
             self = .giga
-        case .automatic:
-            self = .automatic
         }
     }
 }
@@ -83,29 +94,119 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
     public init(metric: BenchmarkMetric,
                 timeUnits: BenchmarkTimeUnits,
                 scalingFactor: BenchmarkScalingFactor,
-//                measurements: Int,
                 warmupIterations: Int,
                 thresholds: PercentileThresholds? = nil,
-//                percentiles: [Statistics.Percentile: Int],
                 statistics: Statistics) {
         self.metric = metric
-        self.timeUnits = timeUnits
+        self.timeUnits = timeUnits == .automatic ? BenchmarkTimeUnits(statistics.units()) : timeUnits
         self.scalingFactor = scalingFactor
-//        self.measurements = measurements
         self.warmupIterations = warmupIterations
         self.thresholds = thresholds
-//        self.percentiles = percentiles
         self.statistics = statistics
     }
 
     public var metric: BenchmarkMetric
     public var timeUnits: BenchmarkTimeUnits
     public var scalingFactor: BenchmarkScalingFactor
-//    public var measurements: Int
     public var warmupIterations: Int
     public var thresholds: PercentileThresholds?
-//    public var percentiles: [Statistics.Percentile: Int]
     public var statistics: Statistics
+
+
+    // Convenience calculations for actual factors/time units in use
+    // E.g. if we have a result in us and a scaling factor in M, we
+    // want to have the timeunit to be ns and the scaling factor K instead for display
+    // if displaying scaled results.
+    // Or a simpler example, where the scaling factor is K and the results is in us,
+    // we want to display results in ns (and no
+    public var scaledTimeUnits: BenchmarkTimeUnits {
+        switch timeUnits {
+        case .nanoseconds:
+            return .nanoseconds
+        case .microseconds:
+            switch scalingFactor {
+            case .none:
+                return .microseconds
+            default:
+                return .nanoseconds
+            }
+        case .milliseconds:
+            switch scalingFactor {
+            case .none:
+                return .milliseconds
+            case .kilo:
+                return .microseconds
+            default:
+                return .nanoseconds
+            }
+        case .seconds:
+            switch scalingFactor {
+            case .none:
+                return .seconds
+            case .kilo:
+                return .milliseconds
+            case .mega:
+                return .microseconds
+            case .giga:
+                return .nanoseconds
+            }
+        default:
+            break
+        }
+
+        fatalError("scaledTimeUnits: \(scalingFactor), \(timeUnits)")
+    }
+
+    // from SO to avoid Foundation/Numerics
+    internal func pow<T: BinaryInteger>(_ base: T, _ power: T) -> T {
+        func expBySq(_ y: T, _ x: T, _ n: T) -> T {
+            precondition(n >= 0)
+            if n == 0 {
+                return y
+            } else if n == 1 {
+                return y * x
+            } else if n.isMultiple(of: 2) {
+                return expBySq(y, x * x, n / 2)
+            } else { // n is odd
+                return expBySq(y * x, x * x, (n - 1) / 2)
+            }
+        }
+
+        return expBySq(1, base, power)
+    }
+
+    internal var remainingScalingFactor: BenchmarkScalingFactor {
+        guard statistics.timeUnits == .automatic else {
+            return scalingFactor
+        }
+        guard timeUnits != scaledTimeUnits else {
+            return scalingFactor
+        }
+        let timeUnitsMagnitude = Int(Double.log10(Double(timeUnits.rawValue)))
+        let scaledTimeUnitsMagnitude = Int(Double.log10(Double(scaledTimeUnits.rawValue)))
+        let scalingFactorMagnitude = Int(Double.log10(Double(scalingFactor.rawValue)))
+        let magnitudeDelta = scalingFactorMagnitude - (scaledTimeUnitsMagnitude - timeUnitsMagnitude)
+
+        guard magnitudeDelta >= 0 else {
+            fatalError("\(magnitudeDelta) \(scalingFactorMagnitude) \(scaledTimeUnitsMagnitude) \(timeUnitsMagnitude)")
+        }
+        let newScale = pow(10, magnitudeDelta)
+
+        return BenchmarkScalingFactor(rawValue: newScale)!
+    }
+
+    // Scale a value according to timeunit/scaling factors in play
+    public func scale(_ value:Int) -> Int {
+        if metric == .throughput {
+            return normalize(value) 
+        }
+        return normalize(value) / remainingScalingFactor.rawValue
+    }
+
+    // Scale a value to the appropriate unit (from ns/count -> )
+    public func normalize(_ value:Int) -> Int {
+        return value / self.timeUnits.divisor
+    }
 
     /*
     public mutating func scaleResults(to otherResult: BenchmarkResult) {
@@ -122,7 +223,7 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
     }
 */
     public var unitDescription: String {
-        if metric.countable() {
+        if metric.countable {
             let statisticsUnit = Statistics.Units(timeUnits)
             if statisticsUnit == .count {
                 return ""
@@ -133,7 +234,7 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
     }
 
     public var unitDescriptionPretty: String {
-        if metric.countable() {
+        if metric.countable {
             let statisticsUnit = Statistics.Units(timeUnits)
             if statisticsUnit == .count {
                 return ""
@@ -141,6 +242,23 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
             return "(\(statisticsUnit.description))"
         }
         return "(\(timeUnits.description))"
+    }
+
+    public var scaledUnitDescriptionPretty: String {
+        if metric == .throughput {
+            if scalingFactor == .none {
+                return "*"
+            }
+            return "(\(self.scalingFactor.description)) *"
+        }
+        if metric.countable {
+            let statisticsUnit = Statistics.Units(self.scaledTimeUnits)
+            if statisticsUnit == .count {
+                return ""
+            }
+            return "(\(statisticsUnit.description)) *"
+        }
+        return statistics.timeUnits == .automatic ? "(\(self.scaledTimeUnits.description)) *" : "(\(self.timeUnits.description)) *"
     }
 
     public static func == (lhs: BenchmarkResult, rhs: BenchmarkResult) -> Bool {
@@ -161,7 +279,7 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
         guard lhs.metric == rhs.metric else {
             return false
         }
-        let reversedComparison = lhs.metric.polarity() == .prefersLarger
+        let reversedComparison = lhs.metric.polarity == .prefersLarger
 
         // TODO: Should add proper comparison to Histograms instead
 
@@ -180,7 +298,7 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
 /*
         rhs.scaleResults(to: lhs)
 
-        let reversedComparison = lhs.metric.polarity() == .prefersLarger
+        let reversedComparison = lhs.metric.polarity == .prefersLarger
         var allIsLess = true
 
         lhs.percentiles.forEach { percentile, value in
@@ -221,13 +339,13 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
         // swiftlint:disable function_parameter_count
         func worseResult(_ lhs: Int,
                          _ rhs: Int,
-                         _ percentile: Statistics.Percentile,
+                         _ percentile: BenchmarkResult.Percentile,
                          _ thresholds: BenchmarkResult.PercentileThresholds,
                          _ scalingFactor: Int,
                          _ printOutput: Bool) -> Bool {
             let relativeDifference = (100 - (100.0 * Double(lhs) / Double(rhs)))
             let absoluteDifference = lhs - rhs
-            let reverseComparison = metric.polarity() == .prefersLarger
+            let reverseComparison = metric.polarity == .prefersLarger
 
             var thresholdViolated = false
 

@@ -32,7 +32,7 @@ extension JMHPrimaryMetric {
         var percentileValues: [String: Double] = [:]
         var recordedValues: [Double] = []
 //        let factor = 1 // result.metric == .throughput ? 1 : 1_000_000_000 / result.timeUnits.rawValue
-        let factor = result.metric.countable() == false ? 1_000 : 1
+        let factor = result.metric.countable == false ? 1_000 : 1
 
         for p in percentiles {
             percentileValues[String(p)] = Statistics.roundToDecimalplaces(Double(histogram.valueAtPercentile(p)) / Double(factor), 3)
@@ -48,7 +48,7 @@ extension JMHPrimaryMetric {
         scoreError = Statistics.roundToDecimalplaces(error / Double(factor), 3)
         scoreConfidence = [Statistics.roundToDecimalplaces(score - error) / Double(factor), Statistics.roundToDecimalplaces(score + error) / Double(factor)]
         scorePercentiles = percentileValues
-        if result.metric.countable() {
+        if result.metric.countable {
             scoreUnit = result.metric == .throughput ? "# / s" : "#"
         } else {
             scoreUnit = "μs" // result.timeUnits.description

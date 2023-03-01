@@ -15,7 +15,9 @@ extension BenchmarkRunner {}
 // swiftlint disable: attributes
 @_dynamicReplacement(for: registerBenchmarks)
 func benchmarks() {
-    Benchmark.defaultConfiguration = .init(maxDuration: .seconds(1),
+    Benchmark.defaultConfiguration = .init(// timeUnits: .microseconds,
+                                            warmupIterations:0,
+                                           maxDuration: .seconds(1),
                                            maxIterations: Int.max)
 
     Benchmark("Basic",
@@ -24,10 +26,13 @@ func benchmarks() {
 
     Benchmark("Scaled metrics",
               configuration: .init(metrics: BenchmarkMetric.all, scalingFactor: .kilo)) { benchmark in
-        for _ in benchmark.scaledIterations {
-            for _ in 0..<2 {
-                blackHole(Int.random(in: benchmark.scaledIterations))
-            }
+        for _ in benchmark.scaledIterations  {
+//            for _ in 0..<1_00 {
+ //               blackHole(Int.random(in: benchmark.scaledIterations))
+//            }
+        }
+        for _ in 0..<150000 {
+                       blackHole(Int.random(in: benchmark.scaledIterations))
         }
     }
 
