@@ -8,6 +8,8 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 //
 
+// swiftlint: disable file_length
+
 import Statistics
 
 /// Time units for cpu/wall clock time
@@ -51,14 +53,14 @@ public enum BenchmarkTimeUnits: Int, Codable, CustomStringConvertible {
 }
 
 public enum BenchmarkScalingFactor: Int, Codable {
-    case none = 1 // e.g. nanoseconds, or count
+    case one = 1 // e.g. nanoseconds, or count
     case kilo = 1_000 // microseconds
     case mega = 1_000_000 // milliseconds
     case giga = 1_000_000_000 // seconds
 
     public var description: String {
         switch self {
-        case .none:
+        case .one:
             return "#"
         case .kilo:
             return "K"
@@ -75,7 +77,7 @@ public extension BenchmarkScalingFactor {
     init(_ units: BenchmarkTimeUnits) {
         switch units {
         case .automatic, .nanoseconds:
-            self = .none
+            self = .one
         case .microseconds:
             self = .kilo
         case .milliseconds:
@@ -111,26 +113,20 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
     public var thresholds: PercentileThresholds?
     public var statistics: Statistics
 
-    // Convenience calculations for actual factors/time units in use
-    // E.g. if we have a result in us and a scaling factor in M, we
-    // want to have the timeunit to be ns and the scaling factor K instead for display
-    // if displaying scaled results.
-    // Or a simpler example, where the scaling factor is K and the results is in us,
-    // we want to display results in ns (and no
     public var scaledTimeUnits: BenchmarkTimeUnits {
         switch timeUnits {
         case .nanoseconds:
             return .nanoseconds
         case .microseconds:
             switch scalingFactor {
-            case .none:
+            case .one:
                 return .microseconds
             default:
                 return .nanoseconds
             }
         case .milliseconds:
             switch scalingFactor {
-            case .none:
+            case .one:
                 return .milliseconds
             case .kilo:
                 return .microseconds
@@ -139,7 +135,7 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
             }
         case .seconds:
             switch scalingFactor {
-            case .none:
+            case .one:
                 return .seconds
             case .kilo:
                 return .milliseconds
@@ -155,6 +151,7 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
         fatalError("scaledTimeUnits: \(scalingFactor), \(timeUnits)")
     }
 
+    // swiftlint:disable identifier_name
     // from SO to avoid Foundation/Numerics
     internal func pow<T: BinaryInteger>(_ base: T, _ power: T) -> T {
         func expBySq(_ y: T, _ x: T, _ n: T) -> T {
@@ -246,11 +243,11 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
             }
             return "(\(statisticsUnit.description)) *"
         }
-        return statistics.timeUnits == .automatic ? "(\(scaledTimeUnits.description)) *" : "(\(timeUnits.description)) *"
+        return statistics.timeUnits == .automatic ?
+            "(\(scaledTimeUnits.description)) *" : "(\(timeUnits.description)) *"
     }
 
     public static func == (lhs: BenchmarkResult, rhs: BenchmarkResult) -> Bool {
-
         guard lhs.metric == rhs.metric else {
             return false
         }
@@ -262,10 +259,9 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
         let lhsPercentiles = lhs.statistics.percentiles()
         let rhsPercentiles = rhs.statistics.percentiles()
 
-        for percentile in 0 ..< lhsPercentiles.count {
-            if lhs.normalizeCompare(lhsPercentiles[percentile]) != rhs.normalizeCompare(rhsPercentiles[percentile]) {
+        for percentile in 0 ..< lhsPercentiles.count where
+            lhs.normalizeCompare(lhsPercentiles[percentile]) != rhs.normalizeCompare(rhsPercentiles[percentile]) {
                 return false
-            }
         }
 
         return true
@@ -282,16 +278,14 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
         let rhsPercentiles = rhs.statistics.percentiles()
 
         if reversedComparison {
-            for percentile in 0 ..< lhsPercentiles.count {
-                if lhs.normalizeCompare(lhsPercentiles[percentile]) < rhs.normalizeCompare(rhsPercentiles[percentile]) {
+            for percentile in 0 ..< lhsPercentiles.count where
+                 lhs.normalizeCompare(lhsPercentiles[percentile]) < rhs.normalizeCompare(rhsPercentiles[percentile]) {
                     return false
                 }
-            }
         } else {
-            for percentile in 0 ..< lhsPercentiles.count {
-                if lhs.normalizeCompare(lhsPercentiles[percentile]) > rhs.normalizeCompare(rhsPercentiles[percentile]) {
+            for percentile in 0 ..< lhsPercentiles.count where
+                 lhs.normalizeCompare(lhsPercentiles[percentile]) > rhs.normalizeCompare(rhsPercentiles[percentile]) {
                     return false
-                }
             }
         }
 
@@ -327,9 +321,10 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
 
             if let threshold = thresholds.relative[percentile] {
                 if reverseComparison ? relativeDifference > threshold : -relativeDifference > threshold {
+                    let relativeDiff = Statistics.roundToDecimalplaces(abs(relativeDifference), 1)
                     if printOutput {
                         print("`\(metric.description)` relative threshold violated, [\(percentile)] result" +
-                            " (\(Statistics.roundToDecimalplaces(abs(relativeDifference), 1))) > threshold (\(threshold))")
+                            " (\(relativeDiff)) > threshold (\(threshold))")
                     }
                     thresholdViolated = true
                 }
@@ -355,7 +350,7 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
         for percentile in 0 ..< lhsPercentiles.count {
             worse = worseResult(lhsPercentiles[percentile],
                                 rhsPercentiles[percentile],
-                                BenchmarkResult.Percentile(rawValue: percentile)!,
+                                Self.Percentile(rawValue: percentile)!,
                                 thresholds,
                                 lhs.statistics.units().rawValue,
                                 printOutput) || worse

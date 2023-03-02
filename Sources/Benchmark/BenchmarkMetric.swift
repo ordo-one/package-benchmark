@@ -8,6 +8,8 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 //
 
+// swiftlint:disable line_length
+
 /// Metrics supported by benchmark.
 ///
 /// Some metrics are only available on macOS or Linux, but you can specify all the metrics without worrying about platform availability.

@@ -9,6 +9,7 @@
 //
 // ===----------------------------------------------------------------------===//
 
+// swiftlint:disable line_length
 // Borrowed from Swift Collections Benchmark, thanks!
 
 /// A function to foil compiler optimizations that would otherwise optimize out code you want to benchmark.

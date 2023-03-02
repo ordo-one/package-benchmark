@@ -81,7 +81,7 @@ public final class Benchmark: Codable, Hashable {
     public static var defaultConfiguration: Configuration = .init(metrics: BenchmarkMetric.default,
                                                                   timeUnits: .automatic,
                                                                   warmupIterations: 1,
-                                                                  scalingFactor: .none,
+                                                                  scalingFactor: .one,
                                                                   maxDuration: .seconds(1),
                                                                   maxIterations: 10_000,
                                                                   skip: false,
