@@ -15,6 +15,20 @@
 // swiftlint:disable discouraged_none_name
 // swiftlint:disable identifier_name
 
+import Statistics
+
+public extension BenchmarkResult {
+    enum Percentile: Int, Codable {
+        case p0 = 0
+        case p25 = 1
+        case p50 = 2
+        case p75 = 3
+        case p90 = 4
+        case p99 = 5
+        case p100 = 6
+    }
+}
+
 public extension BenchmarkResult {
     typealias PercentileRelativeThreshold = Double
     typealias PercentileAbsoluteThreshold = Int
@@ -30,16 +44,6 @@ public extension BenchmarkResult {
 
         let relative: PercentileRelativeThresholds
         let absolute: PercentileAbsoluteThresholds
-    }
-
-    enum Percentile: Codable {
-        case p0
-        case p25
-        case p50
-        case p75
-        case p90
-        case p99
-        case p100
     }
 }
 

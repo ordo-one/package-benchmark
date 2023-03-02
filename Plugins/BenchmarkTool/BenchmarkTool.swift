@@ -80,6 +80,9 @@ struct BenchmarkTool: AsyncParsableCommand {
     @Flag(name: .long, help: "True if we should supress progress in benchmark run")
     var noProgress: Int
 
+    @Flag(name: .long, help: "True if we should scale time units, syscall rate, etc to scalingFactor")
+    var scale: Int
+
     @Option(name: .long, help: "The named baseline(s) we should display, update, delete or compare with")
     var baseline: [String] = []
 
@@ -172,7 +175,7 @@ struct BenchmarkTool: AsyncParsableCommand {
     }
 
     mutating func run() async throws {
-        if command == .baseline && delete == 0 && listBaselines == 0 && update == 0 { // don't need to read baseline
+        if command == .baseline, delete == 0, listBaselines == 0, update == 0 { // don't need to read baseline
             try readBaselines()
         }
 
@@ -190,7 +193,7 @@ struct BenchmarkTool: AsyncParsableCommand {
             }
         }
 
-        if delete > 0 { 
+        if delete > 0 {
             try postProcessBenchmarkResults()
             return
         }
@@ -248,7 +251,9 @@ struct BenchmarkTool: AsyncParsableCommand {
         }
 
         // Insert benchmark run at first position of baselines
-        baseline.insert("default", at: 0)
+        if comparisonBaseline != nil {
+            baseline.insert("default", at: 0)
+        }
         benchmarkBaselines.insert(BenchmarkBaseline(baselineName: "Current baseline",
                                                     machine: benchmarkMachine(),
                                                     results: benchmarkResults), at: 0)

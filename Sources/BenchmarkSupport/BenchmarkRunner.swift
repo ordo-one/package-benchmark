@@ -22,7 +22,7 @@ import SystemPackage
 #else
     #error("Unsupported Platform")
 #endif
-
+// swiftlint:disable type_body_length
 // @main must be done in actual benchmark to avoid linker errors unfortunately
 public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
     static var testReadWrite: BenchmarkRunnerReadWrite?
@@ -38,7 +38,20 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
     @Option(name: .shortAndLong, help: "The output pipe filedescriptor used for communication with host process.")
     var outputFD: Int32?
 
+    @Option(name: .long, help: "Benchmarks matching the regexp filter that should be run")
+    var filter: [String] = []
+
+    @Option(name: .long, help: "Benchmarks matching the regexp filter that should be skipped")
+    var skip: [String] = []
+
     var debug = false
+
+    func shouldRunBenchmark(_ name: String) throws -> Bool {
+        if try skip.contains(where: { name.wholeMatch(of: try Regex($0)) != nil }) {
+            return false
+        }
+        return try filter.isEmpty || filter.contains(where: { name.wholeMatch(of: try Regex($0)) != nil })
+    }
 
     // swiftlint:disable cyclomatic_complexity function_body_length
     public mutating func run() async throws {
@@ -56,10 +69,22 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
         let operatingSystemStatsProducer = OperatingSystemStatsProducer()
 
         while true {
-            if debug { // in debug mode we just run all benchmarks
-                if let benchmark = debugIterator.next() {
-                    benchmarkCommand = BenchmarkCommandRequest.run(benchmark: benchmark)
-                } else {
+            if debug { // in debug mode we run all benchmarks matching filter/skip specified
+                var benchmark: Benchmark?
+                benchmarkCommand = .list
+
+                while true {
+                    benchmark = debugIterator.next()
+                    if let benchmark {
+                        if try shouldRunBenchmark(benchmark.name) {
+                            benchmarkCommand = BenchmarkCommandRequest.run(benchmark: benchmark)
+                            break
+                        }
+                    } else {
+                        return
+                    }
+                }
+                if benchmark == nil {
                     return
                 }
             } else {
@@ -93,15 +118,15 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
                     // Create metric statistics as needed
                     benchmark.configuration.metrics.forEach { metric in
                         switch metric {
-                        case .wallClock:
-                            statistics[.wallClock] = Statistics(timeUnits:
-                                StatisticsUnits(benchmark.configuration.timeUnits))
+                        case .wallClock, .cpuUser, .cpuTotal, .cpuSystem:
+                            let units = Statistics.Units(benchmark.configuration.timeUnits)
+                            statistics[metric] = Statistics(units: units)
                         default:
                             if operatingSystemStatsProducer.metricSupported(metric) == true {
-                                statistics[metric] = Statistics(timeUnits: .automatic,
-                                                                prefersLarger: metric.polarity() == .prefersLarger)
+                                statistics[metric] = Statistics(prefersLarger: metric.polarity == .prefersLarger)
                             }
                         }
+
                         if mallocStatsProducerNeeded(metric) {
                             mallocStatsRequested = true
                         }
@@ -155,7 +180,7 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
                             statistics[.wallClock]?.add(Int(runningTime.nanoseconds()))
 
                             var roundedThroughput =
-                                Double(benchmark.configuration.throughputScalingFactor.rawValue * 1_000_000_000)
+                                Double(1_000_000_000)
                                     / Double(runningTime.nanoseconds())
                             roundedThroughput.round(.toNearestOrAwayFromZero)
 
@@ -258,12 +283,13 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
                         }
                         fflush(stdout)
                     }
-                    var currentPercentage = 0
+
+                    var nextPercentageToUpdateProgressBar = 0
 
                     // Run the benchmark at a minimum the desired iterations/runtime --
 
                     while iterations <= benchmark.configuration.maxIterations ||
-                            wallClockDuration <= benchmark.configuration.maxDuration {
+                        wallClockDuration <= benchmark.configuration.maxDuration {
                         // and at a maximum the same...
                         guard wallClockDuration < benchmark.configuration.maxDuration,
                               iterations < benchmark.configuration.maxIterations
@@ -291,11 +317,10 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
 
                             let maxPercentage = max(iterationsPercentage, timePercentage)
 
-                            if Int(maxPercentage) > currentPercentage {
-                                currentPercentage = Int(maxPercentage)
-                                progressBar.setValue(currentPercentage)
-
+                            if Int(maxPercentage) > nextPercentageToUpdateProgressBar {
+                                progressBar.setValue(Int(maxPercentage))
                                 fflush(stdout)
+                                nextPercentageToUpdateProgressBar = Int(maxPercentage) + Int.random(in: 3 ... 9)
                             }
                         }
                     }
@@ -310,31 +335,15 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
                         operatingSystemStatsProducer.stopSampling()
                     }
 
-                    // calculate percentiles
-                    statistics.keys.forEach { metric in
-                        statistics[metric]?.calculateStatistics()
-                    }
-
                     // construct metric result array
                     var results: [BenchmarkResult] = []
                     statistics.forEach { key, value in
                         if value.measurementCount > 0 {
-                            var percentiles: [BenchmarkResult.Percentile: Int] = [:]
-
-                            percentiles = [.p0: value.percentileResults[0] ?? 0,
-                                           .p25: value.percentileResults[1] ?? 0,
-                                           .p50: value.percentileResults[2] ?? 0,
-                                           .p75: value.percentileResults[3] ?? 0,
-                                           .p90: value.percentileResults[4] ?? 0,
-                                           .p99: value.percentileResults[5] ?? 0,
-                                           .p100: value.percentileResults[6] ?? 0]
-
                             let result = BenchmarkResult(metric: key,
                                                          timeUnits: BenchmarkTimeUnits(value.timeUnits),
-                                                         measurements: value.measurementCount,
+                                                         scalingFactor: benchmark.configuration.scalingFactor,
                                                          warmupIterations: benchmark.configuration.warmupIterations,
                                                          thresholds: benchmark.configuration.thresholds?[key],
-                                                         percentiles: percentiles,
                                                          statistics: value)
                             results.append(result)
                         }

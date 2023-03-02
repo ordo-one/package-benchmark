@@ -8,6 +8,8 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 //
 
+// swiftlint:disable line_length
+
 /// Metrics supported by benchmark.
 ///
 /// Some metrics are only available on macOS or Linux, but you can specify all the metrics without worrying about platform availability.
@@ -59,15 +61,15 @@ public enum BenchmarkMetric: Hashable, Equatable, Codable, CustomStringConvertib
     /// The number of bytes physicall written to a block device (i.e. disk) -- Linux only
     case writeBytesPhysical
     /// Custom metric
-    case custom(_ name: String, polarity: Polarity = .prefersSmaller)
+    case custom(_ name: String, polarity: Polarity = .prefersSmaller, useScalingFactor: Bool = true)
 
     /// Used internally as placeholders for formatting deltas in an easy way, please don't use
     #if swift(>=5.8)
-    @_documentation(visibility: internal)
+        @_documentation(visibility: internal)
     #endif
     case delta
     #if swift(>=5.8)
-    @_documentation(visibility: internal)
+        @_documentation(visibility: internal)
     #endif
     case deltaPercentage
 }
@@ -84,26 +86,41 @@ public extension BenchmarkMetric {
 
 public extension BenchmarkMetric {
     // True if the metric is countable (otherwise it's a time/throughput unit)
-    func countable() -> Bool {
+    var countable: Bool {
         switch self {
-        case .cpuUser:
-            return false
-        case .cpuSystem:
-            return false
-        case .cpuTotal:
-            return false
-        case .wallClock:
+        case .cpuSystem, .cpuTotal, .cpuUser, .wallClock:
             return false
         default:
             return true
         }
     }
 
-    func polarity() -> BenchmarkMetric.Polarity {
+    /// True if this metric should be scaled to the scalingFactor if looking at scaled output.
+    var useScalingFactor: Bool {
+        switch self {
+        case .cpuSystem, .cpuTotal, .cpuUser, .wallClock:
+            return true
+        case .mallocCountLarge, .mallocCountSmall, .mallocCountTotal, .memoryLeaked:
+            return true
+        case .syscalls, .throughput:
+            return true
+        case .readSyscalls, .readBytesLogical, .readBytesPhysical:
+            return true
+        case .writeSyscalls, .writeBytesLogical, .writeBytesPhysical:
+            return true
+        case let .custom(_, _, useScaleFactor):
+            return useScaleFactor
+        default:
+            return false
+        }
+    }
+
+    /// Indicates whether larger or smaller measurements, relative to a set baseline, indicate better performance.
+    var polarity: BenchmarkMetric.Polarity {
         switch self {
         case .throughput:
             return .prefersLarger
-        case let .custom(_, polarity):
+        case let .custom(_, polarity, _):
             return polarity
         default:
             return .prefersSmaller
@@ -121,7 +138,7 @@ public extension BenchmarkMetric {
         case .wallClock:
             return "Time (wall clock)"
         case .throughput:
-            return "Throughput (scaled / s)"
+            return "Throughput (# / s)"
         case .peakMemoryResident:
             return "Memory (resident peak)"
         case .peakMemoryVirtual:
@@ -160,13 +177,17 @@ public extension BenchmarkMetric {
             return "Δ"
         case .deltaPercentage:
             return "Δ %"
-        case let .custom(name, _):
+        case let .custom(name, _, _):
             return name
         }
     }
 }
+
 // swiftlint:disable cyclomatic_complexity
 // As we can't have raw values and associated data we add this...
+#if swift(>=5.8)
+    @_documentation(visibility: internal)
+#endif
 extension BenchmarkMetric {
     init(_ textualMetric: String) {
         switch textualMetric {

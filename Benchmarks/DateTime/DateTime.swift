@@ -15,24 +15,24 @@ import BenchmarkSupport
 func benchmarks() {
     Benchmark.defaultConfiguration = .init(metrics: [.throughput, .wallClock],
                                            warmupIterations: 10,
-                                           throughputScalingFactor: .kilo,
+                                           scalingFactor: .kilo,
                                            maxDuration: .seconds(1),
                                            maxIterations: .kilo(10))
 
     Benchmark("InternalUTCClock-now") { benchmark in
-        for _ in benchmark.throughputIterations {
+        for _ in benchmark.scaledIterations {
             BenchmarkSupport.blackHole(InternalUTCClock.now)
         }
     }
 
     Benchmark("BenchmarkClock-now") { benchmark in
-        for _ in benchmark.throughputIterations {
+        for _ in benchmark.scaledIterations {
             BenchmarkSupport.blackHole(BenchmarkClock.now)
         }
     }
 
     Benchmark("Foundation-Date") { benchmark in
-        for _ in benchmark.throughputIterations {
+        for _ in benchmark.scaledIterations {
             BenchmarkSupport.blackHole(Foundation.Date())
         }
     }

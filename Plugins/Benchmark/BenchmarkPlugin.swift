@@ -66,6 +66,7 @@ import PackagePlugin
         let noProgress = argumentExtractor.extractFlag(named: "no-progress")
         let groupingToUse = argumentExtractor.extractOption(named: "grouping")
         let debug = argumentExtractor.extractFlag(named: "debug")
+        let scale = argumentExtractor.extractFlag(named: "scale")
         var outputFormat: Format = .text
         var grouping = "benchmark"
         var exportPath = "."
@@ -211,6 +212,10 @@ import PackagePlugin
 
         if noProgress > 0 {
             args.append(contentsOf: ["--no-progress"])
+        }
+
+        if scale > 0 {
+            args.append(contentsOf: ["--scale"])
         }
 
         if compareSpecified.count > 0 {

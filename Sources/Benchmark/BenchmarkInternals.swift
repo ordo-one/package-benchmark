@@ -11,7 +11,6 @@
 
 // Internal Benchmark framework definitions used for communication with host process etc
 
-
 /// The entry point for defining benchmarks, expected to be overridden by benchmarks you write.
 ///
 /// Annotate a function that returns your benchmarks with `@_dynamicReplacement(for: registerBenchmarks)`
@@ -29,7 +28,7 @@ public dynamic func registerBenchmarks() {
 
 // Command sent from benchmark runner to the benchmark under measurement
 #if swift(>=5.8)
-@_documentation(visibility: internal)
+    @_documentation(visibility: internal)
 #endif
 public enum BenchmarkCommandRequest: Codable {
     case list
@@ -39,7 +38,7 @@ public enum BenchmarkCommandRequest: Codable {
 
 // Replies from benchmark under measure to benchmark runner
 #if swift(>=5.8)
-@_documentation(visibility: internal)
+    @_documentation(visibility: internal)
 #endif
 public enum BenchmarkCommandReply: Codable {
     case list(benchmark: Benchmark)

@@ -13,99 +13,111 @@ import XCTest
 
 // swiftlint:disable function_body_length
 final class BenchmarkResultTests: XCTestCase {
-    func testBenchmarkResultEquality() throws {
-        let measurementCount = 100
-        let firstPercentiles: [BenchmarkResult.Percentile: Int] = [.p0: 0,
-                                                                   .p25: 125,
-                                                                   .p50: 150,
-                                                                   .p75: 175,
-                                                                   .p90: 190,
-                                                                   .p99: 199,
-                                                                   .p100: 200]
-
-        let secondPercentiles: [BenchmarkResult.Percentile: Int] = [.p0: 0,
-                                                                    .p25: 125_000,
-                                                                    .p50: 150_000,
-                                                                    .p75: 175_000,
-                                                                    .p90: 190_000,
-                                                                    .p99: 199_000,
-                                                                    .p100: 200_000]
+    func testBenchmarkResultEqual() throws {
+        let firstStatistics = Statistics()
+        firstStatistics.add(125_000_000_000)
+        firstStatistics.add(150_000_000_000)
+        firstStatistics.add(175_000_000_000)
+        firstStatistics.add(190_000_000_000)
 
         let firstResult = BenchmarkResult(metric: .cpuUser,
-                                          timeUnits: .milliseconds,
-                                          measurements: measurementCount,
+                                          timeUnits: .nanoseconds,
+                                          scalingFactor: .one,
                                           warmupIterations: 0,
                                           thresholds: .default,
-                                          percentiles: firstPercentiles)
+                                          statistics: firstStatistics)
 
         let secondResult = BenchmarkResult(metric: .cpuUser,
-                                           timeUnits: .microseconds,
-                                           measurements: measurementCount,
-                                           warmupIterations: 0,
+                                           timeUnits: .nanoseconds,
+                                           scalingFactor: .giga,
+                                           warmupIterations: 20,
                                            thresholds: .default,
-                                           percentiles: secondPercentiles)
+                                           statistics: firstStatistics)
 
         XCTAssertEqual(firstResult, secondResult)
     }
 
     func testBenchmarkResultLessThan() throws {
-        let measurementCount = 100
-        let firstPercentiles: [BenchmarkResult.Percentile: Int] = [.p0: 0,
-                                                                   .p25: 125,
-                                                                   .p50: 150,
-                                                                   .p75: 175,
-                                                                   .p90: 190,
-                                                                   .p99: 199,
-                                                                   .p100: 200]
+        let firstStatistics = Statistics()
+        firstStatistics.add(125_000_000_000)
+        firstStatistics.add(150_000_000_000)
+        firstStatistics.add(175_000_000_000)
+        firstStatistics.add(190_000_000_000)
 
-        let secondPercentiles: [BenchmarkResult.Percentile: Int] = [.p0: 0,
-                                                                    .p25: 125_000,
-                                                                    .p50: 150_000,
-                                                                    .p75: 175_000,
-                                                                    .p90: 190_000,
-                                                                    .p99: 199_001,
-                                                                    .p100: 200_000]
+        let secondStatistics = Statistics()
+        secondStatistics.add(125_000_000_000)
+        secondStatistics.add(151_000_000_000)
+        secondStatistics.add(175_000_000_000)
+
+        let thirdStatistics = Statistics()
+        thirdStatistics.add(225_000_000_000)
+        thirdStatistics.add(251_000_000_000)
+        thirdStatistics.add(275_000_000_000)
 
         let firstResult = BenchmarkResult(metric: .cpuUser,
-                                          timeUnits: .milliseconds,
-                                          measurements: measurementCount,
+                                          timeUnits: .nanoseconds,
+                                          scalingFactor: .one,
                                           warmupIterations: 0,
                                           thresholds: .default,
-                                          percentiles: firstPercentiles)
+                                          statistics: firstStatistics)
 
-        let secondResult = BenchmarkResult(metric: .cpuUser,
+        var secondResult = BenchmarkResult(metric: .cpuUser,
                                            timeUnits: .microseconds,
-                                           measurements: measurementCount,
+                                           scalingFactor: .one,
                                            warmupIterations: 0,
                                            thresholds: .default,
-                                           percentiles: secondPercentiles)
+                                           statistics: secondStatistics)
+
+        var thirdResult = BenchmarkResult(metric: .cpuUser,
+                                          timeUnits: .microseconds,
+                                          scalingFactor: .one,
+                                          warmupIterations: 0,
+                                          thresholds: .default,
+                                          statistics: thirdStatistics)
 
         XCTAssertLessThan(firstResult, secondResult)
+        XCTAssertGreaterThan(thirdResult, secondResult)
+
+        secondResult = BenchmarkResult(metric: .throughput,
+                                       timeUnits: .microseconds,
+                                       scalingFactor: .one,
+                                       warmupIterations: 0,
+                                       thresholds: .default,
+                                       statistics: secondStatistics)
+
+        thirdResult = BenchmarkResult(metric: .throughput,
+                                      timeUnits: .microseconds,
+                                      scalingFactor: .one,
+                                      warmupIterations: 0,
+                                      thresholds: .default,
+                                      statistics: thirdStatistics)
+
+        // Should be reversed for throughput measurements
+        XCTAssertLessThan(thirdResult, secondResult)
     }
 
     func testBenchmarkResultLessThanFailure() throws {
-        let measurementCount = 100
-        let firstPercentiles: [BenchmarkResult.Percentile: Int] = [.p0: 0,
-                                                                   .p25: 125,
-                                                                   .p50: 150,
-                                                                   .p75: 175,
-                                                                   .p90: 190,
-                                                                   .p99: 199,
-                                                                   .p100: 200]
+        let firstStatistics = Statistics()
+        firstStatistics.add(125_000_000_000)
+        firstStatistics.add(150_000_000_000)
+        firstStatistics.add(175_000_000_000)
+        firstStatistics.add(190_000_000_000)
+        firstStatistics.add(198_000_000_000)
+        firstStatistics.add(200_000_000_000)
 
         let firstResult = BenchmarkResult(metric: .cpuUser,
                                           timeUnits: .microseconds,
-                                          measurements: measurementCount,
+                                          scalingFactor: .one,
                                           warmupIterations: 0,
                                           thresholds: .default,
-                                          percentiles: firstPercentiles)
+                                          statistics: firstStatistics)
 
         let secondResult = BenchmarkResult(metric: .cpuSystem,
                                            timeUnits: .microseconds,
-                                           measurements: measurementCount,
+                                           scalingFactor: .one,
                                            warmupIterations: 0,
                                            thresholds: .default,
-                                           percentiles: firstPercentiles)
+                                           statistics: firstStatistics)
 
         XCTAssert(firstResult != secondResult)
         XCTAssertFalse(firstResult > secondResult)
@@ -114,57 +126,59 @@ final class BenchmarkResultTests: XCTestCase {
     }
 
     func testBenchmarkResultBetterOrEqualWithDefaultThresholds() throws {
-        let measurementCount = 100
-        let firstPercentiles: [BenchmarkResult.Percentile: Int] = [.p0: 0,
-                                                                   .p25: 125,
-                                                                   .p50: 150,
-                                                                   .p75: 175,
-                                                                   .p90: 190,
-                                                                   .p99: 199,
-                                                                   .p100: 200]
+        let firstStatistics = Statistics()
+        firstStatistics.add(0)
+        firstStatistics.add(125_000_000)
+        firstStatistics.add(150_000_000)
+        firstStatistics.add(175_000_000)
+        firstStatistics.add(190_000_000)
+        firstStatistics.add(199_000_000)
+        firstStatistics.add(200_000_000)
 
-        let secondPercentiles: [BenchmarkResult.Percentile: Int] = [.p0: 2,
-                                                                    .p25: 124_999,
-                                                                    .p50: 149_999,
-                                                                    .p75: 175_001,
-                                                                    .p90: 189_999,
-                                                                    .p99: 199_001,
-                                                                    .p100: 200_004]
+        let secondStatistics = Statistics()
+        secondStatistics.add(2)
+        secondStatistics.add(124_999)
+        secondStatistics.add(149_999)
+        secondStatistics.add(175_001)
+        secondStatistics.add(189_999)
+        secondStatistics.add(199_001)
+        secondStatistics.add(200_004)
 
         let firstResult = BenchmarkResult(metric: .cpuUser,
                                           timeUnits: .milliseconds,
-                                          measurements: measurementCount,
+                                          scalingFactor: .one,
                                           warmupIterations: 0,
                                           thresholds: .default,
-                                          percentiles: firstPercentiles)
+                                          statistics: firstStatistics)
 
         let secondResult = BenchmarkResult(metric: .cpuUser,
                                            timeUnits: .microseconds,
-                                           measurements: measurementCount,
+                                           scalingFactor: .one,
                                            warmupIterations: 0,
                                            thresholds: .default,
-                                           percentiles: secondPercentiles)
+                                           statistics: secondStatistics)
 
         XCTAssert(secondResult.betterResultsOrEqual(than: firstResult))
     }
 
     func testBenchmarkResultBetterOrEqualWithCustomThresholds() throws {
-        let measurementCount = 100
-        let firstPercentiles: [BenchmarkResult.Percentile: Int] = [.p0: 0,
-                                                                   .p25: 125,
-                                                                   .p50: 150,
-                                                                   .p75: 175,
-                                                                   .p90: 190,
-                                                                   .p99: 199,
-                                                                   .p100: 200]
+        let firstStatistics = Statistics()
+        firstStatistics.add(0)
+        firstStatistics.add(125)
+        firstStatistics.add(150)
+        firstStatistics.add(175)
+        firstStatistics.add(190)
+        firstStatistics.add(199)
+        firstStatistics.add(200)
 
-        let secondPercentiles: [BenchmarkResult.Percentile: Int] = [.p0: 0,
-                                                                    .p25: 126,
-                                                                    .p50: 160,
-                                                                    .p75: 175,
-                                                                    .p90: 190,
-                                                                    .p99: 199,
-                                                                    .p100: 200]
+        let secondStatistics = Statistics()
+        secondStatistics.add(0)
+        secondStatistics.add(126)
+        secondStatistics.add(160)
+        secondStatistics.add(175)
+        secondStatistics.add(190)
+        secondStatistics.add(199)
+        secondStatistics.add(200)
 
         let relative: BenchmarkResult.PercentileRelativeThresholds = [.p0: 0.0,
                                                                       .p25: 0.0,
@@ -195,18 +209,18 @@ final class BenchmarkResultTests: XCTestCase {
         let relativeRelaxedThresholds = BenchmarkResult.PercentileThresholds(relative: relativeRelaxed)
 
         let firstResult = BenchmarkResult(metric: .cpuUser,
-                                          timeUnits: .microseconds,
-                                          measurements: measurementCount,
+                                          timeUnits: .nanoseconds,
+                                          scalingFactor: .one,
                                           warmupIterations: 0,
                                           thresholds: .default,
-                                          percentiles: firstPercentiles)
+                                          statistics: firstStatistics)
 
         let secondResult = BenchmarkResult(metric: .cpuUser,
-                                           timeUnits: .microseconds,
-                                           measurements: measurementCount,
+                                           timeUnits: .nanoseconds,
+                                           scalingFactor: .one,
                                            warmupIterations: 0,
                                            thresholds: .default,
-                                           percentiles: secondPercentiles)
+                                           statistics: secondStatistics)
 
         XCTAssertFalse(secondResult.betterResultsOrEqual(than: firstResult, thresholds: bothThresholds))
         XCTAssert(secondResult.betterResultsOrEqual(than: firstResult, thresholds: relativeRelaxedThresholds))
@@ -220,22 +234,69 @@ final class BenchmarkResultTests: XCTestCase {
     }
 
     func testBenchmarkResultDescriptions() throws {
-        let measurementCount = 100
-        let firstPercentiles: [BenchmarkResult.Percentile: Int] = [.p0: 0,
-                                                                   .p25: 125,
-                                                                   .p50: 150,
-                                                                   .p75: 175,
-                                                                   .p90: 190,
-                                                                   .p99: 199,
-                                                                   .p100: 200]
+        let firstStatistics = Statistics()
+        firstStatistics.add(0)
+        firstStatistics.add(125)
+        firstStatistics.add(150)
+        firstStatistics.add(175)
+        firstStatistics.add(190)
+        firstStatistics.add(199)
+        firstStatistics.add(200)
 
         let firstResult = BenchmarkResult(metric: .cpuUser,
-                                          timeUnits: .milliseconds,
-                                          measurements: measurementCount,
+                                          timeUnits: .nanoseconds,
+                                          scalingFactor: .one,
                                           warmupIterations: 0,
                                           thresholds: .default,
-                                          percentiles: firstPercentiles)
+                                          statistics: firstStatistics)
 
         XCTAssertGreaterThan((firstResult.unitDescription + firstResult.unitDescriptionPretty).count, 5)
+    }
+
+    func testBenchmarkResultScalingAndNormalization() throws {
+        let firstStatistics = Statistics()
+        firstStatistics.add(125_000_000_000)
+
+        var result = BenchmarkResult(metric: .cpuUser,
+                                     timeUnits: .milliseconds,
+                                     scalingFactor: .giga,
+                                     warmupIterations: 0,
+                                     thresholds: .default,
+                                     statistics: firstStatistics)
+
+        XCTAssert(result.normalize(125_000_000) == result.scale(125_000_000_000))
+
+        result = BenchmarkResult(metric: .cpuUser,
+                                 timeUnits: .microseconds,
+                                 scalingFactor: .mega,
+                                 warmupIterations: 0,
+                                 thresholds: .default,
+                                 statistics: firstStatistics)
+
+        XCTAssert(result.normalize(125_000_000) == result.scale(125_000_000_000))
+
+        result = BenchmarkResult(metric: .cpuUser,
+                                 timeUnits: .nanoseconds,
+                                 scalingFactor: .kilo,
+                                 warmupIterations: 0,
+                                 thresholds: .default,
+                                 statistics: firstStatistics)
+
+        XCTAssert(result.normalize(125_000_000) == result.scale(125_000_000_000))
+    }
+
+    func testBenchmarkResultEnumerations() throws {
+        var scalingFactor: BenchmarkScalingFactor = .one
+        var description = ""
+        description += scalingFactor.description
+        scalingFactor = .kilo
+        description += scalingFactor.description
+        scalingFactor = .mega
+        description += scalingFactor.description
+        scalingFactor = .giga
+        description += scalingFactor.description
+        scalingFactor = .tera
+        description += scalingFactor.description
+        XCTAssert(description.count > 4)
     }
 }
