@@ -124,6 +124,7 @@ final class StatisticsTests: XCTestCase {
             stats.add(measurement)
         }
 
+        XCTAssert(Int(stats.average) > (measurementCount / 3))
         XCTAssertGreaterThan(stats.histogram.totalCount, 100)
     }
 }
