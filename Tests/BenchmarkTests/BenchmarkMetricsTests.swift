@@ -8,38 +8,64 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 ///
 
+@testable import Benchmark
 @testable import BenchmarkSupport
 import XCTest
 
 final class BenchmarkMetricsTests: XCTestCase {
-    func testBenchmarkRunner() throws {
-        let metrics: [BenchmarkMetric] = [
-            .cpuUser,
-            .cpuSystem,
-            .cpuTotal,
-            .wallClock,
-            .throughput,
-            .peakMemoryResident,
-            .peakMemoryVirtual,
-            .mallocCountSmall,
-            .mallocCountLarge,
-            .mallocCountTotal,
-            .allocatedResidentMemory,
-            .memoryLeaked,
-            .syscalls,
-            .contextSwitches,
-            .threads,
-            .threadsRunning,
-            .readSyscalls,
-            .writeSyscalls,
-            .readBytesLogical,
-            .writeBytesLogical,
-            .readBytesPhysical,
-            .writeBytesPhysical,
-            .custom("test"),
-            .custom("test2", polarity: .prefersLarger, useScalingFactor: true)
-        ]
+    private let metrics: [BenchmarkMetric] = [
+        .cpuUser,
+        .cpuSystem,
+        .cpuTotal,
+        .wallClock,
+        .throughput,
+        .peakMemoryResident,
+        .peakMemoryVirtual,
+        .mallocCountSmall,
+        .mallocCountLarge,
+        .mallocCountTotal,
+        .allocatedResidentMemory,
+        .memoryLeaked,
+        .syscalls,
+        .contextSwitches,
+        .threads,
+        .threadsRunning,
+        .readSyscalls,
+        .writeSyscalls,
+        .readBytesLogical,
+        .writeBytesLogical,
+        .readBytesPhysical,
+        .writeBytesPhysical,
+        .custom("test"),
+        .custom("test2", polarity: .prefersLarger, useScalingFactor: true)
+    ]
 
+    private let textualMetrics: [String] = [
+        "cpuUser",
+        "cpuSystem",
+        "cpuTotal",
+        "wallClock",
+        "throughput",
+        "peakMemoryResident",
+        "peakMemoryVirtual",
+        "mallocCountSmall",
+        "mallocCountLarge",
+        "mallocCountTotal",
+        "allocatedResidentMemory",
+        "memoryLeaked",
+        "syscalls",
+        "contextSwitches",
+        "threads",
+        "threadsRunning",
+        "readSyscalls",
+        "writeSyscalls",
+        "readBytesLogical",
+        "writeBytesLogical",
+        "readBytesPhysical",
+        "writeBytesPhysical"
+    ]
+
+    func testBenchmarkMetrics() throws {
         var description = ""
         var rawValues = 0
         metrics.forEach { metric in
@@ -50,6 +76,18 @@ final class BenchmarkMetricsTests: XCTestCase {
         }
 
         XCTAssert(rawValues > 10)
+        XCTAssert(description.count > 10)
+    }
+
+    func testBenchmarkTextualMetrics() throws {
+        var description = ""
+
+        for metricIndex in 0 ..< textualMetrics.count {
+            let metric = BenchmarkMetric(textualMetrics[metricIndex])
+            description += metric.description
+            XCTAssertEqual(metrics[metricIndex], metric)
+        }
+
         XCTAssert(description.count > 10)
     }
 }
