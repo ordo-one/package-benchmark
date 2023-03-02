@@ -14,7 +14,7 @@ import XCTest
 
 final class StatisticsTests: XCTestCase {
     func testStatisticsResults() throws {
-        var stats = Statistics(numberOfSignificantDigits: .four)
+        let stats = Statistics(numberOfSignificantDigits: .four)
         let measurementCount = 8_340
 
         // Add 2*measurementCount measurements, one 0, one max
@@ -26,23 +26,24 @@ final class StatisticsTests: XCTestCase {
             stats.add(measurement)
         }
 
+        XCTAssert(Statistics.roundToDecimalplaces(123.4567898972239487234) == 123.46)
         XCTAssertEqual(stats.measurementCount, measurementCount * 2)
-        XCTAssertEqual(stats.timeUnits, .count)
-        XCTAssertEqual(round(stats.averageMeasurement), round(Double(measurementCount / 2)))
+        XCTAssertEqual(stats.units(), .count)
+        XCTAssertEqual(round(stats.histogram.mean), round(Double(measurementCount / 2)))
 
-        stats.calculateStatistics()
+        let percentiles = stats.percentiles()
 
-        XCTAssertEqual(stats.percentileResults[0]!, 0)
-        XCTAssertEqual(stats.percentileResults[1]!, Int(round(Double(measurementCount) * 0.25)))
-        XCTAssertEqual(stats.percentileResults[2]!, Int(round(Double(measurementCount) * 0.5)))
-        XCTAssertEqual(stats.percentileResults[3]!, Int(round(Double(measurementCount) * 0.75)))
-        XCTAssertEqual(stats.percentileResults[4]!, Int(round(Double(measurementCount) * 0.9)))
-        XCTAssertEqual(stats.percentileResults[5]!, Int(round(Double(measurementCount) * 0.99)))
-        XCTAssertEqual(stats.percentileResults[6]!, Int(measurementCount))
+        XCTAssertEqual(percentiles[0], 0)
+        XCTAssertEqual(percentiles[1], Int(round(Double(measurementCount) * 0.25)))
+        XCTAssertEqual(percentiles[2], Int(round(Double(measurementCount) * 0.5)))
+        XCTAssertEqual(percentiles[3], Int(round(Double(measurementCount) * 0.75)))
+        XCTAssertEqual(percentiles[4], Int(round(Double(measurementCount) * 0.9)))
+        XCTAssertEqual(percentiles[5], Int(round(Double(measurementCount) * 0.99)))
+        XCTAssertEqual(percentiles[6], Int(measurementCount))
     }
 
     func testOnlyZeroMeasurements() throws {
-        var stats = Statistics()
+        let stats = Statistics()
         let measurementCount = 100
         let range = 0 ..< measurementCount
 
@@ -51,25 +52,25 @@ final class StatisticsTests: XCTestCase {
         }
 
         XCTAssertEqual(stats.measurementCount, range.count)
-        XCTAssertEqual(stats.averageMeasurement, 0.0)
+        XCTAssertEqual(stats.histogram.mean, 0.0)
 
         XCTAssert(stats.onlyZeroMeasurements)
 
-        stats.calculateStatistics()
+        let percentiles = stats.percentiles()
 
         XCTAssert(stats.onlyZeroMeasurements)
-        XCTAssertEqual(stats.timeUnits, .count)
-        XCTAssertEqual(stats.percentileResults[0]!, 0)
-        XCTAssertEqual(stats.percentileResults[1]!, 0)
-        XCTAssertEqual(stats.percentileResults[2]!, 0)
-        XCTAssertEqual(stats.percentileResults[3]!, 0)
-        XCTAssertEqual(stats.percentileResults[4]!, 0)
-        XCTAssertEqual(stats.percentileResults[5]!, 0)
-        XCTAssertEqual(stats.percentileResults[6]!, 0)
+        XCTAssertEqual(stats.units(), .count)
+        XCTAssertEqual(percentiles[0], 0)
+        XCTAssertEqual(percentiles[1], 0)
+        XCTAssertEqual(percentiles[2], 0)
+        XCTAssertEqual(percentiles[3], 0)
+        XCTAssertEqual(percentiles[4], 0)
+        XCTAssertEqual(percentiles[5], 0)
+        XCTAssertEqual(percentiles[6], 0)
     }
 
     func testFewerMeasurementsThanPercentiles() throws {
-        var stats = Statistics()
+        let stats = Statistics()
         let measurementCount = 5
         let range = 1 ..< measurementCount
         var accumulatedMeasurement = 0
@@ -80,22 +81,22 @@ final class StatisticsTests: XCTestCase {
         }
 
         XCTAssertEqual(stats.measurementCount, range.count)
-        XCTAssertEqual(stats.timeUnits, .count)
-        XCTAssertEqual(round(stats.averageMeasurement), round(Double(accumulatedMeasurement) / Double(range.count)))
+        XCTAssertEqual(stats.units(), .count)
+        XCTAssertEqual(round(stats.histogram.mean), round(Double(accumulatedMeasurement) / Double(range.count)))
 
-        stats.calculateStatistics()
+        let percentiles = stats.percentiles()
 
-        XCTAssertEqual(stats.percentileResults[0]!, 1)
-        XCTAssertEqual(stats.percentileResults[1]!, Int(round(Double(range.count) * 0.25)))
-        XCTAssertEqual(stats.percentileResults[2]!, Int(round(Double(range.count) * 0.5)))
-        XCTAssertEqual(stats.percentileResults[3]!, Int(round(Double(range.count) * 0.75)))
-        XCTAssertEqual(stats.percentileResults[4]!, Int(round(Double(range.count) * 0.9)))
-        XCTAssertEqual(stats.percentileResults[5]!, Int(round(Double(range.count) * 0.99)))
-        XCTAssertEqual(stats.percentileResults[6]!, Int(range.count))
+        XCTAssertEqual(percentiles[0], 1)
+        XCTAssertEqual(percentiles[1], Int(round(Double(range.count) * 0.25)))
+        XCTAssertEqual(percentiles[2], Int(round(Double(range.count) * 0.5)))
+        XCTAssertEqual(percentiles[3], Int(round(Double(range.count) * 0.75)))
+        XCTAssertEqual(percentiles[4], Int(round(Double(range.count) * 0.9)))
+        XCTAssertEqual(percentiles[5], Int(round(Double(range.count) * 0.99)))
+        XCTAssertEqual(percentiles[6], Int(range.count))
     }
 
     func testAutomaticUnits() throws {
-        typealias Case = (value: Int, units: StatisticsUnits)
+        typealias Case = (value: Int, units: Statistics.Units)
 
         let cases = [
             Case(value: 0, units: .count),
@@ -111,21 +112,20 @@ final class StatisticsTests: XCTestCase {
         ]
 
         for (value, expectedUnits) in cases {
-            let units = StatisticsUnits(fromMagnitudeOf: Double(value))
+            let units = Statistics.Units(fromMagnitudeOf: Double(value))
             XCTAssertEqual(units, expectedUnits, "Expected units for \(value) are \(expectedUnits)")
         }
     }
 
     func testHistograms() throws {
         let measurementCount = 300
-        var stats = Statistics(prefersLarger: true)
+        let stats = Statistics(prefersLarger: true)
 
         for measurement in 1 ... measurementCount {
             stats.add(measurement)
         }
 
-        let histograms = stats.output()
-
-        XCTAssertGreaterThan(histograms.count, 100)
+        XCTAssert(Int(stats.average) > (measurementCount / 3))
+        XCTAssertGreaterThan(stats.histogram.totalCount, 100)
     }
 }

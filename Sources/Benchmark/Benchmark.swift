@@ -14,24 +14,24 @@ import Statistics
 /// Defines a benchmark
 public final class Benchmark: Codable, Hashable {
     #if swift(>=5.8)
-    @_documentation(visibility: internal)
+        @_documentation(visibility: internal)
     #endif
     public typealias BenchmarkClosure = (_ benchmark: Benchmark) -> Void
     #if swift(>=5.8)
-    @_documentation(visibility: internal)
+        @_documentation(visibility: internal)
     #endif
     public typealias BenchmarkAsyncClosure = (_ benchmark: Benchmark) async -> Void
     #if swift(>=5.8)
-    @_documentation(visibility: internal)
+        @_documentation(visibility: internal)
     #endif
     public typealias BenchmarkMeasurementSynchronization = () -> Void
     #if swift(>=5.8)
-    @_documentation(visibility: internal)
+        @_documentation(visibility: internal)
     #endif
     public typealias BenchmarkCustomMetricMeasurement = (BenchmarkMetric, Int) -> Void
 
     #if swift(>=5.8)
-    @_documentation(visibility: internal)
+        @_documentation(visibility: internal)
     #endif
     public static var benchmarks: [Benchmark] = [] // Bookkeeping of all registered benchmarks
 
@@ -45,15 +45,15 @@ public final class Benchmark: Codable, Hashable {
     public var currentIteration: Int = 0
 
     /// Convenience range to iterate over for benchmarks
-    public var throughputIterations: Range<Int> { 0 ..< configuration.throughputScalingFactor.rawValue }
+    public var scaledIterations: Range<Int> { 0 ..< configuration.scalingFactor.rawValue }
 
     /// Some internal state for display purposes of the benchmark by the BenchmarkTool
     #if swift(>=5.8)
-    @_documentation(visibility: internal)
+        @_documentation(visibility: internal)
     #endif
     public var target: String
     #if swift(>=5.8)
-    @_documentation(visibility: internal)
+        @_documentation(visibility: internal)
     #endif
     public var executablePath: String?
     /// closure: The actual benchmark closure that will be measured
@@ -63,11 +63,11 @@ public final class Benchmark: Codable, Hashable {
 
     // Hooks for benchmark infrastructure to capture metrics of actual measurement() block without preamble:
     #if swift(>=5.8)
-    @_documentation(visibility: internal)
+        @_documentation(visibility: internal)
     #endif
     public var measurementPreSynchronization: BenchmarkMeasurementSynchronization?
     #if swift(>=5.8)
-    @_documentation(visibility: internal)
+        @_documentation(visibility: internal)
     #endif
     public var measurementPostSynchronization: BenchmarkMeasurementSynchronization?
 
@@ -80,8 +80,8 @@ public final class Benchmark: Codable, Hashable {
     /// Hook for setting defaults for a whole benchmark suite
     public static var defaultConfiguration: Configuration = .init(metrics: BenchmarkMetric.default,
                                                                   timeUnits: .automatic,
-                                                                  warmupIterations: 3,
-                                                                  throughputScalingFactor: .count,
+                                                                  warmupIterations: 1,
+                                                                  scalingFactor: .one,
                                                                   maxDuration: .seconds(1),
                                                                   maxIterations: 10_000,
                                                                   skip: false,
@@ -99,16 +99,16 @@ public final class Benchmark: Codable, Hashable {
         case failureReason
     }
 
-#if swift(>=5.8)
-@_documentation(visibility: internal)
-#endif
+    #if swift(>=5.8)
+        @_documentation(visibility: internal)
+    #endif
     public func hash(into hasher: inout Hasher) {
         hasher.combine(name)
     }
 
-#if swift(>=5.8)
-@_documentation(visibility: internal)
-#endif
+    #if swift(>=5.8)
+        @_documentation(visibility: internal)
+    #endif
     public static func == (lhs: Benchmark, rhs: Benchmark) -> Bool {
         lhs.name == rhs.name
     }
@@ -243,7 +243,7 @@ public final class Benchmark: Codable, Hashable {
 
     // Public but should only be used by BenchmarkRunner
     #if swift(>=5.8)
-    @_documentation(visibility: internal)
+        @_documentation(visibility: internal)
     #endif
     public func run() {
         if closure != nil {
@@ -269,10 +269,10 @@ public extension Benchmark {
         /// Specifies a number of warmup iterations should be performed before the measurement to
         /// reduce outliers due to e.g. cache population
         public var warmupIterations: Int
-        /// Specifies the number of logical subiterations being done, scaling throughput measurements accordingly.
-        /// E.g. `.kilo`will scale results with 1000. Any iteration done in the benchmark should use
-        /// `benchmark.throughputScalingFactor.rawvalue` for the number of iterations.
-        public var throughputScalingFactor: StatisticsUnits
+        /// Specifies the number of logical subiterations being done, supporting scaling of metricsi accordingly.
+        /// E.g. `.kilo`will scale results with 1000. Any subiteration done in the benchmark should use
+        /// `for _ in benchmark.scaledIterations` for the number of iterations.
+        public var scalingFactor: BenchmarkScalingFactor
         /// The maximum wall clock runtime for the benchmark, currenty defaults to `.seconds(1)` if not set
         public var maxDuration: Duration
         /// The maximum number of iterations for the benchmark., currently defaults to 10K iterations if not set
@@ -285,7 +285,7 @@ public extension Benchmark {
         public init(metrics: [BenchmarkMetric] = defaultConfiguration.metrics,
                     timeUnits: BenchmarkTimeUnits = defaultConfiguration.timeUnits,
                     warmupIterations: Int = defaultConfiguration.warmupIterations,
-                    throughputScalingFactor: StatisticsUnits = defaultConfiguration.throughputScalingFactor,
+                    scalingFactor: BenchmarkScalingFactor = defaultConfiguration.scalingFactor,
                     maxDuration: Duration = defaultConfiguration.maxDuration,
                     maxIterations: Int = defaultConfiguration.maxIterations,
                     skip: Bool = defaultConfiguration.skip,
@@ -294,7 +294,7 @@ public extension Benchmark {
             self.metrics = metrics
             self.timeUnits = timeUnits
             self.warmupIterations = warmupIterations
-            self.throughputScalingFactor = throughputScalingFactor
+            self.scalingFactor = scalingFactor
             self.maxDuration = maxDuration
             self.maxIterations = maxIterations
             self.skip = skip
@@ -306,7 +306,7 @@ public extension Benchmark {
             case metrics
             case timeUnits
             case warmupIterations
-            case throughputScalingFactor
+            case scalingFactor
             case maxDuration
             case maxIterations
             case thresholds

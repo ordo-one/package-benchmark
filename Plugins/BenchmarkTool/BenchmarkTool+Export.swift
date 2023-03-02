@@ -101,7 +101,7 @@ extension BenchmarkTool {
         case .percentiles:
             try baseline.results.forEach { key, results in
                 try results.forEach { values in
-                    let outputString = values.statistics!.histogram
+                    let outputString = values.statistics.histogram
                     let description = values.metric.description
                     try write(exportData: "\(outputString)",
                               fileName: cleanupStringForShellSafety("\(baselineName).\(key.name).\(description).histogram-export.txt"))
@@ -115,11 +115,11 @@ extension BenchmarkTool {
                 var outputString = ""
 
                 try results.forEach { values in
-                    if let histogram = values.statistics?.histogram {
-                        histogram.recordedValues().forEach { value in
-                            for _ in 0 ..< value.count {
-                                outputString += "\(value.value)\n"
-                            }
+                    let histogram = values.statistics.histogram
+
+                    histogram.recordedValues().forEach { value in
+                        for _ in 0 ..< value.count {
+                            outputString += "\(value.value)\n"
                         }
                     }
                     try write(exportData: "\(outputString)",

@@ -65,9 +65,9 @@ final class BenchmarkTests: XCTestCase {
                                       metrics: BenchmarkMetric.all,
                                       timeUnits: .milliseconds,
                                       warmupIterations: 0,
-                                      throughputScalingFactor: .mega
+                                      scalingFactor: .mega
                                   )) { benchmark in
-            for outerloop in benchmark.throughputIterations {
+            for outerloop in benchmark.scaledIterations {
                 blackHole(outerloop)
             }
         }

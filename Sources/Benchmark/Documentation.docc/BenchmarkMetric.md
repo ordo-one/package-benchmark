@@ -53,7 +53,7 @@
 ### Custom Metrics
 
 - ``Benchmark/BenchmarkMetric/custom(_:polarity:)``
-- ``Benchmark/BenchmarkMetric/polarity()``
+- ``Benchmark/BenchmarkMetric/polarity``
 - ``Benchmark/BenchmarkMetric/Polarity``
 
 ### Inspecting Metrics

@@ -7,6 +7,7 @@
 // You may obtain a copy of the License at
 // http://www.apache.org/licenses/LICENSE-2.0
 //
+// swiftlint:disable line_length
 
 // Convenience sets of metrics
 public extension BenchmarkMetric {
@@ -20,7 +21,7 @@ public extension BenchmarkMetric {
          .throughput,
          .peakMemoryResident]
     }
-    
+
     /// A collection of extended system benchmarks.
     static var extended: [BenchmarkMetric] {
         [.wallClock,
@@ -32,7 +33,7 @@ public extension BenchmarkMetric {
          .memoryLeaked,
          .syscalls]
     }
-    
+
     /// A collection of memory benchmarks.
     static var memory: [BenchmarkMetric] {
         [.peakMemoryResident,
@@ -43,7 +44,7 @@ public extension BenchmarkMetric {
          .memoryLeaked,
          .allocatedResidentMemory]
     }
-    
+
     /// A collection of system benchmarks.
     static var system: [BenchmarkMetric] {
         [.wallClock,
@@ -53,7 +54,7 @@ public extension BenchmarkMetric {
          .threadsRunning,
          .cpuSystem]
     }
-    
+
     /// A collection of disk benchmarks.
     static var disk: [BenchmarkMetric] {
         [.readSyscalls,
@@ -63,7 +64,7 @@ public extension BenchmarkMetric {
          .readBytesPhysical,
          .writeBytesPhysical]
     }
-    
+
     /// A collection of all benchmarks supported by this library.
     static var all: [BenchmarkMetric] {
         [.cpuUser,
