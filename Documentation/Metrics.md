@@ -28,7 +28,7 @@ Currently supported metrics are:
 * `readBytesPhysical` - The number of bytes physically read from a block device (i.e. disk) -- Linux only
 * `writeBytesPhysical` - The number of bytes physicall written to a block device (i.e. disk) -- Linux only
     
-Additionally, _custom metrics_ are supported `custom(_ name: String, polarity: Polarity = .prefersSmaller)` as outlined in the writing benchmarks documentation.
+Additionally, _custom metrics_ are supported `custom(_ name: String, polarity: Polarity = .prefersSmaller, useScalingFactor: Bool = true)` as outlined in the writing benchmarks documentation.
 
 ## Thresholds
 

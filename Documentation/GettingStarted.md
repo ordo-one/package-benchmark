@@ -22,12 +22,32 @@ brew install jemalloc
 sudo apt-get install -y libjemalloc-dev
 ```
 
-Some Linux distributions may have jemalloc already installed on the system.
+### Amazon Linux 2 
+For Amazon Linux 2 users have reported that the following works:
+
+Docker file configuration:
+```
+RUN sudo yum -y install bzip2 make
+RUN curl https://github.com/jemalloc/jemalloc/releases/download/5.3.0/jemalloc-5.3.0.tar.bz2 -L -o jemalloc-5.3.0.tar.bz2
+RUN tar -xf jemalloc-5.3.0.tar.bz2
+RUN cd jemalloc-5.3.0 && ./configure && make && sudo make install
+```
+
+`make install` installs the libraries in `/usr/local/lib`, which the plugin can’t find, so you also have to do:
+
+```
+$ sudo ldconfig /usr/local/lib
+```
+
+Alternatively:
+```
+echo /usr/local/lib > /etc/ld.so.conf.d/local_lib.conf && ldconfig
+```
 
 ## Add dependencies
 Add a dependency on the plugin:
 ```
-        .package(url: "https://github.com/ordo-one/package-benchmark", .upToNextMajor(from: "0.2.0")),
+        .package(url: "https://github.com/ordo-one/package-benchmark", .upToNextMajor(from: "0.9.0")),
 ```
 
 ## Add exectuable targets

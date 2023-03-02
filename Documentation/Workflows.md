@@ -9,16 +9,38 @@ or
 
 then while working, simply compare current state of local repo with the previously recorded baseline:
 
-`swift package benchmark compare`
+`swift package benchmark baseline compare`
 or
-`swift package benchmark compare alpha`
+`swift package benchmark baseline compare alpha`
 
 If you have stored multiple baselines (for example for different approaches to solving a given performance issue), you can easily compare the two approaches by using named baselines for each and then compare them:
 
-`swift package benchmark baseline alpha --compare beta`
+`swift package benchmark baseline compare alpha beta`
+
+## Debugging
 
 ### Debugging crashing benchmarks
 The benchmark executables are set up to automatically run all tests when run standalone with simple debug output - this is to enable workflows where the benchmark is run in the Xcode debugger or with Instruments if desired - or with `lldb` on the command line on Linux to support debugging in problematic performance tests.
+
+```
+swift build
+lldb .build/debug/MyBenchmark
+```
+
+The debug benchmark also takes the `--filter` and `--skip` flags, so if you have a specific benchmark that you want to debug:
+
+```
+.build/debug/MyBenchmark --filter "RunThis.*"
+```
+
+### Debugging the BenchmarkTool if it crashes
+In case the BenchmarkTool that is the benchmark runner itself would crash, it is easily debuggable using:
+
+```
+swift package benchmark <all the options as usual here> --debug
+```
+
+This prints out detaile debug instructions how to run in the debugger to ge a proper backtrace.
 
 ## GitHub CI workflow
 

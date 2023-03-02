@@ -2,13 +2,6 @@
 
 These are a set of known missing features/functionality where help would be highly appreciated with PR:s.
 
-## Tests & Documentation
-* Explore moving to DocC for documentation
-
-## JSON evolution support
-Needs to review baselines storage JSON format evolution (currently not considered), right now any format change 
-basically requires nuking of pre-existing baselines. We won't commit to a stable on-disk format until `1.0.0`.
-
 ## Dependencies
 It would be nice to remove the strict requirement on jemalloc if you don't want/need memory performance metrics, 
 unclear if we can get conditional import of module if its available somehow?

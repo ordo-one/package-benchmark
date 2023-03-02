@@ -114,19 +114,19 @@ swift package benchmark compare --target Frostflake-Benchmark
 **Update benchmark baseline for all targets**
 
 ```
-swift package --allow-writing-to-package-directory benchmark update-baseline
+swift package --allow-writing-to-package-directory benchmark baseline update
 ```
 
 **Update benchmark named baseline for all targets**
 
 ```
-swift package --allow-writing-to-package-directory benchmark update-baseline alpha
+swift package --allow-writing-to-package-directory benchmark baseline update alpha
 ```
 
 **Update benchmark baseline for a specific target**
 
 ```
-swift package --allow-writing-to-package-directory benchmark update-baseline --target Frostflake-Benchmark
+swift package --allow-writing-to-package-directory benchmark baseline update --target Frostflake-Benchmark
 ```
 
 ### Exporting Benchmarks

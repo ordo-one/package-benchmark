@@ -54,8 +54,8 @@ func benchmarks() {
     Benchmark("Foundation Date()",
         configuration: .init(
             metrics: [.throughput, .wallClock], 
-            throughputScalingFactor: .mega)) { benchmark in
-        for _ in benchmark.throughputIterations {
+            scalingFactor: .mega)) { benchmark in
+        for _ in benchmark.scaledIterations {
             blackHole(Date())
         }
     }
@@ -119,9 +119,9 @@ public extension Benchmark {
         /// throughput measurements accordingly.
         /// E.g. `.kilo`will scale results with 1000. 
         /// Any iteration done in the benchmark should use
-        /// `benchmark.throughputScalingFactor.rawvalue` for 
+        /// `benchmark.scalingFactor.rawvalue` for 
         /// the number of iterations.
-        public var throughputScalingFactor: StatisticsUnits
+        public var scalingFactor: StatisticsUnits
         /// The target wall clock runtime for the benchmark. 
         /// Defaults to `.seconds(1)` if not set.
         public var maxDuration: Duration
@@ -137,18 +137,18 @@ public extension Benchmark {
 ...
 ```
 
-### throughputScalingFactor
+### scalingFactor
 
-If your benchmark uses a small test and you want to run a scaled number of iterations to retrieve stable results, define a ``Benchmark/Configuration-swift.struct/throughputScalingFactor`` in ``Benchmark/Configuration-swift.struct``.
-An example of using `throughputScalingFactor`:
+If your benchmark uses a small test and you want to run a scaled number of iterations to retrieve stable results, define a ``Benchmark/Configuration-swift.struct/scalingFactor`` in ``Benchmark/Configuration-swift.struct``.
+An example of using `scalingFactor`:
 
 ```swift
 Benchmark("Foundation Date()",
     configuration: .init(
         metrics: [.throughput, .wallClock], 
-        throughputScalingFactor: .mega)
+        scalingFactor: .mega)
     ) { benchmark in
-        for _ in benchmark.throughputIterations {
+        for _ in benchmark.scaledIterations {
             blackHole(Date())
         }
 }
@@ -191,12 +191,12 @@ Benchmark(
     "Foundation Date()",
     configuration: .init(
     metrics: [.throughput, .wallClock],
-    throughputScalingFactor: .mega,
+    scalingFactor: .mega,
     thresholds: [
         .throughput : customThreshold,
         .wallClock : customThreshold])
 ) { benchmark in
-    for _ in benchmark.throughputIterations {
+    for _ in benchmark.scaledIterations {
         blackHole(Date())
     }
 }

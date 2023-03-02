@@ -12,20 +12,20 @@ Typical workflow for a developer who wants to track performance metrics on the l
 
 ```
 swift package --allow-writing-to-package-directory \
-    benchmark update-baseline
+    benchmark baseline update
 ```
 
 or
 
 ```
 swift package --allow-writing-to-package-directory \
-    benchmark update-baseline alpha
+    benchmark baseline alpha update
 ```
 
 then while working, simply compare current state of local repo with the previously recorded baseline:
 
 ```
-swift package benchmark compare
+swift package benchmark baseline compare
 ```
 
 or
