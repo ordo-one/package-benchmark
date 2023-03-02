@@ -14,13 +14,13 @@ import XCTest
 // swiftlint:disable function_body_length
 final class BenchmarkResultTests: XCTestCase {
     func testBenchmarkResultLessThan() throws {
-        var firstStatistics = Statistics()
+        let firstStatistics = Statistics()
         firstStatistics.add(125_000_000_000)
         firstStatistics.add(150_000_000_000)
         firstStatistics.add(175_000_000_000)
         firstStatistics.add(190_000_000_000)
 
-        var secondStatistics = Statistics()
+        let secondStatistics = Statistics()
         secondStatistics.add(125_000_000_000)
         secondStatistics.add(151_000_000_000)
         secondStatistics.add(175_000_000_000)
@@ -43,7 +43,7 @@ final class BenchmarkResultTests: XCTestCase {
     }
 
     func testBenchmarkResultLessThanFailure() throws {
-        var firstStatistics = Statistics()
+        let firstStatistics = Statistics()
         firstStatistics.add(125_000_000_000)
         firstStatistics.add(150_000_000_000)
         firstStatistics.add(175_000_000_000)
@@ -72,7 +72,7 @@ final class BenchmarkResultTests: XCTestCase {
     }
 
     func testBenchmarkResultBetterOrEqualWithDefaultThresholds() throws {
-        var firstStatistics = Statistics()
+        let firstStatistics = Statistics()
         firstStatistics.add(0)
         firstStatistics.add(125_000_000)
         firstStatistics.add(150_000_000)
@@ -81,7 +81,7 @@ final class BenchmarkResultTests: XCTestCase {
         firstStatistics.add(199_000_000)
         firstStatistics.add(200_000_000)
 
-        var secondStatistics = Statistics()
+        let secondStatistics = Statistics()
         secondStatistics.add(2)
         secondStatistics.add(124_999)
         secondStatistics.add(149_999)
@@ -108,7 +108,7 @@ final class BenchmarkResultTests: XCTestCase {
     }
 
     func testBenchmarkResultBetterOrEqualWithCustomThresholds() throws {
-        var firstStatistics = Statistics()
+        let firstStatistics = Statistics()
         firstStatistics.add(0)
         firstStatistics.add(125)
         firstStatistics.add(150)
@@ -117,7 +117,7 @@ final class BenchmarkResultTests: XCTestCase {
         firstStatistics.add(199)
         firstStatistics.add(200)
 
-        var secondStatistics = Statistics()
+        let secondStatistics = Statistics()
         secondStatistics.add(0)
         secondStatistics.add(126)
         secondStatistics.add(160)
@@ -180,7 +180,7 @@ final class BenchmarkResultTests: XCTestCase {
     }
 
     func testBenchmarkResultDescriptions() throws {
-        var firstStatistics = Statistics()
+        let firstStatistics = Statistics()
         firstStatistics.add(0)
         firstStatistics.add(125)
         firstStatistics.add(150)

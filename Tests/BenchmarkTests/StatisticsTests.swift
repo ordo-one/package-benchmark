@@ -14,7 +14,7 @@ import XCTest
 
 final class StatisticsTests: XCTestCase {
     func testStatisticsResults() throws {
-        var stats = Statistics(numberOfSignificantDigits: .four)
+        let stats = Statistics(numberOfSignificantDigits: .four)
         let measurementCount = 8_340
 
         // Add 2*measurementCount measurements, one 0, one max
@@ -42,7 +42,7 @@ final class StatisticsTests: XCTestCase {
     }
 
     func testOnlyZeroMeasurements() throws {
-        var stats = Statistics()
+        let stats = Statistics()
         let measurementCount = 100
         let range = 0 ..< measurementCount
 
@@ -69,7 +69,7 @@ final class StatisticsTests: XCTestCase {
     }
 
     func testFewerMeasurementsThanPercentiles() throws {
-        var stats = Statistics()
+        let stats = Statistics()
         let measurementCount = 5
         let range = 1 ..< measurementCount
         var accumulatedMeasurement = 0
@@ -118,7 +118,7 @@ final class StatisticsTests: XCTestCase {
 
     func testHistograms() throws {
         let measurementCount = 300
-        var stats = Statistics(prefersLarger: true)
+        let stats = Statistics(prefersLarger: true)
 
         for measurement in 1 ... measurementCount {
             stats.add(measurement)

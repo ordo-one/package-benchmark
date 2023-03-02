@@ -249,9 +249,7 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
         return statistics.timeUnits == .automatic ? "(\(scaledTimeUnits.description)) *" : "(\(timeUnits.description)) *"
     }
 
-    public static func == (lhsRaw: BenchmarkResult, rhsRaw: BenchmarkResult) -> Bool {
-        var lhs = lhsRaw
-        var rhs = rhsRaw
+    public static func == (lhs: BenchmarkResult, rhs: BenchmarkResult) -> Bool {
 
         guard lhs.metric == rhs.metric else {
             return false
@@ -273,9 +271,7 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
         return true
     }
 
-    public static func < (lhsRaw: BenchmarkResult, rhsRaw: BenchmarkResult) -> Bool {
-        var lhs = lhsRaw
-        var rhs = rhsRaw
+    public static func < (lhs: BenchmarkResult, rhs: BenchmarkResult) -> Bool {
         let reversedComparison = lhs.metric.polarity == .prefersLarger
 
         guard lhs.metric == rhs.metric else {

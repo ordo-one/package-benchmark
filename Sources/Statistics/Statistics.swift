@@ -13,7 +13,7 @@ import Histogram
 import Numerics
 
 /// A type that provides distribution / percentile calculations of latency measurements
-public struct Statistics: Codable {
+public final class Statistics: Codable {
     public static let defaultMaximumMeasurement = 1_000_000_000 // 1 second in nanoseconds
     public static let defaultPercentilesToCalculate = [0.0, 25.0, 50.0, 75.0, 90.0, 99.0, 100.0]
 
@@ -57,9 +57,10 @@ public struct Statistics: Codable {
     }
 
     internal var _cachedPercentiles: [Int] = []
+    internal var _cacheUnits: Statistics.Units = .automatic
     internal var _cachedPercentilesHistogramCount: UInt64 = 0
 
-    public mutating func percentiles(for percentilesToCalculate: [Double] = defaultPercentilesToCalculate) -> [Int] {
+    public func percentiles(for percentilesToCalculate: [Double] = defaultPercentilesToCalculate) -> [Int] {
         if percentilesToCalculate == Self.defaultPercentilesToCalculate {
             if _cachedPercentilesHistogramCount == histogram.totalCount, _cachedPercentiles.count > 0 {
                 return _cachedPercentiles
@@ -85,14 +86,6 @@ public struct Statistics: Codable {
         return percentileResults
     }
 
-    public let prefersLarger: Bool
-    public let timeUnits: Statistics.Units
-    public var histogram: Histogram<UInt>
-
-    public var onlyZeroMeasurements: Bool {
-        histogram.countForValue(0) == histogram.totalCount
-    }
-
     // Returns the actual units to use (either specified, or automatic)
     public func units() -> Statistics.Units {
         if timeUnits != .automatic {
@@ -103,7 +96,20 @@ public struct Statistics: Codable {
             return .count
         }
 
-        return Statistics.Units(fromMagnitudeOf: histogram.mean)
+        if _cachedPercentilesHistogramCount != histogram.totalCount || _cacheUnits == .automatic {
+            _cacheUnits = Statistics.Units(fromMagnitudeOf: histogram.mean)
+            _cachedPercentilesHistogramCount = histogram.totalCount
+        }
+
+        return _cacheUnits
+    }
+
+    public let prefersLarger: Bool
+    public let timeUnits: Statistics.Units
+    public var histogram: Histogram<UInt>
+
+    public var onlyZeroMeasurements: Bool {
+        histogram.countForValue(0) == histogram.totalCount
     }
 
     public var measurementCount: Int {
@@ -120,7 +126,7 @@ public struct Statistics: Codable {
                 prefersLarger: Bool = false) {
         self.prefersLarger = prefersLarger
         timeUnits = units
-
+        _cacheUnits = timeUnits
         histogram = Histogram(highestTrackableValue: UInt64(maximumMeasurement),
                               numberOfSignificantValueDigits: numberOfSignificantDigits)
         histogram.autoResize = true
@@ -130,7 +136,7 @@ public struct Statistics: Codable {
     /// - Parameter measurement: A measurement expressed in nanoseconds
     @inlinable
     @inline(__always)
-    public mutating func add(_ measurement: Int) {
+    public func add(_ measurement: Int) {
         guard measurement >= 0 else {
             return // We sometimes got a <0 measurement, should run with fatalError and try to see how that could occur
                 //            fatalError()

@@ -173,7 +173,7 @@ extension BenchmarkTool {
                                 testName _: String) -> TestMetricData {
         var testData: [Int] = []
 
-        var percentiles = test.statistics
+        let percentiles = test.statistics
 
         percentiles.percentiles().forEach { result in
             testData.append(result)
