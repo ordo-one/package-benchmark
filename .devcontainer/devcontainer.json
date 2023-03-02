@@ -13,7 +13,7 @@
             "version": "os-provided",
             "ppa": "false"
         },
-        "ghcr.io/heckj/jemalloc/jemalloc:1": {
+        "ghcr.io/heckj/devcontainer-swift-additions/jemalloc:1": {
         }
     },
     "runArgs": [
