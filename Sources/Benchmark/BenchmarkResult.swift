@@ -231,7 +231,7 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
 
     public var scaledUnitDescriptionPretty: String {
         if metric == .throughput {
-            if scalingFactor == .none {
+            if scalingFactor == .one {
                 return "*"
             }
             return "(\(scalingFactor.description)) *"

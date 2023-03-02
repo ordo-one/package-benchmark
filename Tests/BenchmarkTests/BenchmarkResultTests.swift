@@ -27,14 +27,14 @@ final class BenchmarkResultTests: XCTestCase {
 
         let firstResult = BenchmarkResult(metric: .cpuUser,
                                           timeUnits: .nanoseconds,
-                                          scalingFactor: .none,
+                                          scalingFactor: .one,
                                           warmupIterations: 0,
                                           thresholds: .default,
                                           statistics: firstStatistics)
 
         let secondResult = BenchmarkResult(metric: .cpuUser,
                                            timeUnits: .microseconds,
-                                           scalingFactor: .none,
+                                           scalingFactor: .one,
                                            warmupIterations: 0,
                                            thresholds: .default,
                                            statistics: secondStatistics)
@@ -53,14 +53,14 @@ final class BenchmarkResultTests: XCTestCase {
 
         let firstResult = BenchmarkResult(metric: .cpuUser,
                                           timeUnits: .microseconds,
-                                          scalingFactor: .none,
+                                          scalingFactor: .one,
                                           warmupIterations: 0,
                                           thresholds: .default,
                                           statistics: firstStatistics)
 
         let secondResult = BenchmarkResult(metric: .cpuSystem,
                                            timeUnits: .microseconds,
-                                           scalingFactor: .none,
+                                           scalingFactor: .one,
                                            warmupIterations: 0,
                                            thresholds: .default,
                                            statistics: firstStatistics)
@@ -92,14 +92,14 @@ final class BenchmarkResultTests: XCTestCase {
 
         let firstResult = BenchmarkResult(metric: .cpuUser,
                                           timeUnits: .milliseconds,
-                                          scalingFactor: .none,
+                                          scalingFactor: .one,
                                           warmupIterations: 0,
                                           thresholds: .default,
                                           statistics: firstStatistics)
 
         let secondResult = BenchmarkResult(metric: .cpuUser,
                                            timeUnits: .microseconds,
-                                           scalingFactor: .none,
+                                           scalingFactor: .one,
                                            warmupIterations: 0,
                                            thresholds: .default,
                                            statistics: secondStatistics)
@@ -156,14 +156,14 @@ final class BenchmarkResultTests: XCTestCase {
 
         let firstResult = BenchmarkResult(metric: .cpuUser,
                                           timeUnits: .nanoseconds,
-                                          scalingFactor: .none,
+                                          scalingFactor: .one,
                                           warmupIterations: 0,
                                           thresholds: .default,
                                           statistics: firstStatistics)
 
         let secondResult = BenchmarkResult(metric: .cpuUser,
                                            timeUnits: .nanoseconds,
-                                           scalingFactor: .none,
+                                           scalingFactor: .one,
                                            warmupIterations: 0,
                                            thresholds: .default,
                                            statistics: secondStatistics)
@@ -191,7 +191,7 @@ final class BenchmarkResultTests: XCTestCase {
 
         let firstResult = BenchmarkResult(metric: .cpuUser,
                                           timeUnits: .nanoseconds,
-                                          scalingFactor: .none,
+                                          scalingFactor: .one,
                                           warmupIterations: 0,
                                           thresholds: .default,
                                           statistics: firstStatistics)
