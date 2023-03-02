@@ -210,10 +210,6 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
         value / timeUnits.rawValue
     }
 
-    public func scaleCompare(_ value: Int) -> Int {
-        value * timeUnits.divisor
-    }
-
     public var unitDescription: String {
         if metric.countable {
             let statisticsUnit = Statistics.Units(timeUnits)
@@ -320,8 +316,6 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
             return false
         }
 
-//        rhs.timeUnits = lhs.timeUnits
-
         // swiftlint:disable function_parameter_count
         func worseResult(_ lhs: Int,
                          _ rhs: Int,
@@ -363,8 +357,8 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
 
         var worse = false
         for percentile in 0 ..< lhsPercentiles.count {
-            worse = worseResult(lhs.scaleCompare(lhsPercentiles[percentile]),
-                                rhs.scaleCompare(rhsPercentiles[percentile]),
+            worse = worseResult(lhsPercentiles[percentile],
+                                rhsPercentiles[percentile],
                                 BenchmarkResult.Percentile(rawValue: percentile)!,
                                 thresholds,
                                 lhs.statistics.units().rawValue,

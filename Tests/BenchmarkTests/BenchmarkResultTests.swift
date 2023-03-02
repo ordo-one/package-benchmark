@@ -74,12 +74,12 @@ final class BenchmarkResultTests: XCTestCase {
     func testBenchmarkResultBetterOrEqualWithDefaultThresholds() throws {
         var firstStatistics = Statistics()
         firstStatistics.add(0)
-        firstStatistics.add(125)
-        firstStatistics.add(150)
-        firstStatistics.add(175)
-        firstStatistics.add(190)
-        firstStatistics.add(199)
-        firstStatistics.add(200)
+        firstStatistics.add(125_000_000)
+        firstStatistics.add(150_000_000)
+        firstStatistics.add(175_000_000)
+        firstStatistics.add(190_000_000)
+        firstStatistics.add(199_000_000)
+        firstStatistics.add(200_000_000)
 
         var secondStatistics = Statistics()
         secondStatistics.add(2)
