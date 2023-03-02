@@ -168,7 +168,6 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
         let scalingFactorMagnitude = Int(Double.log10(Double(scalingFactor.rawValue)))
         let totalMagnitude = timeUnitsMagnitude + scalingFactorMagnitude
         let newScale = pow(10, totalMagnitude)
-        print("\(timeUnitsMagnitude) \(scalingFactorMagnitude) \(totalMagnitude) \(newScale)")
 
         return BenchmarkScalingFactor(rawValue: newScale)!
     }
@@ -261,7 +260,7 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
         if metric.countable {
             let statisticsUnit = Statistics.Units(scaledTimeUnits)
             if statisticsUnit == .count {
-                return ""
+                return "*"
             }
             return "(\(statisticsUnit.description)) *"
         }
