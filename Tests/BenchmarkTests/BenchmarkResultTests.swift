@@ -232,4 +232,18 @@ final class BenchmarkResultTests: XCTestCase {
 
     }
 
+    func testBenchmarkResultEnumerations() throws {
+        var scalingFactor: BenchmarkScalingFactor = .one
+        var description: String = ""
+        description += scalingFactor.description
+        scalingFactor = .kilo
+        description += scalingFactor.description
+        scalingFactor = .mega
+        description += scalingFactor.description
+        scalingFactor = .giga
+        description += scalingFactor.description
+        scalingFactor = .tera
+        description += scalingFactor.description
+        XCTAssert(description.count > 10)
+    }
 }
