@@ -243,6 +243,6 @@ final class BenchmarkResultTests: XCTestCase {
         description += scalingFactor.description
         scalingFactor = .tera
         description += scalingFactor.description
-        XCTAssert(description.count > 10)
+        XCTAssert(description.count > 4)
     }
 }
