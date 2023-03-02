@@ -22,7 +22,7 @@ import SystemPackage
 #else
     #error("Unsupported Platform")
 #endif
-
+// swiftlint:disable type_body_length
 // @main must be done in actual benchmark to avoid linker errors unfortunately
 public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
     static var testReadWrite: BenchmarkRunnerReadWrite?
@@ -38,7 +38,20 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
     @Option(name: .shortAndLong, help: "The output pipe filedescriptor used for communication with host process.")
     var outputFD: Int32?
 
+    @Option(name: .long, help: "Benchmarks matching the regexp filter that should be run")
+    var filter: [String] = []
+
+    @Option(name: .long, help: "Benchmarks matching the regexp filter that should be skipped")
+    var skip: [String] = []
+
     var debug = false
+
+    func shouldRunBenchmark(_ name: String) throws -> Bool {
+        if try skip.contains(where: { name.wholeMatch(of: try Regex($0)) != nil }) {
+            return false
+        }
+        return try filter.isEmpty || filter.contains(where: { name.wholeMatch(of: try Regex($0)) != nil })
+    }
 
     // swiftlint:disable cyclomatic_complexity function_body_length
     public mutating func run() async throws {
@@ -56,10 +69,22 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
         let operatingSystemStatsProducer = OperatingSystemStatsProducer()
 
         while true {
-            if debug { // in debug mode we just run all benchmarks
-                if let benchmark = debugIterator.next() {
-                    benchmarkCommand = BenchmarkCommandRequest.run(benchmark: benchmark)
-                } else {
+            if debug { // in debug mode we run all benchmarks matching filter/skip specified
+                var benchmark: Benchmark?
+                benchmarkCommand = .list
+
+                while true {
+                    benchmark = debugIterator.next()
+                    if let benchmark {
+                        if try shouldRunBenchmark(benchmark.name) {
+                            benchmarkCommand = BenchmarkCommandRequest.run(benchmark: benchmark)
+                            break
+                        }
+                    } else {
+                        return
+                    }
+                }
+                if benchmark == nil {
                     return
                 }
             } else {
