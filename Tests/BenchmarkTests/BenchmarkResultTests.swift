@@ -198,4 +198,38 @@ final class BenchmarkResultTests: XCTestCase {
 
         XCTAssertGreaterThan((firstResult.unitDescription + firstResult.unitDescriptionPretty).count, 5)
     }
+
+    func testBenchmarkResultScalingAndNormalization() throws {
+        let firstStatistics = Statistics()
+        firstStatistics.add(125_000_000_000)
+
+        var result = BenchmarkResult(metric: .cpuUser,
+                                          timeUnits: .milliseconds,
+                                          scalingFactor: .giga,
+                                          warmupIterations: 0,
+                                          thresholds: .default,
+                                          statistics: firstStatistics)
+
+        XCTAssert(result.normalize(125_000_000) == result.scale(125_000_000_000))
+
+        result = BenchmarkResult(metric: .cpuUser,
+                                 timeUnits: .microseconds,
+                                 scalingFactor: .mega,
+                                 warmupIterations: 0,
+                                 thresholds: .default,
+                                 statistics: firstStatistics)
+
+        XCTAssert(result.normalize(125_000_000) == result.scale(125_000_000_000))
+
+        result = BenchmarkResult(metric: .cpuUser,
+                                 timeUnits: .nanoseconds,
+                                 scalingFactor: .kilo,
+                                 warmupIterations: 0,
+                                 thresholds: .default,
+                                 statistics: firstStatistics)
+
+        XCTAssert(result.normalize(125_000_000) == result.scale(125_000_000_000))
+
+    }
+
 }
