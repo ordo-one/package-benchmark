@@ -204,11 +204,11 @@ final class BenchmarkResultTests: XCTestCase {
         firstStatistics.add(125_000_000_000)
 
         var result = BenchmarkResult(metric: .cpuUser,
-                                          timeUnits: .milliseconds,
-                                          scalingFactor: .giga,
-                                          warmupIterations: 0,
-                                          thresholds: .default,
-                                          statistics: firstStatistics)
+                                     timeUnits: .milliseconds,
+                                     scalingFactor: .giga,
+                                     warmupIterations: 0,
+                                     thresholds: .default,
+                                     statistics: firstStatistics)
 
         XCTAssert(result.normalize(125_000_000) == result.scale(125_000_000_000))
 
@@ -229,12 +229,11 @@ final class BenchmarkResultTests: XCTestCase {
                                  statistics: firstStatistics)
 
         XCTAssert(result.normalize(125_000_000) == result.scale(125_000_000_000))
-
     }
 
     func testBenchmarkResultEnumerations() throws {
         var scalingFactor: BenchmarkScalingFactor = .one
-        var description: String = ""
+        var description = ""
         description += scalingFactor.description
         scalingFactor = .kilo
         description += scalingFactor.description
