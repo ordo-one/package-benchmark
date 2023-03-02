@@ -13,6 +13,30 @@ import XCTest
 
 // swiftlint:disable function_body_length
 final class BenchmarkResultTests: XCTestCase {
+    func testBenchmarkResultEqual() throws {
+        let firstStatistics = Statistics()
+        firstStatistics.add(125_000_000_000)
+        firstStatistics.add(150_000_000_000)
+        firstStatistics.add(175_000_000_000)
+        firstStatistics.add(190_000_000_000)
+
+        let firstResult = BenchmarkResult(metric: .cpuUser,
+                                          timeUnits: .nanoseconds,
+                                          scalingFactor: .one,
+                                          warmupIterations: 0,
+                                          thresholds: .default,
+                                          statistics: firstStatistics)
+
+        let secondResult = BenchmarkResult(metric: .cpuUser,
+                                           timeUnits: .nanoseconds,
+                                           scalingFactor: .giga,
+                                           warmupIterations: 20,
+                                           thresholds: .default,
+                                           statistics: firstStatistics)
+
+        XCTAssertEqual(firstResult, secondResult)
+    }
+
     func testBenchmarkResultLessThan() throws {
         let firstStatistics = Statistics()
         firstStatistics.add(125_000_000_000)
@@ -25,6 +49,11 @@ final class BenchmarkResultTests: XCTestCase {
         secondStatistics.add(151_000_000_000)
         secondStatistics.add(175_000_000_000)
 
+        let thirdStatistics = Statistics()
+        thirdStatistics.add(225_000_000_000)
+        thirdStatistics.add(251_000_000_000)
+        thirdStatistics.add(275_000_000_000)
+
         let firstResult = BenchmarkResult(metric: .cpuUser,
                                           timeUnits: .nanoseconds,
                                           scalingFactor: .one,
@@ -32,14 +61,39 @@ final class BenchmarkResultTests: XCTestCase {
                                           thresholds: .default,
                                           statistics: firstStatistics)
 
-        let secondResult = BenchmarkResult(metric: .cpuUser,
+        var secondResult = BenchmarkResult(metric: .cpuUser,
                                            timeUnits: .microseconds,
                                            scalingFactor: .one,
                                            warmupIterations: 0,
                                            thresholds: .default,
                                            statistics: secondStatistics)
 
+        var thirdResult = BenchmarkResult(metric: .cpuUser,
+                                          timeUnits: .microseconds,
+                                          scalingFactor: .one,
+                                          warmupIterations: 0,
+                                          thresholds: .default,
+                                          statistics: thirdStatistics)
+
         XCTAssertLessThan(firstResult, secondResult)
+        XCTAssertGreaterThan(thirdResult, secondResult)
+
+        secondResult = BenchmarkResult(metric: .throughput,
+                                       timeUnits: .microseconds,
+                                       scalingFactor: .one,
+                                       warmupIterations: 0,
+                                       thresholds: .default,
+                                       statistics: secondStatistics)
+
+        thirdResult = BenchmarkResult(metric: .throughput,
+                                      timeUnits: .microseconds,
+                                      scalingFactor: .one,
+                                      warmupIterations: 0,
+                                      thresholds: .default,
+                                      statistics: thirdStatistics)
+
+        // Should be reversed for throughput measurements
+        XCTAssertLessThan(thirdResult, secondResult)
     }
 
     func testBenchmarkResultLessThanFailure() throws {
