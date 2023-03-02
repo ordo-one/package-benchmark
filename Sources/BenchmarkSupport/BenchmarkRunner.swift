@@ -12,7 +12,6 @@ import ArgumentParser
 @_exported import Benchmark
 @_exported import Statistics
 
-// swiftlint:disable type_body_length
 // @main must be done in actual benchmark to avoid linker errors unfortunately
 public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
     static var testReadWrite: BenchmarkRunnerReadWrite?
@@ -53,7 +52,7 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
         let channel = Self.testReadWrite ?? self
 
         registerBenchmarks()
-        
+
         var debugIterator = Benchmark.benchmarks.makeIterator()
         var benchmarkCommand: BenchmarkCommandRequest
         let benchmarkExecutor = BenchmarkExecutor(quiet: quiet)
@@ -94,30 +93,30 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
                 benchmark = Benchmark.benchmarks.first { $0.name == benchmarkToRun.name }
 
                 if let benchmark {
-                        results = benchmarkExecutor.run(benchmark)
+                    results = benchmarkExecutor.run(benchmark)
 
-                        guard benchmark.failureReason == nil else {
-                            try channel.write(.error(benchmark.failureReason!))
-                            return
-                        }
+                    guard benchmark.failureReason == nil else {
+                        try channel.write(.error(benchmark.failureReason!))
+                        return
+                    }
 
-                        // If we didn't capture any results for the desired metrics (e.g. an empty metric list), skip
-                        // reporting results back
-                        if results.isEmpty == false {
-                            try channel.write(.result(benchmark: benchmark, results: results))
-                        }
+                    // If we didn't capture any results for the desired metrics (e.g. an empty metric list), skip
+                    // reporting results back
+                    if results.isEmpty == false {
+                        try channel.write(.result(benchmark: benchmark, results: results))
+                    }
 
-                        // Minimal output for debugging
-                        if debug {
-                            print("Debug results for \(benchmark.name):")
-                            print("")
-                            results.forEach { result in
-                                print("\(result.metric):")
-                                print("\(result.statistics.histogram)")
-                                print("")
-                            }
+                    // Minimal output for debugging
+                    if debug {
+                        print("Debug results for \(benchmark.name):")
+                        print("")
+                        results.forEach { result in
+                            print("\(result.metric):")
+                            print("\(result.statistics.histogram)")
                             print("")
                         }
+                        print("")
+                    }
                 } else {
                     print("Internal error: Couldn't find specified benchmark '\(benchmarkToRun.name)' to run.")
                 }

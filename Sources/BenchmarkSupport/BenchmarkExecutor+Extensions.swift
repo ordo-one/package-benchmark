@@ -7,6 +7,7 @@
 // You may obtain a copy of the License at
 // http://www.apache.org/licenses/LICENSE-2.0
 //
+// swiftlint:disable cyclomatic_complexity
 
 extension BenchmarkExecutor {
     func mallocStatsProducerNeeded(_ metric: BenchmarkMetric) -> Bool {

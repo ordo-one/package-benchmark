@@ -13,14 +13,13 @@ import Progress
 import Statistics
 
 #if canImport(Darwin)
-import Darwin
+    import Darwin
 #elseif canImport(Glibc)
-import Glibc
+    import Glibc
 #else
-#error("Unsupported Platform")
+    #error("Unsupported Platform")
 #endif
 
-// swiftlint:disable type_body_length
 internal final class BenchmarkExecutor {
     internal init(quiet: Bool = false) {
         self.quiet = quiet
@@ -111,8 +110,8 @@ internal final class BenchmarkExecutor {
                 statistics[.wallClock]?.add(Int(runningTime.nanoseconds()))
 
                 var roundedThroughput =
-                Double(1_000_000_000)
-                / Double(runningTime.nanoseconds())
+                    Double(1_000_000_000)
+                        / Double(runningTime.nanoseconds())
                 roundedThroughput.round(.toNearestOrAwayFromZero)
 
                 let throughput = Int(roundedThroughput)
@@ -121,7 +120,7 @@ internal final class BenchmarkExecutor {
                     statistics[.throughput]?.add(throughput)
                 }
             } else {
-              //  fatalError("Zero running time \(self.startTime), \(self.stopTime), \(runningTime)")
+                //  fatalError("Zero running time \(self.startTime), \(self.stopTime), \(runningTime)")
             }
 
             if mallocStatsRequested {
@@ -135,7 +134,7 @@ internal final class BenchmarkExecutor {
                 statistics[.mallocCountLarge]?.add(Int(delta))
 
                 delta = stopMallocStats.allocatedResidentMemory -
-                startMallocStats.allocatedResidentMemory
+                    startMallocStats.allocatedResidentMemory
                 statistics[.memoryLeaked]?.add(Int(delta))
 
                 statistics[.allocatedResidentMemory]?.add(Int(stopMallocStats.allocatedResidentMemory))
@@ -149,7 +148,7 @@ internal final class BenchmarkExecutor {
                 statistics[.cpuSystem]?.add(Int(delta))
 
                 delta = stopOperatingSystemStats.cpuTotal -
-                startOperatingSystemStats.cpuTotal
+                    startOperatingSystemStats.cpuTotal
                 statistics[.cpuTotal]?.add(Int(delta))
 
                 delta = stopOperatingSystemStats.peakMemoryResident
@@ -159,11 +158,11 @@ internal final class BenchmarkExecutor {
                 statistics[.peakMemoryVirtual]?.add(Int(delta))
 
                 delta = stopOperatingSystemStats.syscalls -
-                startOperatingSystemStats.syscalls
+                    startOperatingSystemStats.syscalls
                 statistics[.syscalls]?.add(Int(delta))
 
                 delta = stopOperatingSystemStats.contextSwitches -
-                startOperatingSystemStats.contextSwitches
+                    startOperatingSystemStats.contextSwitches
                 statistics[.contextSwitches]?.add(Int(delta))
 
                 delta = stopOperatingSystemStats.threads
@@ -173,27 +172,27 @@ internal final class BenchmarkExecutor {
                 statistics[.threadsRunning]?.add(Int(delta))
 
                 delta = stopOperatingSystemStats.readSyscalls -
-                startOperatingSystemStats.readSyscalls
+                    startOperatingSystemStats.readSyscalls
                 statistics[.readSyscalls]?.add(Int(delta))
 
                 delta = stopOperatingSystemStats.writeSyscalls -
-                startOperatingSystemStats.writeSyscalls
+                    startOperatingSystemStats.writeSyscalls
                 statistics[.writeSyscalls]?.add(Int(delta))
 
                 delta = stopOperatingSystemStats.readBytesLogical -
-                startOperatingSystemStats.readBytesLogical
+                    startOperatingSystemStats.readBytesLogical
                 statistics[.readBytesLogical]?.add(Int(delta))
 
                 delta = stopOperatingSystemStats.writeBytesLogical -
-                startOperatingSystemStats.writeBytesLogical
+                    startOperatingSystemStats.writeBytesLogical
                 statistics[.writeBytesLogical]?.add(Int(delta))
 
                 delta = stopOperatingSystemStats.readBytesPhysical -
-                startOperatingSystemStats.readBytesPhysical
+                    startOperatingSystemStats.readBytesPhysical
                 statistics[.readBytesPhysical]?.add(Int(delta))
 
                 delta = stopOperatingSystemStats.writeBytesPhysical -
-                startOperatingSystemStats.writeBytesPhysical
+                    startOperatingSystemStats.writeBytesPhysical
                 statistics[.writeBytesPhysical]?.add(Int(delta))
             }
         }
@@ -228,7 +227,7 @@ internal final class BenchmarkExecutor {
         // Run the benchmark at a minimum the desired iterations/runtime --
 
         while iterations <= benchmark.configuration.maxIterations ||
-                wallClockDuration <= benchmark.configuration.maxDuration {
+            wallClockDuration <= benchmark.configuration.maxDuration {
             // and at a maximum the same...
             guard wallClockDuration < benchmark.configuration.maxDuration,
                   iterations < benchmark.configuration.maxIterations
@@ -248,10 +247,10 @@ internal final class BenchmarkExecutor {
 
             if var progressBar {
                 let iterationsPercentage = 100.0 * Double(iterations) /
-                Double(benchmark.configuration.maxIterations)
+                    Double(benchmark.configuration.maxIterations)
 
                 let timePercentage = 100.0 * (wallClockDuration /
-                                              benchmark.configuration.maxDuration)
+                    benchmark.configuration.maxDuration)
 
                 let maxPercentage = max(iterationsPercentage, timePercentage)
 
