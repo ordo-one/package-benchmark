@@ -27,13 +27,19 @@ enum Grouping: String, ExpressibleByArgument {
     case benchmark
 }
 
+/// The benchmark data output format.
 enum OutputFormat: String, ExpressibleByArgument, CaseIterable {
+    /// Text output formatted into a visual table
     case text
+    /// The text output format, formatted in markdown
     case markdown
+    /// Influx data import
     case influx
     case percentiles
     case tsv
     case jmh
+    /// The encoded representation of the underlying histograms capturing the benchmark data.
+    case encodedHistogram
 }
 
 enum BenchmarkOperation: String, ExpressibleByArgument {
@@ -126,10 +132,10 @@ struct BenchmarkTool: AsyncParsableCommand {
     }
 
     func shouldRunBenchmark(_ name: String) throws -> Bool {
-        if try skip.contains(where: { name.wholeMatch(of: try Regex($0)) != nil }) {
+        if try skip.contains(where: { try name.wholeMatch(of: Regex($0)) != nil }) {
             return false
         }
-        return try filter.isEmpty || filter.contains(where: { name.wholeMatch(of: try Regex($0)) != nil })
+        return try filter.isEmpty || filter.contains(where: { try name.wholeMatch(of: Regex($0)) != nil })
     }
 
     mutating func readBaselines() throws {

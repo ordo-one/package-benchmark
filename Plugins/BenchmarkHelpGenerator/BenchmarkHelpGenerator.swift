@@ -25,6 +25,7 @@ enum OutputFormat: String, ExpressibleByArgument, CaseIterable {
     case percentiles
     case tsv
     case jmh
+    case encodedHistogram
 }
 
 enum Command: String, ExpressibleByArgument, CaseIterable {
