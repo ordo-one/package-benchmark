@@ -1,20 +1,27 @@
 # Getting Started
 
-Before creating your own benchmarks, install the required prerequisites and add benchmarks to your package.
+Before creating your own benchmarks, you must install the required prerequisites and add a dependency on Benchmark to your package.
 
 ## Overview
 
-Deeper introduction
-On multiple lines (sentences), of course.
+There are three steps that needs to be performed to get up and running with your own benchmarks:
 
-### Prerequisites and platform support
+* Install prerequisite dependencies if needed (currently only `jemalloc`) 
+* Add a dependency on Benchmark to your `Package.swift` file
+* Add one or more benchmark executable targets to the top level `Benchmarks/` directory for auto discovery
 
-The main external dependency is [jemalloc](https://jemalloc.net).The plugin that runs the benchmarks uses jemalloc memory allocation library to provide malloc statistics.
-The Benchmark package requires you to install jemalloc on any machine used for benchmarking.
+After having done those, running your benchmarks are as simple as running `swift package benchmark`.
 
-Benchmark uses jemalloc because it has extensive debug information with an accessible API for extracting it, in addition to having good runtime performance.
 
-The plugin depends on the [jemalloc module wrapper](https://github.com/ordo-one/package-jemalloc) for accessing it.
+### Installing Prerequisites and Platform Support
+
+Benchmark requires Swift 5.7 support as it uses Regex and Duration types introduced with the `macOS 13` runtime, most versions of Linux will work as long as Swift 5.7+ is used. 
+
+Benchmark also depends and needs the [jemalloc](https://jemalloc.net) memory allocation library, which is used by the Benchmark infrastructure to capture memory allocation statistics, as `jemalloc` provides a rich programmatic API for extracting memory allocation statistics at runtime. 
+
+The Benchmark package requires you to install jemalloc on any machine used for benchmarking. 
+
+If you want to avoid adding the `jemalloc` dependency to your project, the recommended approach is to embed a separate Swift project in a subdirectory that uses your project, then the dependency on `jemalloc` is contained to that subproject only.
 
 #### Installing `jemalloc` on macOS
 
@@ -28,24 +35,46 @@ brew install jemalloc
 sudo apt-get install -y libjemalloc-dev
 ```
 
-Other Linux distributions may come with jemalloc already installed.
+#### Installing `jemalloc` on Amazon Linux 2 
+For Amazon Linux 2 users have reported that the following works:
 
-### Add dependencies
+Docker file configuration
+```dockerfile
+RUN sudo yum -y install bzip2 make
+RUN curl https://github.com/jemalloc/jemalloc/releases/download/5.3.0/jemalloc-5.3.0.tar.bz2 -L -o jemalloc-5.3.0.tar.bz2
+RUN tar -xf jemalloc-5.3.0.tar.bz2
+RUN cd jemalloc-5.3.0 && ./configure && make && sudo make install
+```
 
-If you're adding benchmarks to an existing package, add a dependency to the overall package:
+`make install` installs the libraries in `/usr/local/lib`, which the plugin can’t find, so you also have to do:
 
 ```
-.package(url: "https://github.com/ordo-one/package-benchmark", .upToNextMajor(from: "0.2.0")),
+$ sudo ldconfig /usr/local/lib
 ```
 
-Benchmark requires Swift 5.7 support. If the package that you want to benchmark supports older versions of Swift, create a new package that includes this dependency, as well as a dependency on your library.
+Alternatively:
+```
+echo /usr/local/lib > /etc/ld.so.conf.d/local_lib.conf && ldconfig
+```
 
-### Add exectuable targets
+### Adding dependencies
+
+To add the dependency on Benchmark, add a dependency to your package:
+
+```swift
+.package(url: "https://github.com/ordo-one/package-benchmark", .upToNextMajor(from: "1.0.0")),
+```
+
+### Add benchmark exectuable targets
 
 Create an executable target in `Package.swift` for each benchmark suite you want to measure.
+
 The source for all benchmarks *must reside in a directory named `Benchmarks`* in the root of your swift package.
-The benchmark plugin relies on the source existing within this directory to discover and run your benchmarks.
-Include a dependency in each executable target to `BenchmarkSupport`.
+
+The benchmark plugin uses this directory combined with the executable target information to automatically discover and run your benchmarks.
+
+For each executable target, include a dependency on `BenchmarkSupport` from `package-benchmark`.
+
 The following example shows an benchmark suite named `My-Benchmark` with the required dependency on `BenchmarkSupport` and the source files for the benchmark that reside in the directory `Benchmarks/My-Benchmark`:
 
 ```
@@ -58,17 +87,10 @@ The following example shows an benchmark suite named `My-Benchmark` with the req
 ),
 ```
 
-### Baselines storage
-
-You can store the results results from benchmark runs as baselines for use in later comparison.
-Baselines are stored in your package in the directory `.benchmarkBaselines`.  
-
 ### Dedicated GitHub runner instances
 
-For reproducible and good comparable results, it is *highly* recommended to set up a private GitHub runner that is
-dedicated to performance benchmark runs.
+For reproducible and good comparable results, it is *highly* recommended to set up a private GitHub runner that is completely dedicated for performance benchmark runs, as the standard GitHub CI runners are deployed on a shared infrastructure the deviations between runs can be significant and difficult to assess.
 
 ### Sample Project
 
-There's a [sample project](https://github.com/ordo-one/package-benchmark-samples) showing usage of the basic API which
-can be a good starting point.
+There's a [sample project](https://github.com/ordo-one/package-benchmark-samples) showing usage of the basic API which can be a good starting point if you want to look at how a project can be setup.

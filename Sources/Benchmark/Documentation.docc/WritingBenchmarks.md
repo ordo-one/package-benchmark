@@ -6,7 +6,7 @@ Create benchmark suites to run and measure your benchmarks.
 
 Create benchmarks declaratively using the ``Benchmark/Benchmark`` initalizer, specifying configuration and the work to be measured in a trailing closure.
 
-The minimal code for a benchmark suite would be:
+The minimal code for a benchmark suite running with a default configuration would be:
 
 ```swift
 // import supporting infrastructure
@@ -20,6 +20,7 @@ import BenchmarkSupport
 func benchmarks() {
 
     Benchmark("Minimal benchmark") { benchmark in
+        // Some work to measure here
     }
 }
 ```
@@ -139,25 +140,27 @@ public extension Benchmark {
 
 ### scalingFactor
 
-If your benchmark uses a small test and you want to run a scaled number of iterations to retrieve stable results, define a ``Benchmark/Configuration-swift.struct/scalingFactor`` in ``Benchmark/Configuration-swift.struct``.
-An example of using `scalingFactor`:
+For fast running (micro-)benchmarks, it is highly recommended to run measurements with an inner loop to ensure that the measurement overhead is small compared to the thing that is under measurement.
+
+To make this easy, Benchmark provides a ``Benchmark/Configuration-swift.struct/scalingFactor`` in ``Benchmark/Configuration-swift.struct`` which gives a convenience iterator range and supports scaled output on the command line using the `--scale` flag.
+
+An example of using `scalingFactor` to run 1M inner loops:
 
 ```swift
-Benchmark("Foundation Date()",
-    configuration: .init(
-        metrics: [.throughput, .wallClock], 
-        scalingFactor: .mega)
-    ) { benchmark in
-        for _ in benchmark.scaledIterations {
-            blackHole(Date())
-        }
+Benchmark("Foundation Date()", configuration: .init(scalingFactor: .mega)) { benchmark in
+    for _ in benchmark.scaledIterations {
+        blackHole(Date())
+    }
 }
 ```
 
 ### Metrics
 
-Metrics can be specified explicitly, for example `[.throughput, .wallClock]`.
-Benchmark also provides a number of convenience methods for common sets of metrics, for example ``Benchmark/BenchmarkMetric/memory`` and - ``Benchmark/BenchmarkMetric/all``.
+Benchmark supports a wide range of measurements defined by ``Benchmark/BenchmarkMetric``.
+
+Benchmark provides a number of convenience methods for commonly useful sets of metrics, for example ``Benchmark/BenchmarkMetric/memory`` and - ``Benchmark/BenchmarkMetric/all``.
+
+Metrics can also be specified explicitly, for example `[.throughput, .wallClock]`, or even by combining the default set with individual metrics.
 
 ### Settings defaults for all benchmarks within a suite
 
