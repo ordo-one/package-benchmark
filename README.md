@@ -28,10 +28,11 @@ Benchmark is suitable for both smaller ad-hoc benchmarks only caring about runti
 
 Documentation on how to use Benchmark in your Swift package can be [viewed online](https://swiftpackageindex.com/ordo-one/package-benchmark/main/documentation/benchmark) (hosted by the Swift Package Index, thanks!) or inside Xcode using `Build Documenation`. Additionally the command plugin provides help information if you run `swift package benchmark help` from the command line.
 
-### CI build note
-The badges above shows that macOS builds are failing on the CI [as GitHub still haven't provided runners for macOS 13 Ventura](https://github.com/actions/runner-images/issues/6426), it works in practice.
+## Sample Code
 
-### Sample benchmark code
+There's also [a sample project](https://github.com/ordo-one/package-benchmark-samples) using various aspects of this package in practice.
+
+## Sample benchmark code
 ```swift
 import BenchmarkSupport
 @main extension BenchmarkRunner {}
@@ -88,6 +89,6 @@ For those wanting to save benchmark data over time, it's recommended to export d
 
 PR:s for additional standardized formats are welcome, as the export formats are the intended stable interface for saving such data.
 
-### Sample Code
+### CI build note
+The badges above shows that macOS builds are failing on the CI [as GitHub still haven't provided runners for macOS 13 Ventura](https://github.com/actions/runner-images/issues/6426), it works in practice.
 
-There's also [a sample project](https://github.com/ordo-one/package-benchmark-samples) using various aspects of this package in practice.
