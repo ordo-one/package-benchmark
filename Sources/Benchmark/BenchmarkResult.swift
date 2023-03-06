@@ -313,10 +313,20 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
         return true
     }
 
+    public struct ThresholdDeviation {
+        public let metric: BenchmarkMetric
+        public let percentile: BenchmarkResult.Percentile
+        public let baseValue: Int
+        public let comparisonValue: Int
+        public let difference: Int
+        public let differenceThreshold: Int
+        public let relative: Bool
+    }
+
     // swiftlint:disable function_body_length
     public func betterResultsOrEqual(than otherResult: BenchmarkResult,
-                                     thresholds: BenchmarkResult.PercentileThresholds = .default,
-                                     printOutput: Bool = false) -> Bool {
+                                     thresholds: BenchmarkResult.PercentileThresholds = .default) -> (Bool, [ThresholdDeviation]) {
+        var violationDescriptions: [ThresholdDeviation] = []
         var rhs: BenchmarkResult
         var lhs: BenchmarkResult
 
@@ -324,69 +334,69 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
         rhs = otherResult
 
         guard lhs.metric == rhs.metric else {
-            return false
+            fatalError("Tried to compare two different metrics \(lhs.metric) - \(rhs.metric)")
         }
 
         // swiftlint:disable function_parameter_count
-        func worseResult(_ lhs: Int,
+        func worseResult(_ metric: BenchmarkMetric,
+                         _ lhs: Int,
                          _ rhs: Int,
                          _ percentile: BenchmarkResult.Percentile,
                          _ thresholds: BenchmarkResult.PercentileThresholds,
-                         _ scalingFactor: Int,
-                         _ printOutput: Bool) -> Bool {
+                         _ scalingFactor: Int) -> (Bool, [ThresholdDeviation]) {
             let relativeDifference = (100 - (100.0 * Double(lhs) / Double(rhs)))
             let absoluteDifference = lhs - rhs
             let reverseComparison = metric.polarity == .prefersLarger
-
-//            print("Checking worseResult \(lhs) \(rhs) \(percentile) \(thresholds) \(scalingFactor)")
-
+            var violationDescriptions: [ThresholdDeviation] = []
             var thresholdViolated = false
 
             if let threshold = thresholds.relative[percentile] {
                 if reverseComparison ? relativeDifference > threshold : -relativeDifference > threshold {
                     let relativeDiff = Statistics.roundToDecimalplaces(abs(relativeDifference), 1)
-                    if printOutput {
-                        print("`\(metric.description)` relative threshold violated, [\(percentile)] result" +
-                            " (\(relativeDiff)) > threshold (\(threshold))")
-                    }
+                    violationDescriptions.append(ThresholdDeviation(metric: metric,
+                                                                    percentile: percentile,
+                                                                    baseValue: lhs,
+                                                                    comparisonValue: rhs,
+                                                                    difference: Int(relativeDiff),
+                                                                    differenceThreshold: Int(threshold),
+                                                                    relative: true))
                     thresholdViolated = true
                 }
             }
-//print("ABS: \(thresholds.absolute) \(percentile)")
+
             if var threshold = thresholds.absolute[percentile] {
-                print("Absolute threshold check \(threshold) \(absoluteDifference)")
                 threshold /= (1_000_000_000 / scalingFactor)
-                print("Absolute threshold check \(threshold)")
                 if reverseComparison ? -absoluteDifference > threshold : absoluteDifference > threshold {
-                    if printOutput {
-                        print("`\(metric.description)` absolute threshold violated, [\(percentile)] result" +
-                            " (\(abs(absoluteDifference))) > threshold (\(threshold))")
-                    }
+                    violationDescriptions.append(ThresholdDeviation(metric: metric,
+                                                                    percentile: percentile,
+                                                                    baseValue: lhs,
+                                                                    comparisonValue: rhs,
+                                                                    difference: absoluteDifference,
+                                                                    differenceThreshold: threshold,
+                                                                    relative: false))
                     thresholdViolated = true
                 }
             }
-//            print("returning \(thresholdViolated) \(printOutput)")
-            return thresholdViolated
+            //            print("returning \(thresholdViolated) \(printOutput)")
+            return (thresholdViolated, violationDescriptions)
         }
 
         let lhsPercentiles = lhs.statistics.percentiles()
         let rhsPercentiles = rhs.statistics.percentiles()
-
         var worse = false
+
         for percentile in 0 ..< lhsPercentiles.count {
-            worse = worseResult(lhsPercentiles[percentile],
-                                rhsPercentiles[percentile],
-                                Self.Percentile(rawValue: percentile)!,
-                                thresholds,
-                                lhs.statistics.units().rawValue,
-                                printOutput) || worse
+            let (lastCheck, failureDescriptions) = worseResult(lhs.metric,
+                                                               lhsPercentiles[percentile],
+                                                               rhsPercentiles[percentile],
+                                                               Self.Percentile(rawValue: percentile)!,
+                                                               thresholds,
+                                                               lhs.statistics.units().rawValue)
+            violationDescriptions.append(contentsOf: failureDescriptions)
+            worse = lastCheck || worse
         }
 
-        if worse {
-            return false
-        }
-
-        return true
+        return (worse == false, violationDescriptions)
     }
 }
 

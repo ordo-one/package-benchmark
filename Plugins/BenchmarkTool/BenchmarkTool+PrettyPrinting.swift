@@ -221,13 +221,7 @@ extension BenchmarkTool {
                                 //                            print(" \(result.metric) results were identical.")
                                 //                            print("")
                             } else {
-                                var hideResults: Bool = true
-
-                                if result.betterResultsOrEqual(than: base, thresholds: result.thresholds ?? BenchmarkResult.PercentileThresholds.default) {
-                                    hideResults = true
-                                } else {
-                                    hideResults = false
-                                }
+                                let (hideResults, _) = result.betterResultsOrEqual(than: base, thresholds: result.thresholds ?? BenchmarkResult.PercentileThresholds.default)
 
                                 if format == .markdown {
                                     if hideResults {

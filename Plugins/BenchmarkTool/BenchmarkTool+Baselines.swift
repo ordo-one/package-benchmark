@@ -16,11 +16,11 @@ import Foundation
 import SystemPackage
 
 #if canImport(Darwin)
-    import Darwin
+import Darwin
 #elseif canImport(Glibc)
-    import Glibc
+import Glibc
 #else
-    #error("Unsupported Platform")
+#error("Unsupported Platform")
 #endif
 
 struct BenchmarkMachine: Codable, Equatable {
@@ -40,8 +40,8 @@ struct BenchmarkMachine: Codable, Equatable {
 
     public static func == (lhs: BenchmarkMachine, rhs: BenchmarkMachine) -> Bool {
         lhs.processors == rhs.processors &&
-            lhs.processorType == rhs.processorType &&
-            lhs.memory == rhs.memory
+        lhs.processorType == rhs.processorType &&
+        lhs.memory == rhs.memory
     }
 }
 
@@ -64,7 +64,7 @@ struct BenchmarkIdentifier: Codable, Hashable {
     }
 }
 
-extension Sequence where Iterator.Element: Hashable {
+public extension Sequence where Iterator.Element: Hashable {
     func unique() -> [Iterator.Element] {
         var seen: Set<Iterator.Element> = []
         return filter { seen.insert($0).inserted }
@@ -85,7 +85,7 @@ struct BenchmarkBaseline: Codable {
         self.results = results
     }
 
-//    @discardableResult
+    //    @discardableResult
     mutating func merge(_ otherBaseline: BenchmarkBaseline) -> BenchmarkBaseline {
         if machine != otherBaseline.machine {
             print("Warning: Merging baselines from two different machine configurations")
@@ -404,33 +404,29 @@ extension BenchmarkBaseline {
 
 extension BenchmarkBaseline: Equatable {
     public func betterResultsOrEqual(than otherBaseline: BenchmarkBaseline,
-                                     benchmarks: [Benchmark],
-                                     printOutput: Bool = false) -> Bool {
+                                     benchmarks: [Benchmark]) -> (Bool, [BenchmarkResult.ThresholdDeviation]) {
         let lhs = self
         let rhs = otherBaseline
         var warningPrintedForMetric: Set<BenchmarkMetric> = []
         var warningPrinted = false
-        var betterOrEqualForAll = true
-        var betterOrEqualForIdentifier = true
+        var worseResult = false
+        var betterOrEqualForIdentifier: Bool = true
+        var deviationResults: [BenchmarkResult.ThresholdDeviation] = []
+        var allDeviationResults: [BenchmarkResult.ThresholdDeviation] = []
 
         for (lhsBenchmarkIdentifier, lhsBenchmarkResults) in lhs.results {
-             /*           if printOutput {
-                 print("Checking for threshold violations for `\(lhsBenchmarkIdentifier.target):\(lhsBenchmarkIdentifier.name)`.")
-             }
-*/
             for lhsBenchmarkResult in lhsBenchmarkResults {
                 if let rhsResults = rhs.results.first(where: { $0.key == lhsBenchmarkIdentifier }) {
                     if let rhsBenchmarkResult = rhsResults.value.first(where: { $0.metric == lhsBenchmarkResult.metric }) {
                         let thresholds = thresholdFor(benchmarks: benchmarks,
-                                                     name: lhsBenchmarkIdentifier.name,
-                                                     target: lhsBenchmarkIdentifier.target,
-                                                     metric: lhsBenchmarkResult.metric)
+                                                      name: lhsBenchmarkIdentifier.name,
+                                                      target: lhsBenchmarkIdentifier.target,
+                                                      metric: lhsBenchmarkResult.metric)
 
-                        if lhsBenchmarkResult.betterResultsOrEqual(than: rhsBenchmarkResult,
-                                                                   thresholds: thresholds,
-                                                                   printOutput: printOutput) == false {
-                            betterOrEqualForIdentifier = false
-                        }
+                        (betterOrEqualForIdentifier, deviationResults) =
+                        lhsBenchmarkResult.betterResultsOrEqual(than: rhsBenchmarkResult,
+                                                                thresholds: thresholds)
+                        allDeviationResults.append(contentsOf: deviationResults)
                     } else {
                         if warningPrintedForMetric.contains(lhsBenchmarkResult.metric) == false {
                             print("`\(lhsBenchmarkResult.metric)` not found in both baselines, skipping it.")
@@ -443,17 +439,13 @@ extension BenchmarkBaseline: Equatable {
                         warningPrinted = true
                     }
                 }
-            }
-            if betterOrEqualForIdentifier == false && printOutput {
-                print("`\(lhsBenchmarkIdentifier.target):\(lhsBenchmarkIdentifier.name)` had threshold violations.")
-                print("")
-            }
 
-            betterOrEqualForAll = betterOrEqualForAll || betterOrEqualForIdentifier
-            betterOrEqualForIdentifier = true
+                worseResult = worseResult || (betterOrEqualForIdentifier == false)
+                betterOrEqualForIdentifier = true
+            }
         }
 
-        return betterOrEqualForAll
+        return (worseResult == false, allDeviationResults)
     }
 
     static func == (lhs: BenchmarkBaseline, rhs: BenchmarkBaseline) -> Bool {

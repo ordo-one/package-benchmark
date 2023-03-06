@@ -71,6 +71,9 @@ struct BenchmarkTool: AsyncParsableCommand {
     @Option(name: .long, help: "The baseline to compare with")
     var compare: String?
 
+    @Option(name: .long, help: "The baseline to check thresholds with")
+    var check: String?
+
     @Flag(name: .long, help: "True if we should supress output")
     var quiet: Int
 
@@ -111,6 +114,7 @@ struct BenchmarkTool: AsyncParsableCommand {
     var benchmarks: [Benchmark] = []
     var benchmarkBaselines: [BenchmarkBaseline] = [] // The baselines read from disk, merged
     var comparisonBaseline: BenchmarkBaseline?
+    var checkBaseline: BenchmarkBaseline?
 
     mutating func failBenchmark(_ reason: String? = nil) {
         if let reason {
@@ -177,6 +181,11 @@ struct BenchmarkTool: AsyncParsableCommand {
         // And separately read in the comparison baseline if any
         if let compare {
             comparisonBaseline = try readBaseline(compare)
+        }
+
+        // And separately read in the comparison baseline if any
+        if let check {
+            checkBaseline = try readBaseline(check)
         }
     }
 

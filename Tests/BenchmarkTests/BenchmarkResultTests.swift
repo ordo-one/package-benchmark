@@ -158,7 +158,8 @@ final class BenchmarkResultTests: XCTestCase {
                                            thresholds: .default,
                                            statistics: secondStatistics)
 
-        XCTAssert(secondResult.betterResultsOrEqual(than: firstResult))
+        let (betterOrEqual, _) = secondResult.betterResultsOrEqual(than: firstResult)
+        XCTAssert(betterOrEqual)
     }
 
     func testBenchmarkResultBetterOrEqualWithCustomThresholds() throws {
@@ -222,15 +223,29 @@ final class BenchmarkResultTests: XCTestCase {
                                            thresholds: .default,
                                            statistics: secondStatistics)
 
-        XCTAssertFalse(secondResult.betterResultsOrEqual(than: firstResult, thresholds: bothThresholds))
-        XCTAssert(secondResult.betterResultsOrEqual(than: firstResult, thresholds: relativeRelaxedThresholds))
-        XCTAssertFalse(secondResult.betterResultsOrEqual(than: firstResult, thresholds: relativeThresholds))
-        XCTAssertFalse(secondResult.betterResultsOrEqual(than: firstResult, thresholds: absoluteThresholds))
+        var (betterOrEqual, _) = secondResult.betterResultsOrEqual(than: firstResult, thresholds: bothThresholds)
+        XCTAssertFalse(betterOrEqual)
 
-        XCTAssert(firstResult.betterResultsOrEqual(than: secondResult, thresholds: bothThresholds))
-        XCTAssert(firstResult.betterResultsOrEqual(than: secondResult, thresholds: relativeRelaxedThresholds))
-        XCTAssert(firstResult.betterResultsOrEqual(than: secondResult, thresholds: relativeThresholds))
-        XCTAssert(firstResult.betterResultsOrEqual(than: secondResult, thresholds: absoluteThresholds))
+        (betterOrEqual, _) = secondResult.betterResultsOrEqual(than: firstResult, thresholds: relativeRelaxedThresholds)
+        XCTAssert(betterOrEqual)
+
+        (betterOrEqual, _) = secondResult.betterResultsOrEqual(than: firstResult, thresholds: relativeThresholds)
+        XCTAssertFalse(betterOrEqual)
+
+        (betterOrEqual, _) = secondResult.betterResultsOrEqual(than: firstResult, thresholds: absoluteThresholds)
+        XCTAssertFalse(betterOrEqual)
+
+        (betterOrEqual, _) = firstResult.betterResultsOrEqual(than: secondResult, thresholds: bothThresholds)
+        XCTAssert(betterOrEqual)
+
+        (betterOrEqual, _) = firstResult.betterResultsOrEqual(than: secondResult, thresholds: relativeRelaxedThresholds)
+        XCTAssert(betterOrEqual)
+
+        (betterOrEqual, _) = firstResult.betterResultsOrEqual(than: secondResult, thresholds: relativeThresholds)
+        XCTAssert(betterOrEqual)
+
+        (betterOrEqual, _) = firstResult.betterResultsOrEqual(than: secondResult, thresholds: absoluteThresholds)
+        XCTAssert(betterOrEqual)
     }
 
     func testBenchmarkResultDescriptions() throws {

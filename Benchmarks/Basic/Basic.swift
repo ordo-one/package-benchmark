@@ -17,7 +17,7 @@ func benchmarks() {
     Benchmark.defaultConfiguration = .init(warmupIterations: 0,
                                            maxDuration: .seconds(1),
                                            maxIterations: Int.max,
-                                           thresholds: [.wallClock : BenchmarkResult.PercentileThresholds.strict])
+                                           thresholds: [.wallClock: BenchmarkResult.PercentileThresholds.strict])
 
     Benchmark("Basic",
               configuration: .init(metrics: [.wallClock, .throughput])) { _ in
@@ -26,8 +26,8 @@ func benchmarks() {
     Benchmark("Scaled metrics",
               configuration: .init(metrics: BenchmarkMetric.all, scalingFactor: .kilo)) { benchmark in
         for _ in benchmark.scaledIterations {
-            blackHole(Int.random(in: benchmark.scaledIterations))
-            blackHole(Int.random(in: benchmark.scaledIterations))
+            //         blackHole(Int.random(in: benchmark.scaledIterations))
+                  blackHole(Int.random(in: benchmark.scaledIterations))
             blackHole(Int.random(in: benchmark.scaledIterations))
         }
     }

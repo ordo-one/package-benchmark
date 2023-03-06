@@ -13,6 +13,7 @@
 import Benchmark
 import ExtrasJSON
 import SystemPackage
+import TextTable
 
 extension BenchmarkTool {
     mutating func queryBenchmarks(_ benchmarkPath: String) throws {
@@ -95,24 +96,69 @@ extension BenchmarkTool {
                 }
 
                 let currentBaseline = benchmarkBaselines[0]
-                let baselineName = baseline[0] == "default" ? "Current baseline" : baseline[0]
-                let comparingBaselineName = compare ?? "unknown"
 
                 prettyPrintDelta(currentBaseline: currentBaseline, baseline: comparisonBaseline)
+
+                return
+            }
+
+            if let checkBaseline {
+                guard benchmarkBaselines.count > 0 else {
+                    print("Only had \(benchmarkBaselines.count) baselines available, can't check.")
+                    return
+                }
+
+                let currentBaseline = benchmarkBaselines[0]
+                let baselineName = baseline[0] == "default" ? "Current baseline" : baseline[0]
+                let comparingBaselineName = check ?? "unknown"
 
                 if quiet == 0 {
                     "Threshold violations".printAsHeader()
                 }
 
-//                let benchmark = benchmarkFor(currentBaseline.results)
-                if comparisonBaseline.betterResultsOrEqual(than: currentBaseline, benchmarks: benchmarks, printOutput: true) {
+                //                let benchmark = benchmarkFor(currentBaseline.results)
+                let (betterOrEqual, deviationResults) = checkBaseline.betterResultsOrEqual(than: currentBaseline,
+                                                                                           benchmarks: benchmarks)
+
+                if betterOrEqual {
                     print("New baseline '\(comparingBaselineName)' is BETTER (or equal) than the '\(baselineName)' baseline thresholds.")
                     print("")
 
                 } else {
+                    let metrics = deviationResults.map { $0.metric }.unique()
+
+                    metrics.forEach { metric in
+
+                        let relativeResults = deviationResults.filter { $0.metric == metric && $0.relative == true}
+                        let absoluteResults = deviationResults.filter { $0.metric == metric && $0.relative == false}
+                        let width = 40
+                        let percentileWidth = 15
+
+                        let relativeTable = TextTable<BenchmarkResult.ThresholdDeviation> {
+                            [Column(title: "\(metric.description) relative deviations", value: $0.percentile, width: width, align: .left),
+                             Column(title: "\(baselineName)", value: $0.baseValue, width: percentileWidth, align: .right),
+                             Column(title: "\(comparingBaselineName)", value: $0.comparisonValue, width: percentileWidth, align: .right),
+                             Column(title: "Difference", value: $0.difference, width: percentileWidth, align: .right),
+                             Column(title: "Threshold limit", value: $0.differenceThreshold, width: percentileWidth, align: .right)]
+                        }
+
+                        let absoluteTable = TextTable<BenchmarkResult.ThresholdDeviation> {
+                            [Column(title: "\(metric.description) absolute deviations", value: $0.percentile, width: width, align: .left),
+                             Column(title: "\(baselineName)", value: $0.baseValue, width: percentileWidth, align: .right),
+                             Column(title: "\(comparingBaselineName)", value: $0.comparisonValue, width: percentileWidth, align: .right),
+                             Column(title: "Difference", value: $0.difference, width: percentileWidth, align: .right),
+                             Column(title: "Threshold limit", value: $0.differenceThreshold, width: percentileWidth, align: .right)]
+                        }
+
+
+                        absoluteTable.print(absoluteResults, style: Style.fancy)
+                        relativeTable.print(relativeResults, style: Style.fancy)
+
+                    }
+
                     failBenchmark("New baseline '\(comparingBaselineName)' is WORSE than the '\(baselineName)' baseline thresholds.")
                 }
-
+                
                 return
             }
 
@@ -124,7 +170,6 @@ extension BenchmarkTool {
 
                 let baseline = benchmarkBaselines[0]
                 let baselineName = self.baseline.first ?? "default"
-
 
                 try baseline.targets.forEach { target in
                     let results = baseline.results.filter { $0.key.target == target }

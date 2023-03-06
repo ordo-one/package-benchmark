@@ -16,7 +16,7 @@ Benchmark provides a quick way for validation of performance metrics, while othe
 
 Benchmark is suitable for both smaller ad-hoc benchmarks only caring about runtime (in the spirit of [Google's swift-benchmark](https://github.com/google/swift-benchmark)) and more extensive benchmarks that care about additional metrics such as memory allocations, syscalls, thread usage and more. Thanks to the HDR Histogram foundation it's especially suitable for capturing latency statistics for large number of samples.
 
-The default text output from Benchmark is oriented around [the five-number summary](https://en.wikipedia.org/wiki/Five-number_summary) percentiles, plus `p90` and `p99`.
+The default text output from Benchmark is oriented around [the five-number summary](https://en.wikipedia.org/wiki/Five-number_summary) percentiles, plus the last decile (`p90`) and the last percentile (`p99`) - it's thus a variation of a [seven-figure summary](https://en.wikipedia.org/wiki/Seven-number_summary) with the focus on the 'bad' end of results (as those are what we typically care about addressing).
 
 We've found that focusing on percentiles rather than average or standard deviations as is common, is more useful for a wider range of benchmark measurements and allow for a consistent way of expressing benchmark results and CI thresholds deviations looking at both throughput and latency measurements (which typically do **not** have a standardized distribution and almost always are multi-modal in nature).
 

@@ -10,7 +10,7 @@
 
 extension String {
     func printAsHeader() {
-        let separator = String(repeating: "=", count: self.count)
+        let separator = String(repeating: "=", count: count)
         print("")
         print(separator)
         print(self)
