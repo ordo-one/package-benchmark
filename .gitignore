@@ -9,6 +9,9 @@
 ## User settings
 xcuserdata/
 
+## DocC build directories
+**/.docc-build
+
 ## compatibility with Xcode 8 and earlier (ignoring not required starting Xcode 9)
 *.xcscmblueprint
 *.xccheckout
@@ -51,9 +54,6 @@ playground.xcworkspace
 .swiftpm
 .DS_Store
 .build/
-
-# DocC local builds
-Sources/Benchmark/Documentation.docc/.docc-build/
 
 # CocoaPods
 #
