@@ -8,20 +8,30 @@
 
 # Benchmark 
 
-## Introduction
-
 Benchmark is a harness for easily creating Swift performance benchmarks for both macOS and Linux.
 
-It's intended to be suitable for both ad-hoc smaller benchmarks primarily caring about runtime (in the spirit of [Google's swift-benchmark](https://github.com/google/swift-benchmark)) as well for more extensive benchmarks caring about additional benchmark metrics such as memory allocations, syscalls, thread usage and more.
+## Overview
 
-Benchmark supports both local usage with baseline comparisons for an iterative workflow for the individual developer, but more importantly has good support for integration with GitHub CI with provided sample workflows for automated comparisons between `main` and a pull request branch to support enforced performance validation for pull requests with customizable thresholds - this is the primary intended use case for the package.
+Performance is a key feature for many apps and frameworks. Benchmark helps make it easy to measure and track many different metrics that affects performance, such as CPU usage, memory usage and use of operating system resources such as threads and system calls.
 
-The focus for measurements are percentiles (`p0` (min), `p25`, `p50` (median), `p75`, `p90`, `p99` and `p100` (max)) to support analysis of the actual distribution of benchmark measurements. A given benchmark is typically run for a minimum amount of time and/or a given number of iterations, see details in the Benchmark documentation below.
+Benchmark supports several key workflows for performance measurements, e.g.:
+
+* **Automated Pull Request performance regression checks** by comparing the performance metrics of a pull request with the main branch and having the PR check fail if there is a regression (e.g. no added memory allocations, or that the runtime was at least as good) with ready to use workflows for GitHub CI
+* **Manual comparison of multiple performance baselines** for iterative or A/B performance work by an individual developer
+* **Export of benchmark results in several formats** such as JMH (Java Microbenchmark Harness), TSV (tab-separated-values), [HDR Histogram](http://hdrhistogram.org) ([analysis](http://www.david-andrzejewski.com/publications/hdr.pdf)), etc. This allows for tracking performance over time or analyzing/visualizing with other tools such as [JMH visualizer](https://jmh.morethan.io), [Gnuplot](http://www.gnuplot.info), [YouPlot](https://github.com/red-data-tools/YouPlot), [HDR Histogram analyzer](http://hdrhistogram.github.io/HdrHistogram/plotFiles.html) and more.
+
+Benchmark provides a quick way for validation of performance metrics, while other more specialized tools such as Instruments, DTrace, Heaptrack, Leaks, Sample and more can be used for finding root causes for any deviations found.
+
+Benchmark is suitable for both smaller ad-hoc benchmarks only caring about runtime (in the spirit of [Google's swift-benchmark](https://github.com/google/swift-benchmark)) and more extensive benchmarks that care about additional metrics such as memory allocations, syscalls, thread usage and more. Thanks to the [HDR Histogram foundation](https://github.com/ordo-one/package-histogram) it's especially suitable for capturing latency statistics for large number of samples.
+
+## Documentation
+
+Documentation on how to use Benchmark in your Swift package can be [viewed online](https://swiftpackageindex.com/ordo-one/package-benchmark/main/documentation/benchmark) (hosted by the Swift Package Index, thanks!) or inside Xcode using `Build Documenation`. Additionally the command plugin provides help information if you run `swift package benchmark help` from the command line.
 
 ### CI build note
-macOS builds are failing on the CI as GitHub still haven't provided runners for macOS 13 Ventura, it works in practice.
+The badges above shows that macOS builds are failing on the CI [as GitHub still haven't provided runners for macOS 13 Ventura](https://github.com/actions/runner-images/issues/6426), it works in practice.
 
-### Minimal benchmark + benchmark using async / Swift Concurrency
+### Sample benchmark code
 ```swift
 import BenchmarkSupport
 @main extension BenchmarkRunner {}
@@ -55,7 +65,7 @@ To execute all defined benchmarks, simply run:
 
 ```swift package benchmark```
 
-See the detailed documentation links below for extended usage including delta comparisons and baseline storage etc.
+Please see the detailed documentation hosted at Swift Package Index linked to above or inside Xcode.
 
 ### Sample output benchmark run
 
@@ -65,16 +75,19 @@ See the detailed documentation links below for extended usage including delta co
 
 <img width="876" alt="image" src="https://user-images.githubusercontent.com/8501048/192494857-c39c478c-62fe-4795-9458-b317db59893c.png">
 
-### Source and file format stability 
-The source and file format of baselines are not officially stable yet until release `1.0.0`, even though no majors changes are planned currently, there might be source and file format breaking changes in minor releases (not patch releases) until then.
+### API and file format stability
+The API is deemed stable as of `1.0.0` and follows semantical versioning for future releases. 
 
-## Contents
+The export file formats that are externally defined (e.g. JMH or HDR Histogram formats) will follow the upstream definitions if they change, but have been quite stable for several years. 
 
-- [Getting started and initial setup](Documentation/GettingStarted.md)
-- [Writing benchmarks](Documentation/WritingBenchmarks.md)
-- [Running benchmarks](Documentation/RunningBenchmarks.md)
-- [Performance metrics and thresholds](Documentation/Metrics.md)
-- [Typical workflows (manual and CI)](Documentation/Workflows.md)
-- [Laundry list](Documentation/TODO.md)
+The Histogram codable representation is not stable and may change if the Histogram implementation changes.
 
-There's also [a sample project](https://github.com/ordo-one/package-benchmark-samples) using various aspects of this package for those who just want to see how it can be used in practice
+The benchmark internal baseline representation (stored in `.benchmarkBaselines`) is not stable and is not viewed as public API and may break over time.
+
+For those wanting to save benchmark data over time, it's recommended to export data in e.g. HDR Histogram representations (percentiles, average, stddev etc) or simply post processing the TSV format (which is raw data) to your desired representation.
+
+PR:s for additional standardized formats are welcome, as the export formats are the intended stable interface for saving such data.
+
+### Sample Code
+
+There's also [a sample project](https://github.com/ordo-one/package-benchmark-samples) using various aspects of this package in practice.
