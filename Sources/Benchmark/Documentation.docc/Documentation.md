@@ -28,7 +28,6 @@ That being said, some of the export formats do include more traditional average/
 
 - <doc:GettingStarted>
 - <doc:WritingBenchmarks>
-- <doc:ConfiguringBenchmarks>
 - <doc:Metrics>
 - <doc:RunningBenchmarks>
 - <doc:Workflows>
@@ -39,9 +38,10 @@ That being said, some of the export formats do include more traditional average/
 
 ### Configuring Benchmarks
 
-- ``Benchmark/Benchmark/Configuration-swift.struct`` 
+- ``Benchmark/Benchmark/Configuration-swift.struct``
 - ``Benchmark/BenchmarkMetric``
 - ``Benchmark/BenchmarkTimeUnits``
+- ``Benchmark/BenchmarkScalingFactor``
 
 ### Registering Benchmarks
 

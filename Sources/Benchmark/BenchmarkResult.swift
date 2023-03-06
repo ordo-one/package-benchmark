@@ -52,12 +52,23 @@ public enum BenchmarkTimeUnits: Int, Codable, CustomStringConvertible {
     }
 }
 
+/// The scaling factor for benchmark iterations.
+///
+/// Typically used for very fast-running benchmarks.
+/// In those cases, the time to measure the benchmark can impact as much as the time to run the code being benchmarked.
+/// Use a scaling factor when running your short benchmarks to provide greater numerical stability to the results.
 public enum BenchmarkScalingFactor: Int, Codable {
+    /// No scaling factor, the raw count of iterations.
     case one = 1 // e.g. nanoseconds, or count
+    /// Scaling factor of 1e03.
     case kilo = 1_000 // microseconds
+    /// Scaling factor of 1e06.
     case mega = 1_000_000 // milliseconds
+    /// Scaling factor of 1e09.
     case giga = 1_000_000_000 // seconds
+    /// Scaling factor of 1e12.
     case tera = 1_000_000_000_000 // 1K seconds
+    /// Scaling factor of 1e15.
     case peta = 1_000_000_000_000_000 // 1M
 
     public var description: String {
