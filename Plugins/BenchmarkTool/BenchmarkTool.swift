@@ -185,6 +185,16 @@ struct BenchmarkTool: AsyncParsableCommand {
             try readBaselines()
         }
 
+        // First get a list of all benchmarks
+        try benchmarkExecutablePaths.forEach { benchmarkExecutablePath in
+            try runChild(benchmarkPath: benchmarkExecutablePath,
+                         benchmarkCommand: .query) { [self] result in
+                if result != 0 {
+                    printChildRunError(error: result, benchmarkExecutablePath: benchmarkExecutablePath)
+                }
+            }
+        }
+
         // If we just need data from disk, skip running benchmarks
         if command == .baseline, benchmarkBaselines.count > 0 {
             if compare == nil, delete == 0, update == 0 {
@@ -213,29 +223,13 @@ struct BenchmarkTool: AsyncParsableCommand {
             fatalError("Query command should never be specified to the BenchmarkTool")
         }
 
-        // First get a list of all benchmarks
-        try benchmarkExecutablePaths.forEach { benchmarkExecutablePath in
-            try runChild(benchmarkPath: benchmarkExecutablePath,
-                         benchmarkCommand: .query) { [self] result in
-                if result != 0 {
-                    printChildRunError(error: result, benchmarkExecutablePath: benchmarkExecutablePath)
-                }
-            }
-        }
-
         guard command != .list else {
             try listBenchmarks()
             return
         }
 
         if quiet == 0 {
-            let runString = "Running Benchmarks"
-            let separator = String(repeating: "=", count: runString.count)
-            print("")
-            print(separator)
-            print(runString)
-            print(separator)
-            print("")
+            "Running Benchmarks".printAsHeader()
             fflush(stdout)
         }
 

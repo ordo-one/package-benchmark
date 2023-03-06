@@ -182,10 +182,7 @@ extension BenchmarkTool {
                 var subDirectory = storagePath
                 subDirectory.append(file.lastComponent!)
                 if let directoryName = file.lastComponent {
-                    let string = "Baselines for \(directoryName.description)"
-                    let separator = String(repeating: "=", count: string.count)
-                    print(string)
-                    print(separator)
+                    "Baselines for \(directoryName.description)".printAsHeader()
                     for file in subDirectory.directoryEntries {
                         if let subdirectoryName = file.lastComponent {
                             if file.ends(with: ".") == false,
@@ -385,9 +382,29 @@ extension BenchmarkTool {
     }
 }
 
+extension BenchmarkBaseline {
+    func thresholdFor(benchmarks: [Benchmark], name: String, target: String, metric: BenchmarkMetric) -> BenchmarkResult.PercentileThresholds {
+        let benchmark = benchmarks.filter { $0.name == name && $0.target == target }.first
+
+        guard let benchmark else {
+            return BenchmarkResult.PercentileThresholds.default
+        }
+
+        guard let thresholds = benchmark.configuration.thresholds else {
+            return BenchmarkResult.PercentileThresholds.default
+        }
+
+        guard let threshold = thresholds[metric] else {
+            return BenchmarkResult.PercentileThresholds.default
+        }
+
+        return threshold
+    }
+}
+
 extension BenchmarkBaseline: Equatable {
     public func betterResultsOrEqual(than otherBaseline: BenchmarkBaseline,
-                                     thresholds: BenchmarkResult.PercentileThresholds = .default,
+                                     benchmarks: [Benchmark],
                                      printOutput: Bool = false) -> Bool {
         let lhs = self
         let rhs = otherBaseline
@@ -397,15 +414,20 @@ extension BenchmarkBaseline: Equatable {
         var betterOrEqualForIdentifier = true
 
         for (lhsBenchmarkIdentifier, lhsBenchmarkResults) in lhs.results {
-            /*            if printOutput {
+             /*           if printOutput {
                  print("Checking for threshold violations for `\(lhsBenchmarkIdentifier.target):\(lhsBenchmarkIdentifier.name)`.")
              }
-             */
+*/
             for lhsBenchmarkResult in lhsBenchmarkResults {
                 if let rhsResults = rhs.results.first(where: { $0.key == lhsBenchmarkIdentifier }) {
                     if let rhsBenchmarkResult = rhsResults.value.first(where: { $0.metric == lhsBenchmarkResult.metric }) {
+                        let thresholds = thresholdFor(benchmarks: benchmarks,
+                                                     name: lhsBenchmarkIdentifier.name,
+                                                     target: lhsBenchmarkIdentifier.target,
+                                                     metric: lhsBenchmarkResult.metric)
+
                         if lhsBenchmarkResult.betterResultsOrEqual(than: rhsBenchmarkResult,
-                                                                   thresholds: lhsBenchmarkResult.thresholds ?? thresholds,
+                                                                   thresholds: thresholds,
                                                                    printOutput: printOutput) == false {
                             betterOrEqualForIdentifier = false
                         }

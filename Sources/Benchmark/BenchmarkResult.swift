@@ -338,6 +338,8 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
             let absoluteDifference = lhs - rhs
             let reverseComparison = metric.polarity == .prefersLarger
 
+//            print("Checking worseResult \(lhs) \(rhs) \(percentile) \(thresholds) \(scalingFactor)")
+
             var thresholdViolated = false
 
             if let threshold = thresholds.relative[percentile] {
@@ -350,9 +352,11 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
                     thresholdViolated = true
                 }
             }
-
+//print("ABS: \(thresholds.absolute) \(percentile)")
             if var threshold = thresholds.absolute[percentile] {
+                print("Absolute threshold check \(threshold) \(absoluteDifference)")
                 threshold /= (1_000_000_000 / scalingFactor)
+                print("Absolute threshold check \(threshold)")
                 if reverseComparison ? -absoluteDifference > threshold : absoluteDifference > threshold {
                     if printOutput {
                         print("`\(metric.description)` absolute threshold violated, [\(percentile)] result" +
@@ -361,6 +365,7 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
                     thresholdViolated = true
                 }
             }
+//            print("returning \(thresholdViolated) \(printOutput)")
             return thresholdViolated
         }
 

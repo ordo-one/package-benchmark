@@ -84,7 +84,6 @@ extension BenchmarkTool {
             }
 
             if listBaselines > 0 {
-                print("")
                 printAllBaselines()
                 return
             }
@@ -101,7 +100,12 @@ extension BenchmarkTool {
 
                 prettyPrintDelta(currentBaseline: currentBaseline, baseline: comparisonBaseline)
 
-                if currentBaseline.betterResultsOrEqual(than: comparisonBaseline, printOutput: true) {
+                if quiet == 0 {
+                    "Threshold violations".printAsHeader()
+                }
+
+//                let benchmark = benchmarkFor(currentBaseline.results)
+                if comparisonBaseline.betterResultsOrEqual(than: currentBaseline, benchmarks: benchmarks, printOutput: true) {
                     print("New baseline '\(comparingBaselineName)' is BETTER (or equal) than the '\(baselineName)' baseline thresholds.")
                     print("")
 
@@ -121,9 +125,6 @@ extension BenchmarkTool {
                 let baseline = benchmarkBaselines[0]
                 let baselineName = self.baseline.first ?? "default"
 
-                if quiet == 0 {
-                    prettyPrint(baseline, header: "Updating baseline '\(baselineName)'")
-                }
 
                 try baseline.targets.forEach { target in
                     let results = baseline.results.filter { $0.key.target == target }
@@ -134,6 +135,12 @@ extension BenchmarkTool {
                               baselineName: baselineName,
                               target: target)
                 }
+
+                if quiet == 0 {
+                    print("")
+                    print("Updated baseline '\(baselineName)'")
+                }
+
                 return
             }
 
