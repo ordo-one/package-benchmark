@@ -4,7 +4,7 @@
 
 ### Creating Configurations
 
-- ``Benchmark/Benchmark/Configuration-swift.struct/init(metrics:timeUnits:warmupIterations:throughputScalingFactor:maxDuration:maxIterations:skip:thresholds:)``
+- ``Benchmark/Benchmark/Configuration-swift.struct/init(metrics:timeUnits:warmupIterations:scalingFactor:maxDuration:maxIterations:skip:thresholds:)``
 
 ### Inspecting Configurations
 
@@ -13,7 +13,7 @@
 - ``Benchmark/Benchmark/Configuration-swift.struct/metrics``
 - ``Benchmark/Benchmark/Configuration-swift.struct/skip``
 - ``Benchmark/Benchmark/Configuration-swift.struct/thresholds``
-- ``Benchmark/Benchmark/Configuration-swift.struct/throughputScalingFactor``
+- ``Benchmark/Benchmark/Configuration-swift.struct/scalingFactor``
 - ``Benchmark/Benchmark/Configuration-swift.struct/timeUnits``
 - ``Benchmark/Benchmark/Configuration-swift.struct/warmupIterations``
 

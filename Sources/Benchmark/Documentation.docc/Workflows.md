@@ -11,21 +11,19 @@ While developing locally, you can set benchmark baselines, compare against a bas
 Typical workflow for a developer who wants to track performance metrics on the local machine while during performance work, would be to store one or more baselines (either default or named baselines), with e.g:
 
 ```
-swift package --allow-writing-to-package-directory \
-    benchmark update-baseline
+swift package --allow-writing-to-package-directory benchmark baseline update
 ```
 
 or
 
 ```
-swift package --allow-writing-to-package-directory \
-    benchmark update-baseline alpha
+swift package --allow-writing-to-package-directory benchmark baseline alpha update
 ```
 
 then while working, simply compare current state of local repo with the previously recorded baseline:
 
 ```
-swift package benchmark compare
+swift package benchmark baseline compare
 ```
 
 or

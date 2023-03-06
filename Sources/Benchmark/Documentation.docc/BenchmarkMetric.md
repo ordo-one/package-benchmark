@@ -52,14 +52,14 @@
 
 ### Custom Metrics
 
-- ``Benchmark/BenchmarkMetric/custom(_:polarity:)``
-- ``Benchmark/BenchmarkMetric/polarity``
-- ``Benchmark/BenchmarkMetric/Polarity``
+- ``Benchmark/BenchmarkMetric/custom(_:polarity:useScalingFactor:)``
+- ``Benchmark/BenchmarkMetric/polarity-swift.property``
+- ``Benchmark/BenchmarkMetric/Polarity-swift.enum``
 
 ### Inspecting Metrics
 
 - ``Benchmark/BenchmarkMetric/description``
-- ``Benchmark/BenchmarkMetric/countable()``
+- ``Benchmark/BenchmarkMetric/countable``
 
 ### Decoding a Metric
 

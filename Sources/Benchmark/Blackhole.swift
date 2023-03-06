@@ -23,9 +23,9 @@
 /// Benchmark("Foundation Date()",
 ///     configuration: .init(
 ///         metrics: [.throughput, .wallClock],
-///         throughputScalingFactor: .mega)
+///         scalingFactor: .mega)
 /// ) { benchmark in
-///     for _ in benchmark.throughputIterations {
+///     for _ in benchmark.scaledIterations {
 ///         blackHole(Date())
 ///     }
 /// }

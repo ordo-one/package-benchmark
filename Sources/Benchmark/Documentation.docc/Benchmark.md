@@ -17,7 +17,7 @@
 
 ### Writing Benchmarks
 
-- ``Benchmark/Benchmark/throughputIterations``
+- ``Benchmark/Benchmark/scaledIterations``
 - ``Benchmark/Benchmark/startMeasurement()``
 - ``Benchmark/Benchmark/stopMeasurement()``
 
