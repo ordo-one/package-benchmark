@@ -36,10 +36,10 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
     var debug = false
 
     func shouldRunBenchmark(_ name: String) throws -> Bool {
-        if try skip.contains(where: { name.wholeMatch(of: try Regex($0)) != nil }) {
+        if try skip.contains(where: { try name.wholeMatch(of: Regex($0)) != nil }) {
             return false
         }
-        return try filter.isEmpty || filter.contains(where: { name.wholeMatch(of: try Regex($0)) != nil })
+        return try filter.isEmpty || filter.contains(where: { try name.wholeMatch(of: Regex($0)) != nil })
     }
 
     // swiftlint:disable cyclomatic_complexity function_body_length

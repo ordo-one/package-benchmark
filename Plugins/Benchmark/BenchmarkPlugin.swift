@@ -37,6 +37,7 @@ import PackagePlugin
         case percentiles
         case tsv
         case jmh
+        case encodedHistogram
     }
 
     enum Grouping: String {
