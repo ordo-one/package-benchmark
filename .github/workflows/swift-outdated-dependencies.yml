@@ -13,7 +13,7 @@ jobs:
     - uses: actions/checkout@v3
     - name: Check Swift package dependencies
       id: spm-dep-check
-      uses: MarcoEidinger/swift-package-dependencies-check@2.1.0
+      uses: MarcoEidinger/swift-package-dependencies-check@2.3.4
       with:
          isMutating: true
          failWhenOutdated: false

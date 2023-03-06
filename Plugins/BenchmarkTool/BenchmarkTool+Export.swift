@@ -88,6 +88,56 @@ extension BenchmarkTool {
         }
     }
 
+    /// Writes raw data into a file.
+    /// - Parameters:
+    ///   - exportData: A buffer in the form of an array of unsigned 8-bit integers.
+    ///   - hostIdentifier: The identifier of the host running the benchmarks.
+    ///   - fileName: The filename to write into.
+    func write(exportData: [UInt8],
+               hostIdentifier: String? = nil,
+               fileName: String = "results.txt") throws {
+        var outputPath = FilePath(".")
+
+        var jsonFile = FilePath()
+        if let hostIdentifier {
+            jsonFile.append("\(hostIdentifier).\(fileName)")
+        } else {
+            jsonFile.append(fileName)
+        }
+
+        outputPath.append(jsonFile.components)
+
+        do {
+            let fd = try FileDescriptor.open(
+                outputPath, .writeOnly, options: [.truncate, .create], permissions: .ownerReadWrite
+            )
+
+            do {
+                try fd.closeAfter {
+                    do {
+                        try exportData.withUnsafeBytes { rawBuffer in
+                            _ = try fd.write(rawBuffer)
+                        }
+                    } catch {
+                        print("Failed to write to file \(outputPath) [\(error)]")
+                    }
+                }
+            } catch {
+                print("Failed to close fd for \(outputPath) after write [\(error)].")
+            }
+        } catch {
+            if errno == EPERM {
+                print("Lacking permissions to write to \(outputPath)")
+                print("Give benchmark plugin permissions by running with e.g.:")
+                print("")
+                print("swift package --allow-writing-to-package-directory benchmark --format encodedHistogram")
+                print("")
+            } else {
+                print("Failed to open file \(outputPath), errno = [\(errno)]")
+            }
+        }
+    }
+
     func exportResults(baseline: BenchmarkBaseline) throws {
         let baselineName = baseline.baselineName == "Current baseline" ? "default" : baseline.baselineName
         switch format {
@@ -124,6 +174,17 @@ extension BenchmarkTool {
                     }
                     try write(exportData: "\(outputString)",
                               fileName: cleanupStringForShellSafety("\(baselineName).\(key.target).\(key.name).\(values.metric).tsv"))
+                }
+            }
+        case .encodedHistogram:
+            try baseline.results.forEach { key, results in
+                let encoder = XJSONEncoder()
+
+                try results.forEach { values in
+                    let histogram = values.statistics.histogram
+                    let jsonData = try encoder.encode(histogram)
+                    try write(exportData: jsonData,
+                              fileName: cleanupStringForShellSafety("\(baselineName).\(key.target).\(key.name).\(values.metric).json"))
                 }
             }
         }
