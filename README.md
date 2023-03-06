@@ -12,7 +12,7 @@ Benchmark is a harness for easily creating Swift performance benchmarks for both
 
 ## Overview
 
-Performance is a key feature for many apps and frameworks. Benchmark helps make it easy to measure and track many different metrics that affects performance, such as CPU usage, memory usage and use of operating system resources such as threads and system calls.
+Performance is a key feature for many apps and frameworks. Benchmark helps make it easy to measure and track many different metrics that affect performance, such as CPU usage, memory usage and use of operating system resources such as threads and system calls.
 
 Benchmark supports several key workflows for performance measurements, e.g.:
 
