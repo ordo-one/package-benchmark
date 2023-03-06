@@ -8,7 +8,6 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 //
 
-// swiftlint:disable cyclomatic_complexity
 // swiftlint disable: file_length type_body_length
 import ArgumentParser
 @_exported import Benchmark
@@ -70,63 +69,5 @@ extension BenchmarkRunner {
         let request = try XJSONDecoder().decode(BenchmarkCommandRequest.self, from: readBytes)
 
         return request
-    }
-}
-
-extension BenchmarkRunner {
-    func mallocStatsProducerNeeded(_ metric: BenchmarkMetric) -> Bool {
-        switch metric {
-        case .mallocCountLarge:
-            return true
-        case .memoryLeaked:
-            return true
-        case .mallocCountSmall:
-            return true
-        case .mallocCountTotal:
-            return true
-        case .allocatedResidentMemory:
-            return true
-        default:
-            return false
-        }
-    }
-}
-
-extension BenchmarkRunner {
-    func operatingSystemsStatsProducerNeeded(_ metric: BenchmarkMetric) -> Bool {
-        switch metric {
-        case .cpuUser:
-            return true
-        case .cpuSystem:
-            return true
-        case .cpuTotal:
-            return true
-        case .peakMemoryResident:
-            return true
-        case .peakMemoryVirtual:
-            return true
-        case .syscalls:
-            return true
-        case .contextSwitches:
-            return true
-        case .threads:
-            return true
-        case .threadsRunning:
-            return true
-        case .readSyscalls:
-            return true
-        case .writeSyscalls:
-            return true
-        case .readBytesLogical:
-            return true
-        case .writeBytesLogical:
-            return true
-        case .readBytesPhysical:
-            return true
-        case .writeBytesPhysical:
-            return true
-        default:
-            return false
-        }
     }
 }
