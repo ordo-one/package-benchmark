@@ -50,7 +50,7 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
         }
 
         let channel = Self.testReadWrite ?? self
-
+        
         registerBenchmarks()
 
         var debugIterator = Benchmark.benchmarks.makeIterator()
@@ -59,6 +59,8 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
         var benchmark: Benchmark?
         var results: [BenchmarkResult] = []
 
+        setupBenchmarks()
+        
         while true {
             if debug { // in debug mode we run all benchmarks matching filter/skip specified
                 var benchmark: Benchmark?
@@ -123,6 +125,7 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
 
                 try channel.write(.end)
             case .end:
+                teardownBenchmarks()
                 return
             }
         }

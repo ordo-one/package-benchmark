@@ -220,7 +220,7 @@ public final class Benchmark: Codable, Hashable {
         failureReason = description
     }
 
-    // The rest is intenral supporting infrastructure that should only
+    // The rest is internal supporting infrastructure that should only
     // be used by the BenchmarkRunner
 
     // https://forums.swift.org/t/actually-waiting-for-a-task/56230

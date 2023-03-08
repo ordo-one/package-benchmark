@@ -26,6 +26,36 @@ public dynamic func registerBenchmarks() {
     print("This function must be dynamically replaced using @_dynamicReplacement")
 }
 
+/// The entry point for defining benchmarks setup, expected to be overridden by the setup you write.
+///
+/// Annotate a function that returns your benchmarks with `@_dynamicReplacement(for: setupBenchmarks)`
+/// to override this function. The following code shows a minimal benchmark structure.
+/// ```swift
+/// @_dynamicReplacement(for: setupBenchmarks)
+/// func setup() {
+///     try Benchmark("Minimal benchmark") { benchmark in
+///     }
+/// }
+/// ```
+public dynamic func setupBenchmarks() {
+    print("This function must be dynamically replaced using @_dynamicReplacement")
+}
+
+/// The entry point for defining benchmarks teardown, expected to be overridden by the teardown you write.
+///
+/// Annotate a function that returns your benchmarks with `@_dynamicReplacement(for: teardownBenchmarks)`
+/// to override this function. The following code shows a minimal benchmark structure.
+/// ```swift
+/// @_dynamicReplacement(for: teardownBenchmarks)
+/// func teardown() {
+///     try Benchmark("Minimal benchmark") { benchmark in
+///     }
+/// }
+/// ```
+public dynamic func teardownBenchmarks() {
+    print("This function must be dynamically replaced using @_dynamicReplacement")
+}
+
 // Command sent from benchmark runner to the benchmark under measurement
 #if swift(>=5.8)
     @_documentation(visibility: internal)
