@@ -312,7 +312,6 @@ public extension Benchmark {
             case thresholds
         }
     }
-    
     /// Definition of a throwing Benchmark
     /// - Parameters:
     ///   - name: The name used for display purposes of the benchmark (also used for
@@ -321,8 +320,8 @@ public extension Benchmark {
     ///   - closure: The actual throwing benchmark closure that will be measured
     @discardableResult
     convenience init?(_ name: String,
-                 configuration: Benchmark.Configuration = Benchmark.defaultConfiguration,
-                 closure: @escaping (_ benchmark: Benchmark) throws -> Void) {
+                      configuration: Benchmark.Configuration = Benchmark.defaultConfiguration,
+                      closure: @escaping (_ benchmark: Benchmark) throws -> Void) {
         self.init(name, configuration: configuration) { benchmark in
             do {
                 try closure(benchmark)
