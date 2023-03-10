@@ -24,6 +24,9 @@ let package = Package(
         .package(url: "https://github.com/ordo-one/package-histogram", .upToNextMajor(from: "0.0.1")),
         .package(url: "https://github.com/ordo-one/Progress.swift", .upToNextMajor(from: "1.0.0")),
         .package(url: "https://github.com/apple/swift-docc-plugin", .upToNextMajor(from: "1.1.0")),
+        .package(url: "https://github.com/apple/swift-async-algorithms", .upToNextMajor(from: "0.1.0")),
+        .package(url: "https://github.com/ordo-one/package-concurrency-helpers", .upToNextMajor(from: "0.0.10")),
+        .package(url: "https://github.com/apple/swift-nio", .upToNextMajor(from: "2.41.0")),
     ],
     targets: [
         // Plugin used by users of the package
@@ -123,6 +126,18 @@ let package = Package(
                 .product(name: "Histogram", package: "package-histogram"),
             ],
             path: "Benchmarks/Histogram"
+        ),
+
+        // Benchmark of various producer-consumer primitives
+        .executableTarget(
+            name: "ProducerConsumerBenchmark",
+            dependencies: [
+                "BenchmarkSupport",
+                .product(name: "AsyncAlgorithms", package: "swift-async-algorithms"),
+                .product(name: "ConcurrencyHelpers", package: "package-concurrency-helpers"),
+                .product(name: "NIOCore", package: "swift-nio"),
+            ],
+            path: "Benchmarks/ProducerConsumer"
         ),
 
         // Scaffolding to support benchmarks under the hood
