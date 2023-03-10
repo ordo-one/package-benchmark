@@ -78,7 +78,6 @@ let package = Package(
             name: "Benchmark",
             dependencies: [
                 "Statistics",
-                .product(name: "TextTable", package: "TextTable"),
             ]
         ),
 
