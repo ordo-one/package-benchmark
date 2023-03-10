@@ -9,7 +9,8 @@
 //
 
 import BenchmarkSupport
-@main extension BenchmarkRunner {}
+@main
+extension BenchmarkRunner {}
 
 // swiftlint disable: attributes
 @_dynamicReplacement(for: registerBenchmarks)
@@ -27,7 +28,7 @@ func benchmarks() {
               configuration: .init(metrics: BenchmarkMetric.all, scalingFactor: .kilo)) { benchmark in
         for _ in benchmark.scaledIterations {
             //         blackHole(Int.random(in: benchmark.scaledIterations))
-                  blackHole(Int.random(in: benchmark.scaledIterations))
+            blackHole(Int.random(in: benchmark.scaledIterations))
             blackHole(Int.random(in: benchmark.scaledIterations))
         }
     }

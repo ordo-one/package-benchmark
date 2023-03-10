@@ -16,11 +16,11 @@ import Foundation
 import SystemPackage
 
 #if canImport(Darwin)
-import Darwin
+    import Darwin
 #elseif canImport(Glibc)
-import Glibc
+    import Glibc
 #else
-#error("Unsupported Platform")
+    #error("Unsupported Platform")
 #endif
 
 struct BenchmarkMachine: Codable, Equatable {
@@ -40,8 +40,8 @@ struct BenchmarkMachine: Codable, Equatable {
 
     public static func == (lhs: BenchmarkMachine, rhs: BenchmarkMachine) -> Bool {
         lhs.processors == rhs.processors &&
-        lhs.processorType == rhs.processorType &&
-        lhs.memory == rhs.memory
+            lhs.processorType == rhs.processorType &&
+            lhs.memory == rhs.memory
     }
 }
 
@@ -410,7 +410,7 @@ extension BenchmarkBaseline: Equatable {
         var warningPrintedForMetric: Set<BenchmarkMetric> = []
         var warningPrinted = false
         var worseResult = false
-        var betterOrEqualForIdentifier: Bool = true
+        var betterOrEqualForIdentifier = true
         var deviationResults: [BenchmarkResult.ThresholdDeviation] = []
         var allDeviationResults: [BenchmarkResult.ThresholdDeviation] = []
 
@@ -424,8 +424,8 @@ extension BenchmarkBaseline: Equatable {
                                                       metric: lhsBenchmarkResult.metric)
 
                         (betterOrEqualForIdentifier, deviationResults) =
-                        lhsBenchmarkResult.betterResultsOrEqual(than: rhsBenchmarkResult,
-                                                                thresholds: thresholds)
+                            lhsBenchmarkResult.betterResultsOrEqual(than: rhsBenchmarkResult,
+                                                                    thresholds: thresholds)
                         allDeviationResults.append(contentsOf: deviationResults)
                     } else {
                         if warningPrintedForMetric.contains(lhsBenchmarkResult.metric) == false {

@@ -93,6 +93,7 @@ public extension BenchmarkScalingFactor {
         }
     }
 }
+// swiftlint:disable type_body_length
 
 #if swift(>=5.8)
     @_documentation(visibility: internal)

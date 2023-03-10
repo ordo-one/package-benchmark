@@ -125,12 +125,12 @@ extension BenchmarkTool {
                     print("")
 
                 } else {
-                    let metrics = deviationResults.map { $0.metric }.unique()
+                    let metrics = deviationResults.map(\.metric).unique()
 
                     metrics.forEach { metric in
 
-                        let relativeResults = deviationResults.filter { $0.metric == metric && $0.relative == true}
-                        let absoluteResults = deviationResults.filter { $0.metric == metric && $0.relative == false}
+                        let relativeResults = deviationResults.filter { $0.metric == metric && $0.relative == true }
+                        let absoluteResults = deviationResults.filter { $0.metric == metric && $0.relative == false }
                         let width = 40
                         let percentileWidth = 15
 
@@ -150,15 +150,13 @@ extension BenchmarkTool {
                              Column(title: "Threshold limit", value: $0.differenceThreshold, width: percentileWidth, align: .right)]
                         }
 
-
                         absoluteTable.print(absoluteResults, style: Style.fancy)
                         relativeTable.print(relativeResults, style: Style.fancy)
-
                     }
 
                     failBenchmark("New baseline '\(comparingBaselineName)' is WORSE than the '\(baselineName)' baseline thresholds.")
                 }
-                
+
                 return
             }
 
