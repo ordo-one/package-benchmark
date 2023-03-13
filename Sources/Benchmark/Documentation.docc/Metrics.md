@@ -33,10 +33,10 @@ Currently supported metrics are:
 - term `readBytesPhysical`: The number of bytes physically read from a block device (i.e. disk) -- Linux only
 - term `writeBytesPhysical`: The number of bytes physicall written to a block device (i.e. disk) -- Linux only
 
-Additionally, _custom metrics_ are supported `custom(_ name: String, polarity: Polarity = .prefersSmaller)` as outlined in the writing benchmarks documentation.
+Additionally, _custom metrics_ are supported `custom(_ name: String, polarity: Polarity = .prefersSmaller, useScalingFactor: Bool = true)` as outlined in the writing benchmarks documentation.
 
 ### Thresholds
 
-For comparison (`swift package benchmark compare`) operations, there's a set of default thresholds that are used which are fairly strict. It is also possible to define both absolute and relative thresholds, _per metric_, that will be used for such comparisons (or that a given metric should be skipped completely).
+For comparison (`swift package benchmark baseline compare`) operations, there's a set of default thresholds that are used which are strict. It is also possible to define both absolute and relative thresholds, _per metric_, that will be used for such comparisons (or that a given metric should be skipped completely).
 
 See <doc:WritingBenchmarks> or look at the sample code to see how custom thresholds can be set up.

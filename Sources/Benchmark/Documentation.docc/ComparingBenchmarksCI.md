@@ -6,7 +6,7 @@ Benchmark was written with continuous integration in mind, and allows you to set
 
 It may be useful to compare code performance against a baseline in an automated fashion.
 Benchmark was developed to be invoked through command line options to support automation.
-Additionally, the `swift package benchmark compare` command exits with a non-zero error if there are performance degradations found during the comparison.
+Additionally, the `swift package benchmark baseline check` command exits with a non-zero error if there are performance degradations found during the comparison.
 
 ### Example GitHub CI workflow comparing against a baseline
 
@@ -73,7 +73,7 @@ jobs:
         run: |
           echo $(date) >> $GITHUB_STEP_SUMMARY
           echo "exitStatus=1" >> $GITHUB_ENV
-          swift package benchmark compare main pull_request --format markdown >> $GITHUB_STEP_SUMMARY
+          swift package benchmark baseline check main pull_request --format markdown >> $GITHUB_STEP_SUMMARY
           echo "exitStatus=0" >> $GITHUB_ENV
         continue-on-error: true
       - if: ${{ env.exitStatus == '0' }}

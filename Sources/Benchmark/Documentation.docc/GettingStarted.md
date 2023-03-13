@@ -6,12 +6,11 @@ Before creating your own benchmarks, you must install the required prerequisites
 
 There are three steps that needs to be performed to get up and running with your own benchmarks:
 
-* Install prerequisite dependencies if needed (currently only `jemalloc`) 
+* Install prerequisite dependencies if needed (currently that's only `jemalloc`) 
 * Add a dependency on Benchmark to your `Package.swift` file
 * Add one or more benchmark executable targets to the top level `Benchmarks/` directory for auto discovery
 
 After having done those, running your benchmarks are as simple as running `swift package benchmark`.
-
 
 ### Installing Prerequisites and Platform Support
 

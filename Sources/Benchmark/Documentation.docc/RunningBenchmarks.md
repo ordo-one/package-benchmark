@@ -21,7 +21,7 @@ swift package benchmark <command verb> [<options>]
 - term `run`: run the benchmarks - default action if none specified
 - term `list`: list available benchmarks that can be run per benchmark target
 - term `baseline list`: Lists the available baselines stored per benchmark target
-- term `baseline read|update|delete|compare`: perform the specified subaction on one or more specified benchmark baselines
+- term `baseline read|update|delete|compare|check`: perform the specified subaction on one or more specified benchmark baselines
 - term `help`: Display usage help to the terminal
 
 ### Options 
@@ -34,6 +34,7 @@ swift package benchmark <command verb> [<options>]
 - term `--path <path>`: The path where exported data is stored, default is the current directory ("."). 
 - term `--quiet`: Specifies that output should be suppressed (useful for if you just want to check return code)
 - term `--scale`: Specifies that some of the text output should be scaled using the scalingFactor (denoted by '*' in output)
+- term `--metric`: Specifies that the benchmark run should use a specific metric instead of the ones defined by the benchmarks
 - term `--no-progress`: Specifies that benchmark progress information should not be displayed
 - term `--grouping <grouping>`: The grouping to use, one of: ["metric", "benchmark"]. default is 'benchmark'
 
@@ -102,6 +103,7 @@ swift package benchmark
 ```
 swift package benchmark --grouping metric
 ```
+
 ### Run targets / benchmarks with regex matching
 ```
 swift package benchmark --target ".*Time" --filter ".*k\." --skip ".*UTC.*" --skip-target ".*Time"
@@ -117,7 +119,7 @@ swift package benchmark list
 swift package benchmark run --target Frostflake
 ```
 
-### Compare with the current baseline:
+### Compare a stored baseline with a benchmark run
 ```
 swift package benchmark baseline compare baseline1
 ```
@@ -127,32 +129,32 @@ swift package benchmark baseline compare baseline1
 swift package benchmark baseline compare alpha beta
 ```
 
-### Compare two named baselines suppressing table output
+### Check a stored baseline with a benchmark run for deviations
 ```
-swift package benchmark baseline compare alpha beta --quiet
-```
-
-### Update benchmark baseline for all targets:
-```
-swift package --allow-writing-to-package-directory benchmark baseline update
+swift package benchmark baseline check baseline1
 ```
 
-### Update benchmark named baseline for all targets:
+### Check two name baselines for deviations
+```
+swift package benchmark baseline check alpha beta
+```
+
+### Update a named benchmark baseline for all targets
 ```
 swift package --allow-writing-to-package-directory benchmark baseline update alpha
 ```
 
-### Update benchmark baseline for a specific target:
+### Update benchmark baseline for a specific target
 ```
 swift package --allow-writing-to-package-directory benchmark baseline update --target Frostflake-Benchmark
 ```
 
-### Export benchmark data:
+### Export benchmark data
 ```
 swift package --allow-writing-to-package-directory benchmark --format jmh 
 ```
 
-### Export benchmark data:
+### Export benchmark data to a specific location
 ```
 swift package --allow-writing-to-package-directory benchmark --format jmh --path xyz
 ```
