@@ -13,6 +13,7 @@
 import Benchmark
 import ExtrasJSON
 import SystemPackage
+import TextTable
 
 extension BenchmarkTool {
     mutating func queryBenchmarks(_ benchmarkPath: String) throws {
@@ -68,15 +69,18 @@ extension BenchmarkTool {
         return cleanedString
     }
 
+    struct NameAndTarget: Hashable {
+        let name: String
+        let target: String
+    }
+
     mutating func postProcessBenchmarkResults() throws {
         switch command {
         case .baseline:
             if delete > 0 {
                 benchmarkExecutablePaths.forEach { path in
                     let target = FilePath(path).lastComponent!.description
-                    print("")
                     baseline.forEach {
-                        print("Removing baseline for \(target): '\($0)'")
                         removeBaselinesNamed(target: target, baselineName: $0)
                     }
                 }
@@ -84,7 +88,6 @@ extension BenchmarkTool {
             }
 
             if listBaselines > 0 {
-                print("")
                 printAllBaselines()
                 return
             }
@@ -96,17 +99,90 @@ extension BenchmarkTool {
                 }
 
                 let currentBaseline = benchmarkBaselines[0]
-                let baselineName = baseline[0] == "default" ? "Current baseline" : baseline[0]
-                let comparingBaselineName = compare ?? "unknown"
 
                 prettyPrintDelta(currentBaseline: currentBaseline, baseline: comparisonBaseline)
 
-                if currentBaseline.betterResultsOrEqual(than: comparisonBaseline, printOutput: true) {
-                    print("New baseline '\(comparingBaselineName)' is BETTER (or equal) than the '\(baselineName)' baseline thresholds.")
-                    print("")
+                return
+            }
 
+            if let checkBaseline {
+                guard benchmarkBaselines.count > 0 else {
+                    print("No baselines available, can't check.")
+                    return
+                }
+
+                let currentBaseline = benchmarkBaselines[0]
+                let baselineName = baseline[0] == "default" ? "Current baseline" : baseline[0]
+                let comparingBaselineName = check ?? "unknown"
+
+                //                let benchmark = benchmarkFor(currentBaseline.results)
+                let (betterOrEqual, deviationResults) = checkBaseline.betterResultsOrEqual(than: currentBaseline,
+                                                                                           benchmarks: benchmarks)
+
+                if betterOrEqual {
+                    print("New baseline '\(comparingBaselineName)' is BETTER (or equal) than the '\(baselineName)' baseline thresholds.")
                 } else {
-                    failBenchmark("New baseline '\(comparingBaselineName)' is WORSE than the '\(baselineName)' baseline thresholds.")
+                    if quiet == 0 {
+                        let metrics = deviationResults.map(\.metric).unique()
+                        // Get a unique set of all name/target pairs that have threshold violations, sorted lexically:
+                        let namesAndTargets = deviationResults.map { NameAndTarget(name: $0.name, target: $0.target) }
+                            .unique().sorted { lhs, rhs in
+                                if lhs.target < rhs.target {
+                                    return true
+                                }
+
+                                return lhs.name < rhs.name
+                            }
+
+                        namesAndTargets.forEach { nameAndTarget in
+                            "Threshold violations for \(nameAndTarget.name):\(nameAndTarget.target)".printAsHeader()
+                            metrics.forEach { metric in
+
+                                let relativeResults = deviationResults.filter { $0.name == nameAndTarget.name &&
+                                    $0.target == nameAndTarget.target &&
+                                    $0.metric == metric &&
+                                    $0.relative == true
+                                }
+                                let absoluteResults = deviationResults.filter { $0.name == nameAndTarget.name &&
+                                    $0.target == nameAndTarget.target &&
+                                    $0.metric == metric &&
+                                    $0.relative == false
+                                }
+                                let width = 40
+                                let percentileWidth = 15
+
+                                // The baseValue is the new baseline that we're using as the comparison base, so...
+                                if absoluteResults.isEmpty == false {
+                                    let absoluteTable = TextTable<BenchmarkResult.ThresholdDeviation> {
+                                        [Column(title: "\(metric.description) (\(metric.countable ? $0.units.description : $0.units.timeDescription), Δ)",
+                                                value: $0.percentile, width: width, align: .left),
+                                         Column(title: "\(baselineName)", value: $0.comparisonValue, width: percentileWidth, align: .right),
+                                         Column(title: "\(comparingBaselineName)", value: $0.baseValue, width: percentileWidth, align: .right),
+                                         Column(title: "Difference Δ", value: $0.difference, width: percentileWidth, align: .right),
+                                         Column(title: "Threshold Δ", value: $0.differenceThreshold, width: percentileWidth, align: .right)]
+                                    }
+
+                                    absoluteTable.print(absoluteResults, style: Style.fancy)
+                                }
+
+                                if relativeResults.isEmpty == false {
+                                    let relativeTable = TextTable<BenchmarkResult.ThresholdDeviation> {
+                                        [Column(title: "\(metric.description) (\(metric.countable ? $0.units.description : $0.units.timeDescription), %)",
+                                                value: $0.percentile, width: width, align: .left),
+                                         Column(title: "\(baselineName)", value: $0.comparisonValue, width: percentileWidth, align: .right),
+                                         Column(title: "\(comparingBaselineName)", value: $0.baseValue, width: percentileWidth, align: .right),
+                                         Column(title: "Difference %", value: $0.difference, width: percentileWidth, align: .right),
+                                         Column(title: "Threshold %", value: $0.differenceThreshold, width: percentileWidth, align: .right)]
+                                    }
+
+                                    relativeTable.print(relativeResults, style: Style.fancy)
+                                }
+                            }
+                        }
+                    }
+
+                    failBenchmark("New baseline '\(comparingBaselineName)' is WORSE than the '\(baselineName)' baseline thresholds.",
+                                  exitCode: .thresholdViolation)
                 }
 
                 return
@@ -121,10 +197,6 @@ extension BenchmarkTool {
                 let baseline = benchmarkBaselines[0]
                 let baselineName = self.baseline.first ?? "default"
 
-                if quiet == 0 {
-                    prettyPrint(baseline, header: "Updating baseline '\(baselineName)'")
-                }
-
                 try baseline.targets.forEach { target in
                     let results = baseline.results.filter { $0.key.target == target }
                     let subset = BenchmarkBaseline(baselineName: baselineName == "default" ? "Current baseline" : baselineName,
@@ -134,6 +206,12 @@ extension BenchmarkTool {
                               baselineName: baselineName,
                               target: target)
                 }
+
+                if quiet == 0 {
+                    print("")
+                    print("Updated baseline '\(baselineName)'")
+                }
+
                 return
             }
 

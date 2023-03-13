@@ -9,7 +9,8 @@
 import DateTime
 
 import BenchmarkSupport
-@main extension BenchmarkRunner {}
+@main
+extension BenchmarkRunner {}
 
 @_dynamicReplacement(for: registerBenchmarks)
 func benchmarks() {

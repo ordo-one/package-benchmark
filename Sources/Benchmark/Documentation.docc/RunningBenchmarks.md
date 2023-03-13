@@ -32,7 +32,7 @@ swift package benchmark <command verb> [<options>]
 - term `--skip-target <skip-target>`: Benchmark targets matching the regexp filter that should be skipped
 - term `--format <format>`: The output format to use, one of: ["text", "markdown", "influx", "percentiles", "tsv", "jmh"], default is 'text'
 - term `--path <path>`: The path where exported data is stored, default is the current directory ("."). 
-- term `--quiet`: Specifies that output should be supressed (useful for if you just want to check return code)
+- term `--quiet`: Specifies that output should be suppressed (useful for if you just want to check return code)
 - term `--scale`: Specifies that some of the text output should be scaled using the scalingFactor (denoted by '*' in output)
 - term `--no-progress`: Specifies that benchmark progress information should not be displayed
 - term `--grouping <grouping>`: The grouping to use, one of: ["metric", "benchmark"]. default is 'benchmark'
@@ -73,7 +73,7 @@ OPTIONS:
 Benchmark targets matching the regexp filter that should be skipped
 --format <format>       The output format to use, one of: ["text", "markdown", "influx", "percentiles", "tsv", "jmh"], default is 'text'
 --path <path>           The path where exported data is stored, default is the current directory ("."). 
---quiet                 Specifies that output should be supressed (useful for if you just want to check return code)
+--quiet                 Specifies that output should be suppressed (useful for if you just want to check return code)
 --scale                 Specifies that some of the text output should be scaled using the scalingFactor (denoted by '*' in output)
 --no-progress           Specifies that benchmark progress information should not be displayed
 --grouping <grouping>   The grouping to use, one of: ["metric", "benchmark"]. default is 'benchmark'

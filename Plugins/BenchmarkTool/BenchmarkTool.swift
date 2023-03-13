@@ -71,7 +71,10 @@ struct BenchmarkTool: AsyncParsableCommand {
     @Option(name: .long, help: "The baseline to compare with")
     var compare: String?
 
-    @Flag(name: .long, help: "True if we should supress output")
+    @Option(name: .long, help: "The baseline to check thresholds with")
+    var check: String?
+
+    @Flag(name: .long, help: "True if we should suppress output")
     var quiet: Int
 
     @Flag(name: .long, help: "True if we should update the baseline")
@@ -83,7 +86,7 @@ struct BenchmarkTool: AsyncParsableCommand {
     @Flag(name: .long, help: "True if we should display available baselines")
     var listBaselines: Int
 
-    @Flag(name: .long, help: "True if we should supress progress in benchmark run")
+    @Flag(name: .long, help: "True if we should suppress progress in benchmark run")
     var noProgress: Int
 
     @Flag(name: .long, help: "True if we should scale time units, syscall rate, etc to scalingFactor")
@@ -111,16 +114,22 @@ struct BenchmarkTool: AsyncParsableCommand {
     var benchmarks: [Benchmark] = []
     var benchmarkBaselines: [BenchmarkBaseline] = [] // The baselines read from disk, merged
     var comparisonBaseline: BenchmarkBaseline?
+    var checkBaseline: BenchmarkBaseline?
 
-    mutating func failBenchmark(_ reason: String? = nil) {
+    internal enum ExitCode: Int32 {
+        case genericFailure = 1
+        case thresholdViolation = 2
+    }
+
+    mutating func failBenchmark(_ reason: String? = nil, exitCode: ExitCode = .genericFailure) {
         if let reason {
             print(reason)
             print("")
         }
         #if canImport(Darwin)
-            Darwin.exit(EXIT_FAILURE)
+            Darwin.exit(exitCode.rawValue)
         #elseif canImport(Glibc)
-            Glibc.exit(EXIT_FAILURE)
+            Glibc.exit(exitCode.rawValue)
         #endif
     }
 
@@ -178,11 +187,26 @@ struct BenchmarkTool: AsyncParsableCommand {
         if let compare {
             comparisonBaseline = try readBaseline(compare)
         }
+
+        // And separately read in the comparison baseline if any
+        if let check {
+            checkBaseline = try readBaseline(check)
+        }
     }
 
     mutating func run() async throws {
         if command == .baseline, delete == 0, listBaselines == 0, update == 0 { // don't need to read baseline
             try readBaselines()
+        }
+
+        // First get a list of all benchmarks
+        try benchmarkExecutablePaths.forEach { benchmarkExecutablePath in
+            try runChild(benchmarkPath: benchmarkExecutablePath,
+                         benchmarkCommand: .query) { [self] result in
+                if result != 0 {
+                    printChildRunError(error: result, benchmarkExecutablePath: benchmarkExecutablePath)
+                }
+            }
         }
 
         // If we just need data from disk, skip running benchmarks
@@ -213,29 +237,13 @@ struct BenchmarkTool: AsyncParsableCommand {
             fatalError("Query command should never be specified to the BenchmarkTool")
         }
 
-        // First get a list of all benchmarks
-        try benchmarkExecutablePaths.forEach { benchmarkExecutablePath in
-            try runChild(benchmarkPath: benchmarkExecutablePath,
-                         benchmarkCommand: .query) { [self] result in
-                if result != 0 {
-                    printChildRunError(error: result, benchmarkExecutablePath: benchmarkExecutablePath)
-                }
-            }
-        }
-
         guard command != .list else {
             try listBenchmarks()
             return
         }
 
         if quiet == 0 {
-            let runString = "Running Benchmarks"
-            let separator = String(repeating: "=", count: runString.count)
-            print("")
-            print(separator)
-            print(runString)
-            print(separator)
-            print("")
+            "Running Benchmarks".printAsHeader()
             fflush(stdout)
         }
 

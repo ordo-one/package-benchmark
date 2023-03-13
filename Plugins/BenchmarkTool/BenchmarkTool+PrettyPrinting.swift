@@ -200,7 +200,7 @@ extension BenchmarkTool {
 
             var keys = baseline.results.keys.sorted(by: { $0.name < $1.name })
 
-            keys.removeAll(where: { $0.target == target })
+            keys.removeAll(where: { $0.target != target })
             keys.forEach { key in
                 if let value = baseline.results[key] {
                     guard let baselineComparison = currentBaseline.results[key] else {
@@ -221,13 +221,7 @@ extension BenchmarkTool {
                                 //                            print(" \(result.metric) results were identical.")
                                 //                            print("")
                             } else {
-                                var hideResults: Bool = true
-
-                                if result.betterResultsOrEqual(than: base, thresholds: result.thresholds ?? BenchmarkResult.PercentileThresholds.default) {
-                                    hideResults = true
-                                } else {
-                                    hideResults = false
-                                }
+                                let (hideResults, _) = result.betterResultsOrEqual(than: base, thresholds: result.thresholds ?? BenchmarkResult.PercentileThresholds.default)
 
                                 if format == .markdown {
                                     if hideResults {

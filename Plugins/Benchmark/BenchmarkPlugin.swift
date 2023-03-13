@@ -45,6 +45,15 @@ import PackagePlugin
         case benchmark
     }
 
+    enum BaselineOperation: String, CaseIterable {
+        case read
+        case update
+        case list
+        case delete
+        case compare
+        case check
+    }
+
     func withCStrings(_ strings: [String], scoped: ([UnsafeMutablePointer<CChar>?]) throws -> Void) rethrows {
         let cStrings = strings.map { strdup($0) }
         try scoped(cStrings + [nil])
@@ -60,9 +69,6 @@ import PackagePlugin
         let skipTargets = try argumentExtractor.extractSpecifiedTargets(in: context.package, withOption: "skip-target")
         let outputFormats = argumentExtractor.extractOption(named: "format")
         let pathSpecified = argumentExtractor.extractOption(named: "path") // export path
-        let compareSpecified = argumentExtractor.extractOption(named: "compare")
-//        let updateBaseline = argumentExtractor.extractFlag(named: "update")
-//        let deleteBaseline = argumentExtractor.extractFlag(named: "delete")
         let quietRunning = argumentExtractor.extractFlag(named: "quiet")
         let noProgress = argumentExtractor.extractFlag(named: "no-progress")
         let groupingToUse = argumentExtractor.extractOption(named: "grouping")
@@ -71,7 +77,6 @@ import PackagePlugin
         var outputFormat: Format = .text
         var grouping = "benchmark"
         var exportPath = "."
-        var comparisonBaseline = "default"
 
         if argumentExtractor.unextractedOptionsOrFlags.count > 0 {
             print("Unknown option/flag specfied: \(argumentExtractor.unextractedOptionsOrFlags)")
@@ -100,13 +105,6 @@ import PackagePlugin
             exportPath = pathSpecified.first!
             if pathSpecified.count > 1 {
                 print("Only a single output path may be specified, will use the first one specified '\(exportPath)'")
-            }
-        }
-
-        if compareSpecified.count > 0 {
-            comparisonBaseline = compareSpecified.first!
-            if compareSpecified.count > 1 {
-                print("Only a single comparison baseline may be specified, will use the first one specified '\(comparisonBaseline)'")
             }
         }
 
@@ -219,10 +217,6 @@ import PackagePlugin
             args.append(contentsOf: ["--scale"])
         }
 
-        if compareSpecified.count > 0 {
-            args.append(contentsOf: ["--compare", comparisonBaseline])
-        }
-
         filterSpecified.forEach { filter in
             args.append(contentsOf: ["--filter", filter])
         }
@@ -241,36 +235,50 @@ import PackagePlugin
         }
 
         if commandToPerform == .baseline {
-            if let firstBaselineArgument = positionalArguments.first {
-                switch firstBaselineArgument {
-                case "update":
-                    positionalArguments.removeFirst()
-                    args.append(contentsOf: ["--update"])
+            guard positionalArguments.count > 0,
+                  let baselineOperation = BaselineOperation(rawValue: positionalArguments.removeFirst()) else {
+                print("")
+                print("A valid baseline command must be specified, one of: '\(BaselineOperation.allCases.description)'.")
+                print("")
+                print(help)
+                print("")
+                print("Please visit https://github.com/ordo-one/package-benchmark for more in-depth documentation")
+                print("")
+                return
+            }
 
-                    if positionalArguments.count > 1 {
-                        print("Only a single baseline may be specified for update operations \(positionalArguments)")
-                        return
-                    }
-                case "delete":
-                    positionalArguments.removeFirst()
-                    args.append(contentsOf: ["--delete"])
-                case "compare":
-                    positionalArguments.removeFirst()
-                    if positionalArguments.count > 2 {
-                        print("Multiple baselines can't be compared, only one or two baselines may be specified for comparisons \(positionalArguments)")
-                        throw MyError.invalidArgument
-                    }
+            switch baselineOperation {
+            case .update:
+                args.append("--update")
 
-                    // This will be the second if two, the first otherwise
-                    args.append(contentsOf: ["--compare", positionalArguments.removeLast()])
-                case "read": // to allow for a baseline named 'update'
-                    positionalArguments.removeFirst()
-                case "list":
-                    positionalArguments.removeFirst()
-                    args.append(contentsOf: ["--list-baselines"])
-                default:
-                    break
+                if positionalArguments.count > 1 {
+                    print("Only a single baseline may be specified for update operations \(positionalArguments)")
+                    return
                 }
+            case .delete:
+                args.append(contentsOf: ["--delete"])
+            case .compare:
+                let validRange = 1 ... 2
+                if validRange.contains(positionalArguments.count) == false {
+                    print("Zero or multiple baselines can't be compared, only one or two baselines may be specified for comparisons \(positionalArguments)")
+                    throw MyError.invalidArgument
+                }
+
+                // This will be the second if two, the first otherwise
+                args.append(contentsOf: ["--compare", positionalArguments.removeLast()])
+            case .check:
+                let validRange = 1 ... 2
+                if validRange.contains(positionalArguments.count) == false {
+                    print("Zero or multiple baselines can't be checked for threshold violations, only one or two baselines may be specified for checks \(positionalArguments)")
+                    throw MyError.invalidArgument
+                }
+
+                // This will be the second if two, the first otherwise
+                args.append(contentsOf: ["--check", positionalArguments.removeLast()])
+            case .read: // to allow for a baseline named 'update'
+                break
+            case .list:
+                args.append(contentsOf: ["--list-baselines"])
             }
         }
 
@@ -305,9 +313,22 @@ import PackagePlugin
 
             if status == 0 {
                 if waitpid(pid, &status, 0) != -1 {
-                    if status != 0 {
-                        print("One or more benchmark suites had a threshold violation or crashed during runtime.")
-                        throw MyError.benchmarkDeviationOrBenchmarkFailed
+                    // Ok, this sucks, but there is no way to get a C support target for plugins and
+                    // the way the status is extracted portably is with macros - so we just need to
+                    // reimplement the logic here in Swift according to the waitpid man page to
+                    // get some nicer feedback on failure reason.
+                    let waitStatus = ((status & 0xFF00) >> 8)
+
+                    switch waitStatus { // These correspond to BenchmarkTool.ExitCode
+                    case 0: break
+                    case 1:
+                        print("One or more benchmark suites crashed during runtime.")
+                        throw MyError.benchmarkCrashed
+                    case 2:
+                        throw MyError.benchmarkThresholdDeviation
+                    default:
+                        print("One or more benchmarks returned an unexpected return code \(status) / \(waitStatus).")
+                        throw MyError.benchmarkUnexpectedReturnCode
                     }
                 } else {
                     print("waitpid() for pid \(pid) returned a non-zero exit code \(status), errno = \(errno)")
@@ -320,7 +341,9 @@ import PackagePlugin
     }
 
     enum MyError: Error {
-        case benchmarkDeviationOrBenchmarkFailed
+        case benchmarkThresholdDeviation
+        case benchmarkCrashed
+        case benchmarkUnexpectedReturnCode
         case invalidArgument
     }
 }

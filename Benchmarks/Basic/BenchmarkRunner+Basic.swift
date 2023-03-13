@@ -7,8 +7,8 @@
 // You may obtain a copy of the License at
 // http://www.apache.org/licenses/LICENSE-2.0
 //
-import BenchmarkSupport
 
+import BenchmarkSupport
 @main
 extension BenchmarkRunner {}
 
@@ -17,7 +17,8 @@ extension BenchmarkRunner {}
 func benchmarks() {
     Benchmark.defaultConfiguration = .init(warmupIterations: 0,
                                            maxDuration: .seconds(1),
-                                           maxIterations: Int.max)
+                                           maxIterations: Int.max,
+                                           thresholds: [.wallClock: BenchmarkResult.PercentileThresholds.strict])
 
     Benchmark("Basic",
               configuration: .init(metrics: [.wallClock, .throughput])) { _ in

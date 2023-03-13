@@ -38,17 +38,22 @@ enum Command: String, ExpressibleByArgument, CaseIterable {
 @main
 struct Benchmark: AsyncParsableCommand {
     static var configuration = CommandConfiguration(
-        abstract: "Runs your benchmark targets located in Benchmarks/",
+        abstract: "Run benchmarks or update, compare or check performance baselines",
         usage: """
         swift package benchmark <command>
 
-        swift package benchmark run <options>
+        swift package benchmark [run] <options>
         swift package benchmark list
         swift package benchmark baseline list
-        swift package benchmark baseline [read|update|delete|compare] [baseline1 baseline2 ... baselineN] <options>
+        swift package benchmark baseline read <baseline> [<baseline2> ... <baselineN>] [<options>]
+        swift package benchmark baseline update <baseline> [<options>]
+        swift package benchmark baseline delete <baseline> [<baseline2> ... <baselineN>] [<options>]
+        swift package benchmark baseline check <baseline> [<otherBaseline>] [<options>]
+        swift package benchmark baseline compare <baseline> [<otherBaseline>] [<options>]
         swift package benchmark help
         """,
         discussion: """
+        Performs operations on benchmarks (running or listing them), as we
         Runs the benchmarks, lists or operates on baselines (a named, stored set of results).
 
         For the 'text' default format, the output is implicitly 'stdout' unless otherwise specified.
@@ -82,7 +87,7 @@ struct Benchmark: AsyncParsableCommand {
     @Option(name: .long, help: "The path where exported data is stored, default is the current directory (\".\"). ")
     var path: String
 
-    @Flag(name: .long, help: "Specifies that output should be supressed (useful for if you just want to check return code)")
+    @Flag(name: .long, help: "Specifies that output should be suppressed (useful for if you just want to check return code)")
     var quiet: Int
 
     @Flag(name: .long, help: "Specifies that some of the text output should be scaled using the scalingFactor (denoted by '*' in output)")
