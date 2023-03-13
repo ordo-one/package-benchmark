@@ -29,9 +29,10 @@ enum BenchmarkOperation: String, ExpressibleByArgument {
     case query // query all benchmarks from target, used internally in tool
 }
 
-extension Grouping: ExpressibleByArgument { }
-extension OutputFormat: ExpressibleByArgument { }
-extension BaselineOperation: ExpressibleByArgument { }
+extension Grouping: ExpressibleByArgument {}
+extension OutputFormat: ExpressibleByArgument {}
+extension BaselineOperation: ExpressibleByArgument {}
+extension BenchmarkMetric: ExpressibleByArgument {}
 
 typealias BenchmarkResults = [BenchmarkIdentifier: [BenchmarkResult]]
 
@@ -51,28 +52,13 @@ struct BenchmarkTool: AsyncParsableCommand {
 
     @Option(name: .long, help: "The path to export to")
     var path: String?
-/*
-    @Option(name: .long, help: "The baseline to compare with")
-    var compare: String?
-*/
+
     @Option(name: .long, help: "The operation to perform on the specified baselines")
     var baselineOperation: BaselineOperation?
-/*
-    @Option(name: .long, help: "The baseline to check thresholds with")
-    var check: String?
-*/
+
     @Flag(name: .long, help: "True if we should suppress output")
     var quiet: Int
-/*
-    @Flag(name: .long, help: "True if we should update the baseline")
-    var update: Int
 
-    @Flag(name: .long, help: "True if we should delete the baseline")
-    var delete: Int
-
-    @Flag(name: .long, help: "True if we should display available baselines")
-    var listBaselines: Int
-*/
     @Flag(name: .long, help: "True if we should suppress progress in benchmark run")
     var noProgress: Int
 
@@ -81,6 +67,9 @@ struct BenchmarkTool: AsyncParsableCommand {
 
     @Option(name: .long, help: "The named baseline(s) we should display, update, delete or compare with")
     var baseline: [String] = []
+
+    @Option(name: .long, help: "The metrics to use, overrides whatever the benchmark has specified as desired metrics.")
+    var metrics: [BenchmarkMetric] = []
 
     @Option(name: .long, help: "The grouping to use, 'metric' or 'test'")
     var grouping: Grouping
@@ -141,14 +130,6 @@ struct BenchmarkTool: AsyncParsableCommand {
                     readBaselines.append(currentBaseline)
                 }
             }
-
-            // Filter out any results that doesn't match regex filtering
-/*            readBaselines.first?.results.filter
-            readBaselines.forEach { baseline in
-
-            }
-*/
-
 
             // Merge baselines read
             if readBaselines.isEmpty == false {

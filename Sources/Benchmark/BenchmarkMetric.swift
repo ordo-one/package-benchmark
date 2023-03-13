@@ -72,6 +72,20 @@ public enum BenchmarkMetric: Hashable, Equatable, Codable, CustomStringConvertib
     case deltaPercentage
 }
 
+// We don't want to take polarity and useScalingFactor into consideration as it makes dealing with custom metrics hard
+#if swift(>=5.8)
+    @_documentation(visibility: internal)
+#endif
+public extension BenchmarkMetric {
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(description)
+    }
+
+    static func == (lhs: BenchmarkMetric, rhs: BenchmarkMetric) -> Bool {
+        lhs.description == rhs.description
+    }
+}
+
 public extension BenchmarkMetric {
     /// A constant that states whether larger or smaller measurements, relative to a set baseline, indicate better performance.
     enum Polarity: Codable { // same naming as XCTest uses, polarity is known for all metrics except custom
@@ -186,9 +200,9 @@ public extension BenchmarkMetric {
 #if swift(>=5.8)
     @_documentation(visibility: internal)
 #endif
-extension BenchmarkMetric {
-    init(_ textualMetric: String) {
-        switch textualMetric {
+public extension BenchmarkMetric {
+    init?(argument: String) {
+        switch argument {
         case "cpuUser":
             self = BenchmarkMetric.cpuUser
         case "cpuSystem":
@@ -234,7 +248,7 @@ extension BenchmarkMetric {
         case "writeBytesPhysical":
             self = BenchmarkMetric.writeBytesPhysical
         default:
-            self = BenchmarkMetric.custom(textualMetric)
+            self = BenchmarkMetric.custom(argument)
         }
     }
 }

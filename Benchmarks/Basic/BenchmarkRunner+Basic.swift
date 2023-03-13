@@ -20,15 +20,24 @@ func benchmarks() {
                                            maxIterations: Int.max,
                                            thresholds: [.wallClock: BenchmarkResult.PercentileThresholds.strict])
 
+    // A way to define custom metrics fairly compact
+    enum CustomMetrics {
+        static var one: BenchmarkMetric { .custom("CustomMetricOne") }
+        static var two: BenchmarkMetric { .custom("CustomMetricTwo", polarity: .prefersLarger, useScalingFactor: true) }
+    }
+
     Benchmark("Basic",
               configuration: .init(metrics: [.wallClock, .throughput])) { _ in
     }
 
     Benchmark("Scaled metrics",
-              configuration: .init(metrics: BenchmarkMetric.all, scalingFactor: .kilo)) { benchmark in
+              configuration: .init(metrics: BenchmarkMetric.all + [CustomMetrics.two, CustomMetrics.one],
+                                   scalingFactor: .kilo)) { benchmark in
         for _ in benchmark.scaledIterations {
             blackHole(Int.random(in: benchmark.scaledIterations))
         }
+        benchmark.measurement(CustomMetrics.two, Int.random(in: 1 ... 1_000_000))
+        benchmark.measurement(CustomMetrics.one, Int.random(in: 1 ... 1_000))
     }
 
     Benchmark("All metrics",
