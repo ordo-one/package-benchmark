@@ -195,6 +195,66 @@ public extension BenchmarkMetric {
     }
 }
 
+#if swift(>=5.8)
+@_documentation(visibility: internal)
+#endif
+public extension BenchmarkMetric {
+    var rawDescription: String { // As we can't have raw values due to custom support, we do this...
+        switch self {
+        case .cpuUser:
+            return "cpuUser"
+        case .cpuSystem:
+            return "cpuSystem"
+        case .cpuTotal:
+            return "cpuTotal"
+        case .wallClock:
+            return "wallClock"
+        case .throughput:
+            return "throughput"
+        case .peakMemoryResident:
+            return "peakMemoryResident"
+        case .peakMemoryVirtual:
+            return "peakMemoryVirtual"
+        case .mallocCountSmall:
+            return "mallocCountSmall"
+        case .mallocCountLarge:
+            return "mallocCountLarge"
+        case .mallocCountTotal:
+            return "mallocCountTotal"
+        case .allocatedResidentMemory:
+            return "allocatedResidentMemory"
+        case .memoryLeaked:
+            return "memoryLeaked"
+        case .syscalls:
+            return "syscalls"
+        case .contextSwitches:
+            return "contextSwitches"
+        case .threads:
+            return "threads"
+        case .threadsRunning:
+            return "threadsRunning"
+        case .readSyscalls:
+            return "readSyscalls"
+        case .writeSyscalls:
+            return "writeSyscalls"
+        case .readBytesLogical:
+            return "readBytesLogical"
+        case .writeBytesLogical:
+            return "writeBytesLogical"
+        case .readBytesPhysical:
+            return "readBytesPhysical"
+        case .writeBytesPhysical:
+            return "writeBytesPhysical"
+        case .delta:
+            return "Δ"
+        case .deltaPercentage:
+            return "Δ %"
+        case let .custom(name, _, _):
+            return name
+        }
+    }
+}
+
 // swiftlint:disable cyclomatic_complexity
 // As we can't have raw values and associated data we add this...
 #if swift(>=5.8)
