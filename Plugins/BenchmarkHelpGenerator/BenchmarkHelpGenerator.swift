@@ -13,27 +13,35 @@
 
 import ArgumentParser
 
-enum Grouping: String, ExpressibleByArgument, CaseIterable {
-    case metric
-    case benchmark
-}
+let availableMetrics = [
+    "cpuUser",
+    "cpuSystem",
+    "cpuTotal",
+    "wallClock",
+    "throughput",
+    "peakMemoryResident",
+    "peakMemoryVirtual",
+    "mallocCountSmall",
+    "mallocCountLarge",
+    "mallocCountTotal",
+    "allocatedResidentMemory",
+    "memoryLeaked",
+    "syscalls",
+    "contextSwitches",
+    "threads",
+    "threadsRunning",
+    "readSyscalls",
+    "writeSyscalls",
+    "readBytesLogical",
+    "writeBytesLogical",
+    "readBytesPhysical",
+    "writeBytesPhysical",
+    "custom"]
 
-enum OutputFormat: String, ExpressibleByArgument, CaseIterable {
-    case text
-    case markdown
-    case influx
-    case percentiles
-    case tsv
-    case jmh
-    case encodedHistogram
-}
-
-enum Command: String, ExpressibleByArgument, CaseIterable {
-    case run
-    case list
-    case baseline
-    case help
-}
+extension Command: ExpressibleByArgument {}
+extension Grouping: ExpressibleByArgument {}
+extension OutputFormat: ExpressibleByArgument {}
+extension BaselineOperation: ExpressibleByArgument {}
 
 @main
 struct Benchmark: AsyncParsableCommand {
@@ -83,6 +91,9 @@ struct Benchmark: AsyncParsableCommand {
 
     @Option(name: .long, help: "The output format to use, one of: \((OutputFormat.allCases).map { String(describing: $0) }), default is '\(OutputFormat.text.rawValue)'")
     var format: OutputFormat
+
+    @Option(name: .long, help: "Specifies that the benchmark run should use one or more specific metrics instead of the ones defined by the benchmarks, valid values are: \(availableMetrics)")
+    var metric: [String] = []
 
     @Option(name: .long, help: "The path where exported data is stored, default is the current directory (\".\"). ")
     var path: String

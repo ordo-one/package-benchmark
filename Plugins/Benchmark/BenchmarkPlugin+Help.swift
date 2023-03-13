@@ -10,8 +10,9 @@
 
 let help =
     """
-    OVERVIEW: Runs your benchmark targets located in Benchmarks/
+    OVERVIEW: Run benchmarks or update, compare or check performance baselines
 
+    Performs operations on benchmarks (running or listing them), as we
     Runs the benchmarks, lists or operates on baselines (a named, stored set of results).
 
     For the 'text' default format, the output is implicitly 'stdout' unless otherwise specified.
@@ -24,10 +25,14 @@ let help =
 
     USAGE: swift package benchmark <command>
 
-       swift package benchmark run <options>
+       swift package benchmark [run] <options>
        swift package benchmark list
        swift package benchmark baseline list
-       swift package benchmark baseline [read|update|delete|compare] [baseline1 baseline2 ... baselineN] <options>
+       swift package benchmark baseline read <baseline> [<baseline2> ... <baselineN>] [<options>]
+       swift package benchmark baseline update <baseline> [<options>]
+       swift package benchmark baseline delete <baseline> [<baseline2> ... <baselineN>] [<options>]
+       swift package benchmark baseline check <baseline> [<otherBaseline>] [<options>]
+       swift package benchmark baseline compare <baseline> [<otherBaseline>] [<options>]
        swift package benchmark help
 
     ARGUMENTS:
@@ -39,7 +44,9 @@ let help =
     --target <target>       Benchmark targets matching the regexp filter that should be run
     --skip-target <skip-target>
                           Benchmark targets matching the regexp filter that should be skipped
-    --format <format>       The output format to use, one of: ["text", "markdown", "influx", "percentiles", "tsv", "jmh"], default is 'text'
+    --format <format>       The output format to use, one of: ["text", "markdown", "influx", "percentiles", "tsv", "jmh", "encodedHistogram"], default is 'text'
+    --metric <metric>       Specifies that the benchmark run should use one or more specific metrics instead of the ones defined by the benchmarks, valid values are: ["cpuUser", "cpuSystem", "cpuTotal", "wallClock", "throughput", "peakMemoryResident", "peakMemoryVirtual", "mallocCountSmall", "mallocCountLarge",
+                          "mallocCountTotal", "allocatedResidentMemory", "memoryLeaked", "syscalls", "contextSwitches", "threads", "threadsRunning", "readSyscalls", "writeSyscalls", "readBytesLogical", "writeBytesLogical", "readBytesPhysical", "writeBytesPhysical", "custom"]
     --path <path>           The path where exported data is stored, default is the current directory (".").
     --quiet                 Specifies that output should be suppressed (useful for if you just want to check return code)
     --scale                 Specifies that some of the text output should be scaled using the scalingFactor (denoted by '*' in output)
@@ -47,3 +54,4 @@ let help =
     --grouping <grouping>   The grouping to use, one of: ["metric", "benchmark"]. default is 'benchmark'
     -h, --help              Show help information.
     """
+
