@@ -162,6 +162,25 @@ Benchmark provides a number of convenience methods for commonly useful sets of m
 
 Metrics can also be specified explicitly, for example `[.throughput, .wallClock]`, or even by combining the default set with individual metrics.
 
+Benchmark also supports completely custom metric measurements using ``Benchmark/Benchmark/measurement(_:_:)`` if there are specific things you want to capture:
+
+```swift
+...
+// A way to define custom metrics fairly compact
+enum CustomMetrics {
+    static var one: BenchmarkMetric { .custom("CustomMetricOne") }
+    static var two: BenchmarkMetric { .custom("CustomMetricTwo", polarity: .prefersLarger, useScalingFactor: true) }
+}
+
+Benchmark("Custom metrics", configuration: .init(metrics: BenchmarkMetric.all + [CustomMetrics.two, CustomMetrics.one], scalingFactor: .kilo)) { benchmark in
+    for _ in benchmark.scaledIterations {
+        blackHole(Int.random(in: benchmark.scaledIterations))
+    }
+    benchmark.measurement(CustomMetrics.one, Int.random(in: 1 ... 1_000))
+    benchmark.measurement(CustomMetrics.two, Int.random(in: 1 ... 1_000_000))
+}
+```
+
 ### Settings defaults for all benchmarks within a suite
 
 Set the desired time units for all benchmarks within a suite easily by setting ``Benchmark/Configuration-swift.struct/timeUnits``:
