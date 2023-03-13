@@ -23,36 +23,6 @@ import PackagePlugin
 
 @available(macOS 13.0, *)
 @main struct Benchmark: CommandPlugin {
-    enum Command: String {
-        case run
-        case list
-        case baseline
-        case help
-    }
-
-    enum Format: String {
-        case text
-        case markdown
-        case influx
-        case percentiles
-        case tsv
-        case jmh
-        case encodedHistogram
-    }
-
-    enum Grouping: String {
-        case metric
-        case benchmark
-    }
-
-    enum BaselineOperation: String, CaseIterable {
-        case read
-        case update
-        case list
-        case delete
-        case compare
-        case check
-    }
 
     func withCStrings(_ strings: [String], scoped: ([UnsafeMutablePointer<CChar>?]) throws -> Void) rethrows {
         let cStrings = strings.map { strdup($0) }
@@ -74,7 +44,7 @@ import PackagePlugin
         let groupingToUse = argumentExtractor.extractOption(named: "grouping")
         let debug = argumentExtractor.extractFlag(named: "debug")
         let scale = argumentExtractor.extractFlag(named: "scale")
-        var outputFormat: Format = .text
+        var outputFormat: OutputFormat = .text
         var grouping = "benchmark"
         var exportPath = "."
 
@@ -109,7 +79,7 @@ import PackagePlugin
         }
 
         if outputFormats.count > 0 {
-            if let format = Format(rawValue: outputFormats.first!) {
+            if let format = OutputFormat(rawValue: outputFormats.first!) {
                 outputFormat = format
             } else {
                 print("Unknown output format '\(outputFormats.first!)'")
@@ -247,44 +217,27 @@ import PackagePlugin
                 return
             }
 
+            args.append(contentsOf: ["--baseline-operation", baselineOperation.rawValue])
+
+            // Check valid number of baselines specified per baseline operation
             switch baselineOperation {
             case .update:
-                args.append("--update")
-
-                if positionalArguments.count > 1 {
-                    print("Only a single baseline may be specified for update operations \(positionalArguments)")
+                guard positionalArguments.count == 1 else {
+                    print("A single baseline must be specified for update operations, got: \(positionalArguments)")
                     return
                 }
-            case .delete:
-                args.append(contentsOf: ["--delete"])
             case .compare:
-                let validRange = 1 ... 2
-                if validRange.contains(positionalArguments.count) == false {
-                    print("Zero or multiple baselines can't be compared, only one or two baselines may be specified for comparisons \(positionalArguments)")
-                    throw MyError.invalidArgument
-                }
-
-                // This will be the second if two, the first otherwise
-                args.append(contentsOf: ["--compare", positionalArguments.removeLast()])
+                fallthrough
             case .check:
                 let validRange = 1 ... 2
-                if validRange.contains(positionalArguments.count) == false {
-                    print("Zero or multiple baselines can't be checked for threshold violations, only one or two baselines may be specified for checks \(positionalArguments)")
+                guard validRange.contains(positionalArguments.count) else {
+                    print("Must specify exactly one or two baselines for comparisons or threshold violation checks, got: \(positionalArguments)")
                     throw MyError.invalidArgument
                 }
-
-                // This will be the second if two, the first otherwise
-                args.append(contentsOf: ["--check", positionalArguments.removeLast()])
-            case .read: // to allow for a baseline named 'update'
+            default:
                 break
-            case .list:
-                args.append(contentsOf: ["--list-baselines"])
             }
-        }
 
-        if commandToPerform == .baseline, positionalArguments.count == 0 {
-            args.append(contentsOf: ["--baseline", "default"])
-        } else {
             positionalArguments.forEach { baseline in
                 args.append(contentsOf: ["--baseline", baseline])
             }
@@ -317,17 +270,18 @@ import PackagePlugin
                     // the way the status is extracted portably is with macros - so we just need to
                     // reimplement the logic here in Swift according to the waitpid man page to
                     // get some nicer feedback on failure reason.
-                    let waitStatus = ((status & 0xFF00) >> 8)
-
-                    switch waitStatus { // These correspond to BenchmarkTool.ExitCode
-                    case 0: break
-                    case 1:
-                        print("One or more benchmark suites crashed during runtime.")
-                        throw MyError.benchmarkCrashed
-                    case 2:
-                        throw MyError.benchmarkThresholdDeviation
-                    default:
-                        print("One or more benchmarks returned an unexpected return code \(status) / \(waitStatus).")
+                    if let waitStatus = ExitCode(rawValue:((status & 0xFF00) >> 8)) {
+                        switch waitStatus { 
+                        case .success:
+                            break
+                        case .genericFailure:
+                            print("One or more benchmark suites crashed during runtime.")
+                            throw MyError.benchmarkCrashed
+                        case .thresholdViolation:
+                            throw MyError.benchmarkThresholdDeviation
+                        }
+                    } else {
+                        print("One or more benchmarks returned an unexpected return code \(status)")
                         throw MyError.benchmarkUnexpectedReturnCode
                     }
                 } else {

@@ -93,7 +93,7 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
                 benchmark = Benchmark.benchmarks.first { $0.name == benchmarkToRun.name }
 
                 if let benchmark {
-                    results = benchmarkExecutor.run(benchmark)
+                    results = benchmarkExecutor.run(benchmark, benchmarkToRun.target)
 
                     guard benchmark.failureReason == nil else {
                         try channel.write(.error(benchmark.failureReason!))
