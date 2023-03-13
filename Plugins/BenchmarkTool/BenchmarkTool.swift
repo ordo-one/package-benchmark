@@ -74,7 +74,7 @@ struct BenchmarkTool: AsyncParsableCommand {
     @Option(name: .long, help: "The baseline to check thresholds with")
     var check: String?
 
-    @Flag(name: .long, help: "True if we should supress output")
+    @Flag(name: .long, help: "True if we should suppress output")
     var quiet: Int
 
     @Flag(name: .long, help: "True if we should update the baseline")
@@ -86,7 +86,7 @@ struct BenchmarkTool: AsyncParsableCommand {
     @Flag(name: .long, help: "True if we should display available baselines")
     var listBaselines: Int
 
-    @Flag(name: .long, help: "True if we should supress progress in benchmark run")
+    @Flag(name: .long, help: "True if we should suppress progress in benchmark run")
     var noProgress: Int
 
     @Flag(name: .long, help: "True if we should scale time units, syscall rate, etc to scalingFactor")

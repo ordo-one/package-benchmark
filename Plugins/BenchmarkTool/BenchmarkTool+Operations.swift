@@ -80,9 +80,7 @@ extension BenchmarkTool {
             if delete > 0 {
                 benchmarkExecutablePaths.forEach { path in
                     let target = FilePath(path).lastComponent!.description
-                    print("")
                     baseline.forEach {
-                        print("Removing baseline for \(target): '\($0)'")
                         removeBaselinesNamed(target: target, baselineName: $0)
                     }
                 }
@@ -109,7 +107,7 @@ extension BenchmarkTool {
 
             if let checkBaseline {
                 guard benchmarkBaselines.count > 0 else {
-                    print("Only had \(benchmarkBaselines.count) baselines available, can't check.")
+                    print("No baselines available, can't check.")
                     return
                 }
 
@@ -127,7 +125,7 @@ extension BenchmarkTool {
                     if quiet == 0 {
                         let metrics = deviationResults.map(\.metric).unique()
                         // Get a unique set of all name/target pairs that have threshold violations, sorted lexically:
-                        let namesAndTargets = deviationResults.map { return NameAndTarget(name: $0.name, target:$0.target)}
+                        let namesAndTargets = deviationResults.map { NameAndTarget(name: $0.name, target: $0.target) }
                             .unique().sorted { lhs, rhs in
                                 if lhs.target < rhs.target {
                                     return true
@@ -143,21 +141,22 @@ extension BenchmarkTool {
                                 let relativeResults = deviationResults.filter { $0.name == nameAndTarget.name &&
                                     $0.target == nameAndTarget.target &&
                                     $0.metric == metric &&
-                                    $0.relative == true }
+                                    $0.relative == true
+                                }
                                 let absoluteResults = deviationResults.filter { $0.name == nameAndTarget.name &&
                                     $0.target == nameAndTarget.target &&
                                     $0.metric == metric &&
-                                    $0.relative == false }
+                                    $0.relative == false
+                                }
                                 let width = 40
                                 let percentileWidth = 15
-
 
                                 // The baseValue is the new baseline that we're using as the comparison base, so...
                                 if absoluteResults.isEmpty == false {
                                     let absoluteTable = TextTable<BenchmarkResult.ThresholdDeviation> {
                                         [Column(title: "\(metric.description) (\(metric.countable ? $0.units.description : $0.units.timeDescription), Δ)",
                                                 value: $0.percentile, width: width, align: .left),
-                                         Column(title: "\(baselineName)", value: $0.comparisonValue , width: percentileWidth, align: .right),
+                                         Column(title: "\(baselineName)", value: $0.comparisonValue, width: percentileWidth, align: .right),
                                          Column(title: "\(comparingBaselineName)", value: $0.baseValue, width: percentileWidth, align: .right),
                                          Column(title: "Difference Δ", value: $0.difference, width: percentileWidth, align: .right),
                                          Column(title: "Threshold Δ", value: $0.differenceThreshold, width: percentileWidth, align: .right)]

@@ -249,7 +249,7 @@ import PackagePlugin
 
             switch baselineOperation {
             case .update:
-                args.append(contentsOf: ["--update"])
+                args.append("--update")
 
                 if positionalArguments.count > 1 {
                     print("Only a single baseline may be specified for update operations \(positionalArguments)")
@@ -317,7 +317,7 @@ import PackagePlugin
                     // the way the status is extracted portably is with macros - so we just need to
                     // reimplement the logic here in Swift according to the waitpid man page to
                     // get some nicer feedback on failure reason.
-                    let waitStatus = (((status) & 0xff00) >> 8)
+                    let waitStatus = ((status & 0xFF00) >> 8)
 
                     switch waitStatus { // These correspond to BenchmarkTool.ExitCode
                     case 0: break

@@ -18,7 +18,7 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
 
     public init() {}
 
-    @Option(name: .shortAndLong, help: "Whether to supress progress output.")
+    @Option(name: .shortAndLong, help: "Whether to suppress progress output.")
     var quiet = false
 
     @Option(name: .shortAndLong, help: "The input pipe filedescriptor used for communication with host process.")

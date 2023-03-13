@@ -104,6 +104,7 @@ public extension BenchmarkScalingFactor {
         }
     }
 }
+
 // swiftlint:disable type_body_length
 
 #if swift(>=5.8)
@@ -374,9 +375,9 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
                                                                     target: target,
                                                                     metric: metric,
                                                                     percentile: percentile,
-                                                                    baseValue: self.normalize(lhs),
-                                                                    comparisonValue: self.normalize(rhs),
-                                                                    difference: self.normalize(Int(relativeDiff)),
+                                                                    baseValue: normalize(lhs),
+                                                                    comparisonValue: normalize(rhs),
+                                                                    difference: normalize(Int(relativeDiff)),
                                                                     differenceThreshold: Int(threshold),
                                                                     relative: true,
                                                                     units: scalingFactor))
@@ -391,9 +392,9 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
                                                                     target: target,
                                                                     metric: metric,
                                                                     percentile: percentile,
-                                                                    baseValue: self.normalize(lhs),
-                                                                    comparisonValue: self.normalize(rhs),
-                                                                    difference: self.normalize(absoluteDifference),
+                                                                    baseValue: normalize(lhs),
+                                                                    comparisonValue: normalize(rhs),
+                                                                    difference: normalize(absoluteDifference),
                                                                     differenceThreshold: threshold,
                                                                     relative: false,
                                                                     units: scalingFactor))

@@ -87,7 +87,7 @@ struct Benchmark: AsyncParsableCommand {
     @Option(name: .long, help: "The path where exported data is stored, default is the current directory (\".\"). ")
     var path: String
 
-    @Flag(name: .long, help: "Specifies that output should be supressed (useful for if you just want to check return code)")
+    @Flag(name: .long, help: "Specifies that output should be suppressed (useful for if you just want to check return code)")
     var quiet: Int
 
     @Flag(name: .long, help: "Specifies that some of the text output should be scaled using the scalingFactor (denoted by '*' in output)")

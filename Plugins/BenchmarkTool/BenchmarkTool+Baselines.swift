@@ -180,8 +180,8 @@ extension BenchmarkTool {
             if file.ends(with: ".") == false,
                file.ends(with: "..") == false {
                 var subDirectory = storagePath
-                subDirectory.append(file.lastComponent!)
                 if let directoryName = file.lastComponent {
+                    subDirectory.append(directoryName)
                     "Baselines for \(directoryName.description)".printAsHeader()
                     for file in subDirectory.directoryEntries {
                         if let subdirectoryName = file.lastComponent {
@@ -207,14 +207,15 @@ extension BenchmarkTool {
                file.ends(with: "..") == false {
                 if target == file.lastComponent!.description {
                     var subDirectory = storagePath
-                    subDirectory.append(file.lastComponent!)
-                    if file.lastComponent != nil {
+                    if let directoryName = file.lastComponent {
+                        subDirectory.append(directoryName)
                         for file in subDirectory.directoryEntries {
                             if let subdirectoryName = file.lastComponent {
                                 if file.ends(with: ".") == false,
                                    file.ends(with: "..") == false {
                                     if subdirectoryName.description == baselineName {
                                         do {
+                                            print("Removing baseline '\(baselineName)' for \(target)")
                                             try filemanager.removeItem(atPath: file.description)
                                         } catch {
                                             print("Failed to remove file \(file), error \(error)")
