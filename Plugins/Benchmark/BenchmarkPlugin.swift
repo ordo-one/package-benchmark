@@ -313,9 +313,22 @@ import PackagePlugin
 
             if status == 0 {
                 if waitpid(pid, &status, 0) != -1 {
-                    if status != 0 {
-                        print("One or more benchmark suites had a threshold violation or crashed during runtime.")
-                        throw MyError.benchmarkDeviationOrBenchmarkFailed
+                    // Ok, this sucks, but there is no way to get a C support target for plugins and
+                    // the way the status is extracted portably is with macros - so we just need to
+                    // reimplement the logic here in Swift according to the waitpid man page to
+                    // get some nicer feedback on failure reason.
+                    let waitStatus = (((status) & 0xff00) >> 8)
+
+                    switch waitStatus { // These correspond to BenchmarkTool.ExitCode
+                    case 0: break
+                    case 1:
+                        print("One or more benchmark suites crashed during runtime.")
+                        throw MyError.benchmarkCrashed
+                    case 2:
+                        throw MyError.benchmarkThresholdDeviation
+                    default:
+                        print("One or more benchmarks returned an unexpected return code \(status) / \(waitStatus).")
+                        throw MyError.benchmarkUnexpectedReturnCode
                     }
                 } else {
                     print("waitpid() for pid \(pid) returned a non-zero exit code \(status), errno = \(errno)")
@@ -328,7 +341,9 @@ import PackagePlugin
     }
 
     enum MyError: Error {
-        case benchmarkDeviationOrBenchmarkFailed
+        case benchmarkThresholdDeviation
+        case benchmarkCrashed
+        case benchmarkUnexpectedReturnCode
         case invalidArgument
     }
 }

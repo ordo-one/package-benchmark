@@ -39,6 +39,21 @@ public final class Statistics: Codable {
             }
         }
 
+        public var timeDescription: String {
+            switch self {
+            case .count:
+                return "ns"
+            case .kilo:
+                return "μs"
+            case .mega:
+                return "ms"
+            case .giga:
+                return "s"
+            case .automatic:
+                return "#"
+            }
+        }
+
         public init(fromMagnitudeOf value: Double) {
             let magnitude = Double.log10(value)
             switch magnitude {

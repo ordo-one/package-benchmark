@@ -425,7 +425,9 @@ extension BenchmarkBaseline: Equatable {
 
                         (betterOrEqualForIdentifier, deviationResults) =
                             lhsBenchmarkResult.betterResultsOrEqual(than: rhsBenchmarkResult,
-                                                                    thresholds: thresholds)
+                                                                    thresholds: thresholds,
+                                                                    name: lhsBenchmarkIdentifier.name,
+                                                                    target: lhsBenchmarkIdentifier.target)
                         allDeviationResults.append(contentsOf: deviationResults)
                     } else {
                         if warningPrintedForMetric.contains(lhsBenchmarkResult.metric) == false {

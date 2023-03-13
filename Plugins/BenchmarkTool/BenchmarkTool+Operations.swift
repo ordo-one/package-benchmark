@@ -69,6 +69,11 @@ extension BenchmarkTool {
         return cleanedString
     }
 
+    struct NameAndTarget: Hashable {
+        let name: String
+        let target: String
+    }
+
     mutating func postProcessBenchmarkResults() throws {
         switch command {
         case .baseline:
@@ -112,49 +117,73 @@ extension BenchmarkTool {
                 let baselineName = baseline[0] == "default" ? "Current baseline" : baseline[0]
                 let comparingBaselineName = check ?? "unknown"
 
-                if quiet == 0 {
-                    "Threshold violations".printAsHeader()
-                }
-
                 //                let benchmark = benchmarkFor(currentBaseline.results)
                 let (betterOrEqual, deviationResults) = checkBaseline.betterResultsOrEqual(than: currentBaseline,
                                                                                            benchmarks: benchmarks)
 
                 if betterOrEqual {
                     print("New baseline '\(comparingBaselineName)' is BETTER (or equal) than the '\(baselineName)' baseline thresholds.")
-                    print("")
-
                 } else {
-                    let metrics = deviationResults.map(\.metric).unique()
+                    if quiet == 0 {
+                        let metrics = deviationResults.map(\.metric).unique()
+                        // Get a unique set of all name/target pairs that have threshold violations, sorted lexically:
+                        let namesAndTargets = deviationResults.map { return NameAndTarget(name: $0.name, target:$0.target)}
+                            .unique().sorted { lhs, rhs in
+                                if lhs.target < rhs.target {
+                                    return true
+                                }
 
-                    metrics.forEach { metric in
+                                return lhs.name < rhs.name
+                            }
 
-                        let relativeResults = deviationResults.filter { $0.metric == metric && $0.relative == true }
-                        let absoluteResults = deviationResults.filter { $0.metric == metric && $0.relative == false }
-                        let width = 40
-                        let percentileWidth = 15
+                        namesAndTargets.forEach { nameAndTarget in
+                            "Threshold violations for \(nameAndTarget.name):\(nameAndTarget.target)".printAsHeader()
+                            metrics.forEach { metric in
 
-                        let relativeTable = TextTable<BenchmarkResult.ThresholdDeviation> {
-                            [Column(title: "\(metric.description) relative deviations", value: $0.percentile, width: width, align: .left),
-                             Column(title: "\(baselineName)", value: $0.baseValue, width: percentileWidth, align: .right),
-                             Column(title: "\(comparingBaselineName)", value: $0.comparisonValue, width: percentileWidth, align: .right),
-                             Column(title: "Difference", value: $0.difference, width: percentileWidth, align: .right),
-                             Column(title: "Threshold limit", value: $0.differenceThreshold, width: percentileWidth, align: .right)]
+                                let relativeResults = deviationResults.filter { $0.name == nameAndTarget.name &&
+                                    $0.target == nameAndTarget.target &&
+                                    $0.metric == metric &&
+                                    $0.relative == true }
+                                let absoluteResults = deviationResults.filter { $0.name == nameAndTarget.name &&
+                                    $0.target == nameAndTarget.target &&
+                                    $0.metric == metric &&
+                                    $0.relative == false }
+                                let width = 40
+                                let percentileWidth = 15
+
+
+                                // The baseValue is the new baseline that we're using as the comparison base, so...
+                                if absoluteResults.isEmpty == false {
+                                    let absoluteTable = TextTable<BenchmarkResult.ThresholdDeviation> {
+                                        [Column(title: "\(metric.description) (\(metric.countable ? $0.units.description : $0.units.timeDescription), Δ)",
+                                                value: $0.percentile, width: width, align: .left),
+                                         Column(title: "\(baselineName)", value: $0.comparisonValue , width: percentileWidth, align: .right),
+                                         Column(title: "\(comparingBaselineName)", value: $0.baseValue, width: percentileWidth, align: .right),
+                                         Column(title: "Difference Δ", value: $0.difference, width: percentileWidth, align: .right),
+                                         Column(title: "Threshold Δ", value: $0.differenceThreshold, width: percentileWidth, align: .right)]
+                                    }
+
+                                    absoluteTable.print(absoluteResults, style: Style.fancy)
+                                }
+
+                                if relativeResults.isEmpty == false {
+                                    let relativeTable = TextTable<BenchmarkResult.ThresholdDeviation> {
+                                        [Column(title: "\(metric.description) (\(metric.countable ? $0.units.description : $0.units.timeDescription), %)",
+                                                value: $0.percentile, width: width, align: .left),
+                                         Column(title: "\(baselineName)", value: $0.comparisonValue, width: percentileWidth, align: .right),
+                                         Column(title: "\(comparingBaselineName)", value: $0.baseValue, width: percentileWidth, align: .right),
+                                         Column(title: "Difference %", value: $0.difference, width: percentileWidth, align: .right),
+                                         Column(title: "Threshold %", value: $0.differenceThreshold, width: percentileWidth, align: .right)]
+                                    }
+
+                                    relativeTable.print(relativeResults, style: Style.fancy)
+                                }
+                            }
                         }
-
-                        let absoluteTable = TextTable<BenchmarkResult.ThresholdDeviation> {
-                            [Column(title: "\(metric.description) absolute deviations", value: $0.percentile, width: width, align: .left),
-                             Column(title: "\(baselineName)", value: $0.baseValue, width: percentileWidth, align: .right),
-                             Column(title: "\(comparingBaselineName)", value: $0.comparisonValue, width: percentileWidth, align: .right),
-                             Column(title: "Difference", value: $0.difference, width: percentileWidth, align: .right),
-                             Column(title: "Threshold limit", value: $0.differenceThreshold, width: percentileWidth, align: .right)]
-                        }
-
-                        absoluteTable.print(absoluteResults, style: Style.fancy)
-                        relativeTable.print(relativeResults, style: Style.fancy)
                     }
 
-                    failBenchmark("New baseline '\(comparingBaselineName)' is WORSE than the '\(baselineName)' baseline thresholds.")
+                    failBenchmark("New baseline '\(comparingBaselineName)' is WORSE than the '\(baselineName)' baseline thresholds.",
+                                  exitCode: .thresholdViolation)
                 }
 
                 return

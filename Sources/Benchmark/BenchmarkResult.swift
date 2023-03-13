@@ -326,6 +326,8 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
     }
 
     public struct ThresholdDeviation {
+        public let name: String
+        public let target: String
         public let metric: BenchmarkMetric
         public let percentile: BenchmarkResult.Percentile
         public let baseValue: Int
@@ -333,11 +335,14 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
         public let difference: Int
         public let differenceThreshold: Int
         public let relative: Bool
+        public let units: Statistics.Units
     }
 
     // swiftlint:disable function_body_length
     public func betterResultsOrEqual(than otherResult: BenchmarkResult,
-                                     thresholds: BenchmarkResult.PercentileThresholds = .default) -> (Bool, [ThresholdDeviation]) {
+                                     thresholds: BenchmarkResult.PercentileThresholds = .default,
+                                     name: String = "unknown name",
+                                     target: String = "unknown target") -> (Bool, [ThresholdDeviation]) {
         var violationDescriptions: [ThresholdDeviation] = []
         var rhs: BenchmarkResult
         var lhs: BenchmarkResult
@@ -355,8 +360,8 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
                          _ rhs: Int,
                          _ percentile: BenchmarkResult.Percentile,
                          _ thresholds: BenchmarkResult.PercentileThresholds,
-                         _ scalingFactor: Int) -> (Bool, [ThresholdDeviation]) {
-            let relativeDifference = (100 - (100.0 * Double(lhs) / Double(rhs)))
+                         _ scalingFactor: Statistics.Units) -> (Bool, [ThresholdDeviation]) {
+            let relativeDifference = rhs != 0 ? (100 - (100.0 * Double(lhs) / Double(rhs))) : 0.0
             let absoluteDifference = lhs - rhs
             let reverseComparison = metric.polarity == .prefersLarger
             var violationDescriptions: [ThresholdDeviation] = []
@@ -365,31 +370,36 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
             if let threshold = thresholds.relative[percentile] {
                 if reverseComparison ? relativeDifference > threshold : -relativeDifference > threshold {
                     let relativeDiff = Statistics.roundToDecimalplaces(abs(relativeDifference), 1)
-                    violationDescriptions.append(ThresholdDeviation(metric: metric,
+                    violationDescriptions.append(ThresholdDeviation(name: name,
+                                                                    target: target,
+                                                                    metric: metric,
                                                                     percentile: percentile,
-                                                                    baseValue: lhs,
-                                                                    comparisonValue: rhs,
-                                                                    difference: Int(relativeDiff),
+                                                                    baseValue: self.normalize(lhs),
+                                                                    comparisonValue: self.normalize(rhs),
+                                                                    difference: self.normalize(Int(relativeDiff)),
                                                                     differenceThreshold: Int(threshold),
-                                                                    relative: true))
+                                                                    relative: true,
+                                                                    units: scalingFactor))
                     thresholdViolated = true
                 }
             }
 
             if var threshold = thresholds.absolute[percentile] {
-                threshold /= (1_000_000_000 / scalingFactor)
+                threshold /= (1_000_000_000 / scalingFactor.rawValue)
                 if reverseComparison ? -absoluteDifference > threshold : absoluteDifference > threshold {
-                    violationDescriptions.append(ThresholdDeviation(metric: metric,
+                    violationDescriptions.append(ThresholdDeviation(name: name,
+                                                                    target: target,
+                                                                    metric: metric,
                                                                     percentile: percentile,
-                                                                    baseValue: lhs,
-                                                                    comparisonValue: rhs,
-                                                                    difference: absoluteDifference,
+                                                                    baseValue: self.normalize(lhs),
+                                                                    comparisonValue: self.normalize(rhs),
+                                                                    difference: self.normalize(absoluteDifference),
                                                                     differenceThreshold: threshold,
-                                                                    relative: false))
+                                                                    relative: false,
+                                                                    units: scalingFactor))
                     thresholdViolated = true
                 }
             }
-            //            print("returning \(thresholdViolated) \(printOutput)")
             return (thresholdViolated, violationDescriptions)
         }
 
@@ -403,7 +413,7 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
                                                                rhsPercentiles[percentile],
                                                                Self.Percentile(rawValue: percentile)!,
                                                                thresholds,
-                                                               lhs.statistics.units().rawValue)
+                                                               lhs.statistics.units())
             violationDescriptions.append(contentsOf: failureDescriptions)
             worse = lastCheck || worse
         }

@@ -116,15 +116,20 @@ struct BenchmarkTool: AsyncParsableCommand {
     var comparisonBaseline: BenchmarkBaseline?
     var checkBaseline: BenchmarkBaseline?
 
-    mutating func failBenchmark(_ reason: String? = nil) {
+    internal enum ExitCode: Int32 {
+        case genericFailure = 1
+        case thresholdViolation = 2
+    }
+
+    mutating func failBenchmark(_ reason: String? = nil, exitCode: ExitCode = .genericFailure) {
         if let reason {
             print(reason)
             print("")
         }
         #if canImport(Darwin)
-            Darwin.exit(EXIT_FAILURE)
+            Darwin.exit(exitCode.rawValue)
         #elseif canImport(Glibc)
-            Glibc.exit(EXIT_FAILURE)
+            Glibc.exit(exitCode.rawValue)
         #endif
     }
 
