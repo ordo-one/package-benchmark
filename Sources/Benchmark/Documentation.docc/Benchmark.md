@@ -8,6 +8,8 @@
 
 - ``Benchmark/Benchmark/init(_:configuration:closure:)-5ra7m``
 - ``Benchmark/Benchmark/init(_:configuration:closure:)-699lk``
+- ``Benchmark/Benchmark/init(_:configuration:closure:)-7wcl8``
+- ``Benchmark/Benchmark/init(_:configuration:closure:)-48cka``
 
 ### Configuring Benchmarks
 
