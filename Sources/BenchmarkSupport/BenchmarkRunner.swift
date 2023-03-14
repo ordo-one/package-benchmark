@@ -59,6 +59,8 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
         var benchmark: Benchmark?
         var results: [BenchmarkResult] = []
 
+        Benchmark.startupHook?()
+
         while true {
             if debug { // in debug mode we run all benchmarks matching filter/skip specified
                 var benchmark: Benchmark?
@@ -139,6 +141,7 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
 
                 try channel.write(.end)
             case .end:
+                Benchmark.shutdownHook?()
                 return
             }
         }
