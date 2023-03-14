@@ -41,7 +41,7 @@ jobs:
       - name: Run benchmarks for branch
         if: ${{ env.hasBenchmark == '1' }}
         run: |
-          swift package --allow-writing-to-directory .benchmarkBaselines/ benchmark baseline update pull_request
+          swift package --allow-writing-to-directory .benchmarkBaselines/ benchmark baseline update pull_request --no-progress
       - name: Switch to branch 'main'
         if: ${{ env.hasBenchmark == '1' }}
         run: |
@@ -50,7 +50,7 @@ jobs:
       - name: Run benchmarks for branch 'main'
         if: ${{ env.hasBenchmark == '1' }}
         run: |
-          swift package --allow-writing-to-directory .benchmarkBaselines/ benchmark baseline update main
+          swift package --allow-writing-to-directory .benchmarkBaselines/ benchmark baseline update main --no-progress
       - name: Compare PR and main
         if: ${{ env.hasBenchmark == '1' }}
         id: benchmark
