@@ -414,7 +414,9 @@ extension BenchmarkTool {
                              Column(title: "Threshold Δ", value: $0.differenceThreshold, width: percentileWidth, align: .right)]
                         }
 
+                        printMarkdown("```")
                         absoluteTable.print(absoluteResults, style: Style.fancy)
+                        printMarkdown("```")
                     }
 
                     if relativeResults.isEmpty == false {
