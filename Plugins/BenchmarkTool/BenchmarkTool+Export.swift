@@ -139,7 +139,7 @@ extension BenchmarkTool {
     }
 
     func exportResults(baseline: BenchmarkBaseline) throws {
-        let baselineName = baseline.baselineName == "Current baseline" ? "default" : baseline.baselineName
+        let baselineName = baseline.baselineName
         switch format {
         case .text:
             fallthrough

@@ -377,7 +377,7 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
                                                                     percentile: percentile,
                                                                     baseValue: normalize(lhs),
                                                                     comparisonValue: normalize(rhs),
-                                                                    difference: normalize(Int(relativeDiff)),
+                                                                    difference: Int(relativeDiff),
                                                                     differenceThreshold: Int(threshold),
                                                                     relative: true,
                                                                     units: scalingFactor))

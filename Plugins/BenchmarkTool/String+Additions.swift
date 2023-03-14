@@ -9,12 +9,16 @@
 //
 
 extension String {
-    func printAsHeader() {
+    func printAsHeader(addWhiteSpace:Bool = true) {
         let separator = String(repeating: "=", count: count)
-        print("")
+        if addWhiteSpace {
+            print("")
+        }
         print(separator)
         print(self)
         print(separator)
-        print("")
+        if addWhiteSpace {
+            print("")
+        }
     }
 }

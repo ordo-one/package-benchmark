@@ -77,7 +77,12 @@ extension BenchmarkTool {
     mutating func postProcessBenchmarkResults() throws {
         switch command {
         case .baseline:
-            if delete > 0 {
+            guard let baselineOperation else {
+                fatalError("Baseline command without specifying a baseline operation, internal error in Benchmark")
+            }
+
+            switch baselineOperation {
+            case .delete:
                 benchmarkExecutablePaths.forEach { path in
                     let target = FilePath(path).lastComponent!.description
                     baseline.forEach {
@@ -85,147 +90,75 @@ extension BenchmarkTool {
                     }
                 }
                 return
-            }
-
-            if listBaselines > 0 {
+            case .list:
                 printAllBaselines()
-                return
-            }
-
-            if let comparisonBaseline {
-                guard benchmarkBaselines.count > 0 else {
-                    print("Only had \(benchmarkBaselines.count) baselines, can't compare.")
+            case .compare:
+                guard benchmarkBaselines.count == 2 else {
+                    print("Can only compare exactly 2 benchmark baselines, got: \(benchmarkBaselines.count) baselines.")
                     return
                 }
 
-                let currentBaseline = benchmarkBaselines[0]
-
-                prettyPrintDelta(currentBaseline: currentBaseline, baseline: comparisonBaseline)
-
-                return
-            }
-
-            if let checkBaseline {
-                guard benchmarkBaselines.count > 0 else {
-                    print("No baselines available, can't check.")
-                    return
-                }
-
-                let currentBaseline = benchmarkBaselines[0]
-                let baselineName = baseline[0] == "default" ? "Current baseline" : baseline[0]
-                let comparingBaselineName = check ?? "unknown"
-
-                //                let benchmark = benchmarkFor(currentBaseline.results)
-                let (betterOrEqual, deviationResults) = checkBaseline.betterResultsOrEqual(than: currentBaseline,
-                                                                                           benchmarks: benchmarks)
-
-                if betterOrEqual {
-                    print("New baseline '\(comparingBaselineName)' is BETTER (or equal) than the '\(baselineName)' baseline thresholds.")
-                } else {
-                    if quiet == 0 {
-                        let metrics = deviationResults.map(\.metric).unique()
-                        // Get a unique set of all name/target pairs that have threshold violations, sorted lexically:
-                        let namesAndTargets = deviationResults.map { NameAndTarget(name: $0.name, target: $0.target) }
-                            .unique().sorted { lhs, rhs in
-                                if lhs.target < rhs.target {
-                                    return true
-                                }
-
-                                return lhs.name < rhs.name
-                            }
-
-                        namesAndTargets.forEach { nameAndTarget in
-                            "Threshold violations for \(nameAndTarget.name):\(nameAndTarget.target)".printAsHeader()
-                            metrics.forEach { metric in
-
-                                let relativeResults = deviationResults.filter { $0.name == nameAndTarget.name &&
-                                    $0.target == nameAndTarget.target &&
-                                    $0.metric == metric &&
-                                    $0.relative == true
-                                }
-                                let absoluteResults = deviationResults.filter { $0.name == nameAndTarget.name &&
-                                    $0.target == nameAndTarget.target &&
-                                    $0.metric == metric &&
-                                    $0.relative == false
-                                }
-                                let width = 40
-                                let percentileWidth = 15
-
-                                // The baseValue is the new baseline that we're using as the comparison base, so...
-                                if absoluteResults.isEmpty == false {
-                                    let absoluteTable = TextTable<BenchmarkResult.ThresholdDeviation> {
-                                        [Column(title: "\(metric.description) (\(metric.countable ? $0.units.description : $0.units.timeDescription), Δ)",
-                                                value: $0.percentile, width: width, align: .left),
-                                         Column(title: "\(baselineName)", value: $0.comparisonValue, width: percentileWidth, align: .right),
-                                         Column(title: "\(comparingBaselineName)", value: $0.baseValue, width: percentileWidth, align: .right),
-                                         Column(title: "Difference Δ", value: $0.difference, width: percentileWidth, align: .right),
-                                         Column(title: "Threshold Δ", value: $0.differenceThreshold, width: percentileWidth, align: .right)]
-                                    }
-
-                                    absoluteTable.print(absoluteResults, style: Style.fancy)
-                                }
-
-                                if relativeResults.isEmpty == false {
-                                    let relativeTable = TextTable<BenchmarkResult.ThresholdDeviation> {
-                                        [Column(title: "\(metric.description) (\(metric.countable ? $0.units.description : $0.units.timeDescription), %)",
-                                                value: $0.percentile, width: width, align: .left),
-                                         Column(title: "\(baselineName)", value: $0.comparisonValue, width: percentileWidth, align: .right),
-                                         Column(title: "\(comparingBaselineName)", value: $0.baseValue, width: percentileWidth, align: .right),
-                                         Column(title: "Difference %", value: $0.difference, width: percentileWidth, align: .right),
-                                         Column(title: "Threshold %", value: $0.differenceThreshold, width: percentileWidth, align: .right)]
-                                    }
-
-                                    relativeTable.print(relativeResults, style: Style.fancy)
-                                }
-                            }
-                        }
-                    }
-
-                    failBenchmark("New baseline '\(comparingBaselineName)' is WORSE than the '\(baselineName)' baseline thresholds.",
-                                  exitCode: .thresholdViolation)
-                }
-
-                return
-            }
-
-            if update > 0 {
-                guard benchmarkBaselines.count > 0 else {
-                    print("Only had \(benchmarkBaselines.count) baselines, can't update.")
+                prettyPrintDelta(currentBaseline: benchmarkBaselines[0], baseline: benchmarkBaselines[1])
+            case .update:
+                guard benchmarkBaselines.count == 1 else {
+                    print("Can only update a single benchmark baseline, got: \(benchmarkBaselines.count) baselines.")
                     return
                 }
 
                 let baseline = benchmarkBaselines[0]
-                let baselineName = self.baseline.first ?? "default"
+                if let baselineName = self.baseline.first {
+                    try baseline.targets.forEach { target in
+                        let results = baseline.results.filter { $0.key.target == target }
+                        let subset = BenchmarkBaseline(baselineName: baselineName,
+                                                       machine: baseline.machine,
+                                                       results: results)
+                        try write(baseline: subset,
+                                  baselineName: baselineName,
+                                  target: target)
+                    }
 
-                try baseline.targets.forEach { target in
-                    let results = baseline.results.filter { $0.key.target == target }
-                    let subset = BenchmarkBaseline(baselineName: baselineName == "default" ? "Current baseline" : baselineName,
-                                                   machine: baseline.machine,
-                                                   results: results)
-                    try write(baseline: subset,
-                              baselineName: baselineName,
-                              target: target)
+                    if quiet == 0 {
+                        print("")
+                        print("Updated baseline '\(baselineName)'")
+                    }
+                } else {
+                    fatalError("Could not get first baselinename")
                 }
 
-                if quiet == 0 {
-                    print("")
-                    print("Updated baseline '\(baselineName)'")
+            case .check:
+                guard benchmarkBaselines.count == 2 else {
+                    print("Can only do threshold violation checks for exactly 2 benchmark baselines, got: \(benchmarkBaselines.count) baselines.")
+                    return
                 }
 
-                return
+
+                let currentBaseline = benchmarkBaselines[0]
+                let checkBaseline = benchmarkBaselines[1]
+                let baselineName = baseline[0]
+                let checkBaselineName = baseline[1]
+
+                let (betterOrEqual, deviationResults) = checkBaseline.betterResultsOrEqual(than: currentBaseline,
+                                                                                           benchmarks: benchmarks)
+
+                if betterOrEqual {
+                    print("New baseline '\(checkBaselineName)' is BETTER (or equal) than the '\(baselineName)' baseline thresholds.")
+                } else {
+                    prettyPrintDeviation(baselineName: baselineName,
+                                         comparingBaselineName: checkBaselineName,
+                                         deviationResults: deviationResults)
+                    failBenchmark("New baseline '\(checkBaselineName)' is WORSE than the '\(baselineName)' baseline thresholds.",
+                                  exitCode: .thresholdViolation)
+                }
+            case .read:
+                if benchmarkBaselines.isEmpty {
+                    print("No baseline found.")
+                } else {
+                    try benchmarkBaselines.forEach { baseline in
+                        try exportResults(baseline: baseline)
+                    }
+                }
             }
-
-            if benchmarkBaselines.isEmpty {
-                print("No baseline found.")
-            } else {
-                try benchmarkBaselines.forEach { baseline in
-                    try exportResults(baseline: baseline)
-                }
-            }
-
-            return
         case .run:
-
             guard let baseline = benchmarkBaselines.first else {
                 fatalError("Internal error, no baseline data after benchmark run.")
             }
