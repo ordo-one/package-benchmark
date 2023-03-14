@@ -22,17 +22,26 @@ enum Command: String, CaseIterable {
 
 /// The benchmark data output format.
 enum OutputFormat: String, CaseIterable {
-    /// Text output formatted into a visual table
+    /// Text output formatted into a visual table suitable for console output
     case text
-    /// The text output format, formatted in markdown
+    /// The text output format, formatted in markdown, suitable for GitHub workflows 
     case markdown
-    /// Influx data import
+    /// Influx data format
     case influx
-    case percentiles
-    case tsv
-    case jmh
+    case jmh // JMH format consumable by http://jmh.morethan.io
     /// The encoded representation of the underlying histograms capturing the benchmark data.
-    case encodedHistogram
+//    case percentiles // --> histogramPercentilesTXT
+//    case tsv // --> histogramSamplesTSV
+//    case encodedHistogram // --> histogramEncodedJSON
+    /// The encoded representation of the underlying histograms capturing the benchmark data, for programmatic use (Codable).
+    case histogramEncoded
+    /// The histogram percentiles, average, deviation, sample count etc in standard HDR Histogram text format consumable by http://hdrhistogram.github.io/HdrHistogram/plotFiles.html
+    case histogram
+    /// The raw histogram samples in TSV format for processing by external tools (e.g. Youplot)
+    case histogramSamples
+    /// The percentiles values betwen (0-99, 99.9, 99.99, ... 99.99999, 100) in TSV format for processing by external tools (e.g. Youplot)
+    case histogramPercentiles
+
 }
 
 enum Grouping: String, CaseIterable {
