@@ -183,8 +183,8 @@ public final class Benchmark: Codable, Hashable {
     ///   - closure: The actual throwing benchmark closure that will be measured
     @discardableResult
     public convenience init?(_ name: String,
-                      configuration: Benchmark.Configuration = Benchmark.defaultConfiguration,
-                      closure: @escaping BenchmarkThrowingClosure) {
+                             configuration: Benchmark.Configuration = Benchmark.defaultConfiguration,
+                             closure: @escaping BenchmarkThrowingClosure) {
         self.init(name, configuration: configuration) { benchmark in
             do {
                 try closure(benchmark)
