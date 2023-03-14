@@ -43,11 +43,9 @@ let help =
     --target <target>       Benchmark targets matching the regexp filter that should be run
     --skip-target <skip-target>
                           Benchmark targets matching the regexp filter that should be skipped
-    --format <format>       The output format to use, one of: ["text", "markdown", "influx", "percentiles", "tsv", "jmh", "encodedHistogram"], default is 'text'
-    --metric <metric>       Specifies that the benchmark run should use one or more specific metrics instead of the ones defined by the benchmarks, valid values are: ["cpuUser",
-                          "cpuSystem", "cpuTotal", "wallClock", "throughput", "peakMemoryResident", "peakMemoryVirtual", "mallocCountSmall", "mallocCountLarge", "mallocCountTotal",
-                          "allocatedResidentMemory", "memoryLeaked", "syscalls", "contextSwitches", "threads", "threadsRunning", "readSyscalls", "writeSyscalls", "readBytesLogical",
-                          "writeBytesLogical", "readBytesPhysical", "writeBytesPhysical", "custom"]
+    --format <format>       The output format to use, one of: ["text", "markdown", "influx", "jmh", "histogramEncoded", "histogram", "histogramSamples", "histogramPercentiles"], default is 'text'
+    --metric <metric>       Specifies that the benchmark run should use one or more specific metrics instead of the ones defined by the benchmarks, valid values are: ["cpuUser", "cpuSystem", "cpuTotal", "wallClock", "throughput", "peakMemoryResident", "peakMemoryVirtual", "mallocCountSmall", "mallocCountLarge",
+                          "mallocCountTotal", "allocatedResidentMemory", "memoryLeaked", "syscalls", "contextSwitches", "threads", "threadsRunning", "readSyscalls", "writeSyscalls", "readBytesLogical", "writeBytesLogical", "readBytesPhysical", "writeBytesPhysical", "custom"]
     --path <path>           The path where exported data is stored, default is the current directory (".").
     --quiet                 Specifies that output should be suppressed (useful for if you just want to check return code)
     --scale                 Specifies that some of the text output should be scaled using the scalingFactor (denoted by '*' in output)
