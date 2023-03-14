@@ -204,7 +204,7 @@ extension BenchmarkTool {
 
                     outputString += "Percentile\t" + "\(values.metric.description) \(values.unitDescriptionPretty)\n"
 
-                    for percentile in 0 ..< 99 {
+                    for percentile in 0 ..< 100 {
                         outputString += "\(percentile)\t" + "\(values.normalize(Int(histogram.valueAtPercentile(Double(percentile)))))\n"
                     }
 
