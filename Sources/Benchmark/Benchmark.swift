@@ -31,6 +31,10 @@ public final class Benchmark: Codable, Hashable {
     #if swift(>=5.8)
         @_documentation(visibility: internal)
     #endif
+    public typealias BenchmarkAsyncThrowingClosure = (_ benchmark: Benchmark) async throws -> Void
+    #if swift(>=5.8)
+        @_documentation(visibility: internal)
+    #endif
     public typealias BenchmarkMeasurementSynchronization = () -> Void
     #if swift(>=5.8)
         @_documentation(visibility: internal)
@@ -184,6 +188,25 @@ public final class Benchmark: Codable, Hashable {
         self.init(name, configuration: configuration) { benchmark in
             do {
                 try closure(benchmark)
+            } catch {
+                benchmark.error("Benchmark \(name) failed with \(error)")
+            }
+        }
+    }
+
+    /// Definition of an async throwing Benchmark
+    /// - Parameters:
+    ///   - name: The name used for display purposes of the benchmark (also used for
+    ///   matching when comparing to baselines)
+    ///   - configuration: Defines the settings that should be used for this benchmark
+    ///   - closure: The actual async throwing benchmark closure that will be measured
+    @discardableResult
+    public convenience init?(_ name: String,
+                             configuration: Benchmark.Configuration = Benchmark.defaultConfiguration,
+                             closure: @escaping BenchmarkAsyncThrowingClosure) {
+        self.init(name, configuration: configuration) { benchmark in
+            do {
+                try await closure(benchmark)
             } catch {
                 benchmark.error("Benchmark \(name) failed with \(error)")
             }
