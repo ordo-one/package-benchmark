@@ -274,7 +274,6 @@ import PackagePlugin
                     // the way the status is extracted portably is with macros - so we just need to
                     // reimplement the logic here in Swift according to the waitpid man page to
                     // get some nicer feedback on failure reason.
-
                     if let waitStatus = ExitCode(rawValue: (status & 0xFF00) >> 8) {
                         switch waitStatus {
                         case .success:
