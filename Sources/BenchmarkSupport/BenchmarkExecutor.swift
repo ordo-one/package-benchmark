@@ -55,6 +55,8 @@ internal final class BenchmarkExecutor {
         // Create metric statistics as needed
         benchmark.configuration.metrics.forEach { metric in
             switch metric {
+            case .custom:
+                statistics[metric] = Statistics(prefersLarger: metric.polarity == .prefersLarger)
             case .wallClock, .cpuUser, .cpuTotal, .cpuSystem:
                 let units = Statistics.Units(benchmark.configuration.timeUnits)
                 statistics[metric] = Statistics(units: units)

@@ -22,32 +22,17 @@ import SystemPackage
     #error("Unsupported Platform")
 #endif
 
-enum Grouping: String, ExpressibleByArgument {
-    case metric
-    case benchmark
-}
-
-/// The benchmark data output format.
-enum OutputFormat: String, ExpressibleByArgument, CaseIterable {
-    /// Text output formatted into a visual table
-    case text
-    /// The text output format, formatted in markdown
-    case markdown
-    /// Influx data import
-    case influx
-    case percentiles
-    case tsv
-    case jmh
-    /// The encoded representation of the underlying histograms capturing the benchmark data.
-    case encodedHistogram
-}
-
 enum BenchmarkOperation: String, ExpressibleByArgument {
     case baseline
     case list
     case run
     case query // query all benchmarks from target, used internally in tool
 }
+
+extension Grouping: ExpressibleByArgument {}
+extension OutputFormat: ExpressibleByArgument {}
+extension BaselineOperation: ExpressibleByArgument {}
+extension BenchmarkMetric: ExpressibleByArgument {}
 
 typealias BenchmarkResults = [BenchmarkIdentifier: [BenchmarkResult]]
 
@@ -68,23 +53,11 @@ struct BenchmarkTool: AsyncParsableCommand {
     @Option(name: .long, help: "The path to export to")
     var path: String?
 
-    @Option(name: .long, help: "The baseline to compare with")
-    var compare: String?
-
-    @Option(name: .long, help: "The baseline to check thresholds with")
-    var check: String?
+    @Option(name: .long, help: "The operation to perform on the specified baselines")
+    var baselineOperation: BaselineOperation?
 
     @Flag(name: .long, help: "True if we should suppress output")
     var quiet: Int
-
-    @Flag(name: .long, help: "True if we should update the baseline")
-    var update: Int
-
-    @Flag(name: .long, help: "True if we should delete the baseline")
-    var delete: Int
-
-    @Flag(name: .long, help: "True if we should display available baselines")
-    var listBaselines: Int
 
     @Flag(name: .long, help: "True if we should suppress progress in benchmark run")
     var noProgress: Int
@@ -94,6 +67,9 @@ struct BenchmarkTool: AsyncParsableCommand {
 
     @Option(name: .long, help: "The named baseline(s) we should display, update, delete or compare with")
     var baseline: [String] = []
+
+    @Option(name: .long, help: "The metrics to use, overrides whatever the benchmark has specified as desired metrics.")
+    var metrics: [BenchmarkMetric] = []
 
     @Option(name: .long, help: "The grouping to use, 'metric' or 'test'")
     var grouping: Grouping
@@ -112,14 +88,9 @@ struct BenchmarkTool: AsyncParsableCommand {
     var outputFD: CInt = 0
 
     var benchmarks: [Benchmark] = []
-    var benchmarkBaselines: [BenchmarkBaseline] = [] // The baselines read from disk, merged
+    var benchmarkBaselines: [BenchmarkBaseline] = [] // The baselines read from disk, merged + current run if needed
     var comparisonBaseline: BenchmarkBaseline?
     var checkBaseline: BenchmarkBaseline?
-
-    internal enum ExitCode: Int32 {
-        case genericFailure = 1
-        case thresholdViolation = 2
-    }
 
     mutating func failBenchmark(_ reason: String? = nil, exitCode: ExitCode = .genericFailure) {
         if let reason {
@@ -140,7 +111,7 @@ struct BenchmarkTool: AsyncParsableCommand {
         print("Or check Console.app for a backtrace if on macOS.")
     }
 
-    func shouldRunBenchmark(_ name: String) throws -> Bool {
+    func shouldIncludeBenchmark(_ name: String) throws -> Bool {
         if try skip.contains(where: { try name.wholeMatch(of: Regex($0)) != nil }) {
             return false
         }
@@ -177,26 +148,20 @@ struct BenchmarkTool: AsyncParsableCommand {
                 benchmarkBaselines.append(baseline)
             } else {
                 if quiet == 0 {
-                    print("")
                     print("Warning: Failed to load specified baseline '\(baselineName)'.")
                 }
             }
         }
-
-        // And separately read in the comparison baseline if any
-        if let compare {
-            comparisonBaseline = try readBaseline(compare)
-        }
-
-        // And separately read in the comparison baseline if any
-        if let check {
-            checkBaseline = try readBaseline(check)
-        }
     }
 
     mutating func run() async throws {
-        if command == .baseline, delete == 0, listBaselines == 0, update == 0 { // don't need to read baseline
+        // Skip reading baselines for baseline operations not needing them
+        if let operation = baselineOperation, [.delete, .list, .update].contains(operation) == false {
             try readBaselines()
+            if [.compare, .check].contains(operation), benchmarkBaselines.count < 1 {
+                print("Failed to read at least one benchmark baseline for compare/check operations.")
+                return
+            }
         }
 
         // First get a list of all benchmarks
@@ -209,37 +174,25 @@ struct BenchmarkTool: AsyncParsableCommand {
             }
         }
 
-        // If we just need data from disk, skip running benchmarks
-        if command == .baseline, benchmarkBaselines.count > 0 {
-            if compare == nil, delete == 0, update == 0 {
-                try postProcessBenchmarkResults()
-                return
-            }
-
-            // comparison, short circuit if we have read both baselines from disk
-            if compare != nil, comparisonBaseline != nil { // comparison operation
-                try postProcessBenchmarkResults()
-                return
-            }
+        guard command != .list else {
+            try listBenchmarks()
+            return
         }
 
-        if delete > 0 {
+        // If we just need data from disk, skip running benchmarks
+
+        if let operation = baselineOperation, [.delete, .list].contains(operation) {
             try postProcessBenchmarkResults()
             return
         }
 
-        if listBaselines > 0 {
+        if let operation = baselineOperation, [.compare, .check].contains(operation), benchmarkBaselines.count > 1 {
             try postProcessBenchmarkResults()
             return
         }
 
         guard command != .query else {
             fatalError("Query command should never be specified to the BenchmarkTool")
-        }
-
-        guard command != .list else {
-            try listBenchmarks()
-            return
         }
 
         if quiet == 0 {
@@ -251,7 +204,7 @@ struct BenchmarkTool: AsyncParsableCommand {
 
         // run each benchmark for the target as a separate process
         try benchmarks.forEach { benchmark in
-            if try shouldRunBenchmark(benchmark.name) {
+            if try shouldIncludeBenchmark(benchmark.name) {
                 let results = try runChild(benchmarkPath: benchmark.executablePath!,
                                            benchmarkCommand: command,
                                            benchmark: benchmark) { [self] result in
@@ -265,12 +218,10 @@ struct BenchmarkTool: AsyncParsableCommand {
         }
 
         // Insert benchmark run at first position of baselines
-        if comparisonBaseline != nil {
-            baseline.insert("default", at: 0)
-        }
-        benchmarkBaselines.insert(BenchmarkBaseline(baselineName: "Current baseline",
+        baseline.append("Current run")
+        benchmarkBaselines.append(BenchmarkBaseline(baselineName: "Current run",
                                                     machine: benchmarkMachine(),
-                                                    results: benchmarkResults), at: 0)
+                                                    results: benchmarkResults))
 
         try postProcessBenchmarkResults()
     }

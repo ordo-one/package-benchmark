@@ -93,6 +93,22 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
                 benchmark = Benchmark.benchmarks.first { $0.name == benchmarkToRun.name }
 
                 if let benchmark {
+                    // Pick up some settings overridden by BenchmarkTool
+                    if benchmarkToRun.configuration.metrics.isEmpty == false {
+                        for metricIndex in 0 ..< benchmarkToRun.configuration.metrics.count {
+                            let metric = benchmarkToRun.configuration.metrics[metricIndex]
+                            if metric == .custom(metric.description) {
+                                if let existingMetric =
+                                    benchmark.configuration.metrics.first(where: { $0.description == metric.description }) {
+                                    benchmarkToRun.configuration.metrics[metricIndex] = existingMetric
+                                }
+                            }
+                        }
+                        benchmark.configuration.metrics = benchmarkToRun.configuration.metrics
+                    }
+
+                    benchmark.target = benchmarkToRun.target
+
                     results = benchmarkExecutor.run(benchmark)
 
                     guard benchmark.failureReason == nil else {

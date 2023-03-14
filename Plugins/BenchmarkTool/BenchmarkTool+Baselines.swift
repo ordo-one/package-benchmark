@@ -438,7 +438,7 @@ extension BenchmarkBaseline: Equatable {
                     }
                 } else {
                     if warningPrinted == false {
-                        print("`\(lhsBenchmarkIdentifier.target):\(lhsBenchmarkIdentifier.name)` not found in second baseline, skipping it.")
+                        print("One or more benchmarks, including `\(lhsBenchmarkIdentifier.target):\(lhsBenchmarkIdentifier.name)` was not found in one of the baselines.")
                         warningPrinted = true
                     }
                 }

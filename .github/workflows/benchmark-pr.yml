@@ -57,7 +57,7 @@ jobs:
         run: |
           echo $(date) >> $GITHUB_STEP_SUMMARY
           echo "exitStatus=1" >> $GITHUB_ENV
-          swift package benchmark baseline check main pull_request --format markdown --quiet >> $GITHUB_STEP_SUMMARY
+          swift package benchmark baseline check main pull_request --format markdown >> $GITHUB_STEP_SUMMARY
           echo "exitStatus=0" >> $GITHUB_ENV
         continue-on-error: true
       - if: ${{ env.exitStatus == '0' }}
