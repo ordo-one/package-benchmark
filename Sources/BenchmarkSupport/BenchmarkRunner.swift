@@ -93,6 +93,7 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
                 benchmark = Benchmark.benchmarks.first { $0.name == benchmarkToRun.name }
 
                 if let benchmark {
+<<<<<<< HEAD
                     // Pick up some settings overridden by BenchmarkTool
                     if benchmarkToRun.configuration.metrics.isEmpty == false {
                         for metricIndex in 0 ..< benchmarkToRun.configuration.metrics.count {
@@ -110,6 +111,9 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
                     benchmark.target = benchmarkToRun.target
 
                     results = benchmarkExecutor.run(benchmark)
+=======
+                    results = benchmarkExecutor.run(benchmark, benchmarkToRun.target)
+>>>>>>> 3b9bd51 (fix: Clean up required baseline parameters for consistency, cleanup of parameter passing to child process (#96))
 
                     guard benchmark.failureReason == nil else {
                         try channel.write(.error(benchmark.failureReason!))

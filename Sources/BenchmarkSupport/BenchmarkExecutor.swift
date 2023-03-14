@@ -30,7 +30,7 @@ internal final class BenchmarkExecutor {
     let operatingSystemStatsProducer = OperatingSystemStatsProducer()
 
     // swiftlint:disable cyclomatic_complexity function_body_length
-    func run(_ benchmark: Benchmark) -> [BenchmarkResult] {
+    func run(_ benchmark: Benchmark, _ targetName: String) -> [BenchmarkResult] {
         var wallClockDuration: Duration = .zero
         var startMallocStats = MallocStats()
         var stopMallocStats = MallocStats()
@@ -211,7 +211,7 @@ internal final class BenchmarkExecutor {
         var progressBar: ProgressBar?
 
         if quiet == false {
-            let progressString = "| \(benchmark.target):\(benchmark.name)"
+            let progressString = "| \(targetName):\(benchmark.name)"
 
             progressBar = ProgressBar(count: 100,
                                       configuration: [ProgressPercent(),
