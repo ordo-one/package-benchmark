@@ -36,7 +36,7 @@ final class BenchmarkMetricsTests: XCTestCase {
         .writeBytesLogical,
         .readBytesPhysical,
         .writeBytesPhysical,
-        .custom("test"),
+        .custom("test", polarity: .prefersSmaller, useScalingFactor: false),
         .custom("test2", polarity: .prefersLarger, useScalingFactor: true)
     ]
 
@@ -83,9 +83,12 @@ final class BenchmarkMetricsTests: XCTestCase {
         var description = ""
 
         for metricIndex in 0 ..< textualMetrics.count {
-            let metric = BenchmarkMetric(textualMetrics[metricIndex])
-            description += metric.description
-            XCTAssertEqual(metrics[metricIndex], metric)
+            if let metric = BenchmarkMetric(argument: textualMetrics[metricIndex]) {
+                description += metric.description
+                XCTAssertEqual(metrics[metricIndex], metric)
+            } else {
+                XCTFail("Could not extract metric \(textualMetrics[metricIndex])")
+            }
         }
 
         XCTAssert(description.count > 10)

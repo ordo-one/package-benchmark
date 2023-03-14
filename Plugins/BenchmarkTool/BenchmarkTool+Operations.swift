@@ -25,6 +25,9 @@ extension BenchmarkTool {
             case let .list(benchmark):
                 benchmark.executablePath = benchmarkPath
                 benchmark.target = FilePath(benchmarkPath).lastComponent!.description
+                if metrics.isEmpty == false {
+                    benchmark.configuration.metrics = metrics
+                }
                 benchmarks.append(benchmark)
             case .end:
                 break outerloop
@@ -130,7 +133,6 @@ extension BenchmarkTool {
                     print("Can only do threshold violation checks for exactly 2 benchmark baselines, got: \(benchmarkBaselines.count) baselines.")
                     return
                 }
-
 
                 let currentBaseline = benchmarkBaselines[0]
                 let checkBaseline = benchmarkBaselines[1]

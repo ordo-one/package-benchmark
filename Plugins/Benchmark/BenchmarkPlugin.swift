@@ -23,7 +23,6 @@ import PackagePlugin
 
 @available(macOS 13.0, *)
 @main struct Benchmark: CommandPlugin {
-
     func withCStrings(_ strings: [String], scoped: ([UnsafeMutablePointer<CChar>?]) throws -> Void) rethrows {
         let cStrings = strings.map { strdup($0) }
         try scoped(cStrings + [nil])
@@ -42,6 +41,7 @@ import PackagePlugin
         let quietRunning = argumentExtractor.extractFlag(named: "quiet")
         let noProgress = argumentExtractor.extractFlag(named: "no-progress")
         let groupingToUse = argumentExtractor.extractOption(named: "grouping")
+        let metricsToUse = argumentExtractor.extractOption(named: "metric")
         let debug = argumentExtractor.extractFlag(named: "debug")
         let scale = argumentExtractor.extractFlag(named: "scale")
         var outputFormat: OutputFormat = .text
@@ -169,6 +169,10 @@ import PackagePlugin
             }
         }
 
+        metricsToUse.forEach { metric in
+            args.append(contentsOf: ["--metrics", metric.description])
+        }
+
         if outputFormat == .text {
             if quietRunning == 0 {
                 print("Build complete!")
@@ -270,8 +274,8 @@ import PackagePlugin
                     // the way the status is extracted portably is with macros - so we just need to
                     // reimplement the logic here in Swift according to the waitpid man page to
                     // get some nicer feedback on failure reason.
-                    if let waitStatus = ExitCode(rawValue:((status & 0xFF00) >> 8)) {
-                        switch waitStatus { 
+                    if let waitStatus = ExitCode(rawValue: (status & 0xFF00) >> 8) {
+                        switch waitStatus {
                         case .success:
                             break
                         case .genericFailure:

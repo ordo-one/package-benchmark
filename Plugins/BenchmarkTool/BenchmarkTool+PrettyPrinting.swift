@@ -105,7 +105,7 @@ extension BenchmarkTool {
                 adjustmentFunction = result.metrics.scale
             } else {
                 description = useGroupingDescription ? "\(result.description) \(result.metrics.unitDescriptionPretty)"
-                : "\(result.metrics.metric.description) \(result.metrics.unitDescriptionPretty)"
+                    : "\(result.metrics.metric.description) \(result.metrics.unitDescriptionPretty)"
                 adjustmentFunction = result.metrics.normalize
             }
 
