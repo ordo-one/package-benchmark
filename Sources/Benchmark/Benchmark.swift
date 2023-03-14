@@ -24,6 +24,13 @@ public final class Benchmark: Codable, Hashable {
     #if swift(>=5.8)
         @_documentation(visibility: internal)
     #endif
+    #if swift(>=5.8)
+        @_documentation(visibility: internal)
+    #endif
+    public typealias BenchmarkThrowingClosure = (_ benchmark: Benchmark) throws -> Void
+    #if swift(>=5.8)
+        @_documentation(visibility: internal)
+    #endif
     public typealias BenchmarkMeasurementSynchronization = () -> Void
     #if swift(>=5.8)
         @_documentation(visibility: internal)
@@ -171,9 +178,9 @@ public final class Benchmark: Codable, Hashable {
     ///   - configuration: Defines the settings that should be used for this benchmark
     ///   - closure: The actual throwing benchmark closure that will be measured
     @discardableResult
-    convenience init?(_ name: String,
+    public convenience init?(_ name: String,
                       configuration: Benchmark.Configuration = Benchmark.defaultConfiguration,
-                      closure: @escaping (_ benchmark: Benchmark) throws -> Void) {
+                      closure: @escaping BenchmarkThrowingClosure) {
         self.init(name, configuration: configuration) { benchmark in
             do {
                 try closure(benchmark)
