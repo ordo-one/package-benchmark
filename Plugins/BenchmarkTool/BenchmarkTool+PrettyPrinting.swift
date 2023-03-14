@@ -383,7 +383,11 @@ extension BenchmarkTool {
                 }
 
             namesAndTargets.forEach { nameAndTarget in
-                "Threshold violations for \(nameAndTarget.name):\(nameAndTarget.target)".printAsHeader()
+
+                printMarkdown("```")
+                "Threshold violations for \(nameAndTarget.name):\(nameAndTarget.target)".printAsHeader(addWhiteSpace: false)
+                printMarkdown("```")
+
                 metrics.forEach { metric in
 
                     let relativeResults = deviationResults.filter { $0.name == nameAndTarget.name &&
@@ -423,7 +427,9 @@ extension BenchmarkTool {
                              Column(title: "Threshold %", value: $0.differenceThreshold, width: percentileWidth, align: .right)]
                         }
 
+                        printMarkdown("```")
                         relativeTable.print(relativeResults, style: Style.fancy)
+                        printMarkdown("```")
                     }
                 }
             }
