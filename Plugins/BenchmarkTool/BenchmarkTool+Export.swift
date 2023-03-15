@@ -171,14 +171,16 @@ extension BenchmarkTool {
                 try results.forEach { values in
                     let histogram = values.statistics.histogram
 
+                    outputString += "\(values.metric.description) \(values.unitDescriptionPretty)\n"
+
                     histogram.recordedValues().forEach { value in
                         for _ in 0 ..< value.count {
-                            outputString += "\(value.value)\n"
+                            outputString += "\(values.normalize(Int(value.value)))\n"
                         }
                     }
                     let description = values.metric.rawDescription
                     try write(exportData: "\(outputString)",
-                              fileName: cleanupStringForShellSafety("\(baselineName).\(key.target).\(key.name).\(description).histogram.raw.tsv"))
+                              fileName: cleanupStringForShellSafety("\(baselineName).\(key.target).\(key.name).\(description).histogram.samples.tsv"))
                     outputString = ""
                 }
             }
@@ -196,7 +198,6 @@ extension BenchmarkTool {
             }
         case .histogramPercentiles:
             var outputString = ""
-            let extraPercentiles = [99.9, 99.99, 99.999, 99.9999, 99.99999, 100.0]
 
             try baseline.results.forEach { key, results in
                 try results.forEach { values in
@@ -204,12 +205,8 @@ extension BenchmarkTool {
 
                     outputString += "Percentile\t" + "\(values.metric.description) \(values.unitDescriptionPretty)\n"
 
-                    for percentile in 0 ..< 100 {
+                    for percentile in 0 ... 100 {
                         outputString += "\(percentile)\t" + "\(values.normalize(Int(histogram.valueAtPercentile(Double(percentile)))))\n"
-                    }
-
-                    extraPercentiles.forEach { percentile in
-                        outputString += "\(percentile)\t" + "\(values.normalize(Int(histogram.valueAtPercentile(percentile))))\n"
                     }
 
                     let description = values.metric.rawDescription
