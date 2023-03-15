@@ -24,9 +24,6 @@ public final class Benchmark: Codable, Hashable {
     #if swift(>=5.8)
         @_documentation(visibility: internal)
     #endif
-    #if swift(>=5.8)
-        @_documentation(visibility: internal)
-    #endif
     public typealias BenchmarkThrowingClosure = (_ benchmark: Benchmark) throws -> Void
     #if swift(>=5.8)
         @_documentation(visibility: internal)
