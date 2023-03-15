@@ -9,7 +9,7 @@
 //
 
 extension String {
-    func printAsHeader(addWhiteSpace:Bool = true) {
+    func printAsHeader(addWhiteSpace: Bool = true) {
         let separator = String(repeating: "=", count: count)
         if addWhiteSpace {
             print("")

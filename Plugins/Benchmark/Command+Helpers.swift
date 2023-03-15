@@ -24,7 +24,7 @@ enum Command: String, CaseIterable {
 enum OutputFormat: String, CaseIterable {
     /// Text output formatted into a visual table suitable for console output
     case text
-    /// The text output format, formatted in markdown, suitable for GitHub workflows 
+    /// The text output format, formatted in markdown, suitable for GitHub workflows
     case markdown
     /// Influx data format
     case influx
@@ -37,7 +37,6 @@ enum OutputFormat: String, CaseIterable {
     case histogramSamples
     /// The percentiles values betwen (0-99, 99.9, 99.99, ... 99.99999, 100) in TSV format for processing by external tools (e.g. Youplot)
     case histogramPercentiles
-
 }
 
 enum Grouping: String, CaseIterable {

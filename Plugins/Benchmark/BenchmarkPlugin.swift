@@ -144,7 +144,7 @@ import PackagePlugin
                     print("Building \(target.name)")
                 }
             }
-            
+
             let buildResult = try packageManager.build(
                 .product(target.name), // .all(includingTests: false),
                 parameters: .init(configuration: .release)

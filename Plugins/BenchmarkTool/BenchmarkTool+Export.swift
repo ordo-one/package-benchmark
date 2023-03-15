@@ -200,13 +200,12 @@ extension BenchmarkTool {
 
             try baseline.results.forEach { key, results in
 
-
                 try results.forEach { values in
                     let histogram = values.statistics.histogram
 
                     outputString += "Percentile\t" + "\(values.metric.description) \(values.unitDescriptionPretty)\n"
 
-                    for percentile in 0..<99 {
+                    for percentile in 0 ..< 99 {
                         outputString += "\(percentile)\t" + "\(values.normalize(Int(histogram.valueAtPercentile(Double(percentile)))))\n"
                     }
 

@@ -196,7 +196,7 @@ public extension BenchmarkMetric {
 }
 
 #if swift(>=5.8)
-@_documentation(visibility: internal)
+    @_documentation(visibility: internal)
 #endif
 public extension BenchmarkMetric {
     var rawDescription: String { // As we can't have raw values due to custom support, we do this...

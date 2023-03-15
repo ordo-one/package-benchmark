@@ -53,4 +53,3 @@ let help =
     --grouping <grouping>   The grouping to use, one of: ["metric", "benchmark"]. default is 'benchmark'
     -h, --help              Show help information.
     """
-
