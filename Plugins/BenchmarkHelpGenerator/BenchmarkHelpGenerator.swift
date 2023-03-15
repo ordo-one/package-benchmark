@@ -36,7 +36,8 @@ let availableMetrics = [
     "writeBytesLogical",
     "readBytesPhysical",
     "writeBytesPhysical",
-    "custom"]
+    "custom"
+]
 
 extension Command: ExpressibleByArgument {}
 extension Grouping: ExpressibleByArgument {}

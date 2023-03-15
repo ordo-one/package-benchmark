@@ -139,8 +139,10 @@ import PackagePlugin
                               "--grouping", grouping]
 
         try filteredTargets.forEach { target in
-            if quietRunning == 0 {
-                print("Building \(target.name)")
+            if outputFormat == .text {
+                if quietRunning == 0 {
+                    print("Building \(target.name)")
+                }
             }
 
             let buildResult = try packageManager.build(

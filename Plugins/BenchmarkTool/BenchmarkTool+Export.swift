@@ -134,7 +134,7 @@ extension BenchmarkTool {
                 print("Lacking permissions to write to \(outputPath)")
                 print("Give benchmark plugin permissions by running with e.g.:")
                 print("")
-                print("swift package --allow-writing-to-package-directory benchmark --format encodedHistogram")
+                print("swift package --allow-writing-to-package-directory benchmark --format histogramEncoded")
                 print("")
             } else {
                 print("Failed to open file \(outputPath), errno = [\(errno)]")
@@ -152,7 +152,7 @@ extension BenchmarkTool {
         case .influx:
             try write(exportData: "\(convertToInflux(baseline))",
                       fileName: "\(baselineName).influx.csv")
-        case .percentiles:
+        case .histogram:
             try baseline.results.forEach { key, results in
                 try results.forEach { values in
                     let outputString = values.statistics.histogram
@@ -164,7 +164,7 @@ extension BenchmarkTool {
         case .jmh:
             try write(exportData: "\(convertToJMH(baseline))",
                       fileName: cleanupStringForShellSafety("\(baselineName).jmh.json"))
-        case .tsv:
+        case .histogramSamples:
             try baseline.results.forEach { key, results in
                 var outputString = ""
 
@@ -178,11 +178,11 @@ extension BenchmarkTool {
                     }
                     let description = values.metric.rawDescription
                     try write(exportData: "\(outputString)",
-                              fileName: cleanupStringForShellSafety("\(baselineName).\(key.target).\(key.name).\(description).tsv"))
+                              fileName: cleanupStringForShellSafety("\(baselineName).\(key.target).\(key.name).\(description).histogram.raw.tsv"))
                     outputString = ""
                 }
             }
-        case .encodedHistogram:
+        case .histogramEncoded:
             try baseline.results.forEach { key, results in
                 let encoder = XJSONEncoder()
 
@@ -191,7 +191,31 @@ extension BenchmarkTool {
                     let jsonData = try encoder.encode(histogram)
                     let description = values.metric.rawDescription
                     try write(exportData: jsonData,
-                              fileName: cleanupStringForShellSafety("\(baselineName).\(key.target).\(key.name).\(description).json"))
+                              fileName: cleanupStringForShellSafety("\(baselineName).\(key.target).\(key.name).\(description).histogram.json"))
+                }
+            }
+        case .histogramPercentiles:
+            var outputString = ""
+            let extraPercentiles = [99.9, 99.99, 99.999, 99.9999, 99.99999, 100.0]
+
+            try baseline.results.forEach { key, results in
+                try results.forEach { values in
+                    let histogram = values.statistics.histogram
+
+                    outputString += "Percentile\t" + "\(values.metric.description) \(values.unitDescriptionPretty)\n"
+
+                    for percentile in 0 ..< 99 {
+                        outputString += "\(percentile)\t" + "\(values.normalize(Int(histogram.valueAtPercentile(Double(percentile)))))\n"
+                    }
+
+                    extraPercentiles.forEach { percentile in
+                        outputString += "\(percentile)\t" + "\(values.normalize(Int(histogram.valueAtPercentile(percentile))))\n"
+                    }
+
+                    let description = values.metric.rawDescription
+                    try write(exportData: "\(outputString)",
+                              fileName: cleanupStringForShellSafety("\(baselineName).\(key.target).\(key.name).\(description).histogram.percentiles.tsv"))
+                    outputString = ""
                 }
             }
         }
