@@ -24,11 +24,28 @@ public final class Benchmark: Codable, Hashable {
     #if swift(>=5.8)
         @_documentation(visibility: internal)
     #endif
+    public typealias BenchmarkThrowingClosure = (_ benchmark: Benchmark) throws -> Void
+    #if swift(>=5.8)
+        @_documentation(visibility: internal)
+    #endif
+    public typealias BenchmarkAsyncThrowingClosure = (_ benchmark: Benchmark) async throws -> Void
+    #if swift(>=5.8)
+        @_documentation(visibility: internal)
+    #endif
     public typealias BenchmarkMeasurementSynchronization = () -> Void
     #if swift(>=5.8)
         @_documentation(visibility: internal)
     #endif
     public typealias BenchmarkCustomMetricMeasurement = (BenchmarkMetric, Int) -> Void
+
+    /// Alias for closures used to hook into setup / teardown
+    public typealias BenchmarkHook = () -> Void
+
+    /// This closure if set, will be run before a targets benchmarks are run, but after they are registered
+    public static var startupHook: BenchmarkHook?
+
+    /// This closure if set, will be run after a targets benchmarks run, but after they are registered
+    public static var shutdownHook: BenchmarkHook?
 
     #if swift(>=5.8)
         @_documentation(visibility: internal)
@@ -153,6 +170,44 @@ public final class Benchmark: Codable, Hashable {
         asyncClosure = closure
 
         benchmarkRegistration()
+    }
+
+    /// Definition of a throwing Benchmark
+    /// - Parameters:
+    ///   - name: The name used for display purposes of the benchmark (also used for
+    ///   matching when comparing to baselines)
+    ///   - configuration: Defines the settings that should be used for this benchmark
+    ///   - closure: The actual throwing benchmark closure that will be measured
+    @discardableResult
+    public convenience init?(_ name: String,
+                             configuration: Benchmark.Configuration = Benchmark.defaultConfiguration,
+                             closure: @escaping BenchmarkThrowingClosure) {
+        self.init(name, configuration: configuration) { benchmark in
+            do {
+                try closure(benchmark)
+            } catch {
+                benchmark.error("Benchmark \(name) failed with \(error)")
+            }
+        }
+    }
+
+    /// Definition of an async throwing Benchmark
+    /// - Parameters:
+    ///   - name: The name used for display purposes of the benchmark (also used for
+    ///   matching when comparing to baselines)
+    ///   - configuration: Defines the settings that should be used for this benchmark
+    ///   - closure: The actual async throwing benchmark closure that will be measured
+    @discardableResult
+    public convenience init?(_ name: String,
+                             configuration: Benchmark.Configuration = Benchmark.defaultConfiguration,
+                             closure: @escaping BenchmarkAsyncThrowingClosure) {
+        self.init(name, configuration: configuration) { benchmark in
+            do {
+                try await closure(benchmark)
+            } catch {
+                benchmark.error("Benchmark \(name) failed with \(error)")
+            }
+        }
     }
 
     // Shared between sync/async actual benchmark registration

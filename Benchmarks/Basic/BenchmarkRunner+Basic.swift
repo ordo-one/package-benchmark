@@ -20,6 +20,8 @@ func benchmarks() {
                                            maxIterations: Int.max,
                                            thresholds: [.wallClock: BenchmarkResult.PercentileThresholds.strict])
 
+//    Benchmark.startupHook = { print("Startup hook") }
+//    Benchmark.shutdownHook = { print("Shutdown hook") }
     // A way to define custom metrics fairly compact
     enum CustomMetrics {
         static var one: BenchmarkMetric { .custom("CustomMetricOne") }
