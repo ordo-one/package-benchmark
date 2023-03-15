@@ -91,6 +91,7 @@ Please see the [documentation](https://swiftpackageindex.com/ordo-one/package-be
 swift package benchmark run --filter InternalUTCClock-now --metric wallClock --format histogramPercentiles --path stdout --no-progress | uplot lineplot -H
 ```
 <img width="523" alt="image" src="https://user-images.githubusercontent.com/8501048/225284254-c1349494-2323-4460-b18a-7bc2896b5dc4.png">
+
 ### API and file format stability
 The API will be deemed stable as of `1.0.0` and follows semantical versioning for future releases. 
 
