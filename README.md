@@ -36,9 +36,8 @@ We've found that focusing on percentiles rather than average or standard deviati
 Percentiles allows for a consistent way of expressing benchmark results of both throughput and latency measurements (which typically do **not** have a standardized distribution, being almost always multi-modal in nature).
 This multi-modal nature of the latency measurements leads to the common statistical measures of mean and standard deviation being potentially misleading.
 
-## Sample Code
-
-There's also [a sample project](https://github.com/ordo-one/package-benchmark-samples) using various aspects of this package in practice.
+## Writing benchmarks
+There are [documentation available](https://swiftpackageindex.com/ordo-one/package-benchmark/main/documentation/benchmark/writingbenchmarks) as well as a [a sample project](https://github.com/ordo-one/package-benchmark-samples) using various aspects of this package in practice.
 
 ## Sample benchmark code
 ```swift
