@@ -11,7 +11,7 @@
 // This file need to be manually copied between the Benchmark plugin and
 // the BenchmarkTool when updated, as no external dependencies are allowed
 // for SwiftPM command tools. The source file is in Benchmark and should be
-// edited there, then manually copies to BenchmarkTool AND BenchmarkHelpGenerator after edited.
+// edited there, then manually copied to BenchmarkTool AND BenchmarkHelpGenerator.
 
 enum Command: String, CaseIterable {
     case run
@@ -28,7 +28,8 @@ enum OutputFormat: String, CaseIterable {
     case markdown
     /// Influx data format
     case influx
-    case jmh // JMH format consumable by http://jmh.morethan.io
+    /// JMH format consumable by http://jmh.morethan.io
+    case jmh
     /// The encoded representation of the underlying histograms capturing the benchmark data, for programmatic use (Codable).
     case histogramEncoded
     /// The histogram percentiles, average, deviation, sample count etc in standard HDR Histogram text format consumable by http://hdrhistogram.github.io/HdrHistogram/plotFiles.html

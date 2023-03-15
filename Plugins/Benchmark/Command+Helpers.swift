@@ -28,7 +28,8 @@ enum OutputFormat: String, CaseIterable {
     case markdown
     /// Influx data format
     case influx
-    case jmh // JMH format consumable by http://jmh.morethan.io
+    /// JMH format consumable by http://jmh.morethan.io
+    case jmh
     /// The encoded representation of the underlying histograms capturing the benchmark data, for programmatic use (Codable).
     case histogramEncoded
     /// The histogram percentiles, average, deviation, sample count etc in standard HDR Histogram text format consumable by http://hdrhistogram.github.io/HdrHistogram/plotFiles.html

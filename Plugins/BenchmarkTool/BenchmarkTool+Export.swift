@@ -199,7 +199,6 @@ extension BenchmarkTool {
             let extraPercentiles = [99.9, 99.99, 99.999, 99.9999, 99.99999, 100.0]
 
             try baseline.results.forEach { key, results in
-
                 try results.forEach { values in
                     let histogram = values.statistics.histogram
 
