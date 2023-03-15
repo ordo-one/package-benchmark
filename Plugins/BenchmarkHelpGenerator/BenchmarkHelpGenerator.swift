@@ -61,8 +61,7 @@ struct Benchmark: AsyncParsableCommand {
         swift package benchmark help
         """,
         discussion: """
-        Performs operations on benchmarks (running or listing them), as we
-        Runs the benchmarks, lists or operates on baselines (a named, stored set of results).
+        Performs operations on benchmarks (running or listing them), as well as storing, comparing baselines as well as checking them for threshold deviations.
 
         For the 'text' default format, the output is implicitly 'stdout' unless otherwise specified.
         For all other formats, the output is to a file in either the current working directory, or
