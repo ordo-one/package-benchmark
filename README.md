@@ -75,7 +75,7 @@ To execute all defined benchmarks, simply run:
 Please see the [documentation](https://swiftpackageindex.com/ordo-one/package-benchmark/main/documentation/benchmark/runningbenchmarks) for more detail on all options.
 
 ### Sample output benchmark run
-<img width="1005" alt="image" src="https://user-images.githubusercontent.com/8501048/225281508-7c732325-1276-49bf-bff9-031a62afed0a.png">
+<img width="1005" alt="image" src="https://user-images.githubusercontent.com/8501048/225311258-1247f8e9-c1fd-4598-a4b8-2b41a9b9a8e7.png">
 
 ### Sample output benchmark grouped by metric 
 <img width="1089" alt="image" src="https://user-images.githubusercontent.com/8501048/225281786-411530de-25c2-47b5-b99f-0d7bac3209a7.png">
