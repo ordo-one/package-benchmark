@@ -11,7 +11,7 @@
 // This file need to be manually copied between the Benchmark plugin and
 // the BenchmarkTool when updated, as no external dependencies are allowed
 // for SwiftPM command tools. The source file is in Benchmark and should be
-// edited there, then manually copies to BenchmarkTool AND BenchmarkHelpGenerator after edited.
+// edited there, then manually copied to BenchmarkTool AND BenchmarkHelpGenerator.
 
 enum Command: String, CaseIterable {
     case run
