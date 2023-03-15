@@ -86,11 +86,22 @@ Please see the [documentation](https://swiftpackageindex.com/ordo-one/package-be
 ### Sample output threshold deviation check
 <img width="956" alt="image" src="https://user-images.githubusercontent.com/8501048/225282982-95c9c641-9455-4df2-81bc-6aee43721223.png">
 
-### Sample usage of Youplot
+### Sample usage of YouPlot
+Install [YouPlot](https://github.com/red-data-tools/YouPlot)
+
 ```bash
 swift package benchmark run --filter InternalUTCClock-now --metric wallClock --format histogramPercentiles --path stdout --no-progress | uplot lineplot -H
 ```
+
 <img width="523" alt="image" src="https://user-images.githubusercontent.com/8501048/225284254-c1349494-2323-4460-b18a-7bc2896b5dc4.png">
+
+### JMH Visualization
+
+Using [jmh.morethan.io](https://jmh.morethan.io)
+
+<img width="1262" alt="image" src="https://user-images.githubusercontent.com/8501048/225313246-4369da1f-0890-4856-8fd8-b28d56d842aa.png">
+
+<img width="1482" alt="image" src="https://user-images.githubusercontent.com/8501048/225313559-33014755-797f-4ddf-b536-24c1a618f271.png">
 
 ### API and file format stability
 The API will be deemed stable as of `1.0.0` and follows semantical versioning for future releases. 
