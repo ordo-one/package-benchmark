@@ -31,7 +31,8 @@ swift package benchmark <command verb> [<options>]
 - term `--target <target>`: Benchmark targets matching the regexp filter that should be run
 - term `--skip-target <skip-target>`: Benchmark targets matching the regexp filter that should be skipped
 - term `--format <format>`: The output format to use, one of: ["text", "markdown", "influx", "percentiles", "tsv", "jmh"], default is 'text'
-- term `--metric <metric>`: Specified one or more metrics that should be used instead of the benchmark define ones. Valid values are string representation of: ``Benchmark/BenchmarkMetric``
+- term `--metric <metric>`: Specified one or more metrics that should be used instead of the benchmark defined ones. Valid values are string representation of: ``Benchmark/BenchmarkMetric``
+
 - term `--path <path>`: The path where exported data is stored, default is the current directory ("."). 
 - term `--quiet`: Specifies that output should be suppressed (useful for if you just want to check return code)
 - term `--scale`: Specifies that some of the text output should be scaled using the scalingFactor (denoted by '*' in output)
