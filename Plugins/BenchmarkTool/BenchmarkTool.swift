@@ -181,7 +181,7 @@ struct BenchmarkTool: AsyncParsableCommand {
 
         // If we just need data from disk, skip running benchmarks
 
-        if let operation = baselineOperation, [.delete, .list].contains(operation) {
+        if let operation = baselineOperation, [.delete, .list, .read].contains(operation) {
             try postProcessBenchmarkResults()
             return
         }

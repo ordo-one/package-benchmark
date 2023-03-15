@@ -56,6 +56,8 @@ extension BenchmarkTool {
 
         outputPath.append(csvFile.components)
 
+        print("Writing output to \(outputPath)")
+
         do {
             let fd = try FileDescriptor.open(
                 outputPath, .writeOnly, options: [.truncate, .create], permissions: .ownerReadWrite
@@ -107,6 +109,8 @@ extension BenchmarkTool {
 
         outputPath.append(jsonFile.components)
 
+        print("Writing output to \(outputPath)")
+
         do {
             let fd = try FileDescriptor.open(
                 outputPath, .writeOnly, options: [.truncate, .create], permissions: .ownerReadWrite
@@ -147,19 +151,19 @@ extension BenchmarkTool {
             prettyPrint(baseline, header: "Baseline '\(baselineName)'")
         case .influx:
             try write(exportData: "\(convertToInflux(baseline))",
-                      fileName: "\(baselineName)-influx-export.csv")
+                      fileName: "\(baselineName).influx.csv")
         case .percentiles:
             try baseline.results.forEach { key, results in
                 try results.forEach { values in
                     let outputString = values.statistics.histogram
-                    let description = values.metric.description
+                    let description = values.metric.rawDescription
                     try write(exportData: "\(outputString)",
-                              fileName: cleanupStringForShellSafety("\(baselineName).\(key.name).\(description).histogram-export.txt"))
+                              fileName: cleanupStringForShellSafety("\(baselineName).\(key.target).\(key.name).\(description).histogram.txt"))
                 }
             }
         case .jmh:
             try write(exportData: "\(convertToJMH(baseline))",
-                      fileName: cleanupStringForShellSafety("\(baselineName)-jmh-export.json"))
+                      fileName: cleanupStringForShellSafety("\(baselineName).jmh.json"))
         case .tsv:
             try baseline.results.forEach { key, results in
                 var outputString = ""
@@ -172,8 +176,10 @@ extension BenchmarkTool {
                             outputString += "\(value.value)\n"
                         }
                     }
+                    let description = values.metric.rawDescription
                     try write(exportData: "\(outputString)",
-                              fileName: cleanupStringForShellSafety("\(baselineName).\(key.target).\(key.name).\(values.metric).tsv"))
+                              fileName: cleanupStringForShellSafety("\(baselineName).\(key.target).\(key.name).\(description).tsv"))
+                    outputString = ""
                 }
             }
         case .encodedHistogram:
@@ -183,8 +189,9 @@ extension BenchmarkTool {
                 try results.forEach { values in
                     let histogram = values.statistics.histogram
                     let jsonData = try encoder.encode(histogram)
+                    let description = values.metric.rawDescription
                     try write(exportData: jsonData,
-                              fileName: cleanupStringForShellSafety("\(baselineName).\(key.target).\(key.name).\(values.metric).json"))
+                              fileName: cleanupStringForShellSafety("\(baselineName).\(key.target).\(key.name).\(description).json"))
                 }
             }
         }
