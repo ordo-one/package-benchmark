@@ -12,13 +12,13 @@ Benchmark allows you to easily create sophisticated Swift performance benchmarks
 
 ## Overview
 
-Performance is a key feature for many apps and frameworks. Benchmark helps make it easy to measure and track many different metrics that affects performance, such as CPU usage, memory usage and use of operating system resources such as threads and system calls.
+Performance is a key feature for many apps and frameworks. Benchmark helps make it easy to measure and track [many different metrics](https://swiftpackageindex.com/ordo-one/package-benchmark/main/documentation/benchmark/metrics) that affects performance, such as CPU usage, memory usage and use of operating system resources such as threads and system calls, as well as completely custom metric counters.
 
 Benchmark works on both macOS and Linux and supports several key workflows for performance measurements:
 
-* **Automated Pull Request performance regression checks** by comparing the performance metrics of a pull request with the main branch and having the PR workflow check fail if there is a regression according to absolute or relative thresholds specified per benchmark
-* **Manual comparison of multiple performance baselines** for iterative or A/B performance work by an individual developer
-* **Export of benchmark results in several formats** for analysis or visualization
+* **[Automated Pull Request performance regression checks](https://swiftpackageindex.com/ordo-one/package-benchmark/main/documentation/benchmark/comparingbenchmarksci)** by comparing the performance metrics of a pull request with the main branch and having the PR workflow check fail if there is a regression according to absolute or relative thresholds specified per benchmark
+* **[Manual comparison of multiple performance baselines](https://swiftpackageindex.com/ordo-one/package-benchmark/main/documentation/benchmark/creatingandcomparingbaselines)** for iterative or A/B performance work by an individual developer
+* **[Export of benchmark results in several formats](https://swiftpackageindex.com/ordo-one/package-benchmark/main/documentation/benchmark/exportingbenchmarks)** for analysis or visualization
 
 Benchmark provides a quick way for validation of performance metrics, while other more specialized tools such as Instruments, DTrace, Heaptrack, Leaks, Sample and more can be used for finding root causes for any deviations found.
 
