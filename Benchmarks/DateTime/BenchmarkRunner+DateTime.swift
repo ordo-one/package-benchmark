@@ -7,34 +7,33 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 
 import DateTime
-
 import BenchmarkSupport
+
 @main
-extension BenchmarkRunner {}
+struct DateTimeBenchmark: BenchmarkRunnerReal {
+    static func registerBenchmarks() {
+        Benchmark.defaultConfiguration = .init(metrics: [.throughput, .wallClock],
+                                               warmupIterations: 10,
+                                               scalingFactor: .kilo,
+                                               maxDuration: .seconds(1),
+                                               maxIterations: .kilo(10))
 
-@_dynamicReplacement(for: registerBenchmarks)
-func benchmarks() {
-    Benchmark.defaultConfiguration = .init(metrics: [.throughput, .wallClock],
-                                           warmupIterations: 10,
-                                           scalingFactor: .kilo,
-                                           maxDuration: .seconds(1),
-                                           maxIterations: .kilo(10))
-
-    Benchmark("InternalUTCClock-now") { benchmark in
-        for _ in benchmark.scaledIterations {
-            BenchmarkSupport.blackHole(InternalUTCClock.now)
+        Benchmark("InternalUTCClock-now") { benchmark in
+            for _ in benchmark.scaledIterations {
+                BenchmarkSupport.blackHole(InternalUTCClock.now)
+            }
         }
-    }
 
-    Benchmark("BenchmarkClock-now") { benchmark in
-        for _ in benchmark.scaledIterations {
-            BenchmarkSupport.blackHole(BenchmarkClock.now)
+        Benchmark("BenchmarkClock-now") { benchmark in
+            for _ in benchmark.scaledIterations {
+                BenchmarkSupport.blackHole(BenchmarkClock.now)
+            }
         }
-    }
 
-    Benchmark("Foundation-Date") { benchmark in
-        for _ in benchmark.scaledIterations {
-            BenchmarkSupport.blackHole(Foundation.Date())
+        Benchmark("Foundation-Date") { benchmark in
+            for _ in benchmark.scaledIterations {
+                BenchmarkSupport.blackHole(Foundation.Date())
+            }
         }
     }
 }

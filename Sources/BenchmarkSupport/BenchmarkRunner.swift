@@ -12,6 +12,18 @@ import ArgumentParser
 @_exported import Benchmark
 @_exported import Statistics
 
+public protocol BenchmarkRunnerReal {
+    static func main() async
+    static func registerBenchmarks()
+}
+
+extension BenchmarkRunnerReal {
+    public static func main() async {
+        registerBenchmarks()
+        await BenchmarkRunner.setupBenchmarkRunner()
+    }
+}
+
 // @main must be done in actual benchmark to avoid linker errors unfortunately
 public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
     static var testReadWrite: BenchmarkRunnerReadWrite?
@@ -42,6 +54,19 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
         return try filter.isEmpty || filter.contains(where: { try name.wholeMatch(of: Regex($0)) != nil })
     }
 
+    public static func setupBenchmarkRunner() async {
+        do {
+            var command = try parseAsRoot()
+            if var asyncCommand = command as? AsyncParsableCommand {
+                try await asyncCommand.run()
+            } else {
+                try command.run()
+            }
+        } catch {
+            exit(withError: error)
+        }
+    }
+
     // swiftlint:disable cyclomatic_complexity function_body_length
     public mutating func run() async throws {
         // We just run everything in debug mode to simplify workflow with debuggers/profilers
@@ -50,8 +75,6 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
         }
 
         let channel = Self.testReadWrite ?? self
-
-        registerBenchmarks()
 
         var debugIterator = Benchmark.benchmarks.makeIterator()
         var benchmarkCommand: BenchmarkCommandRequest
