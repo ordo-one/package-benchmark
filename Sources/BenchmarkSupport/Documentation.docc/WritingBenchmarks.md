@@ -9,16 +9,9 @@ Create benchmarks declaratively using the ``Benchmark/Benchmark`` initalizer, sp
 The minimal code for a benchmark suite running with a default configuration would be:
 
 ```swift
-// import supporting infrastructure
-import BenchmarkSupport
+import Benchmark
 
-// Required for main() definition to not get linker errors
-@main extension BenchmarkRunner {}      
-
-// Register benchmarks
-@_dynamicReplacement(for: registerBenchmarks) 
-func benchmarks() {
-
+let benchmarks = {
     Benchmark("Minimal benchmark") { benchmark in
         // Some work to measure here
     }
@@ -32,11 +25,9 @@ A more real test for a couple of Foundation features would be:
 ```swift
 import SystemPackage
 import Foundation
-import BenchmarkSupport
-@main extension BenchmarkRunner {}
+import Benchmark
 
-@_dynamicReplacement(for: registerBenchmarks)
-func benchmarks() {
+let benchmarks = {
     let customThreshold = BenchmarkResult.PercentileThresholds(
         relative: [.p50: 5.0, .p75: 10.0],
         absolute: [.p25: 10, .p50: 15])
@@ -186,9 +177,9 @@ Benchmark("Custom metrics", configuration: .init(metrics: BenchmarkMetric.all + 
 Set the desired time units for all benchmarks within a suite easily by setting ``Benchmark/Configuration-swift.struct/timeUnits``:
 
 ```swift
-@_dynamicReplacement(for: registerBenchmarks)
-func benchmarks() {
+import Benchmark
 
+let benchmarks = {
     Benchmark.defaultConfiguration.timeUnits = .nanoseconds
 
     Benchmark("Foundation Date()") {
@@ -245,5 +236,3 @@ The Benchmark SwiftPM plugins executes the `BenchmarkTool` executable which is t
 The `BenchmarkTool` in turns runs each executable target that is defined and uses JSON to communicate with the target process over pipes.
 
 The executable benchmark targets just implements the actual benchmark tests, as much boilerplate code as possible has been hidden. The executable benchmark must depend on the `Benchmark` library target which also will pull in `jemalloc` for malloc stats.
-
-`@_dynamicReplacement(for:)` is used to hook in the benchmarks for the target, hopefully it will be an integrated supported part of Swift in the future.

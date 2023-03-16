@@ -8,7 +8,7 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 //
 
-@testable import BenchmarkSupport
+@testable import Benchmark
 @testable import Statistics
 import XCTest
 

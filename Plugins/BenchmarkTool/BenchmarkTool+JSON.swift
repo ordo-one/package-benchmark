@@ -10,7 +10,7 @@
 
 // JSON serialization of benchmark request/reply command sent to controlled process
 
-import Benchmark
+import BenchmarkSupport
 import ExtrasJSON
 import SystemPackage
 

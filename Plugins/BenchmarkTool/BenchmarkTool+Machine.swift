@@ -10,7 +10,7 @@
 
 // Getting running machine configuration information
 
-import Benchmark
+import BenchmarkSupport
 
 #if canImport(Darwin)
     import Darwin

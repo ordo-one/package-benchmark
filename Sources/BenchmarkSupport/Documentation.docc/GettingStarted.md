@@ -72,7 +72,7 @@ The source for all benchmarks *must reside in a directory named `Benchmarks`* in
 
 The benchmark plugin uses this directory combined with the executable target information to automatically discover and run your benchmarks.
 
-For each executable target, include a dependency on `BenchmarkSupport` from `package-benchmark`.
+For each executable target, include dependencies on both `Benchmark` (supporting framework) and `BenchmarkPlugin` (boilerplate generator) from `package-benchmark`.
 
 The following example shows an benchmark suite named `My-Benchmark` with the required dependency on `BenchmarkSupport` and the source files for the benchmark that reside in the directory `Benchmarks/My-Benchmark`:
 
@@ -80,7 +80,8 @@ The following example shows an benchmark suite named `My-Benchmark` with the req
 .executableTarget(
     name: "My-Benchmark",
     dependencies: [
-        .product(name: "BenchmarkSupport", package: "package-benchmark"),
+        .product(name: "Benchmark", package: "package-benchmark"),
+        .product(name: "BenchmarkPlugin", package: "package-benchmark"),
     ],
     path: "Benchmarks/My-Benchmark"
 ),

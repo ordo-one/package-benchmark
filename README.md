@@ -41,12 +41,9 @@ There are [documentation available](https://swiftpackageindex.com/ordo-one/packa
 
 ## Sample benchmark code
 ```swift
-import BenchmarkSupport
-@main extension BenchmarkRunner {}
-@_dynamicReplacement(for: registerBenchmarks)
+import Benchmark
 
-func benchmarks() {
-
+let benchmarks = {
     Benchmark("Minimal benchmark") { benchmark in
       // measure something here
     }
