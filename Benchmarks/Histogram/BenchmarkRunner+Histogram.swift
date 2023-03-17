@@ -14,7 +14,6 @@ let benchmarks = {
     Benchmark.defaultConfiguration = .init(scalingFactor: .mega,
                                            maxDuration: .seconds(1),
                                            maxIterations: .kilo(1))
-
     Benchmark("Record",
               configuration: .init(metrics: [.wallClock, .throughput] + BenchmarkMetric.memory)) { benchmark in
         let maxValue: UInt64 = 1_000_000

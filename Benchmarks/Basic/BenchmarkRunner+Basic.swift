@@ -9,6 +9,9 @@
 
 import Benchmark
 
+// quiet swiftlint for now
+extension BenchmarkRunner {}
+
 let benchmarks = {
     Benchmark.defaultConfiguration = .init(warmupIterations: 0,
                                            maxDuration: .seconds(1),
