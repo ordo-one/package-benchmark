@@ -49,10 +49,6 @@ The Benchmark infrastructure captures _all_ samples for a test run, so you can r
 - ``Benchmark/BenchmarkTimeUnits``
 - ``Benchmark/BenchmarkScalingFactor``
 
-### Registering Benchmarks
-
-- ``Benchmark/registerBenchmarks()``
-
 ### Supporting Functions
 
 - ``Benchmark/blackHole(_:)``
