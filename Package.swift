@@ -6,10 +6,11 @@ let package = Package(
     name: "Benchmark",
     platforms: [.macOS(.v13)],
     products: [
-        .plugin(name: "Benchmark-Plugin", targets: ["Benchmark-Plugin"]),
+        .plugin(name: "BenchmarkCommandPlugin", targets: ["BenchmarkCommandPlugin"]),
+        .plugin(name: "BenchmarkPlugin", targets: ["BenchmarkPlugin"]),
         .library(
-            name: "BenchmarkSupport",
-            targets: ["BenchmarkSupport"]
+            name: "Benchmark",
+            targets: ["Benchmark"]
         ),
     ],
     dependencies: [
@@ -26,9 +27,11 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-docc-plugin", .upToNextMajor(from: "1.1.0")),
     ],
     targets: [
-        // Plugin used by users of the package
+        // Plugins used by users of the package
+
+        // The actual 'benchmark' command plugin
         .plugin(
-            name: "Benchmark-Plugin",
+            name: "BenchmarkCommandPlugin",
             capability: .command(
                 intent: .custom(
                     verb: "benchmark",
@@ -38,8 +41,19 @@ let package = Package(
             dependencies: [
                 "BenchmarkTool",
             ],
-            path: "Plugins/Benchmark"
+            path: "Plugins/BenchmarkCommandPlugin"
         ),
+
+        // Plugin that generates the boilerplate needed to interface with the Benchmark infrastructure
+        .plugin(
+            name: "BenchmarkPlugin",
+            capability: .buildTool(),
+            dependencies: [
+                "BenchmarkBoilerplateGenerator",
+            ],
+            path: "Plugins/BenchmarkPlugin"
+        ),
+
         // Tool that the plugin executes to perform the actual work, the real benchmark driver
         .executableTarget(
             name: "BenchmarkTool",
@@ -49,9 +63,19 @@ let package = Package(
                 .product(name: "ExtrasJSON", package: "swift-extras-json"),
                 .product(name: "TextTable", package: "TextTable"),
                 "Statistics",
-                "Benchmark",
+                "BenchmarkSupport",
             ],
             path: "Plugins/BenchmarkTool"
+        ),
+
+        // Tool that generates the boilerplate
+        .executableTarget(
+            name: "BenchmarkBoilerplateGenerator",
+            dependencies: [
+                .product(name: "ArgumentParser", package: "swift-argument-parser"),
+                .product(name: "SystemPackage", package: "swift-system"),
+            ],
+            path: "Plugins/BenchmarkBoilerplateGenerator"
         ),
 
         // Tool that simply generates the man page for the Benchmark-Plugin as we can't use SAP in it... :-/
@@ -75,7 +99,7 @@ let package = Package(
 
         // Benchmark package
         .target(
-            name: "Benchmark",
+            name: "BenchmarkSupport",
             dependencies: [
                 "Statistics",
             ]
@@ -101,7 +125,8 @@ let package = Package(
         .executableTarget(
             name: "Basic",
             dependencies: [
-                "BenchmarkSupport"
+                "Benchmark",
+                "BenchmarkPlugin"
             ],
             path: "Benchmarks/Basic"
         ),
@@ -110,7 +135,8 @@ let package = Package(
         .executableTarget(
             name: "BenchmarkDateTime",
             dependencies: [
-                "BenchmarkSupport"
+                "Benchmark",
+                "BenchmarkPlugin"
             ],
             path: "Benchmarks/DateTime"
         ),
@@ -119,7 +145,8 @@ let package = Package(
         .executableTarget(
             name: "HistogramBenchmark",
             dependencies: [
-                "BenchmarkSupport",
+                "Benchmark",
+                "BenchmarkPlugin",
                 .product(name: "Histogram", package: "package-histogram"),
             ],
             path: "Benchmarks/Histogram"
@@ -127,7 +154,7 @@ let package = Package(
 
         // Scaffolding to support benchmarks under the hood
         .target(
-            name: "BenchmarkSupport",
+            name: "Benchmark",
             dependencies: [
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
                 .product(name: "ExtrasJSON", package: "swift-extras-json"),
@@ -136,14 +163,14 @@ let package = Package(
                 .product(name: "DateTime", package: "package-datetime"),
                 .product(name: "Progress", package: "Progress.swift"),
                 "Statistics",
-                "Benchmark",
+                "BenchmarkSupport",
                 .byNameItem(name: "CDarwinOperatingSystemStats", condition: .when(platforms: [.macOS])),
                 .byNameItem(name: "CLinuxOperatingSystemStats", condition: .when(platforms: [.linux])),
             ]
         ),
         .testTarget(
             name: "BenchmarkTests",
-            dependencies: ["BenchmarkSupport"]
+            dependencies: ["Benchmark"]
         ),
     ]
 )

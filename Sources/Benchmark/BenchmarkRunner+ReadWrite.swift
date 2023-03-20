@@ -10,7 +10,7 @@
 
 // swiftlint disable: file_length type_body_length
 import ArgumentParser
-@_exported import Benchmark
+@_exported import BenchmarkSupport
 import ExtrasJSON
 @_exported import Statistics
 import SystemPackage

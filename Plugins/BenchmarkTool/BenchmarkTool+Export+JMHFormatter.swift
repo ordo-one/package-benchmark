@@ -11,7 +11,7 @@
 // Merge resulting json using jq with
 // jq -s add delta-*.json > delta.json
 
-import Benchmark
+import BenchmarkSupport
 import ExtrasJSON
 import Numerics
 import Statistics

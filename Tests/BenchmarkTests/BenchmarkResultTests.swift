@@ -8,7 +8,7 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 //
 
-@testable import BenchmarkSupport
+@testable import Benchmark
 import XCTest
 
 // swiftlint:disable function_body_length type_body_length

@@ -8,7 +8,7 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 //
 
-import Benchmark
+import BenchmarkSupport
 import Foundation
 
 struct ExportableBenchmark: Codable {

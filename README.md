@@ -41,21 +41,18 @@ There are [documentation available](https://swiftpackageindex.com/ordo-one/packa
 
 ## Sample benchmark code
 ```swift
-import BenchmarkSupport
-@main extension BenchmarkRunner {}
-@_dynamicReplacement(for: registerBenchmarks)
+import Benchmark
 
-func benchmarks() {
-
+let benchmarks = {
     Benchmark("Minimal benchmark") { benchmark in
       // measure something here
     }
 
     Benchmark("All metrics, full concurrency, async",
-              metrics: BenchmarkMetric.all,
-              maxDuration: .seconds(10)) { benchmark in
+              configuration: .init(metrics: BenchmarkMetric.all,
+                                   maxDuration: .seconds(10)) { benchmark in
         let _ = await withTaskGroup(of: Void.self, returning: Void.self, body: { taskGroup in
-            for _ in 0..< 80  {
+            for _ in 0..<80  {
                 taskGroup.addTask {
                     dummyCounter(defaultCounter()*1000)
                 }

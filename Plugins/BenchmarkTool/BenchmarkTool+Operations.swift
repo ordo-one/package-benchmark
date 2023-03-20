@@ -10,7 +10,7 @@
 
 // run/list benchmarks by talking to controlled process
 
-import Benchmark
+import BenchmarkSupport
 import ExtrasJSON
 import SystemPackage
 import TextTable
