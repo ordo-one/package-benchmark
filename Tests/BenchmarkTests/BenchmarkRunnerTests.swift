@@ -12,18 +12,6 @@
 @testable import BenchmarkSupport
 import XCTest
 
-// @main extension BenchmarkRunner {}      // Required for main() definition to not get linker errors
-
-@_dynamicReplacement(for: registerBenchmarks) // Register benchmarks
-func benchmarks() {
-    Benchmark("Minimal benchmark", configuration: .init(metrics: BenchmarkMetric.all, maxIterations: 1)) { _ in
-    }
-    Benchmark("Minimal benchmark 2", configuration: .init(warmupIterations: 0, maxIterations: 2)) { _ in
-    }
-    Benchmark("Minimal benchmark 3", configuration: .init(timeUnits: .seconds, maxIterations: 3)) { _ in
-    }
-}
-
 final class BenchmarkRunnerTests: XCTestCase, BenchmarkRunnerReadWrite {
     private var readMessage: Int = 0
     private var writeCount: Int = 0
@@ -54,6 +42,11 @@ final class BenchmarkRunnerTests: XCTestCase, BenchmarkRunnerReadWrite {
 
     func testBenchmarkRunner() async throws {
         BenchmarkRunner.testReadWrite = self
+
+        Benchmark("Minimal benchmark", configuration: .init(metrics: BenchmarkMetric.all, maxIterations: 1)) { _ in }
+        Benchmark("Minimal benchmark 2", configuration: .init(warmupIterations: 0, maxIterations: 2)) { _ in }
+        Benchmark("Minimal benchmark 3", configuration: .init(timeUnits: .seconds, maxIterations: 3)) { _ in }
+
         var runner = BenchmarkRunner()
         runner.inputFD = 0
         runner.outputFD = 0

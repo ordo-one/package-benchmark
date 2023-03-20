@@ -11,7 +11,7 @@
 // The actual benchmark runner/driver
 
 import ArgumentParser
-import Benchmark
+import BenchmarkSupport
 import SystemPackage
 
 #if canImport(Darwin)

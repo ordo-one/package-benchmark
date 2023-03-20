@@ -10,7 +10,7 @@
 
 // Reading / writing of benchmark baselines
 
-import Benchmark
+import BenchmarkSupport
 import ExtrasJSON
 import Foundation
 import SystemPackage
