@@ -13,7 +13,8 @@ import Statistics
 import SystemPackage
 import TextTable
 
-private let percentileWidth = 8
+private let percentileWidth = 7
+private let maxDescriptionWidth = 100
 
 extension BenchmarkTool {
     private func printMarkdown(_ markdown: String, terminator: String = "\n") {
@@ -147,7 +148,7 @@ extension BenchmarkTool {
             metrics.forEach { metric in
                 width = max(width, metric.description.count)
             }
-            width = min(70, width + 5) // add 5 for ' (M)'
+            width = min(maxDescriptionWidth, width + 5) // add 5 for ' (M)'
 
             baseline.targets.forEach { target in
                 let separator = String(repeating: "=", count: "\(target)".count)
@@ -175,7 +176,7 @@ extension BenchmarkTool {
             baseline.benchmarkIdentifiers.forEach { identifier in
                 width = max(width, "\(identifier.target):\(identifier.name)".count)
             }
-            width = min(70, width + 5) // add 5 for ' (M)'
+            width = min(maxDescriptionWidth, width + 5) // add 5 for ' (M)'
 
             baseline.benchmarkMetrics.forEach { metric in
 
