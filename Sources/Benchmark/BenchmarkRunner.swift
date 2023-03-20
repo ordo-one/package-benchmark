@@ -8,6 +8,14 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 //
 
+#if canImport(Darwin)
+import Darwin
+#elseif canImport(Glibc)
+import Glibc
+#else
+#error("Unsupported Platform")
+#endif
+
 import ArgumentParser
 @_exported import BenchmarkSupport
 @_exported import Statistics
@@ -69,6 +77,9 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
 
     // swiftlint:disable cyclomatic_complexity function_body_length
     public mutating func run() async throws {
+        // Flush stdout so we see any failures clearly
+        setbuf(stdout, nil)
+
         // We just run everything in debug mode to simplify workflow with debuggers/profilers
         if inputFD == nil, outputFD == nil {
             debug = true

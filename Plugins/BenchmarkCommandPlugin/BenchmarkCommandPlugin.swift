@@ -48,6 +48,9 @@ import PackagePlugin
         var grouping = "benchmark"
         var exportPath = "."
 
+        // Flush stdout so we see any failures clearly
+        setbuf(stdout, nil)
+
         if argumentExtractor.unextractedOptionsOrFlags.count > 0 {
             print("Unknown option/flag specfied: \(argumentExtractor.unextractedOptionsOrFlags)")
             throw MyError.invalidArgument
@@ -126,7 +129,6 @@ import PackagePlugin
         if outputFormat == .text {
             if quietRunning == 0 {
                 print("Building benchmark targets in release mode for benchmark run...")
-                fflush(nil)
             }
         }
 

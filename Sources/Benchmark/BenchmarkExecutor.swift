@@ -12,14 +12,6 @@ import DateTime
 import Progress
 import Statistics
 
-#if canImport(Darwin)
-    import Darwin
-#elseif canImport(Glibc)
-    import Glibc
-#else
-    #error("Unsupported Platform")
-#endif
-
 internal final class BenchmarkExecutor {
     internal init(quiet: Bool = false) {
         self.quiet = quiet
@@ -221,7 +213,6 @@ internal final class BenchmarkExecutor {
             if var progressBar {
                 progressBar.setValue(0)
             }
-            fflush(stdout)
         }
 
         var nextPercentageToUpdateProgressBar = 0
@@ -258,7 +249,6 @@ internal final class BenchmarkExecutor {
 
                 if Int(maxPercentage) > nextPercentageToUpdateProgressBar {
                     progressBar.setValue(Int(maxPercentage))
-                    fflush(stdout)
                     nextPercentageToUpdateProgressBar = Int(maxPercentage) + Int.random(in: 3 ... 9)
                 }
             }
@@ -266,7 +256,6 @@ internal final class BenchmarkExecutor {
 
         if var progressBar {
             progressBar.setValue(100)
-            fflush(stdout)
         }
 
         if benchmark.configuration.metrics.contains(.threads) ||

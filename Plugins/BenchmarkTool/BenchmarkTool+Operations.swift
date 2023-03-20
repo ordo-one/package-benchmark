@@ -9,6 +9,13 @@
 //
 
 // run/list benchmarks by talking to controlled process
+#if canImport(Darwin)
+import Darwin
+#elseif canImport(Glibc)
+import Glibc
+#else
+#error("Unsupported Platform")
+#endif
 
 import BenchmarkSupport
 import ExtrasJSON
@@ -78,6 +85,9 @@ extension BenchmarkTool {
     }
 
     mutating func postProcessBenchmarkResults() throws {
+        // Turn on buffering again for output
+        setvbuf(stdout, nil, _IOFBF, Int(BUFSIZ))
+
         switch command {
         case .baseline:
             guard let baselineOperation else {

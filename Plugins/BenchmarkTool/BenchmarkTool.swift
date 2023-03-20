@@ -155,6 +155,9 @@ struct BenchmarkTool: AsyncParsableCommand {
     }
 
     mutating func run() async throws {
+        // Flush stdout so we see any failures clearly
+        setbuf(stdout, nil)
+
         // Skip reading baselines for baseline operations not needing them
         if let operation = baselineOperation, [.delete, .list, .update].contains(operation) == false {
             try readBaselines()
@@ -197,7 +200,6 @@ struct BenchmarkTool: AsyncParsableCommand {
 
         if quiet == 0, format == .text {
             "Running Benchmarks".printAsHeader()
-            fflush(stdout)
         }
 
         var benchmarkResults: BenchmarkResults = [:]
@@ -288,7 +290,6 @@ struct BenchmarkTool: AsyncParsableCommand {
                     completion?(status)
                 } else {
                     print("waitpiderror")
-                    fflush(nil)
                     throw RunCommandError.WaitPIDError
                 }
             } else {
