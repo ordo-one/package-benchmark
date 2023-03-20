@@ -47,6 +47,11 @@ public final class Benchmark: Codable, Hashable {
     /// This closure if set, will be run after a targets benchmarks run, but after they are registered
     public static var shutdownHook: BenchmarkHook?
 
+    /// True if this benchmark results will be compared with an absolute threshold when `--check-absolute` is
+    /// specified on the command line. An implementation can then choose to configure thresholds differently for
+    /// such comparisons by e.g. reading them in from external storage.
+    public static var checkAbsolute = false
+
     #if swift(>=5.8)
         @_documentation(visibility: internal)
     #endif
@@ -335,7 +340,7 @@ public extension Benchmark {
         /// Whether to skip this test (convenience for not having to comment out tests that have issues)
         public var skip = false
         /// Customized CI failure thresholds for a given metric for the Benchmark
-        public var thresholds: [BenchmarkMetric: BenchmarkResult.PercentileThresholds]?
+        public var thresholds: [BenchmarkMetric: BenchmarkThresholds]?
 
         public init(metrics: [BenchmarkMetric] = defaultConfiguration.metrics,
                     timeUnits: BenchmarkTimeUnits = defaultConfiguration.timeUnits,
@@ -344,7 +349,7 @@ public extension Benchmark {
                     maxDuration: Duration = defaultConfiguration.maxDuration,
                     maxIterations: Int = defaultConfiguration.maxIterations,
                     skip: Bool = defaultConfiguration.skip,
-                    thresholds: [BenchmarkMetric: BenchmarkResult.PercentileThresholds]? =
+                    thresholds: [BenchmarkMetric: BenchmarkThresholds]? =
                         defaultConfiguration.thresholds) {
             self.metrics = metrics
             self.timeUnits = timeUnits

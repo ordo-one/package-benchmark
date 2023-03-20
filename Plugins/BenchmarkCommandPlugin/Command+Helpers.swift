@@ -36,7 +36,7 @@ enum OutputFormat: String, CaseIterable {
     case histogram
     /// The raw histogram samples in TSV format for processing by external tools (e.g. Youplot)
     case histogramSamples
-    /// The percentiles values betwen (0-99, 99.9, 99.99, ... 99.99999, 100) in TSV format for processing by external tools (e.g. Youplot)
+    /// The percentiles values betwen (0-100) in TSV format for processing by external tools (e.g. Youplot)
     case histogramPercentiles
 }
 

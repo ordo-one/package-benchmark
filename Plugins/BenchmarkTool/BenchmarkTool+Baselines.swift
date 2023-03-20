@@ -384,19 +384,19 @@ extension BenchmarkTool {
 }
 
 extension BenchmarkBaseline {
-    func thresholdFor(benchmarks: [Benchmark], name: String, target: String, metric: BenchmarkMetric) -> BenchmarkResult.PercentileThresholds {
+    func thresholdFor(benchmarks: [Benchmark], name: String, target: String, metric: BenchmarkMetric) -> BenchmarkThresholds {
         let benchmark = benchmarks.filter { $0.name == name && $0.target == target }.first
 
         guard let benchmark else {
-            return BenchmarkResult.PercentileThresholds.default
+            return BenchmarkThresholds.default
         }
 
         guard let thresholds = benchmark.configuration.thresholds else {
-            return BenchmarkResult.PercentileThresholds.default
+            return BenchmarkThresholds.default
         }
 
         guard let threshold = thresholds[metric] else {
-            return BenchmarkResult.PercentileThresholds.default
+            return BenchmarkThresholds.default
         }
 
         return threshold
@@ -449,6 +449,26 @@ extension BenchmarkBaseline: Equatable {
         }
 
         return (worseResult == false, allDeviationResults)
+    }
+
+    public func failsAbsoluteThresholdChecks(benchmarks: [Benchmark]) -> [BenchmarkResult.ThresholdDeviation] { // absolute checks
+        var allDeviationResults: [BenchmarkResult.ThresholdDeviation] = []
+
+        for (lhsBenchmarkIdentifier, lhsBenchmarkResults) in results {
+            for lhsBenchmarkResult in lhsBenchmarkResults {
+                let thresholds = thresholdFor(benchmarks: benchmarks,
+                                              name: lhsBenchmarkIdentifier.name,
+                                              target: lhsBenchmarkIdentifier.target,
+                                              metric: lhsBenchmarkResult.metric)
+
+                let deviationResults = lhsBenchmarkResult.failsAbsoluteThresholdChecks(thresholds: thresholds,
+                                                                                       name: lhsBenchmarkIdentifier.name,
+                                                                                       target: lhsBenchmarkIdentifier.target)
+                allDeviationResults.append(contentsOf: deviationResults)
+            }
+        }
+
+        return allDeviationResults
     }
 
     static func == (lhs: BenchmarkBaseline, rhs: BenchmarkBaseline) -> Bool {

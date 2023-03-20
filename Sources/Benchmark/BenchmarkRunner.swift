@@ -9,11 +9,11 @@
 //
 
 #if canImport(Darwin)
-import Darwin
+    import Darwin
 #elseif canImport(Glibc)
-import Glibc
+    import Glibc
 #else
-#error("Unsupported Platform")
+    #error("Unsupported Platform")
 #endif
 
 import ArgumentParser
@@ -27,8 +27,7 @@ public protocol BenchmarkRunnerHooks {
 
 public extension BenchmarkRunnerHooks {
     static func main() async {
-        registerBenchmarks()
-        await BenchmarkRunner.setupBenchmarkRunner()
+        await BenchmarkRunner.setupBenchmarkRunner(registerBenchmarks: registerBenchmarks)
     }
 }
 
@@ -53,6 +52,18 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
     @Option(name: .long, help: "Benchmarks matching the regexp filter that should be skipped")
     var skip: [String] = []
 
+    @Flag(name: .long, help:
+        """
+        Set to true if thresholds should be checked against an absolute reference point rather than delta between baselines.
+        This is used for CI workflows when you want to validate the thresholds vs. a persisted benchmark baseline
+        rather than comparing PR vs main or vs a current run. This is useful to cut down the build matrix needed
+        for those wanting to validate performance of e.g. toolchains or OS:s as well (or have other reasons for wanting
+        a specific check against a given absolute reference.).
+        If this is enabled, zero or one baselines should be specified for the check operation.
+        By default, thresholds are checked comparing two baselines, or a baseline and a benchmark run.
+        """)
+    var checkAbsolute = false
+
     var debug = false
 
     func shouldRunBenchmark(_ name: String) throws -> Bool {
@@ -62,14 +73,12 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
         return try filter.isEmpty || filter.contains(where: { try name.wholeMatch(of: Regex($0)) != nil })
     }
 
-    public static func setupBenchmarkRunner() async {
+    public static func setupBenchmarkRunner(registerBenchmarks: () -> Void) async {
         do {
-            var command = try parseAsRoot()
-            if var asyncCommand = command as? AsyncParsableCommand {
-                try await asyncCommand.run()
-            } else {
-                try command.run()
-            }
+            var command = Self.parseOrExit()
+            Benchmark.checkAbsolute = command.checkAbsolute
+            registerBenchmarks()
+            try await command.run()
         } catch {
             exit(withError: error)
         }

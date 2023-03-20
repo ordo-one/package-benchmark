@@ -181,33 +181,34 @@ final class BenchmarkResultTests: XCTestCase {
         secondStatistics.add(199)
         secondStatistics.add(200)
 
-        let relative: BenchmarkResult.PercentileRelativeThresholds = [.p0: 0.0,
-                                                                      .p25: 0.0,
-                                                                      .p50: 0.0,
-                                                                      .p75: 0.0,
-                                                                      .p90: 0.0,
-                                                                      .p99: 0.0,
-                                                                      .p100: 0.0]
+        let relative: BenchmarkThresholds.RelativeThresholds = [.p0: 0.0,
+                                                                .p25: 0.0,
+                                                                .p50: 0.0,
+                                                                .p75: 0.0,
+                                                                .p90: 0.0,
+                                                                .p99: 0.0,
+                                                                .p100: 0.0]
 
-        let relativeRelaxed: BenchmarkResult.PercentileRelativeThresholds = [.p0: 10.0,
-                                                                             .p25: 10.0,
-                                                                             .p50: 10.0,
-                                                                             .p75: 10.0,
-                                                                             .p90: 10.0,
-                                                                             .p99: 10.0,
-                                                                             .p100: 10.0]
+        let relativeRelaxed: BenchmarkThresholds.RelativeThresholds = [.p0: 10.0,
+                                                                       .p25: 10.0,
+                                                                       .p50: 10.0,
+                                                                       .p75: 10.0,
+                                                                       .p90: 10.0,
+                                                                       .p99: 10.0,
+                                                                       .p100: 10.0]
 
-        let absolute: BenchmarkResult.PercentileAbsoluteThresholds = [.p0: 1,
-                                                                      .p25: 1,
-                                                                      .p50: 1,
-                                                                      .p75: 0,
-                                                                      .p90: 0,
-                                                                      .p99: 0,
-                                                                      .p100: 0]
-        let bothThresholds = BenchmarkResult.PercentileThresholds(relative: relative, absolute: absolute)
-        let absoluteThresholds = BenchmarkResult.PercentileThresholds(absolute: absolute)
-        let relativeThresholds = BenchmarkResult.PercentileThresholds(relative: relative)
-        let relativeRelaxedThresholds = BenchmarkResult.PercentileThresholds(relative: relativeRelaxed)
+        let absolute: BenchmarkThresholds.AbsoluteThresholds = [.p0: 1,
+                                                                .p25: 1,
+                                                                .p50: 1,
+                                                                .p75: 0,
+                                                                .p90: 0,
+                                                                .p99: 0,
+                                                                .p100: 0]
+
+        let bothThresholds = BenchmarkThresholds(relative: relative, absolute: absolute)
+        let absoluteThresholds = BenchmarkThresholds(absolute: absolute)
+        let relativeThresholds = BenchmarkThresholds(relative: relative)
+        let relativeRelaxedThresholds = BenchmarkThresholds(relative: relativeRelaxed)
 
         let firstResult = BenchmarkResult(metric: .cpuUser,
                                           timeUnits: .nanoseconds,
