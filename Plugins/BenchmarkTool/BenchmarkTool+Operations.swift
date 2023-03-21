@@ -130,7 +130,7 @@ extension BenchmarkTool {
                                   target: target)
                     }
 
-                    if quiet == 0 {
+                    if quiet == false {
                         print("")
                         print("Updated baseline '\(baselineName)'")
                     }

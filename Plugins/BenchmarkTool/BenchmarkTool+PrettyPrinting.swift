@@ -100,7 +100,7 @@ extension BenchmarkTool {
 
             var adjustmentFunction: (Int) -> Int
 
-            if self.scale > 0, result.metrics.metric.useScalingFactor {
+            if self.scale, result.metrics.metric.useScalingFactor {
                 description = useGroupingDescription ? "\(result.description) \(result.metrics.scaledUnitDescriptionPretty)"
                     : "\(result.metrics.metric.description) \(result.metrics.scaledUnitDescriptionPretty)"
                 adjustmentFunction = result.metrics.scale
@@ -135,7 +135,7 @@ extension BenchmarkTool {
     func prettyPrint(_ baseline: BenchmarkBaseline,
                      header: String, // = "Benchmark results",
                      hostIdentifier _: String? = nil) {
-        guard quiet == 0 else { return }
+        guard quiet == false else { return }
 
         printMachine(baseline.machine, header)
 
@@ -268,7 +268,7 @@ extension BenchmarkTool {
                             var adjustmentFunction: (Int) -> Int
                             let samples = result.statistics.measurementCount - base.statistics.measurementCount
 
-                            if self.scale > 0, base.metric.useScalingFactor {
+                            if self.scale, base.metric.useScalingFactor {
                                 adjustmentFunction = base.scale
                             } else {
                                 adjustmentFunction = base.normalize
@@ -286,7 +286,7 @@ extension BenchmarkTool {
                                                                percentiles: basePercentiles,
                                                                samples: base.statistics.measurementCount))
 
-                            if self.scale > 0, result.metric.useScalingFactor {
+                            if self.scale, result.metric.useScalingFactor {
                                 adjustmentFunction = result.scale
                             } else {
                                 adjustmentFunction = result.normalize
@@ -369,7 +369,7 @@ extension BenchmarkTool {
     func prettyPrintDeviation(baselineName: String,
                               comparingBaselineName: String,
                               deviationResults: [BenchmarkResult.ThresholdDeviation]) {
-        guard quiet == 0 else { return }
+        guard quiet == false else { return }
 
         let metrics = deviationResults.map(\.metric).unique()
         // Get a unique set of all name/target pairs that have threshold violations, sorted lexically:
@@ -433,7 +433,7 @@ extension BenchmarkTool {
 
     func prettyPrintAbsoluteDeviation(baselineName: String,
                                       deviationResults: [BenchmarkResult.ThresholdDeviation]) {
-        guard quiet == 0 else { return }
+        guard quiet == false else { return }
 
         let metrics = deviationResults.map(\.metric).unique()
         // Get a unique set of all name/target pairs that have threshold violations, sorted lexically:
