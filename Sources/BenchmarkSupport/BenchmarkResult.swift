@@ -464,7 +464,7 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
             }
             return violationDescriptions
         }
-        
+
         var violationDescriptions: [ThresholdDeviation] = []
         let percentiles = statistics.percentiles()
         for percentile in 0 ..< percentiles.count {
