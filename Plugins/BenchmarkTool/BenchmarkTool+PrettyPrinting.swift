@@ -135,7 +135,7 @@ extension BenchmarkTool {
     func prettyPrint(_ baseline: BenchmarkBaseline,
                      header: String, // = "Benchmark results",
                      hostIdentifier _: String? = nil) {
-        guard quiet != 0 else { return }
+        guard quiet == 0 else { return }
 
         printMachine(baseline.machine, header)
 
@@ -369,7 +369,7 @@ extension BenchmarkTool {
     func prettyPrintDeviation(baselineName: String,
                               comparingBaselineName: String,
                               deviationResults: [BenchmarkResult.ThresholdDeviation]) {
-        guard quiet != 0 else { return }
+        guard quiet == 0 else { return }
 
         let metrics = deviationResults.map(\.metric).unique()
         // Get a unique set of all name/target pairs that have threshold violations, sorted lexically:
@@ -433,7 +433,7 @@ extension BenchmarkTool {
 
     func prettyPrintAbsoluteDeviation(baselineName: String,
                                       deviationResults: [BenchmarkResult.ThresholdDeviation]) {
-        guard quiet != 0 else { return }
+        guard quiet == 0 else { return }
 
         let metrics = deviationResults.map(\.metric).unique()
         // Get a unique set of all name/target pairs that have threshold violations, sorted lexically:

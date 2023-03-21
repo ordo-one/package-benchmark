@@ -464,14 +464,19 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
             }
             return violationDescriptions
         }
-
+        
+        var violationDescriptions: [ThresholdDeviation] = []
         let percentiles = statistics.percentiles()
-        return percentiles.flatMap { percentile in worseResult(metric,
-                                                               percentiles[percentile],
-                                                               Self.Percentile(rawValue: percentile)!,
-                                                               thresholds,
-                                                               statistics.units())
+        for percentile in 0 ..< percentiles.count {
+            let failureDescriptions = worseResult(metric,
+                                                  percentiles[percentile],
+                                                  Self.Percentile(rawValue: percentile)!,
+                                                  thresholds,
+                                                  statistics.units())
+            violationDescriptions.append(contentsOf: failureDescriptions)
         }
+
+        return violationDescriptions
     }
 }
 
