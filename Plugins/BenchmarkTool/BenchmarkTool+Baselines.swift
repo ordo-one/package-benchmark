@@ -451,7 +451,9 @@ extension BenchmarkBaseline: Equatable {
         return (worseResult == false, allDeviationResults)
     }
 
-    public func failsAbsoluteThresholdChecks(benchmarks: [Benchmark]) -> [BenchmarkResult.ThresholdDeviation] { // absolute checks
+    
+public func failsAbsoluteThresholdChecks(benchmarks: [Benchmark]) -> [BenchmarkResult.ThresholdDeviation] {
+
         var allDeviationResults: [BenchmarkResult.ThresholdDeviation] = []
 
         for (lhsBenchmarkIdentifier, lhsBenchmarkResults) in results {
