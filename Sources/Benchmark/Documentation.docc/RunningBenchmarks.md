@@ -98,6 +98,58 @@ By default, thresholds are checked comparing two baselines, or a baseline and a 
 -h, --help              Show help information.
 ```
 
+## Troubleshooting problems
+If you have a benchmark that crashes, it's possible to run that specific benchmark in the debugger easily.
+
+E.g. for the target `BenchmarkDateTime`, you can run it manually with
+```
+.build/arm64-apple-macosx/release/BenchmarkDateTime
+```
+
+There are some additional options too that can be displayed with `--help`:
+```
+hassila@max ~/G/package-benchmark (various-fixes)> .build/arm64-apple-macosx/release/BenchmarkDateTime --help
+USAGE: benchmark-runner [--quiet <quiet>] [--input-fd <input-fd>] [--output-fd <output-fd>] [--filter <filter> ...] [--skip <skip> ...] [--check-absolute]
+
+OPTIONS:
+-q, --quiet <quiet>     Whether to suppress progress output. (default: false)
+-i, --input-fd <input-fd>
+The input pipe filedescriptor used for communication with host process.
+-o, --output-fd <output-fd>
+The output pipe filedescriptor used for communication with host process.
+--filter <filter>       Benchmarks matching the regexp filter that should be run
+--skip <skip>           Benchmarks matching the regexp filter that should be skipped
+--check-absolute        Set to true if thresholds should be checked against an absolute reference point rather than delta between baselines.
+This is used for CI workflows when you want to validate the thresholds vs. a persisted benchmark baseline
+rather than comparing PR vs main or vs a current run. This is useful to cut down the build matrix needed
+for those wanting to validate performance of e.g. toolchains or OS:s as well (or have other reasons for wanting
+a specific check against a given absolute reference.).
+If this is enabled, zero or one baselines should be specified for the check operation.
+By default, thresholds are checked comparing two baselines, or a baseline and a benchmark run.
+-h, --help              Show help information.
+```
+
+So to run a specific troubling benchmark target you can run it with:
+```
+.build/arm64-apple-macosx/release/BenchmarkDateTime --filter Foundation-Date
+```
+
+And use standard troubleshooting tools like LLDB etc on that binary, it simply runs the benchmark code.
+
+Additionally, if there would be any internal failure in the benchmark plugin, please run your failed
+command and append `--debug` to the end for instructions on how to run it with a debugger to generate
+a backtrace for a bug report. E.g:
+```
+> swift package benchmark --debug
+...
+To debug, start BenchmarkTool in LLDB using:
+lldb /Users/hassila/GitHub/package-benchmark/.build/arm64-apple-macosx/debug/BenchmarkTool
+
+Then launch BenchmarkTool with:
+run --command run --baseline-storage-path /Users/hassila/GitHub/package-benchmark --format text --grouping benchmark --benchmark-executable-paths /Users/hassila/GitHub/package-benchmark/.build/arm64-apple-macosx/release/HistogramBenchmark --benchmark-executable-paths /Users/hassila/GitHub/package-benchmark/.build/arm64-apple-macosx/release/BenchmarkDateTime --benchmark-executable-paths /Users/hassila/GitHub/package-benchmark/.build/arm64-apple-macosx/release/Basic
+```
+
+
 ## Network or disk permissions failures
 
 We've seen one instance of strange permissioning failures for disk writes for tests that use LMDB (where only the lock file can be created, but the actual data file fails - even when specifying `--allow-writing-to-package-directory`).
