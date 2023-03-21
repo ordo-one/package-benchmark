@@ -47,10 +47,10 @@ public final class Benchmark: Codable, Hashable {
     /// This closure if set, will be run after a targets benchmarks run, but after they are registered
     public static var shutdownHook: BenchmarkHook?
 
-    /// True if this benchmark results will be compared with an absolute threshold when `--check-absolute` is
+    /// Set to true if this benchmark results should be compared with an absolute threshold when `--check-absolute` is
     /// specified on the command line. An implementation can then choose to configure thresholds differently for
     /// such comparisons by e.g. reading them in from external storage.
-    public static var checkAbsolute = false
+    public static var checkAbsoluteThresholds = false
 
     #if swift(>=5.8)
         @_documentation(visibility: internal)

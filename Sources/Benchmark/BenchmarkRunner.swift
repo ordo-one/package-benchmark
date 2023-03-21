@@ -70,7 +70,7 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
         If this is enabled, zero or one baselines should be specified for the check operation.
         By default, thresholds are checked comparing two baselines, or a baseline and a benchmark run.
         """)
-    var checkAbsolute = false
+    var checkAbsoluteThresholds = false
 
     var debug = false
 
@@ -84,7 +84,7 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
     public static func setupBenchmarkRunner(registerBenchmarks: () -> Void) async {
         do {
             var command = Self.parseOrExit()
-            Benchmark.checkAbsolute = command.checkAbsolute
+            Benchmark.checkAbsoluteThresholds = command.checkAbsoluteThresholds
             registerBenchmarks()
             try await command.run()
         } catch {

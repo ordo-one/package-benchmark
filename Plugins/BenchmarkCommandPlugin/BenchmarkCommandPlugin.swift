@@ -40,7 +40,7 @@ import PackagePlugin
         let pathSpecified = argumentExtractor.extractOption(named: "path") // export path
         let quietRunning = argumentExtractor.extractFlag(named: "quiet")
         let noProgress = argumentExtractor.extractFlag(named: "no-progress")
-        let checkAbsolute = argumentExtractor.extractFlag(named: "check-absolute")
+        let checkAbsoluteThresholds = argumentExtractor.extractFlag(named: "check-absolute")
         let groupingToUse = argumentExtractor.extractOption(named: "grouping")
         let metricsToUse = argumentExtractor.extractOption(named: "metric")
         let debug = argumentExtractor.extractFlag(named: "debug")
@@ -192,7 +192,7 @@ import PackagePlugin
             args.append(contentsOf: ["--no-progress"])
         }
 
-        if checkAbsolute > 0 {
+        if checkAbsoluteThresholds > 0 {
             args.append(contentsOf: ["--check-absolute"])
         }
 
@@ -242,7 +242,7 @@ import PackagePlugin
             case .compare:
                 fallthrough
             case .check:
-                if checkAbsolute > 0 {
+                if checkAbsoluteThresholds > 0 {
                     let validRange = 0 ... 1
                     guard validRange.contains(positionalArguments.count) else {
                         print("Must specify exactly zero or one baseline for check against absolute thresholds, got: \(positionalArguments)")

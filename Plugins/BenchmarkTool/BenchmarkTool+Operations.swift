@@ -139,7 +139,7 @@ extension BenchmarkTool {
                 }
 
             case .check:
-                if checkAbsolute {
+                if checkAbsoluteThresholds {
                     guard benchmarkBaselines.count == 1 else {
                         print("Can only do threshold violation checks for exactly 1 benchmark baseline, got: \(benchmarkBaselines.count) baselines.")
                         return

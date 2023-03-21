@@ -15,7 +15,7 @@ extension BenchmarkRunner {}
 let benchmarks = {
     var thresholds: [BenchmarkMetric: BenchmarkThresholds]
 
-    if Benchmark.checkAbsolute {
+    if Benchmark.checkAbsoluteThresholds {
         let absolute: BenchmarkThresholds.AbsoluteThresholds = [.p0: .microseconds(1),
                                                                 .p25: .microseconds(1),
                                                                 .p50: .microseconds(2_500),
