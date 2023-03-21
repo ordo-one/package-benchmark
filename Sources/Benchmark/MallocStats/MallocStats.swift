@@ -10,7 +10,7 @@
 
 /// The memory allocation stats the the MallocStatsProducer can provide
 #if swift(>=5.8)
-@_documentation(visibility: internal)
+    @_documentation(visibility: internal)
 #endif
 public struct MallocStats {
     var mallocCountTotal: Int = 0 /// total number of mallocs done

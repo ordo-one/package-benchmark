@@ -438,8 +438,6 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
     public func failsAbsoluteThresholdChecks(thresholds: BenchmarkThresholds,
                                              name: String,
                                              target: String) -> [ThresholdDeviation] {
-        var violationDescriptions: [ThresholdDeviation] = []
-
         func worseResult(_ metric: BenchmarkMetric,
                          _ lhs: Int,
                          _ percentile: BenchmarkResult.Percentile,
@@ -468,16 +466,12 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
         }
 
         let percentiles = statistics.percentiles()
-        for percentile in 0 ..< percentiles.count {
-            let failureDescriptions = worseResult(metric,
-                                                  percentiles[percentile],
-                                                  Self.Percentile(rawValue: percentile)!,
-                                                  thresholds,
-                                                  statistics.units())
-            violationDescriptions.append(contentsOf: failureDescriptions)
+        return percentiles.flatMap { percentile in worseResult(metric,
+                                                               percentiles[percentile],
+                                                               Self.Percentile(rawValue: percentile)!,
+                                                               thresholds,
+                                                               statistics.units())
         }
-
-        return violationDescriptions
     }
 }
 

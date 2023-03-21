@@ -21,7 +21,7 @@ import ArgumentParser
 @_exported import Statistics
 
 #if swift(>=5.8)
-@_documentation(visibility: internal)
+    @_documentation(visibility: internal)
 #endif
 public protocol BenchmarkRunnerHooks {
     static func main() async
@@ -29,7 +29,7 @@ public protocol BenchmarkRunnerHooks {
 }
 
 #if swift(>=5.8)
-@_documentation(visibility: internal)
+    @_documentation(visibility: internal)
 #endif
 public extension BenchmarkRunnerHooks {
     static func main() async {
@@ -38,7 +38,7 @@ public extension BenchmarkRunnerHooks {
 }
 
 #if swift(>=5.8)
-@_documentation(visibility: internal)
+    @_documentation(visibility: internal)
 #endif
 public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
     static var testReadWrite: BenchmarkRunnerReadWrite?
