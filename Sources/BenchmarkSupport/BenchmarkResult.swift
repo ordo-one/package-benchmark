@@ -379,7 +379,6 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
             let reverseComparison = metric.polarity == .prefersLarger
             var violationDescriptions: [ThresholdDeviation] = []
             var thresholdViolated = false
-
             if let threshold = thresholds.relative[percentile] {
                 if reverseComparison ? relativeDifference > threshold : -relativeDifference > threshold {
                     let relativeDiff = Statistics.roundToDecimalplaces(abs(relativeDifference), 1)
@@ -398,7 +397,6 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
             }
 
             if var threshold = thresholds.absolute[percentile] {
-                threshold /= (1_000_000_000 / scalingFactor.rawValue)
                 if reverseComparison ? -absoluteDifference > threshold : absoluteDifference > threshold {
                     violationDescriptions.append(ThresholdDeviation(name: name,
                                                                     target: target,
@@ -407,7 +405,7 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
                                                                     baseValue: normalize(lhs),
                                                                     comparisonValue: normalize(rhs),
                                                                     difference: normalize(absoluteDifference),
-                                                                    differenceThreshold: threshold,
+                                                                    differenceThreshold: normalize(threshold),
                                                                     relative: false,
                                                                     units: scalingFactor))
                     thresholdViolated = true
