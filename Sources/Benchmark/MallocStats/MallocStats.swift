@@ -9,6 +9,9 @@
 //
 
 /// The memory allocation stats the the MallocStatsProducer can provide
+#if swift(>=5.8)
+    @_documentation(visibility: internal)
+#endif
 public struct MallocStats {
     var mallocCountTotal: Int = 0 /// total number of mallocs done
     var mallocCountSmall: Int = 0 /// number of small mallocs (as defined by jemalloc)

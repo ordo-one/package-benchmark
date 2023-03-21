@@ -45,13 +45,11 @@ public extension FilePath {
                             print("")
                         }
                         print("Failed to create directory at [\(creationPath)], errno = [\(errno)]")
-                        fflush(nil)
                         return
                     }
 
                 default:
                     print("Failed to handle file \(creationPath), errno = [\(errno)]")
-                    fflush(nil)
                 }
             }
         }

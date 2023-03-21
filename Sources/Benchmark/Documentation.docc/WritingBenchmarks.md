@@ -22,19 +22,20 @@ let benchmarks = {
 
 A more real test for a couple of Foundation features would be:
 
+
 ```swift
 import SystemPackage
 import Foundation
 import Benchmark
 
 let benchmarks = {
-    let customThreshold = BenchmarkResult.PercentileThresholds(
+    let customThreshold = BenchmarkThresholds(
         relative: [.p50: 5.0, .p75: 10.0],
         absolute: [.p25: 10, .p50: 15])
-    let customThreshold2 = BenchmarkResult.PercentileThresholds(
-        relative: .strict)
-    let customThreshold3 = BenchmarkResult.PercentileThresholds(
-        absolute: .relaxed)
+    let customThreshold2 = BenchmarkThresholds(
+        relative: BenchmarkThresholds.Relative.strict)
+    let customThreshold3 = BenchmarkThresholds(
+        absolute: BenchmarkThresholds.Absolute.relaxed)
 
     Benchmark.defaultConfiguration = .init(
         timeUnits: .microseconds,
@@ -44,13 +45,13 @@ let benchmarks = {
                      .cpuUser: .strict])
 
     Benchmark("Foundation Date()",
-        configuration: .init(
-            metrics: [.throughput, .wallClock], 
-            scalingFactor: .mega)) { benchmark in
-        for _ in benchmark.scaledIterations {
-            blackHole(Date())
-        }
-    }
+              configuration: .init(
+                metrics: [.throughput, .wallClock],
+                scalingFactor: .mega)) { benchmark in
+                    for _ in benchmark.scaledIterations {
+                        blackHole(Date())
+                    }
+                }
 
     Benchmark("Foundation AttributedString()") { benchmark in
         let count = 200
@@ -61,7 +62,7 @@ let benchmarks = {
         str += AttributedString(
             String(repeating: "c", count: count))
         let idx = str.characters.index(
-            str.startIndex, 
+            str.startIndex,
             offsetBy: str.characters.count / 2)
         let toInsert = AttributedString(
             String(repeating: "c", count: str.characters.count))
@@ -125,7 +126,7 @@ public extension Benchmark {
         public var skip = false
         /// Customized CI failure thresholds for a given metric 
         /// for the Benchmark
-        public var thresholds: [BenchmarkMetric: BenchmarkResult.PercentileThresholds]?
+        public var thresholds: [BenchmarkMetric: BenchmarkThresholds]?
 ...
 ```
 
@@ -196,26 +197,24 @@ Benchmark.defaultConfiguration = .init(...)
 ### Custom thresholds
 
 ```swift
-let customThreshold = BenchmarkResult.PercentileThresholds(
-    relative: [.p50 : 13.0, .p75 : 18.0],
-    absolute: [.p50 : 170, .p75 : 1200])
+    let customThreshold = BenchmarkThresholds(
+        relative: [.p50 : 13.0, .p75 : 18.0],
+        absolute: [.p50 : .millseconds(170), .p75 : .milliseconds(1200]))
 
-Benchmark(
-    "Foundation Date()",
-    configuration: .init(
-    metrics: [.throughput, .wallClock],
-    scalingFactor: .mega,
-    thresholds: [
-        .throughput : customThreshold,
-        .wallClock : customThreshold])
-) { benchmark in
-    for _ in benchmark.scaledIterations {
-        blackHole(Date())
+    Benchmark(
+        "Foundation Date()",
+        configuration: .init(
+            metrics: [.throughput, .wallClock],
+            scalingFactor: .mega,
+            thresholds: [.wallClock : customThreshold])
+    ) { benchmark in
+        for _ in benchmark.scaledIterations {
+            blackHole(Date())
+        }
     }
-}
 ```
 
-There are a number of convenience methods in `BenchmarkResult+Defaults.swift`.
+There are a number of convenience methods in `BenchmarkThreshold+Defaults.swift`.
 
 ### Async vs Sync
 

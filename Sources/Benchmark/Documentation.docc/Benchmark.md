@@ -16,6 +16,7 @@
 - ``Benchmark/Benchmark/configuration-swift.property``
 - ``Benchmark/Benchmark/defaultConfiguration``
 - ``Benchmark/Benchmark/Configuration-swift.struct``
+- ``Benchmark/Benchmark/checkAbsoluteThresholds``
 
 ### Writing Benchmarks
 

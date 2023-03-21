@@ -13,10 +13,26 @@ import Benchmark
 extension BenchmarkRunner {}
 
 let benchmarks = {
+    var thresholds: [BenchmarkMetric: BenchmarkThresholds]
+
+    if Benchmark.checkAbsoluteThresholds {
+        let absolute: BenchmarkThresholds.AbsoluteThresholds = [.p0: .microseconds(1),
+                                                                .p25: .microseconds(1),
+                                                                .p50: .microseconds(2_500),
+                                                                .p75: .microseconds(1),
+                                                                .p90: .microseconds(2),
+                                                                .p99: .milliseconds(3),
+                                                                .p100: .milliseconds(1)]
+
+        thresholds = [BenchmarkMetric.wallClock: BenchmarkThresholds(absolute: absolute)]
+    } else {
+        thresholds = [BenchmarkMetric.wallClock: BenchmarkThresholds.relaxed]
+    }
+
     Benchmark.defaultConfiguration = .init(warmupIterations: 0,
                                            maxDuration: .seconds(1),
                                            maxIterations: Int.max,
-                                           thresholds: [.wallClock: BenchmarkResult.PercentileThresholds.strict])
+                                           thresholds: thresholds)
 
     // Benchmark.startupHook = { print("Startup hook") }
     // Benchmark.shutdownHook = { print("Shutdown hook") }

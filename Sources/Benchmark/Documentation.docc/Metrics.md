@@ -39,4 +39,6 @@ Additionally, _custom metrics_ are supported `custom(_ name: String, polarity: P
 
 For comparison (`swift package benchmark baseline compare`) operations, there's a set of default thresholds that are used which are strict. It is also possible to define both absolute and relative thresholds, _per metric_, that will be used for such comparisons (or that a given metric should be skipped completely).
 
+In addition to comparing the delta between e.g. a `PR` and `main`, there's also an option to compare against an absolute threshold which is useful for more complex projects that may want to reduce the size of the build matrix required to validate all thresholds. 
+
 See <doc:WritingBenchmarks> or look at the sample code to see how custom thresholds can be set up.
