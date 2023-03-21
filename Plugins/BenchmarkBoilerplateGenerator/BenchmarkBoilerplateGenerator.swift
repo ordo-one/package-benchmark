@@ -25,9 +25,9 @@ struct Benchmark: AsyncParsableCommand {
         import Benchmark
 
         @main
-        struct \(target)BenchmarkRunner: BenchmarkRunnerHooks {
+        struct BenchmarkRunner: BenchmarkRunnerHooks {
           static func registerBenchmarks() {
-            benchmarks()
+            _ = benchmarks()
           }
         }
         """
