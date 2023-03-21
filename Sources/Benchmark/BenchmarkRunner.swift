@@ -20,18 +20,26 @@ import ArgumentParser
 @_exported import BenchmarkSupport
 @_exported import Statistics
 
+#if swift(>=5.8)
+@_documentation(visibility: internal)
+#endif
 public protocol BenchmarkRunnerHooks {
     static func main() async
     static func registerBenchmarks()
 }
 
+#if swift(>=5.8)
+@_documentation(visibility: internal)
+#endif
 public extension BenchmarkRunnerHooks {
     static func main() async {
         await BenchmarkRunner.setupBenchmarkRunner(registerBenchmarks: registerBenchmarks)
     }
 }
 
-// @main must be done in actual benchmark to avoid linker errors unfortunately
+#if swift(>=5.8)
+@_documentation(visibility: internal)
+#endif
 public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
     static var testReadWrite: BenchmarkRunnerReadWrite?
 
