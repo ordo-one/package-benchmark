@@ -57,13 +57,13 @@ struct BenchmarkTool: AsyncParsableCommand {
     var baselineOperation: BaselineOperation?
 
     @Flag(name: .long, help: "True if we should suppress output")
-    var quiet: Int
+    var quiet: Bool = false
 
     @Flag(name: .long, help: "True if we should suppress progress in benchmark run")
-    var noProgress: Int
+    var noProgress: Bool = false
 
     @Flag(name: .long, help: "True if we should scale time units, syscall rate, etc to scalingFactor")
-    var scale: Int
+    var scale: Bool = false
 
     @Flag(name: .long, help:
         """
@@ -159,7 +159,7 @@ struct BenchmarkTool: AsyncParsableCommand {
             if let baseline = try readBaseline(baselineName) {
                 benchmarkBaselines.append(baseline)
             } else {
-                if quiet == 0 {
+                if quiet == false {
                     print("Warning: Failed to load specified baseline '\(baselineName)'.")
                 }
             }
@@ -210,7 +210,7 @@ struct BenchmarkTool: AsyncParsableCommand {
             fatalError("Query command should never be specified to the BenchmarkTool")
         }
 
-        if quiet == 0, format == .text {
+        if quiet == false, format == .text {
             "Running Benchmarks".printAsHeader()
         }
 
@@ -265,7 +265,7 @@ struct BenchmarkTool: AsyncParsableCommand {
         var args: [String] = [path.lastComponent!.description,
                               "--input-fd", toChild.readEnd.rawValue.description,
                               "--output-fd", fromChild.writeEnd.rawValue.description,
-                              "--quiet", (noProgress > 0).description]
+                              "--quiet", noProgress.description]
 
         if checkAbsoluteThresholds {
             args.append("--check-absolute")
