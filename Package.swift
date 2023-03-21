@@ -78,7 +78,7 @@ let package = Package(
             path: "Plugins/BenchmarkBoilerplateGenerator"
         ),
 
-        // Tool that simply generates the man page for the Benchmark-Plugin as we can't use SAP in it... :-/
+        // Tool that simply generates the man page for the BenchmarkPlugin as we can't use SAP in it... :-/
         .executableTarget(
             name: "BenchmarkHelpGenerator",
             dependencies: [

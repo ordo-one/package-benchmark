@@ -19,19 +19,19 @@ let benchmarks = {
 
     Benchmark("InternalUTCClock-now") { benchmark in
         for _ in benchmark.scaledIterations {
-            BenchmarkSupport.blackHole(InternalUTCClock.now)
+            blackHole(InternalUTCClock.now)
         }
     }
 
     Benchmark("BenchmarkClock-now") { benchmark in
         for _ in benchmark.scaledIterations {
-            BenchmarkSupport.blackHole(BenchmarkClock.now)
+            blackHole(BenchmarkClock.now)
         }
     }
 
     Benchmark("Foundation-Date") { benchmark in
         for _ in benchmark.scaledIterations {
-            BenchmarkSupport.blackHole(Foundation.Date())
+            blackHole(Foundation.Date())
         }
     }
 }

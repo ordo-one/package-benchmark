@@ -38,6 +38,7 @@ swift package benchmark <command verb> [<options>]
 - term `--scale`: Specifies that some of the text output should be scaled using the scalingFactor (denoted by '*' in output)
 - term `--metric`: Specifies that the benchmark run should use a specific metric instead of the ones defined by the benchmarks
 - term `--no-progress`: Specifies that benchmark progress information should not be displayed
+- term `--check-absolute`: Set to true if thresholds should be checked against an absolute reference point rather than delta between baselines.
 - term `--grouping <grouping>`: The grouping to use, one of: ["metric", "benchmark"]. default is 'benchmark'
 
 ## Usage
@@ -79,15 +80,75 @@ OPTIONS:
 --skip-target <skip-target>
 Benchmark targets matching the regexp filter that should be skipped
 --format <format>       The output format to use, one of: ["text", "markdown", "influx", "jmh", "histogramEncoded", "histogram", "histogramSamples", "histogramPercentiles"], default is 'text'
---metric <metric>       Specifies that the benchmark run should use one or more specific metrics instead of the ones defined by the benchmarks, valid values are: ["cpuUser", "cpuSystem", "cpuTotal", "wallClock", "throughput", "peakMemoryResident", "peakMemoryVirtual", "mallocCountSmall", "mallocCountLarge",
-"mallocCountTotal", "allocatedResidentMemory", "memoryLeaked", "syscalls", "contextSwitches", "threads", "threadsRunning", "readSyscalls", "writeSyscalls", "readBytesLogical", "writeBytesLogical", "readBytesPhysical", "writeBytesPhysical", "custom"]
+--metric <metric>       Specifies that the benchmark run should use one or more specific metrics instead of the ones defined by the benchmarks, valid values are: ["cpuUser", "cpuSystem", "cpuTotal", "wallClock", "throughput", "peakMemoryResident", "peakMemoryVirtual",
+"mallocCountSmall", "mallocCountLarge", "mallocCountTotal", "allocatedResidentMemory", "memoryLeaked", "syscalls", "contextSwitches", "threads", "threadsRunning", "readSyscalls", "writeSyscalls", "readBytesLogical", "writeBytesLogical",
+"readBytesPhysical", "writeBytesPhysical", "custom"]
 --path <path>           The path where exported data is stored, default is the current directory (".").
 --quiet                 Specifies that output should be suppressed (useful for if you just want to check return code)
 --scale                 Specifies that some of the text output should be scaled using the scalingFactor (denoted by '*' in output)
+--check-absolute        Set to true if thresholds should be checked against an absolute reference point rather than delta between baselines.
+This is used for CI workflows when you want to validate the thresholds vs. a persisted benchmark baseline
+rather than comparing PR vs main or vs a current run. This is useful to cut down the build matrix needed
+for those wanting to validate performance of e.g. toolchains or OS:s as well (or have other reasons for wanting
+a specific check against a given absolute reference.).
+If this is enabled, zero or one baselines should be specified for the check operation.
+By default, thresholds are checked comparing two baselines, or a baseline and a benchmark run.
 --no-progress           Specifies that benchmark progress information should not be displayed
 --grouping <grouping>   The grouping to use, one of: ["metric", "benchmark"]. default is 'benchmark'
 -h, --help              Show help information.
 ```
+
+## Troubleshooting problems
+If you have a benchmark that crashes, it's possible to run that specific benchmark in the debugger easily.
+
+E.g. for the target `BenchmarkDateTime`, you can run it manually with
+```
+.build/arm64-apple-macosx/release/BenchmarkDateTime
+```
+
+There are some additional options too that can be displayed with `--help`:
+```
+hassila@max ~/G/package-benchmark (various-fixes)> .build/arm64-apple-macosx/release/BenchmarkDateTime --help
+USAGE: benchmark-runner [--quiet <quiet>] [--input-fd <input-fd>] [--output-fd <output-fd>] [--filter <filter> ...] [--skip <skip> ...] [--check-absolute]
+
+OPTIONS:
+-q, --quiet <quiet>     Whether to suppress progress output. (default: false)
+-i, --input-fd <input-fd>
+The input pipe filedescriptor used for communication with host process.
+-o, --output-fd <output-fd>
+The output pipe filedescriptor used for communication with host process.
+--filter <filter>       Benchmarks matching the regexp filter that should be run
+--skip <skip>           Benchmarks matching the regexp filter that should be skipped
+--check-absolute        Set to true if thresholds should be checked against an absolute reference point rather than delta between baselines.
+This is used for CI workflows when you want to validate the thresholds vs. a persisted benchmark baseline
+rather than comparing PR vs main or vs a current run. This is useful to cut down the build matrix needed
+for those wanting to validate performance of e.g. toolchains or OS:s as well (or have other reasons for wanting
+a specific check against a given absolute reference.).
+If this is enabled, zero or one baselines should be specified for the check operation.
+By default, thresholds are checked comparing two baselines, or a baseline and a benchmark run.
+-h, --help              Show help information.
+```
+
+So to run a specific troubling benchmark target you can run it with:
+```
+.build/arm64-apple-macosx/release/BenchmarkDateTime --filter Foundation-Date
+```
+
+And use standard troubleshooting tools like LLDB etc on that binary, it simply runs the benchmark code.
+
+Additionally, if there would be any internal failure in the benchmark plugin, please run your failed
+command and append `--debug` to the end for instructions on how to run it with a debugger to generate
+a backtrace for a bug report. E.g:
+```
+> swift package benchmark --debug
+...
+To debug, start BenchmarkTool in LLDB using:
+lldb /Users/hassila/GitHub/package-benchmark/.build/arm64-apple-macosx/debug/BenchmarkTool
+
+Then launch BenchmarkTool with:
+run --command run --baseline-storage-path /Users/hassila/GitHub/package-benchmark --format text --grouping benchmark --benchmark-executable-paths /Users/hassila/GitHub/package-benchmark/.build/arm64-apple-macosx/release/HistogramBenchmark --benchmark-executable-paths /Users/hassila/GitHub/package-benchmark/.build/arm64-apple-macosx/release/BenchmarkDateTime --benchmark-executable-paths /Users/hassila/GitHub/package-benchmark/.build/arm64-apple-macosx/release/Basic
+```
+
 
 ## Network or disk permissions failures
 

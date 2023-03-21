@@ -15,6 +15,9 @@ import jemalloc
 // was used during development to figure out most relevant stats,
 // Keeping them around as we may want to expand malloc statistics
 // to become more detailed.
+#if swift(>=5.8)
+    @_documentation(visibility: internal)
+#endif
 public class MallocStatsProducer {
     var threadCacheMIB: [size_t]
     var epochMIB: [size_t]

@@ -104,6 +104,18 @@ struct Benchmark: AsyncParsableCommand {
     @Flag(name: .long, help: "Specifies that some of the text output should be scaled using the scalingFactor (denoted by '*' in output)")
     var scale: Int
 
+    @Flag(name: .long, help:
+        """
+        Set to true if thresholds should be checked against an absolute reference point rather than delta between baselines.
+        This is used for CI workflows when you want to validate the thresholds vs. a persisted benchmark baseline
+        rather than comparing PR vs main or vs a current run. This is useful to cut down the build matrix needed
+        for those wanting to validate performance of e.g. toolchains or OS:s as well (or have other reasons for wanting
+        a specific check against a given absolute reference.).
+        If this is enabled, zero or one baselines should be specified for the check operation.
+        By default, thresholds are checked comparing two baselines, or a baseline and a benchmark run.
+        """)
+    var checkAbsoluteThresholds = false
+
     @Flag(name: .long, help: "Specifies that benchmark progress information should not be displayed")
     var noProgress: Int
 

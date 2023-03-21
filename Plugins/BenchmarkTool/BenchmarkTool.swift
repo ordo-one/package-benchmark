@@ -65,6 +65,18 @@ struct BenchmarkTool: AsyncParsableCommand {
     @Flag(name: .long, help: "True if we should scale time units, syscall rate, etc to scalingFactor")
     var scale: Int
 
+    @Flag(name: .long, help:
+        """
+        Set to true if thresholds should be checked against an absolute reference point rather than delta between baselines.
+        This is used for CI workflows when you want to validate the thresholds vs. a persisted benchmark baseline
+        rather than comparing PR vs main or vs a current run. This is useful to cut down the build matrix needed
+        for those wanting to validate performance of e.g. toolchains or OS:s as well (or have other reasons for wanting
+        a specific check against a given absolute reference.).
+        If this is enabled, zero or one baselines should be specified for the check operation.
+        By default, thresholds are checked comparing two baselines, or a baseline and a benchmark run.
+        """)
+    var checkAbsoluteThresholds = false
+
     @Option(name: .long, help: "The named baseline(s) we should display, update, delete or compare with")
     var baseline: [String] = []
 
@@ -155,10 +167,13 @@ struct BenchmarkTool: AsyncParsableCommand {
     }
 
     mutating func run() async throws {
+        // Flush stdout so we see any failures clearly
+        setbuf(stdout, nil)
+
         // Skip reading baselines for baseline operations not needing them
         if let operation = baselineOperation, [.delete, .list, .update].contains(operation) == false {
             try readBaselines()
-            if [.compare, .check].contains(operation), benchmarkBaselines.count < 1 {
+            if [.compare, .check].contains(operation), benchmarkBaselines.count < 1, checkAbsoluteThresholds == false {
                 print("Failed to read at least one benchmark baseline for compare/check operations.")
                 return
             }
@@ -197,7 +212,6 @@ struct BenchmarkTool: AsyncParsableCommand {
 
         if quiet == 0, format == .text {
             "Running Benchmarks".printAsHeader()
-            fflush(stdout)
         }
 
         var benchmarkResults: BenchmarkResults = [:]
@@ -248,10 +262,14 @@ struct BenchmarkTool: AsyncParsableCommand {
         let fromChild = try FileDescriptor.pipe()
         let toChild = try FileDescriptor.pipe()
         let path = FilePath(benchmarkPath)
-        let args: [String] = [path.lastComponent!.description,
+        var args: [String] = [path.lastComponent!.description,
                               "--input-fd", toChild.readEnd.rawValue.description,
                               "--output-fd", fromChild.writeEnd.rawValue.description,
                               "--quiet", (noProgress > 0).description]
+
+        if checkAbsoluteThresholds {
+            args.append("--check-absolute")
+        }
 
         inputFD = fromChild.readEnd.rawValue
         outputFD = toChild.writeEnd.rawValue
@@ -288,7 +306,6 @@ struct BenchmarkTool: AsyncParsableCommand {
                     completion?(status)
                 } else {
                     print("waitpiderror")
-                    fflush(nil)
                     throw RunCommandError.WaitPIDError
                 }
             } else {

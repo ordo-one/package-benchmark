@@ -9,6 +9,13 @@
 //
 
 // run/list benchmarks by talking to controlled process
+#if canImport(Darwin)
+    import Darwin
+#elseif canImport(Glibc)
+    import Glibc
+#else
+    #error("Unsupported Platform")
+#endif
 
 import BenchmarkSupport
 import ExtrasJSON
@@ -78,6 +85,9 @@ extension BenchmarkTool {
     }
 
     mutating func postProcessBenchmarkResults() throws {
+        // Turn on buffering again for output
+        setvbuf(stdout, nil, _IOFBF, Int(BUFSIZ))
+
         switch command {
         case .baseline:
             guard let baselineOperation else {
@@ -129,27 +139,49 @@ extension BenchmarkTool {
                 }
 
             case .check:
-                guard benchmarkBaselines.count == 2 else {
-                    print("Can only do threshold violation checks for exactly 2 benchmark baselines, got: \(benchmarkBaselines.count) baselines.")
-                    return
-                }
+                if checkAbsoluteThresholds {
+                    guard benchmarkBaselines.count == 1 else {
+                        print("Can only do threshold violation checks for exactly 1 benchmark baseline, got: \(benchmarkBaselines.count) baselines.")
+                        return
+                    }
 
-                let currentBaseline = benchmarkBaselines[0]
-                let checkBaseline = benchmarkBaselines[1]
-                let baselineName = baseline[0]
-                let checkBaselineName = baseline[1]
+                    print("")
+                    let currentBaseline = benchmarkBaselines[0]
+                    let baselineName = baseline[0]
 
-                let (betterOrEqual, deviationResults) = checkBaseline.betterResultsOrEqual(than: currentBaseline,
-                                                                                           benchmarks: benchmarks)
+                    let deviationResults = currentBaseline.failsAbsoluteThresholdChecks(benchmarks: benchmarks)
 
-                if betterOrEqual {
-                    print("New baseline '\(checkBaselineName)' is BETTER (or equal) than the '\(baselineName)' baseline thresholds.")
+                    if deviationResults.isEmpty {
+                        print("Baseline '\(baselineName)' is BETTER (or equal) than the defined absolute baseline thresholds. (--check-absolute)")
+                    } else {
+                        prettyPrintAbsoluteDeviation(baselineName: baselineName,
+                                                     deviationResults: deviationResults)
+                        failBenchmark("New baseline '\(baselineName)' is WORSE than the defined absolute baseline thresholds. (--check-absolute)",
+                                      exitCode: .thresholdViolation)
+                    }
                 } else {
-                    prettyPrintDeviation(baselineName: baselineName,
-                                         comparingBaselineName: checkBaselineName,
-                                         deviationResults: deviationResults)
-                    failBenchmark("New baseline '\(checkBaselineName)' is WORSE than the '\(baselineName)' baseline thresholds.",
-                                  exitCode: .thresholdViolation)
+                    guard benchmarkBaselines.count == 2 else {
+                        print("Can only do threshold violation checks for exactly 2 benchmark baselines, got: \(benchmarkBaselines.count) baselines.")
+                        return
+                    }
+
+                    let currentBaseline = benchmarkBaselines[0]
+                    let checkBaseline = benchmarkBaselines[1]
+                    let baselineName = baseline[0]
+                    let checkBaselineName = baseline[1]
+
+                    let (betterOrEqual, deviationResults) = checkBaseline.betterResultsOrEqual(than: currentBaseline,
+                                                                                               benchmarks: benchmarks)
+
+                    if betterOrEqual {
+                        print("New baseline '\(checkBaselineName)' is BETTER (or equal) than the '\(baselineName)' baseline thresholds.")
+                    } else {
+                        prettyPrintDeviation(baselineName: baselineName,
+                                             comparingBaselineName: checkBaselineName,
+                                             deviationResults: deviationResults)
+                        failBenchmark("New baseline '\(checkBaselineName)' is WORSE than the '\(baselineName)' baseline thresholds.",
+                                      exitCode: .thresholdViolation)
+                    }
                 }
             case .read:
                 if benchmarkBaselines.isEmpty {

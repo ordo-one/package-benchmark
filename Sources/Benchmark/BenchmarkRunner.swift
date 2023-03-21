@@ -8,23 +8,38 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 //
 
+#if canImport(Darwin)
+    import Darwin
+#elseif canImport(Glibc)
+    import Glibc
+#else
+    #error("Unsupported Platform")
+#endif
+
 import ArgumentParser
 @_exported import BenchmarkSupport
 @_exported import Statistics
 
+#if swift(>=5.8)
+    @_documentation(visibility: internal)
+#endif
 public protocol BenchmarkRunnerHooks {
     static func main() async
     static func registerBenchmarks()
 }
 
+#if swift(>=5.8)
+    @_documentation(visibility: internal)
+#endif
 public extension BenchmarkRunnerHooks {
     static func main() async {
-        registerBenchmarks()
-        await BenchmarkRunner.setupBenchmarkRunner()
+        await BenchmarkRunner.setupBenchmarkRunner(registerBenchmarks: registerBenchmarks)
     }
 }
 
-// @main must be done in actual benchmark to avoid linker errors unfortunately
+#if swift(>=5.8)
+    @_documentation(visibility: internal)
+#endif
 public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
     static var testReadWrite: BenchmarkRunnerReadWrite?
 
@@ -45,6 +60,18 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
     @Option(name: .long, help: "Benchmarks matching the regexp filter that should be skipped")
     var skip: [String] = []
 
+    @Flag(name: .long, help:
+        """
+        Set to true if thresholds should be checked against an absolute reference point rather than delta between baselines.
+        This is used for CI workflows when you want to validate the thresholds vs. a persisted benchmark baseline
+        rather than comparing PR vs main or vs a current run. This is useful to cut down the build matrix needed
+        for those wanting to validate performance of e.g. toolchains or OS:s as well (or have other reasons for wanting
+        a specific check against a given absolute reference.).
+        If this is enabled, zero or one baselines should be specified for the check operation.
+        By default, thresholds are checked comparing two baselines, or a baseline and a benchmark run.
+        """)
+    var checkAbsoluteThresholds = false
+
     var debug = false
 
     func shouldRunBenchmark(_ name: String) throws -> Bool {
@@ -54,14 +81,12 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
         return try filter.isEmpty || filter.contains(where: { try name.wholeMatch(of: Regex($0)) != nil })
     }
 
-    public static func setupBenchmarkRunner() async {
+    public static func setupBenchmarkRunner(registerBenchmarks: () -> Void) async {
         do {
-            var command = try parseAsRoot()
-            if var asyncCommand = command as? AsyncParsableCommand {
-                try await asyncCommand.run()
-            } else {
-                try command.run()
-            }
+            var command = Self.parseOrExit()
+            Benchmark.checkAbsoluteThresholds = command.checkAbsoluteThresholds
+            registerBenchmarks()
+            try await command.run()
         } catch {
             exit(withError: error)
         }
@@ -69,6 +94,9 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
 
     // swiftlint:disable cyclomatic_complexity function_body_length
     public mutating func run() async throws {
+        // Flush stdout so we see any failures clearly
+        setbuf(stdout, nil)
+
         // We just run everything in debug mode to simplify workflow with debuggers/profilers
         if inputFD == nil, outputFD == nil {
             debug = true
