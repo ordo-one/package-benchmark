@@ -173,13 +173,13 @@ final class BenchmarkResultTests: XCTestCase {
         firstStatistics.add(200)
 
         let secondStatistics = Statistics()
-        secondStatistics.add(0)
-        secondStatistics.add(126)
+        secondStatistics.add(5)
+        secondStatistics.add(136)
         secondStatistics.add(160)
         secondStatistics.add(175)
         secondStatistics.add(190)
         secondStatistics.add(199)
-        secondStatistics.add(200)
+        secondStatistics.add(210)
 
         let relative: BenchmarkThresholds.RelativeThresholds = [.p0: 0.0,
                                                                 .p25: 0.0,
@@ -260,13 +260,13 @@ final class BenchmarkResultTests: XCTestCase {
         firstStatistics.add(200)
 
         let secondStatistics = Statistics()
-        secondStatistics.add(0)
-        secondStatistics.add(126)
+        secondStatistics.add(5)
+        secondStatistics.add(136)
         secondStatistics.add(160)
         secondStatistics.add(175)
         secondStatistics.add(190)
         secondStatistics.add(199)
-        secondStatistics.add(200)
+        secondStatistics.add(210)
 
         let thirdStatistics = Statistics()
         thirdStatistics.add(1_501)
@@ -314,19 +314,21 @@ final class BenchmarkResultTests: XCTestCase {
                                           thresholds: .default,
                                           statistics: thirdStatistics)
 
-        var (betterOrEqual, failures) = secondResult.betterResultsOrEqual(than: firstResult, thresholds: absoluteThresholds)
+        var (betterOrEqual, failures) = secondResult.betterResultsOrEqual(than: firstResult,
+                                                                          thresholds: absoluteThresholds)
         XCTAssertFalse(betterOrEqual)
-        XCTAssertFalse(failures.isEmpty)
+        XCTAssertFalse(failures.isEmpty, "Failures: \(failures)")
 
-        (betterOrEqual, _) = firstResult.betterResultsOrEqual(than: secondResult, thresholds: absoluteThresholds)
+        (betterOrEqual, failures) = firstResult.betterResultsOrEqual(than: secondResult,
+                                                                     thresholds: absoluteThresholds)
         XCTAssert(betterOrEqual)
         XCTAssert(failures.isEmpty)
 
         Benchmark.checkAbsoluteThresholds = true
-        let absoluteFailures = thirdResult.failsAbsoluteThresholdChecks(thresholds: absoluteThresholdsTwo,
-                                                                        name: "test",
-                                                                        target: "test")
-        XCTAssert(absoluteFailures.count > 4)
+        failures = thirdResult.failsAbsoluteThresholdChecks(thresholds: absoluteThresholdsTwo,
+                                                            name: "test",
+                                                            target: "test")
+        XCTAssert(failures.count > 4)
     }
 
     func testBenchmarkResultDescriptions() throws {
