@@ -396,7 +396,7 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
                 }
             }
 
-            if var threshold = thresholds.absolute[percentile] {
+            if let threshold = thresholds.absolute[percentile] {
                 if reverseComparison ? -absoluteDifference > threshold : absoluteDifference > threshold {
                     violationDescriptions.append(ThresholdDeviation(name: name,
                                                                     target: target,
