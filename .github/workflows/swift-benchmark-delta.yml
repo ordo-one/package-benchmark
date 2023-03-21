@@ -50,7 +50,7 @@ jobs:
       - name: Run benchmarks for branch 'main'
         if: ${{ env.hasBenchmark == '1' }}
         run: |
-          swift package --allow-writing-to-directory .benchmarkBaselines/ benchmark update main --no-progress --quiet
+          swift package --allow-writing-to-directory .benchmarkBaselines/ benchmark baseline update main --no-progress --quiet
       - name: Compare PR and main
         if: ${{ env.hasBenchmark == '1' }}
         id: benchmark
