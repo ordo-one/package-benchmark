@@ -193,7 +193,7 @@ import PackagePlugin
         }
 
         if checkAbsoluteThresholds > 0 {
-            args.append(contentsOf: ["--check-absolute"])
+            args.append(contentsOf: ["--check-absolute-thresholds"])
         }
 
         if scale > 0 {

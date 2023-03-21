@@ -268,7 +268,7 @@ struct BenchmarkTool: AsyncParsableCommand {
                               "--quiet", noProgress.description]
 
         if checkAbsoluteThresholds {
-            args.append("--check-absolute")
+            args.append("--check-absolute-thresholds")
         }
 
         inputFD = fromChild.readEnd.rawValue
