@@ -148,7 +148,7 @@ extension BenchmarkTool {
             metrics.forEach { metric in
                 width = max(width, metric.description.count)
             }
-            width = min(maxDescriptionWidth, width + 5) // add 5 for ' (M)'
+            width = min(maxDescriptionWidth, width + " (M)".count)
 
             baseline.targets.forEach { target in
                 let separator = String(repeating: "=", count: "\(target)".count)
