@@ -285,11 +285,11 @@ final class BenchmarkResultTests: XCTestCase {
         let absoluteThresholds = BenchmarkThresholds(absolute: absolute)
 
         let absoluteTwo: BenchmarkThresholds.AbsoluteThresholds = [.p0: 1_500,
-                                                                .p25: 1_500,
-                                                                .p50: 1_500,
-                                                                .p75: 1_500,
-                                                                .p90: 1_500,
-                                                                .p99: 1_500]
+                                                                   .p25: 1_500,
+                                                                   .p50: 1_500,
+                                                                   .p75: 1_500,
+                                                                   .p90: 1_500,
+                                                                   .p99: 1_500]
 
         let absoluteThresholdsTwo = BenchmarkThresholds(absolute: absoluteTwo)
 
@@ -316,11 +316,11 @@ final class BenchmarkResultTests: XCTestCase {
 
         var (betterOrEqual, failures) = secondResult.betterResultsOrEqual(than: firstResult, thresholds: absoluteThresholds)
         XCTAssertFalse(betterOrEqual)
-        XCTAssert(failures.count > 0)
+        XCTAssertFalse(failures.isEmpty)
 
         (betterOrEqual, _) = firstResult.betterResultsOrEqual(than: secondResult, thresholds: absoluteThresholds)
         XCTAssert(betterOrEqual)
-        XCTAssert(failures.count == 0)
+        XCTAssert(failures.isEmpty)
 
         Benchmark.checkAbsoluteThresholds = true
         let absoluteFailures = thirdResult.failsAbsoluteThresholdChecks(thresholds: absoluteThresholdsTwo,
