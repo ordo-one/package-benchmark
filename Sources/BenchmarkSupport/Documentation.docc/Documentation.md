@@ -1,4 +1,7 @@
-# ``Benchmark``
+# ``BenchmarkSupport``
+@Metadata {
+    @DisplayName("Benchmark")
+}
 
 Benchmark allows you to easily create sophisticated Swift performance benchmarks
 
@@ -40,14 +43,17 @@ The Benchmark infrastructure captures _all_ samples for a test run, so you can r
 - <doc:CreatingAndComparingBaselines>
 - <doc:ComparingBenchmarksCI>
 - <doc:ExportingBenchmarks>
-- ``Benchmark/Benchmark``
+
+### Defining a Benchmark
+
+- ``Benchmark``
 
 ### Configuring Benchmarks
 
-- ``Benchmark/Benchmark/Configuration-swift.struct``
-- ``Benchmark/BenchmarkMetric``
-- ``Benchmark/BenchmarkTimeUnits``
-- ``Benchmark/BenchmarkScalingFactor``
+- ``Benchmark/Configuration-swift.struct``
+- ``BenchmarkMetric``
+- ``BenchmarkTimeUnits``
+- ``BenchmarkScalingFactor``
 
 ### Supporting Functions
 
