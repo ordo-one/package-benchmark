@@ -1,4 +1,4 @@
-# ``BenchmarkSupport/BenchmarkScalingFactor``
+# ``Benchmark/BenchmarkScalingFactor``
 
 ## Topics
 

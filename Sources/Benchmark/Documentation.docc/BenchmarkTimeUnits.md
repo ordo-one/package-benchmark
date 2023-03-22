@@ -1,4 +1,4 @@
-# ``BenchmarkSupport/BenchmarkTimeUnits``
+# ``Benchmark/BenchmarkTimeUnits``
 
 ## Topics
 

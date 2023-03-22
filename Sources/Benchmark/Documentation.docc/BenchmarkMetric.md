@@ -1,4 +1,4 @@
-# ``BenchmarkSupport/BenchmarkMetric``
+# ``Benchmark/BenchmarkMetric``
 
 ## Topics
 

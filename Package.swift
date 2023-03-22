@@ -63,7 +63,7 @@ let package = Package(
                 .product(name: "ExtrasJSON", package: "swift-extras-json"),
                 .product(name: "TextTable", package: "TextTable"),
                 "Statistics",
-                "BenchmarkSupport",
+                "Benchmark",
             ],
             path: "Plugins/BenchmarkTool"
         ),
@@ -99,9 +99,17 @@ let package = Package(
 
         // Benchmark package
         .target(
-            name: "BenchmarkSupport",
+            name: "Benchmark",
             dependencies: [
                 "Statistics",
+                .product(name: "ArgumentParser", package: "swift-argument-parser"),
+                .product(name: "ExtrasJSON", package: "swift-extras-json"),
+                .product(name: "SystemPackage", package: "swift-system"),
+                .product(name: "jemalloc", package: "package-jemalloc"),
+                .product(name: "DateTime", package: "package-datetime"),
+                .product(name: "Progress", package: "Progress.swift"),
+                .byNameItem(name: "CDarwinOperatingSystemStats", condition: .when(platforms: [.macOS])),
+                .byNameItem(name: "CLinuxOperatingSystemStats", condition: .when(platforms: [.linux])),
             ]
         ),
 
@@ -152,22 +160,6 @@ let package = Package(
             path: "Benchmarks/Histogram"
         ),
 
-        // Scaffolding to support benchmarks under the hood
-        .target(
-            name: "Benchmark",
-            dependencies: [
-                .product(name: "ArgumentParser", package: "swift-argument-parser"),
-                .product(name: "ExtrasJSON", package: "swift-extras-json"),
-                .product(name: "SystemPackage", package: "swift-system"),
-                .product(name: "jemalloc", package: "package-jemalloc"),
-                .product(name: "DateTime", package: "package-datetime"),
-                .product(name: "Progress", package: "Progress.swift"),
-                "Statistics",
-                "BenchmarkSupport",
-                .byNameItem(name: "CDarwinOperatingSystemStats", condition: .when(platforms: [.macOS])),
-                .byNameItem(name: "CLinuxOperatingSystemStats", condition: .when(platforms: [.linux])),
-            ]
-        ),
         .testTarget(
             name: "BenchmarkTests",
             dependencies: ["Benchmark"]

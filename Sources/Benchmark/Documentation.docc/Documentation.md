@@ -1,7 +1,4 @@
-# ``BenchmarkSupport``
-@Metadata {
-    @DisplayName("Benchmark")
-}
+# ``Benchmark``
 
 Benchmark allows you to easily create sophisticated Swift performance benchmarks
 
@@ -46,7 +43,7 @@ The Benchmark infrastructure captures _all_ samples for a test run, so you can r
 
 ### Defining a Benchmark
 
-- ``Benchmark``
+- ``Benchmark/Benchmark``
 
 ### Configuring Benchmarks
 

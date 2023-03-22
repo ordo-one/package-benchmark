@@ -17,7 +17,6 @@
 #endif
 
 import ArgumentParser
-@_exported import BenchmarkSupport
 @_exported import Statistics
 
 #if swift(>=5.8)

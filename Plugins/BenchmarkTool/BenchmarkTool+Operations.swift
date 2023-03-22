@@ -17,7 +17,7 @@
     #error("Unsupported Platform")
 #endif
 
-import BenchmarkSupport
+import Benchmark
 import ExtrasJSON
 import SystemPackage
 import TextTable
