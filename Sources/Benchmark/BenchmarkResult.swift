@@ -10,8 +10,6 @@
 
 // swiftlint: disable file_length identifier_name
 
-import Statistics
-
 #if swift(>=5.8)
 @_documentation(visibility: internal)
 #endif

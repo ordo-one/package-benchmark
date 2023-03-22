@@ -11,7 +11,6 @@
 // swiftlint disable: file_length type_body_length
 import ArgumentParser
 import ExtrasJSON
-@_exported import Statistics
 import SystemPackage
 
 // For test dependency injection

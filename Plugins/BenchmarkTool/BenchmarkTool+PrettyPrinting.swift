@@ -9,7 +9,6 @@
 //
 
 import Benchmark
-import Statistics
 import SystemPackage
 import TextTable
 

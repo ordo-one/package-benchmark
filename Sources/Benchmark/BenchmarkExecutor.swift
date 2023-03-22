@@ -10,7 +10,6 @@
 
 import DateTime
 import Progress
-import Statistics
 
 internal final class BenchmarkExecutor {
     internal init(quiet: Bool = false) {
