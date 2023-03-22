@@ -74,7 +74,7 @@ The benchmark plugin uses this directory combined with the executable target inf
 
 For each executable target, include dependencies on both `Benchmark` (supporting framework) and `BenchmarkPlugin` (boilerplate generator) from `package-benchmark`.
 
-The following example shows an benchmark suite named `My-Benchmark` with the required dependency on `BenchmarkSupport` and the source files for the benchmark that reside in the directory `Benchmarks/My-Benchmark`:
+The following example shows an benchmark suite named `My-Benchmark` with the required dependency on `Benchmark` and the source files for the benchmark that reside in the directory `Benchmarks/My-Benchmark`:
 
 ```
 .executableTarget(

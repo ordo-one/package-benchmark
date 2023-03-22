@@ -12,6 +12,9 @@
 
 import Statistics
 
+#if swift(>=5.8)
+@_documentation(visibility: internal)
+#endif
 public extension BenchmarkResult {
     enum Percentile: Int, Codable {
         case p0 = 0

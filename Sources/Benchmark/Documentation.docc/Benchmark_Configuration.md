@@ -1,4 +1,4 @@
-# ``BenchmarkSupport/Benchmark/Configuration-swift.struct``
+# ``Benchmark/Benchmark/Configuration-swift.struct``
 
 ## Topics
 

@@ -8,7 +8,7 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 //
 
-import BenchmarkSupport
+import Benchmark
 import Statistics
 import SystemPackage
 import TextTable

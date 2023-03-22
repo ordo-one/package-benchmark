@@ -9,7 +9,7 @@
 //
 
 /// The  stats that the OperatingSystemStatsProducer can provide
-public struct OperatingSystemStats {
+internal struct OperatingSystemStats {
     /// CPU user space time spent for running the test
     var cpuUser: Int = 0
     /// CPU system time spent for running the test

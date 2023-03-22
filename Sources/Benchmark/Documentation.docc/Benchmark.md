@@ -1,4 +1,4 @@
-# ``BenchmarkSupport/Benchmark``
+# ``Benchmark/Benchmark``
 
 ## Topics
 
@@ -6,10 +6,10 @@
 
 ### Creating Benchmarks
 
-- ``Benchmark/init(_:configuration:closure:)-3tbq``
-- ``Benchmark/init(_:configuration:closure:)-4rphh``
-- ``Benchmark/init(_:configuration:closure:)-3fdz8``
-- ``Benchmark/init(_:configuration:closure:)-1s1pj``
+- ``Benchmark/Benchmark/init(_:configuration:closure:)-5ra7m``
+- ``Benchmark/Benchmark/init(_:configuration:closure:)-7wcl8``
+- ``Benchmark/Benchmark/init(_:configuration:closure:)-699lk``
+- ``Benchmark/Benchmark/init(_:configuration:closure:)-48cka``
 
 ### Configuring Benchmarks
 
