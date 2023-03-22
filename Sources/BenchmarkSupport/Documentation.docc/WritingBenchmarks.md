@@ -4,7 +4,7 @@ Create benchmark suites to run and measure your benchmarks.
 
 ## Overview
 
-Create benchmarks declaratively using the ``Benchmark/Benchmark`` initalizer, specifying configuration and the work to be measured in a trailing closure.
+Create benchmarks declaratively using the ``Benchmark`` initalizer, specifying configuration and the work to be measured in a trailing closure.
 
 The minimal code for a benchmark suite running with a default configuration would be:
 
@@ -31,7 +31,7 @@ import Benchmark
 let benchmarks = {
     let customThreshold = BenchmarkThresholds(
         relative: [.p50: 5.0, .p75: 10.0],
-        absolute: [.p25: 10, .p50: 15])
+        absolute: [.p25: .kilo(10), .p90: .mega(1])
     let customThreshold2 = BenchmarkThresholds(
         relative: BenchmarkThresholds.Relative.strict)
     let customThreshold3 = BenchmarkThresholds(
@@ -73,7 +73,7 @@ let benchmarks = {
 }
 ```
 
-The ``Benchmark/Benchmark`` initializer includes options to allow you to tune how the benchmark should be run, as well as what metrics and thresholds should be captured.
+The ``Benchmark`` initializer includes options to allow you to tune how the benchmark should be run, as well as what metrics and thresholds should be captured.
 These benchmark options are applied through the ``Benchmark/configuration-swift.property`` parameter.
 
 <!-- I think there's a way to reference code in source control/GitHub that may be appropriate here. -->
@@ -148,13 +148,13 @@ Benchmark("Foundation Date()", configuration: .init(scalingFactor: .mega)) { ben
 
 ### Metrics
 
-Benchmark supports a wide range of measurements defined by ``Benchmark/BenchmarkMetric``.
+Benchmark supports a wide range of measurements defined by ``BenchmarkMetric``.
 
-Benchmark provides a number of convenience methods for commonly useful sets of metrics, for example ``Benchmark/BenchmarkMetric/memory`` and - ``Benchmark/BenchmarkMetric/all``.
+Benchmark provides a number of convenience methods for commonly useful sets of metrics, for example ``BenchmarkMetric/memory`` and - ``BenchmarkMetric/all``.
 
 Metrics can also be specified explicitly, for example `[.throughput, .wallClock]`, or even by combining the default set with individual metrics.
 
-Benchmark also supports completely custom metric measurements using ``Benchmark/Benchmark/measurement(_:_:)`` if there are specific things you want to capture:
+Benchmark also supports completely custom metric measurements using ``Benchmark/measurement(_:_:)`` if there are specific things you want to capture:
 
 ```swift
 ...

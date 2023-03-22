@@ -373,3 +373,30 @@ public extension Benchmark {
         }
     }
 }
+
+// This is an additional convenience duplicating the free standing function blackHole() for those cases where
+// another module happens to define it, as we have a type clash between module name and type name and otherwise
+// the user would need to do `import func Benchmark.blackHole` which isn't that obvious - thus this duplication.
+public extension Benchmark {
+    /// A function to foil compiler optimizations that would otherwise optimize out code you want to benchmark.
+    ///
+    /// The function wraps another object or function, does nothing, and returns.
+    /// If you want to benchmark the time is takes to create an instance and you don't maintain a reference to it, the compiler may optimize it out entirely, thinking it is unused.
+    /// To prevent the compiler from removing the code you want to measure, wrap the creation of the instance with `blackHole`.
+    /// For example, the following code benchmarks the time it takes to create an instance of `Date`, and wraps the creation of the instance to prevent the compiler from optimizing it away:
+    ///
+    /// ```swift
+    /// Benchmark("Foundation Date()",
+    ///     configuration: .init(
+    ///         metrics: [.throughput, .wallClock],
+    ///         scalingFactor: .mega)
+    /// ) { benchmark in
+    ///     for _ in benchmark.scaledIterations {
+    ///         Benchmark.blackHole(Date())
+    ///     }
+    /// }
+    /// ```
+    @inline(never)
+    static func blackHole(_: some Any) {}
+}
+

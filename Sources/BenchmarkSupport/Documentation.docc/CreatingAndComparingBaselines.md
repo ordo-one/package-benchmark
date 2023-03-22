@@ -31,3 +31,9 @@ The following command compares a baseline named `alpha` against baseline named `
 swift package benchmark baseline compare alpha beta
 ```
 
+### Comparing a test run against hardcoded thresholds
+
+The following will run all benchmarks and compare them against a fixed absolute threshold (as defined by the benchmark setup code)
+```bash
+swift package benchmark baseline check --check-absolute
+```
