@@ -12,7 +12,7 @@
 import Histogram
 import Numerics
 
-/// A type that provides distribution / percentile calculations of latency measurements
+// A type that provides distribution / percentile calculations of latency measurements
 #if swift(>=5.8)
 @_documentation(visibility: internal)
 #endif
