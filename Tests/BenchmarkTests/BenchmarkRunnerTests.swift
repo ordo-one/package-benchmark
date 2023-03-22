@@ -9,7 +9,6 @@
 ///
 
 @testable import Benchmark
-@testable import Benchmark
 import XCTest
 
 final class BenchmarkRunnerTests: XCTestCase, BenchmarkRunnerReadWrite {
