@@ -18,7 +18,7 @@ import jemalloc
 #if swift(>=5.8)
     @_documentation(visibility: internal)
 #endif
-internal class MallocStatsProducer {
+class MallocStatsProducer {
     var threadCacheMIB: [size_t]
     var epochMIB: [size_t]
 //    var smallNMallocMIB: [size_t]

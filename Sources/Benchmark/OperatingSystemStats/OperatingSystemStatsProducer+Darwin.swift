@@ -13,7 +13,7 @@
     import Darwin
     import Dispatch
 
-    internal class OperatingSystemStatsProducer {
+    class OperatingSystemStatsProducer {
         var nsPerMachTick: Double
         var nsPerSchedulerTick: Int
 
