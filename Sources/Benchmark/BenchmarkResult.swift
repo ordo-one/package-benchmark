@@ -10,8 +10,6 @@
 
 // swiftlint: disable file_length identifier_name
 
-import Statistics
-
 #if swift(>=5.8)
 @_documentation(visibility: internal)
 #endif
@@ -125,6 +123,7 @@ public extension BenchmarkScalingFactor {
 #if swift(>=5.8)
     @_documentation(visibility: internal)
 #endif
+/// Internal type that will be hidden from documentation when upgrading doc generation to Swift 5.8+
 public struct BenchmarkResult: Codable, Comparable, Equatable {
     public init(metric: BenchmarkMetric,
                 timeUnits: BenchmarkTimeUnits,

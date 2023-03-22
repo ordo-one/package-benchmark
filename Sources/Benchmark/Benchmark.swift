@@ -9,7 +9,6 @@
 //
 
 import Dispatch
-import Statistics
 
 /// Defines a benchmark
 public final class Benchmark: Codable, Hashable {

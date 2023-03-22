@@ -12,9 +12,11 @@
 // Internal Benchmark framework definitions used for communication with host process etc
 
 // Command sent from benchmark runner to the benchmark under measurement
+
 #if swift(>=5.8)
     @_documentation(visibility: internal)
 #endif
+/// Internal type that will be hidden from documentation when upgrading doc generation to Swift 5.8+
 public enum BenchmarkCommandRequest: Codable {
     case list
     case run(benchmark: Benchmark)
@@ -25,6 +27,7 @@ public enum BenchmarkCommandRequest: Codable {
 #if swift(>=5.8)
     @_documentation(visibility: internal)
 #endif
+/// Internal type that will be hidden from documentation when upgrading doc generation to Swift 5.8+
 public enum BenchmarkCommandReply: Codable {
     case list(benchmark: Benchmark)
     case ready

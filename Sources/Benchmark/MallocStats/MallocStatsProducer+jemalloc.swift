@@ -18,7 +18,7 @@ import jemalloc
 #if swift(>=5.8)
     @_documentation(visibility: internal)
 #endif
-public class MallocStatsProducer {
+class MallocStatsProducer {
     var threadCacheMIB: [size_t]
     var epochMIB: [size_t]
 //    var smallNMallocMIB: [size_t]
@@ -59,7 +59,7 @@ public class MallocStatsProducer {
 
     // Basically just set up a number of cached MIB structures for
     // more efficient queries later of malloc statistics.
-    public init() {
+    init() {
         func setupMIB(name: String) -> [size_t] {
             precondition(!name.split(separator: ".").isEmpty, "setupMIB with 0 count")
             var mib = [size_t](repeating: 0, count: name.split(separator: ".").count)

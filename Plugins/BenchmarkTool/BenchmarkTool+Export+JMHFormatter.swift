@@ -14,7 +14,6 @@
 import Benchmark
 import ExtrasJSON
 import Numerics
-import Statistics
 
 extension JMHPrimaryMetric {
     init(_ result: BenchmarkResult) {
@@ -46,7 +45,8 @@ extension JMHPrimaryMetric {
 
         self.score = Statistics.roundToDecimalplaces(score / Double(factor), 3)
         scoreError = Statistics.roundToDecimalplaces(error / Double(factor), 3)
-        scoreConfidence = [Statistics.roundToDecimalplaces(score - error) / Double(factor), Statistics.roundToDecimalplaces(score + error) / Double(factor)]
+        scoreConfidence = [Statistics.roundToDecimalplaces(score - error) / Double(factor),
+                           Statistics.roundToDecimalplaces(score + error) / Double(factor)]
         scorePercentiles = percentileValues
         if result.metric.countable {
             scoreUnit = result.metric == .throughput ? "# / s" : "#"
