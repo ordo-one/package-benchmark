@@ -16,6 +16,7 @@ import Numerics
 #if swift(>=5.8)
 @_documentation(visibility: internal)
 #endif
+/// Internal type that will be hidden from documentation when upgrading doc generation to Swift 5.8+
 public final class Statistics: Codable {
     public static let defaultMaximumMeasurement = 1_000_000_000 // 1 second in nanoseconds
     public static let defaultPercentilesToCalculate = [0.0, 25.0, 50.0, 75.0, 90.0, 99.0, 100.0]
