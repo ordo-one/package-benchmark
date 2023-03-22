@@ -29,12 +29,30 @@ Benchmark is suitable for both smaller ad-hoc benchmarks focusing on execution t
 Documentation on how to use Benchmark in your Swift package can be [viewed online](https://swiftpackageindex.com/ordo-one/package-benchmark/main/documentation/benchmark) (hosted by the Swift Package Index, thanks!) or inside Xcode using `Build Documentation`. 
 Additionally the command plugin provides help information if you run `swift package benchmark help` from the command line.
 
-## Output
+## Adding dependencies and getting started
 
-The default text output from Benchmark is oriented around [the five-number summary](https://en.wikipedia.org/wiki/Five-number_summary) percentiles, plus the last decile (`p90`) and the last percentile (`p99`) - it's thus a variation of a [seven-figure summary](https://en.wikipedia.org/wiki/Seven-number_summary) with the focus on the 'bad' end of results (as those are what we typically care about addressing).
-We've found that focusing on percentiles rather than average or standard deviations, is more useful for a wider range of benchmark measurements and gives a deeper understanding of the results.
-Percentiles allows for a consistent way of expressing benchmark results of both throughput and latency measurements (which typically do **not** have a standardized distribution, being almost always multi-modal in nature).
-This multi-modal nature of the latency measurements leads to the common statistical measures of mean and standard deviation being potentially misleading.
+### Add a package dependency to Package.swift
+To add the dependency on Benchmark, add a dependency to your package:
+```swift
+.package(url: "https://github.com/ordo-one/package-benchmark", .upToNextMajor(from: "1.0.0")),
+```
+
+### Add benchmark exectuable targets
+Create an executable target in Package.swift for each benchmark suite you want to measure.
+The source for all benchmarks must reside in a directory named `Benchmarks` in the root of your swift package.
+The benchmark plugin uses this directory combined with the executable target information to automatically discover and run your benchmarks.
+For each executable target, include dependencies on both `Benchmark` (supporting framework) and `BenchmarkPlugin` (boilerplate generator) from package-benchmark.
+The following example shows an benchmark suite named `My-Benchmark` with the required dependency on `Benchmark` and the source files for the benchmark that reside in the directory `Benchmarks/My-Benchmark`:
+```swift
+.executableTarget(
+    name: "My-Benchmark",
+    dependencies: [
+        .product(name: "Benchmark", package: "package-benchmark"),
+        .product(name: "BenchmarkPlugin", package: "package-benchmark"),
+    ],
+    path: "Benchmarks/My-Benchmark"
+),
+```
 
 ## Writing benchmarks
 There are [documentation available](https://swiftpackageindex.com/ordo-one/package-benchmark/main/documentation/benchmark/writingbenchmarks) as well as a [a sample project](https://github.com/ordo-one/package-benchmark-samples) using various aspects of this package in practice.
@@ -100,7 +118,14 @@ Using [jmh.morethan.io](https://jmh.morethan.io)
 
 <img width="1482" alt="image" src="https://user-images.githubusercontent.com/8501048/225313559-33014755-797f-4ddf-b536-24c1a618f271.png">
 
-### API and file format stability
+## Output
+
+The default text output from Benchmark is oriented around [the five-number summary](https://en.wikipedia.org/wiki/Five-number_summary) percentiles, plus the last decile (`p90`) and the last percentile (`p99`) - it's thus a variation of a [seven-figure summary](https://en.wikipedia.org/wiki/Seven-number_summary) with the focus on the 'bad' end of results (as those are what we typically care about addressing).
+We've found that focusing on percentiles rather than average or standard deviations, is more useful for a wider range of benchmark measurements and gives a deeper understanding of the results.
+Percentiles allows for a consistent way of expressing benchmark results of both throughput and latency measurements (which typically do **not** have a standardized distribution, being almost always multi-modal in nature).
+This multi-modal nature of the latency measurements leads to the common statistical measures of mean and standard deviation being potentially misleading.
+
+## API and file format stability
 The API will be deemed stable as of `1.0.0` and follows semantical versioning for future releases. 
 
 The export file formats that are externally defined (e.g. JMH or HDR Histogram formats) will follow the upstream definitions if they change, but have been quite stable for several years. 
