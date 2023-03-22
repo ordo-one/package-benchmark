@@ -110,7 +110,6 @@ public final class Benchmark: Codable, Hashable {
                                                                   thresholds: nil)
 
     internal static var testSkipBenchmarkRegistrations = false // true in test to avoid bench registration fail
-
     var measurementCompleted = false // Keep track so we skip multiple 'end of measurement'
 
     enum CodingKeys: String, CodingKey {
@@ -399,4 +398,3 @@ public extension Benchmark {
     @inline(never)
     static func blackHole(_: some Any) {}
 }
-
