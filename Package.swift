@@ -1,6 +1,11 @@
 // swift-tools-version: 5.7
 
 import PackageDescription
+import class Foundation.ProcessInfo
+
+// If the environment variable BENCHMARK_DISABLE_JEMALLOC is set, we'll build the package without Jemalloc support
+
+let disableJemalloc = ProcessInfo.processInfo.environment["BENCHMARK_DISABLE_JEMALLOC"]
 
 let package = Package(
     name: "Benchmark",
@@ -19,7 +24,6 @@ let package = Package(
         .package(url: "https://github.com/swift-extras/swift-extras-json", .upToNextMajor(from: "0.6.0")),
 //        .package(url: "https://github.com/SwiftPackageIndex/SPIManifest", from: "0.12.0"),
         .package(url: "https://github.com/ordo-one/TextTable", .upToNextMajor(from: "0.0.1")),
-        .package(url: "https://github.com/ordo-one/package-jemalloc", .upToNextMajor(from: "1.0.0")),
         .package(url: "https://github.com/ordo-one/package-datetime", .upToNextMajor(from: "0.0.0")),
         .package(url: "https://github.com/ordo-one/package-histogram", .upToNextMajor(from: "0.0.1")),
         .package(url: "https://github.com/ordo-one/Progress.swift", .upToNextMajor(from: "1.0.0")),
@@ -85,22 +89,6 @@ let package = Package(
             path: "Plugins/BenchmarkHelpGenerator"
         ),
 
-        // Benchmark package
-        .target(
-            name: "Benchmark",
-            dependencies: [
-                .product(name: "Histogram", package: "package-histogram"),
-                .product(name: "ArgumentParser", package: "swift-argument-parser"),
-                .product(name: "ExtrasJSON", package: "swift-extras-json"),
-                .product(name: "SystemPackage", package: "swift-system"),
-                .product(name: "jemalloc", package: "package-jemalloc"),
-                .product(name: "DateTime", package: "package-datetime"),
-                .product(name: "Progress", package: "Progress.swift"),
-                .byNameItem(name: "CDarwinOperatingSystemStats", condition: .when(platforms: [.macOS])),
-                .byNameItem(name: "CLinuxOperatingSystemStats", condition: .when(platforms: [.linux])),
-            ]
-        ),
-
         // Getting OS specific information
         .target(
             name: "CDarwinOperatingSystemStats",
@@ -154,3 +142,37 @@ let package = Package(
         ),
     ]
 )
+
+if let disableJemalloc, disableJemalloc != "false", disableJemalloc != "0" {
+    package.targets += [
+        .target(
+            name: "Benchmark",
+            dependencies: [
+                .product(name: "Histogram", package: "package-histogram"),
+                .product(name: "ArgumentParser", package: "swift-argument-parser"),
+                .product(name: "ExtrasJSON", package: "swift-extras-json"),
+                .product(name: "SystemPackage", package: "swift-system"),
+                .product(name: "DateTime", package: "package-datetime"),
+                .product(name: "Progress", package: "Progress.swift"),
+                .byNameItem(name: "CDarwinOperatingSystemStats", condition: .when(platforms: [.macOS])),
+                .byNameItem(name: "CLinuxOperatingSystemStats", condition: .when(platforms: [.linux])),
+            ]
+        )]
+} else {
+    package.dependencies += [.package(url: "https://github.com/ordo-one/package-jemalloc", .upToNextMajor(from: "1.0.0"))]
+    package.targets += [
+        .target(
+            name: "Benchmark",
+            dependencies: [
+                .product(name: "Histogram", package: "package-histogram"),
+                .product(name: "ArgumentParser", package: "swift-argument-parser"),
+                .product(name: "ExtrasJSON", package: "swift-extras-json"),
+                .product(name: "SystemPackage", package: "swift-system"),
+                .product(name: "jemalloc", package: "package-jemalloc"),
+                .product(name: "DateTime", package: "package-datetime"),
+                .product(name: "Progress", package: "Progress.swift"),
+                .byNameItem(name: "CDarwinOperatingSystemStats", condition: .when(platforms: [.macOS])),
+                .byNameItem(name: "CLinuxOperatingSystemStats", condition: .when(platforms: [.linux])),
+            ]
+        )]
+}

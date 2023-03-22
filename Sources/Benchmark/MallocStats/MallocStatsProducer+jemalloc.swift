@@ -9,6 +9,8 @@
 //
 
 import ExtrasJSON
+
+#if canImport(jemalloc)
 import jemalloc
 
 // We currently register a number of MIB:s that aren't in use that
@@ -165,3 +167,17 @@ class MallocStatsProducer {
         return carrier.data
     }
 }
+
+#else
+
+// stub if no jemalloc available
+class MallocStatsProducer {
+    func makeMallocStats() -> MallocStats {
+        return MallocStats(mallocCountTotal: 0,
+                           mallocCountSmall: 0,
+                           mallocCountLarge: 0,
+                           allocatedResidentMemory: 0)
+    }
+}
+
+#endif

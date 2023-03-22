@@ -16,11 +16,19 @@ After having done those, running your benchmarks are as simple as running `swift
 
 Benchmark requires Swift 5.7 support as it uses Regex and Duration types introduced with the `macOS 13` runtime, most versions of Linux will work as long as Swift 5.7+ is used. 
 
-Benchmark also depends and needs the [jemalloc](https://jemalloc.net) memory allocation library, which is used by the Benchmark infrastructure to capture memory allocation statistics, as `jemalloc` provides a rich programmatic API for extracting memory allocation statistics at runtime. 
+Benchmark also by default depends on and uses the [jemalloc](https://jemalloc.net) memory allocation library, which is used by the Benchmark infrastructure to capture memory allocation statistics.
 
-The Benchmark package requires you to install jemalloc on any machine used for benchmarking. 
+For platforms where `jemalloc` isn't available it's possible to build the Benchmark package without a `jemalloc` dependency by setting the environment variable BENCHMARK_DISABLE_JEMALLOC to any value except `false` or `0`.
 
-If you want to avoid adding the `jemalloc` dependency to your project, the recommended approach is to embed a separate Swift project in a subdirectory that uses your project, then the dependency on `jemalloc` is contained to that subproject only.
+E.g. to run the benchmark on the command line without memory allocation stats could look like:
+
+```bash
+BENCHMARK_DISABLE_JEMALLOC=true swift package benchmark
+```
+
+The Benchmark package requires you to install jemalloc on any machine used for benchmarking if you want malloc statistics. 
+
+If you want to avoid adding the `jemalloc` dependency to your main project while still getting malloc statistics when benchmarking, the recommended approach is to embed a separate Swift project in a subdirectory that uses your project, then the dependency on `jemalloc` is contained to that subproject only.
 
 #### Installing `jemalloc` on macOS
 
