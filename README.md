@@ -8,7 +8,7 @@
 
 # Benchmark 
 
-Benchmark allows you to easily create sophisticated Swift performance benchmarks
+[Benchmark](https://swiftpackageindex.com/ordo-one/package-benchmark/documentation/benchmark) allows you to easily create sophisticated Swift performance benchmarks
 
 ## Overview
 
