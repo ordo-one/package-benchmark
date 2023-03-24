@@ -8,22 +8,22 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 //
 
-import SwiftRuntimeHooks
 import Atomics
+import SwiftRuntimeHooks
 
+// swiftlint:disable prefer_self_in_static_references
 class ARCStatsProducer {
     typealias SwiftRuntimeHook = @convention(c) (UnsafeRawPointer?, UnsafeMutableRawPointer?) -> Void
 
     static var retainCount: UnsafeAtomic<Int> = .create(0)
     static var releaseCount: UnsafeAtomic<Int> = .create(0)
 
-    // TODO: Review orderings used
     func hook() {
-        let retainHook: SwiftRuntimeHook = { ptr, context in
+        let retainHook: SwiftRuntimeHook = { _, _ in
             ARCStatsProducer.retainCount.wrappingIncrement(ordering: .relaxed)
         }
 
-        let releaseHook: SwiftRuntimeHook = { ptr, context in
+        let releaseHook: SwiftRuntimeHook = { _, _ in
             ARCStatsProducer.releaseCount.wrappingIncrement(ordering: .relaxed)
         }
 
@@ -40,7 +40,7 @@ class ARCStatsProducer {
     }
 
     func makeARCStats() -> ARCStats {
-         ARCStats(retainCount: ARCStatsProducer.retainCount.load(ordering: .relaxed),
-                  releaseCount: ARCStatsProducer.releaseCount.load(ordering: .relaxed))
+        ARCStats(retainCount: ARCStatsProducer.retainCount.load(ordering: .relaxed),
+                 releaseCount: ARCStatsProducer.releaseCount.load(ordering: .relaxed))
     }
 }

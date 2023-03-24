@@ -14,7 +14,7 @@ import Numerics
 
 // A type that provides distribution / percentile calculations of latency measurements
 #if swift(>=5.8)
-@_documentation(visibility: internal)
+    @_documentation(visibility: internal)
 #endif
 /// Internal type that will be hidden from documentation when upgrading doc generation to Swift 5.8+
 public final class Statistics: Codable {

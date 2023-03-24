@@ -40,7 +40,6 @@ let benchmarks = {
         let numValues = 1_024 // so compiler can optimize modulo below
         let values = [UInt64]((0 ..< numValues).map { _ in UInt64.random(in: 100 ... 10_000) })
 
-
         for i in benchmark.scaledIterations {
             blackHole(histogram.record(values[i % numValues]))
         }

@@ -275,7 +275,7 @@ public extension BenchmarkMetric {
     }
 }
 
-// swiftlint:disable cyclomatic_complexity
+// swiftlint:disable cyclomatic_complexity function_body_length
 // As we can't have raw values and associated data we add this...
 #if swift(>=5.8)
     @_documentation(visibility: internal)

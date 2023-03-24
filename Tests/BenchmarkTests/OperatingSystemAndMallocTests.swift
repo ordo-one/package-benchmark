@@ -53,23 +53,23 @@ final class OperatingSystemAndMallocTests: XCTestCase {
         blackHole(operatingSystemStatsProducer.metricSupported(.writeBytesPhysical))
         blackHole(operatingSystemStatsProducer.metricSupported(.throughput))
     }
-    
-#if canImport(jemalloc)
-    func testMallocProducerLeaks() throws {
-        let mallocStatsProducer = MallocStatsProducer()
-        let startMallocStats = mallocStatsProducer.makeMallocStats()
 
-        for outerloop in 1 ... 100 {
-            blackHole(malloc(outerloop * 1_024))
+    #if canImport(jemalloc)
+        func testMallocProducerLeaks() throws {
+            let mallocStatsProducer = MallocStatsProducer()
+            let startMallocStats = mallocStatsProducer.makeMallocStats()
+
+            for outerloop in 1 ... 100 {
+                blackHole(malloc(outerloop * 1_024))
+            }
+
+            let stopMallocStats = mallocStatsProducer.makeMallocStats()
+
+            XCTAssertGreaterThanOrEqual(stopMallocStats.mallocCountTotal - startMallocStats.mallocCountTotal, 100)
+            XCTAssertGreaterThanOrEqual(stopMallocStats.allocatedResidentMemory - startMallocStats.allocatedResidentMemory,
+                                        100 * 1_024)
         }
-
-        let stopMallocStats = mallocStatsProducer.makeMallocStats()
-
-        XCTAssertGreaterThanOrEqual(stopMallocStats.mallocCountTotal - startMallocStats.mallocCountTotal, 100)
-        XCTAssertGreaterThanOrEqual(stopMallocStats.allocatedResidentMemory - startMallocStats.allocatedResidentMemory,
-                                    100 * 1_024)
-    }
-#endif
+    #endif
 
     func testARCStatsProducer() throws {
         let statsProducer = ARCStatsProducer()
@@ -80,10 +80,10 @@ final class OperatingSystemAndMallocTests: XCTestCase {
         let startStats = statsProducer.makeARCStats()
 
         for outerloop in 1 ... 100 {
-            var b = array
-            b.append(outerloop)
+            var arrayCopy = array
+            arrayCopy.append(outerloop)
             blackHole(array)
-            blackHole(b)
+            blackHole(arrayCopy)
         }
 
         let stopStats = statsProducer.makeARCStats()

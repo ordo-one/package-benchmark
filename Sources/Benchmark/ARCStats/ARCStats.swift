@@ -10,7 +10,7 @@
 
 /// The ARC stats the ARCStatsProducer can provide
 #if swift(>=5.8)
-@_documentation(visibility: internal)
+    @_documentation(visibility: internal)
 #endif
 
 internal struct ARCStats {

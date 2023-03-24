@@ -1,7 +1,7 @@
 // swift-tools-version: 5.7
 
-import PackageDescription
 import class Foundation.ProcessInfo
+import PackageDescription
 
 // If the environment variable BENCHMARK_DISABLE_JEMALLOC is set, we'll build the package without Jemalloc support
 let disableJemalloc = ProcessInfo.processInfo.environment["BENCHMARK_DISABLE_JEMALLOC"]
@@ -134,7 +134,7 @@ var dependencies: [PackageDescription.Target.Dependency] = [
 if let disableJemalloc, disableJemalloc != "false", disableJemalloc != "0" {
 } else {
     package.dependencies += [.package(url: "https://github.com/ordo-one/package-jemalloc", .upToNextMajor(from: "1.0.0"))]
-    dependencies += [ .product(name: "jemalloc", package: "package-jemalloc")]
+    dependencies += [.product(name: "jemalloc", package: "package-jemalloc")]
 }
 
 package.targets += [.target(name: "Benchmark", dependencies: dependencies)]
