@@ -11,11 +11,12 @@ import Benchmark
 import Histogram
 
 let benchmarks = {
-    Benchmark.defaultConfiguration = .init(scalingFactor: .mega,
+    let metrics = [.wallClock, .throughput] + BenchmarkMetric.memory + BenchmarkMetric.arc
+    Benchmark.defaultConfiguration = .init(metrics: metrics,
+                                           scalingFactor: .mega,
                                            maxDuration: .seconds(1),
                                            maxIterations: .kilo(1))
-    Benchmark("Record",
-              configuration: .init(metrics: [.wallClock, .throughput] + BenchmarkMetric.memory)) { benchmark in
+    Benchmark("Record") { benchmark in
         let maxValue: UInt64 = 1_000_000
 
         var histogram = Histogram<UInt64>(highestTrackableValue: maxValue, numberOfSignificantValueDigits: .three)
@@ -28,25 +29,27 @@ let benchmarks = {
         for i in benchmark.scaledIterations {
             blackHole(histogram.record(values[i % numValues]))
         }
+
+        benchmark.stopMeasurement()
     }
 
-    Benchmark("Record to autoresizing",
-              configuration: .init(metrics: [.wallClock, .throughput] + BenchmarkMetric.memory)) { benchmark in
+    Benchmark("Record to autoresizing") { benchmark in
+        benchmark.startMeasurement()
         var histogram = Histogram<UInt64>(numberOfSignificantValueDigits: .three)
 
         let numValues = 1_024 // so compiler can optimize modulo below
         let values = [UInt64]((0 ..< numValues).map { _ in UInt64.random(in: 100 ... 10_000) })
 
-        benchmark.startMeasurement()
 
         for i in benchmark.scaledIterations {
             blackHole(histogram.record(values[i % numValues]))
         }
+
+        benchmark.stopMeasurement()
     }
 
     Benchmark("ValueAtPercentile",
-              configuration: .init(metrics: [.wallClock, .throughput] + BenchmarkMetric.memory,
-                                   scalingFactor: .kilo)) { benchmark in
+              configuration: .init(scalingFactor: .kilo)) { benchmark in
         let maxValue: UInt64 = 1_000_000
 
         var histogram = Histogram<UInt64>(highestTrackableValue: maxValue, numberOfSignificantValueDigits: .three)
@@ -63,10 +66,12 @@ let benchmarks = {
         for i in benchmark.scaledIterations {
             blackHole(histogram.valueAtPercentile(percentiles[i % percentiles.count]))
         }
+
+        benchmark.stopMeasurement()
     }
 
     Benchmark("Mean",
-              configuration: .init(metrics: BenchmarkMetric.all, scalingFactor: .kilo)) { benchmark in
+              configuration: .init(scalingFactor: .kilo)) { benchmark in
         let maxValue: UInt64 = 1_000_000
 
         var histogram = Histogram<UInt64>(highestTrackableValue: maxValue, numberOfSignificantValueDigits: .three)
@@ -81,5 +86,7 @@ let benchmarks = {
         for _ in benchmark.scaledIterations {
             blackHole(histogram.mean)
         }
+
+        benchmark.stopMeasurement()
     }
 }

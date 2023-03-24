@@ -41,6 +41,12 @@
 - ``BenchmarkMetric/memoryLeaked``
 - ``BenchmarkMetric/allocatedResidentMemory``
 
+### Reference Counting (retain/release)
+
+- ``BenchmarkMetric/retainCount``
+- ``BenchmarkMetric/releaseCount``
+- ``BenchmarkMetric/retainReleaseDelta``
+
 ### Disk Metrics
 
 - ``BenchmarkMetric/readSyscalls``

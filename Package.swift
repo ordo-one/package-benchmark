@@ -4,7 +4,6 @@ import PackageDescription
 import class Foundation.ProcessInfo
 
 // If the environment variable BENCHMARK_DISABLE_JEMALLOC is set, we'll build the package without Jemalloc support
-
 let disableJemalloc = ProcessInfo.processInfo.environment["BENCHMARK_DISABLE_JEMALLOC"]
 
 let package = Package(
@@ -28,6 +27,7 @@ let package = Package(
         .package(url: "https://github.com/ordo-one/package-histogram", .upToNextMajor(from: "0.0.1")),
         .package(url: "https://github.com/ordo-one/Progress.swift", .upToNextMajor(from: "1.0.0")),
         .package(url: "https://github.com/apple/swift-docc-plugin", .upToNextMajor(from: "1.1.0")),
+        .package(url: "https://github.com/apple/swift-atomics", .upToNextMajor(from: "1.0.0")),
     ],
     targets: [
         // Plugins used by users of the package
@@ -105,38 +105,8 @@ let package = Package(
             path: "Platform/CLinuxOperatingSystemStats"
         ),
 
-        .target(name: "SwiftRuntimeHooks", dependencies: []),
-
-        // Benchmark of the benchmark package
-        .executableTarget(
-            name: "Basic",
-            dependencies: [
-                "Benchmark",
-                "BenchmarkPlugin"
-            ],
-            path: "Benchmarks/Basic"
-        ),
-
-        // Benchmark of the DateTime package (which can't depend on Benchmark as we'll get a circular dependency)
-        .executableTarget(
-            name: "BenchmarkDateTime",
-            dependencies: [
-                "Benchmark",
-                "BenchmarkPlugin"
-            ],
-            path: "Benchmarks/DateTime"
-        ),
-
-        // Benchmark of the Histogram package
-        .executableTarget(
-            name: "HistogramBenchmark",
-            dependencies: [
-                "Benchmark",
-                "BenchmarkPlugin",
-                .product(name: "Histogram", package: "package-histogram"),
-            ],
-            path: "Benchmarks/Histogram"
-        ),
+        // Hooks for ARC
+        .target(name: "SwiftRuntimeHooks"),
 
         .testTarget(
             name: "BenchmarkTests",
@@ -145,38 +115,65 @@ let package = Package(
     ]
 )
 
+// Add Benchmark target dynamically
+
+// Shared dependencies
+var dependencies: [PackageDescription.Target.Dependency] = [
+    .product(name: "Histogram", package: "package-histogram"),
+    .product(name: "ArgumentParser", package: "swift-argument-parser"),
+    .product(name: "ExtrasJSON", package: "swift-extras-json"),
+    .product(name: "SystemPackage", package: "swift-system"),
+    .product(name: "DateTime", package: "package-datetime"),
+    .product(name: "Progress", package: "Progress.swift"),
+    .byNameItem(name: "CDarwinOperatingSystemStats", condition: .when(platforms: [.macOS])),
+    .byNameItem(name: "CLinuxOperatingSystemStats", condition: .when(platforms: [.linux])),
+    .product(name: "Atomics", package: "swift-atomics"),
+    "SwiftRuntimeHooks",
+]
+
 if let disableJemalloc, disableJemalloc != "false", disableJemalloc != "0" {
-    package.targets += [
-        .target(
-            name: "Benchmark",
-            dependencies: [
-                .product(name: "Histogram", package: "package-histogram"),
-                .product(name: "ArgumentParser", package: "swift-argument-parser"),
-                .product(name: "ExtrasJSON", package: "swift-extras-json"),
-                .product(name: "SystemPackage", package: "swift-system"),
-                .product(name: "DateTime", package: "package-datetime"),
-                .product(name: "Progress", package: "Progress.swift"),
-                .byNameItem(name: "CDarwinOperatingSystemStats", condition: .when(platforms: [.macOS])),
-                .byNameItem(name: "CLinuxOperatingSystemStats", condition: .when(platforms: [.linux])),
-                "SwiftRuntimeHooks",
-            ]
-        )]
 } else {
     package.dependencies += [.package(url: "https://github.com/ordo-one/package-jemalloc", .upToNextMajor(from: "1.0.0"))]
-    package.targets += [
-        .target(
-            name: "Benchmark",
-            dependencies: [
-                .product(name: "Histogram", package: "package-histogram"),
-                .product(name: "ArgumentParser", package: "swift-argument-parser"),
-                .product(name: "ExtrasJSON", package: "swift-extras-json"),
-                .product(name: "SystemPackage", package: "swift-system"),
-                .product(name: "jemalloc", package: "package-jemalloc"),
-                .product(name: "DateTime", package: "package-datetime"),
-                .product(name: "Progress", package: "Progress.swift"),
-                .byNameItem(name: "CDarwinOperatingSystemStats", condition: .when(platforms: [.macOS])),
-                .byNameItem(name: "CLinuxOperatingSystemStats", condition: .when(platforms: [.linux])),
-                "SwiftRuntimeHooks",
-            ]
-        )]
+    dependencies += [ .product(name: "jemalloc", package: "package-jemalloc")]
 }
+
+package.targets += [.target(name: "Benchmark", dependencies: dependencies)]
+
+// Add benchmark targets separately
+
+// Benchmark of the DateTime package (which can't depend on Benchmark as we'll get a circular dependency)
+package.targets += [
+    .executableTarget(
+        name: "BenchmarkDateTime",
+        dependencies: [
+            "Benchmark",
+            "BenchmarkPlugin"
+        ],
+        path: "Benchmarks/DateTime"
+    )
+]
+
+// Benchmark of the benchmark package
+package.targets += [
+    .executableTarget(
+        name: "Basic",
+        dependencies: [
+            "Benchmark",
+            "BenchmarkPlugin"
+        ],
+        path: "Benchmarks/Basic"
+    ),
+]
+
+// Benchmark of the Histogram package
+package.targets += [
+    .executableTarget(
+        name: "HistogramBenchmark",
+        dependencies: [
+            "Benchmark",
+            "BenchmarkPlugin",
+            .product(name: "Histogram", package: "package-histogram"),
+        ],
+        path: "Benchmarks/Histogram"
+    ),
+]

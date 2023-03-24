@@ -58,6 +58,12 @@ public enum BenchmarkMetric: Hashable, Equatable, Codable, CustomStringConvertib
     case readBytesPhysical
     /// The number of bytes physicall written to a block device (i.e. disk) -- Linux only
     case writeBytesPhysical
+    /// Number of retains (ARC)
+    case retainCount
+    /// Number of releases (ARC)
+    case releaseCount
+    /// ABS(retains-releases) - if this is non-zero, it would typically mean the benchmark has a retain cycle (use Memory Graph Debugger to troubleshoot) or that startMeasurement/stopMeasurement aren't used properly
+    case retainReleaseDelta
     /// Custom metric
     case custom(_ name: String, polarity: Polarity = .prefersSmaller, useScalingFactor: Bool = true)
 
@@ -119,6 +125,8 @@ public extension BenchmarkMetric {
         case .readSyscalls, .readBytesLogical, .readBytesPhysical:
             return true
         case .writeSyscalls, .writeBytesLogical, .writeBytesPhysical:
+            return true
+        case .retainCount, .releaseCount, .retainReleaseDelta:
             return true
         case let .custom(_, _, useScaleFactor):
             return useScaleFactor
@@ -185,6 +193,12 @@ public extension BenchmarkMetric {
             return "Bytes (read physical)"
         case .writeBytesPhysical:
             return "Bytes (write physical)"
+        case .retainCount:
+            return "Retains"
+        case .releaseCount:
+            return "Releases"
+        case .retainReleaseDelta:
+            return "Retain / Release Δ"
         case .delta:
             return "Δ"
         case .deltaPercentage:
@@ -245,6 +259,12 @@ public extension BenchmarkMetric {
             return "readBytesPhysical"
         case .writeBytesPhysical:
             return "writeBytesPhysical"
+        case .retainCount:
+            return "retainCount"
+        case .releaseCount:
+            return "releaseCount"
+        case .retainReleaseDelta:
+            return "retainReleaseDelta"
         case .delta:
             return "Δ"
         case .deltaPercentage:
@@ -307,6 +327,12 @@ public extension BenchmarkMetric {
             self = BenchmarkMetric.readBytesPhysical
         case "writeBytesPhysical":
             self = BenchmarkMetric.writeBytesPhysical
+        case "retainCount":
+            self = BenchmarkMetric.retainCount
+        case "releaseCount":
+            self = BenchmarkMetric.releaseCount
+        case "retainReleaseDelta":
+            self = BenchmarkMetric.retainReleaseDelta
         default:
             self = BenchmarkMetric.custom(argument)
         }

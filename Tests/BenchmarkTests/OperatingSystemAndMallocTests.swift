@@ -53,6 +53,7 @@ final class OperatingSystemAndMallocTests: XCTestCase {
         blackHole(operatingSystemStatsProducer.metricSupported(.writeBytesPhysical))
         blackHole(operatingSystemStatsProducer.metricSupported(.throughput))
     }
+    
 #if canImport(jemalloc)
     func testMallocProducerLeaks() throws {
         let mallocStatsProducer = MallocStatsProducer()
@@ -69,4 +70,25 @@ final class OperatingSystemAndMallocTests: XCTestCase {
                                     100 * 1_024)
     }
 #endif
+
+    func testARCStatsProducer() throws {
+        let statsProducer = ARCStatsProducer()
+
+        let array = [3]
+        statsProducer.hook()
+
+        let startStats = statsProducer.makeARCStats()
+
+        for outerloop in 1 ... 100 {
+            var b = array
+            b.append(outerloop)
+            blackHole(array)
+            blackHole(b)
+        }
+
+        let stopStats = statsProducer.makeARCStats()
+
+        XCTAssertGreaterThanOrEqual(stopStats.retainCount - startStats.retainCount, 100)
+        XCTAssertGreaterThanOrEqual(stopStats.releaseCount - startStats.releaseCount, 100)
+    }
 }

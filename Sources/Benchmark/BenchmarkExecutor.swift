@@ -10,7 +10,6 @@
 
 import DateTime
 import Progress
-import SwiftRuntimeHooks
 
 internal final class BenchmarkExecutor {
     internal init(quiet: Bool = false) {
@@ -20,6 +19,7 @@ internal final class BenchmarkExecutor {
     var quiet: Bool
     let mallocStatsProducer = MallocStatsProducer()
     let operatingSystemStatsProducer = OperatingSystemStatsProducer()
+    let arcStatsProducer = ARCStatsProducer()
 
     // swiftlint:disable cyclomatic_complexity function_body_length
     func run(_ benchmark: Benchmark) -> [BenchmarkResult] {
@@ -28,6 +28,8 @@ internal final class BenchmarkExecutor {
         var stopMallocStats = MallocStats()
         var startOperatingSystemStats = OperatingSystemStats()
         var stopOperatingSystemStats = OperatingSystemStats()
+        var startARCStats = ARCStats(retainCount: 0, releaseCount: 0)
+        var stopARCStats = ARCStats(retainCount: 0, releaseCount: 0)
         var startTime = BenchmarkClock.now
         var stopTime = BenchmarkClock.now
 
@@ -43,6 +45,7 @@ internal final class BenchmarkExecutor {
         var statistics: [BenchmarkMetric: Statistics] = [:]
         var operatingSystemStatsRequested = false
         var mallocStatsRequested = false
+        var arcStatsRequested = false
 
         // Create metric statistics as needed
         benchmark.configuration.metrics.forEach { metric in
@@ -65,6 +68,10 @@ internal final class BenchmarkExecutor {
             if operatingSystemsStatsProducerNeeded(metric) {
                 operatingSystemStatsRequested = true
             }
+
+            if arcStatsProducerNeeded(metric) {
+                arcStatsRequested = true
+            }
         }
 
         var iterations = 0
@@ -80,12 +87,20 @@ internal final class BenchmarkExecutor {
                 startOperatingSystemStats = self.operatingSystemStatsProducer.makeOperatingSystemStats()
             }
 
+            if arcStatsRequested {
+                startARCStats = self.arcStatsProducer.makeARCStats()
+            }
+
             startTime = BenchmarkClock.now // must be last in closure
         }
 
         // And corresponding hook for then the benchmark has finished and capture finishing metrics here
         benchmark.measurementPostSynchronization = {
             stopTime = BenchmarkClock.now // must be first in closure
+
+            if arcStatsRequested {
+                stopARCStats = self.arcStatsProducer.makeARCStats()
+            }
 
             if operatingSystemStatsRequested {
                 stopOperatingSystemStats = self.operatingSystemStatsProducer.makeOperatingSystemStats()
@@ -115,6 +130,16 @@ internal final class BenchmarkExecutor {
                 }
             } else {
                 //  fatalError("Zero running time \(self.startTime), \(self.stopTime), \(runningTime)")
+            }
+
+            if arcStatsRequested {
+                let retainDelta = stopARCStats.retainCount - startARCStats.retainCount
+                statistics[.retainCount]?.add(Int(retainDelta))
+
+                let releaseDelta = stopARCStats.releaseCount - startARCStats.releaseCount
+                statistics[.releaseCount]?.add(Int(releaseDelta))
+
+                statistics[.retainReleaseDelta]?.add(Int(abs(retainDelta - releaseDelta)))
             }
 
             if mallocStatsRequested {
@@ -217,32 +242,9 @@ internal final class BenchmarkExecutor {
 
         var nextPercentageToUpdateProgressBar = 0
 
-        struct HookContext {
-            var retainCount = 0
-            var releaseCount = 0
+        if arcStatsRequested {
+            arcStatsProducer.hook()
         }
-
-        let hookContext = UnsafeMutablePointer<HookContext>.allocate(capacity: 1)
-        hookContext.initialize(to: HookContext(retainCount: 0, releaseCount: 0))
-
-        typealias SwiftRuntimeHook = @convention(c) (UnsafeRawPointer?, UnsafeMutableRawPointer?) -> Void
-
-        let retainHook: SwiftRuntimeHook = { ptr, context in
-            if let context {
-                let c = context.bindMemory(to: HookContext.self, capacity: 1)
-                c.pointee.retainCount += 1
-            }
-        }
-
-        let releaseHook: SwiftRuntimeHook = { ptr, context in
-            if let context {
-                let c = context.bindMemory(to: HookContext.self, capacity: 1)
-                c.pointee.releaseCount += 1
-            }
-        }
-
-        swift_runtime_set_retain_hook(retainHook, hookContext)
-        swift_runtime_set_release_hook(releaseHook, hookContext)
 
         // Run the benchmark at a minimum the desired iterations/runtime --
 
@@ -281,12 +283,9 @@ internal final class BenchmarkExecutor {
             }
         }
 
-        swift_runtime_set_release_hook(nil, nil)
-        swift_runtime_set_retain_hook(nil, nil)
-
-        print("retain=\(hookContext.pointee.retainCount) release=\(hookContext.pointee.releaseCount)")
-
-        hookContext.deallocate()
+        if arcStatsRequested {
+            arcStatsProducer.unhook()
+        }
 
         if var progressBar {
             progressBar.setValue(100)

@@ -44,6 +44,13 @@ public extension BenchmarkMetric {
          .allocatedResidentMemory]
     }
 
+    /// A collection of ARC metrics
+    static var arc: [BenchmarkMetric] {
+        [.retainCount,
+         .releaseCount,
+         .retainReleaseDelta]
+    }
+
     /// A collection of system benchmarks.
     static var system: [BenchmarkMetric] {
         [.wallClock,
@@ -87,6 +94,9 @@ public extension BenchmarkMetric {
          .writeBytesLogical,
          .readBytesPhysical,
          .writeBytesPhysical,
-         .allocatedResidentMemory]
+         .allocatedResidentMemory,
+         .retainCount,
+         .releaseCount,
+         .retainReleaseDelta]
     }
 }
