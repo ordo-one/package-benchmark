@@ -105,6 +105,8 @@ let package = Package(
             path: "Platform/CLinuxOperatingSystemStats"
         ),
 
+        .target(name: "SwiftRuntimeHooks", dependencies: []),
+
         // Benchmark of the benchmark package
         .executableTarget(
             name: "Basic",
@@ -156,6 +158,7 @@ if let disableJemalloc, disableJemalloc != "false", disableJemalloc != "0" {
                 .product(name: "Progress", package: "Progress.swift"),
                 .byNameItem(name: "CDarwinOperatingSystemStats", condition: .when(platforms: [.macOS])),
                 .byNameItem(name: "CLinuxOperatingSystemStats", condition: .when(platforms: [.linux])),
+                "SwiftRuntimeHooks",
             ]
         )]
 } else {
@@ -173,6 +176,7 @@ if let disableJemalloc, disableJemalloc != "false", disableJemalloc != "0" {
                 .product(name: "Progress", package: "Progress.swift"),
                 .byNameItem(name: "CDarwinOperatingSystemStats", condition: .when(platforms: [.macOS])),
                 .byNameItem(name: "CLinuxOperatingSystemStats", condition: .when(platforms: [.linux])),
+                "SwiftRuntimeHooks",
             ]
         )]
 }

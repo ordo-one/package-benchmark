@@ -10,6 +10,7 @@
 
 import DateTime
 import Progress
+import SwiftRuntimeHooks
 
 internal final class BenchmarkExecutor {
     internal init(quiet: Bool = false) {
@@ -216,6 +217,33 @@ internal final class BenchmarkExecutor {
 
         var nextPercentageToUpdateProgressBar = 0
 
+        struct HookContext {
+            var retainCount = 0
+            var releaseCount = 0
+        }
+
+        let hookContext = UnsafeMutablePointer<HookContext>.allocate(capacity: 1)
+        hookContext.initialize(to: HookContext(retainCount: 0, releaseCount: 0))
+
+        typealias SwiftRuntimeHook = @convention(c) (UnsafeRawPointer?, UnsafeMutableRawPointer?) -> Void
+
+        let retainHook: SwiftRuntimeHook = { ptr, context in
+            if let context {
+                let c = context.bindMemory(to: HookContext.self, capacity: 1)
+                c.pointee.retainCount += 1
+            }
+        }
+
+        let releaseHook: SwiftRuntimeHook = { ptr, context in
+            if let context {
+                let c = context.bindMemory(to: HookContext.self, capacity: 1)
+                c.pointee.releaseCount += 1
+            }
+        }
+
+        swift_runtime_set_retain_hook(retainHook, hookContext)
+        swift_runtime_set_release_hook(releaseHook, hookContext)
+
         // Run the benchmark at a minimum the desired iterations/runtime --
 
         while iterations <= benchmark.configuration.maxIterations ||
@@ -252,6 +280,13 @@ internal final class BenchmarkExecutor {
                 }
             }
         }
+
+        swift_runtime_set_release_hook(nil, nil)
+        swift_runtime_set_retain_hook(nil, nil)
+
+        print("retain=\(hookContext.pointee.retainCount) release=\(hookContext.pointee.releaseCount)")
+
+        hookContext.deallocate()
 
         if var progressBar {
             progressBar.setValue(100)
