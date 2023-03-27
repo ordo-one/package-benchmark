@@ -12,7 +12,7 @@ import Atomics
 import SwiftRuntimeHooks
 
 // swiftlint:disable prefer_self_in_static_references
-class ARCStatsProducer {
+final class ARCStatsProducer {
     typealias SwiftRuntimeHook = @convention(c) (UnsafeRawPointer?, UnsafeMutableRawPointer?) -> Void
 
     static var retainCount: UnsafeAtomic<Int> = .create(0)

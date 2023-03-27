@@ -20,7 +20,7 @@ import ExtrasJSON
     #if swift(>=5.8)
         @_documentation(visibility: internal)
     #endif
-    class MallocStatsProducer {
+    final class MallocStatsProducer {
         var threadCacheMIB: [size_t]
         var epochMIB: [size_t]
 //    var smallNMallocMIB: [size_t]
@@ -171,7 +171,7 @@ import ExtrasJSON
 #else
 
     // stub if no jemalloc available
-    class MallocStatsProducer {
+    final class MallocStatsProducer {
         func makeMallocStats() -> MallocStats {
             MallocStats(mallocCountTotal: 0,
                         mallocCountSmall: 0,
