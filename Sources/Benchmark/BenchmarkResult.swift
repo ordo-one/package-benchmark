@@ -11,7 +11,7 @@
 // swiftlint: disable file_length identifier_name
 
 #if swift(>=5.8)
-@_documentation(visibility: internal)
+    @_documentation(visibility: internal)
 #endif
 public extension BenchmarkResult {
     enum Percentile: Int, Codable {

@@ -53,20 +53,42 @@ final class OperatingSystemAndMallocTests: XCTestCase {
         blackHole(operatingSystemStatsProducer.metricSupported(.writeBytesPhysical))
         blackHole(operatingSystemStatsProducer.metricSupported(.throughput))
     }
-#if canImport(jemalloc)
-    func testMallocProducerLeaks() throws {
-        let mallocStatsProducer = MallocStatsProducer()
-        let startMallocStats = mallocStatsProducer.makeMallocStats()
+
+    #if canImport(jemalloc)
+        func testMallocProducerLeaks() throws {
+            let mallocStatsProducer = MallocStatsProducer()
+            let startMallocStats = mallocStatsProducer.makeMallocStats()
+
+            for outerloop in 1 ... 100 {
+                blackHole(malloc(outerloop * 1_024))
+            }
+
+            let stopMallocStats = mallocStatsProducer.makeMallocStats()
+
+            XCTAssertGreaterThanOrEqual(stopMallocStats.mallocCountTotal - startMallocStats.mallocCountTotal, 100)
+            XCTAssertGreaterThanOrEqual(stopMallocStats.allocatedResidentMemory - startMallocStats.allocatedResidentMemory,
+                                        100 * 1_024)
+        }
+    #endif
+
+    func testARCStatsProducer() throws {
+        let statsProducer = ARCStatsProducer()
+
+        let array = [3]
+        statsProducer.hook()
+
+        let startStats = statsProducer.makeARCStats()
 
         for outerloop in 1 ... 100 {
-            blackHole(malloc(outerloop * 1_024))
+            var arrayCopy = array
+            arrayCopy.append(outerloop)
+            blackHole(array)
+            blackHole(arrayCopy)
         }
 
-        let stopMallocStats = mallocStatsProducer.makeMallocStats()
+        let stopStats = statsProducer.makeARCStats()
 
-        XCTAssertGreaterThanOrEqual(stopMallocStats.mallocCountTotal - startMallocStats.mallocCountTotal, 100)
-        XCTAssertGreaterThanOrEqual(stopMallocStats.allocatedResidentMemory - startMallocStats.allocatedResidentMemory,
-                                    100 * 1_024)
+        XCTAssertGreaterThanOrEqual(stopStats.retainCount - startStats.retainCount, 100)
+        XCTAssertGreaterThanOrEqual(stopStats.releaseCount - startStats.releaseCount, 100)
     }
-#endif
 }

@@ -72,6 +72,9 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
         """)
     var checkAbsoluteThresholds = false
 
+    @Flag(name: .shortAndLong, help: "True if we should run the benchmarks for all metrics.")
+    var allMetrics = false
+
     var debug = false
 
     func shouldRunBenchmark(_ name: String) throws -> Bool {
@@ -158,6 +161,10 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
                             }
                         }
                         benchmark.configuration.metrics = benchmarkToRun.configuration.metrics
+                    }
+
+                    if debug, allMetrics {
+                        benchmark.configuration.metrics = BenchmarkMetric.all
                     }
 
                     benchmark.target = benchmarkToRun.target

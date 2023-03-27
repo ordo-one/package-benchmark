@@ -13,7 +13,7 @@
     import Darwin
     import Dispatch
 
-    class OperatingSystemStatsProducer {
+    final class OperatingSystemStatsProducer {
         var nsPerMachTick: Double
         var nsPerSchedulerTick: Int
 
@@ -31,7 +31,7 @@
         }
 
         internal
-        class CallbackDataCarrier<T> {
+        final class CallbackDataCarrier<T> {
             init(_ data: T) {
                 self.data = data
             }

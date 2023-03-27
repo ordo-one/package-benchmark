@@ -35,6 +35,9 @@ final class BenchmarkMetricsTests: XCTestCase {
         .writeBytesLogical,
         .readBytesPhysical,
         .writeBytesPhysical,
+        .retainCount,
+        .releaseCount,
+        .retainReleaseDelta,
         .custom("test", polarity: .prefersSmaller, useScalingFactor: false),
         .custom("test2", polarity: .prefersLarger, useScalingFactor: true)
     ]
@@ -61,7 +64,10 @@ final class BenchmarkMetricsTests: XCTestCase {
         "readBytesLogical",
         "writeBytesLogical",
         "readBytesPhysical",
-        "writeBytesPhysical"
+        "writeBytesPhysical",
+        "retainCount",
+        "releaseCount",
+        "retainReleaseDelta"
     ]
 
     func testBenchmarkMetrics() throws {

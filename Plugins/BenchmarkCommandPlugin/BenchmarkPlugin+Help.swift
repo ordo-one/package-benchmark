@@ -44,13 +44,15 @@ let help =
     --skip-target <skip-target>
                           Benchmark targets matching the regexp filter that should be skipped
     --format <format>       The output format to use, one of: ["text", "markdown", "influx", "jmh", "histogramEncoded", "histogram", "histogramSamples", "histogramPercentiles"], default is 'text'
-    --metric <metric>       Specifies that the benchmark run should use one or more specific metrics instead of the ones defined by the benchmarks, valid values are: ["cpuUser", "cpuSystem", "cpuTotal", "wallClock", "throughput", "peakMemoryResident", "peakMemoryVirtual",
-                          "mallocCountSmall", "mallocCountLarge", "mallocCountTotal", "allocatedResidentMemory", "memoryLeaked", "syscalls", "contextSwitches", "threads", "threadsRunning", "readSyscalls", "writeSyscalls", "readBytesLogical", "writeBytesLogical",
-                          "readBytesPhysical", "writeBytesPhysical", "custom"]
+    --metric <metric>       Specifies that the benchmark run should use one or more specific metrics instead of the ones defined by the benchmarks, valid values are: ["cpuUser", "cpuSystem", "cpuTotal", "wallClock",
+                          "throughput", "peakMemoryResident", "peakMemoryVirtual", "mallocCountSmall", "mallocCountLarge", "mallocCountTotal", "allocatedResidentMemory", "memoryLeaked", "syscalls",
+                          "contextSwitches", "threads", "threadsRunning", "readSyscalls", "writeSyscalls", "readBytesLogical", "writeBytesLogical", "readBytesPhysical", "writeBytesPhysical", "retainCount",
+                          "releaseCount", "retainReleaseDelta", "custom"]
     --path <path>           The path where exported data is stored, default is the current directory (".").
     --quiet                 Specifies that output should be suppressed (useful for if you just want to check return code)
     --scale                 Specifies that some of the text output should be scaled using the scalingFactor (denoted by '*' in output)
-    --check-absolute        Set to true if thresholds should be checked against an absolute reference point rather than delta between baselines.
+    --check-absolute-thresholds
+                          Set to true if thresholds should be checked against an absolute reference point rather than delta between baselines.
                           This is used for CI workflows when you want to validate the thresholds vs. a persisted benchmark baseline
                           rather than comparing PR vs main or vs a current run. This is useful to cut down the build matrix needed
                           for those wanting to validate performance of e.g. toolchains or OS:s as well (or have other reasons for wanting
