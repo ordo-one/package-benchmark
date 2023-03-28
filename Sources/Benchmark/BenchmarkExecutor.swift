@@ -78,6 +78,8 @@ internal final class BenchmarkExecutor {
         let initialStartTime = BenchmarkClock.now
 
         // Hook that is called before the actual benchmark closure run, so we can capture metrics here
+        // NB this code may be called twice if the user calls startMeasurement() manually and should
+        // then reset to a new starting state.
         benchmark.measurementPreSynchronization = {
             if mallocStatsRequested {
                 startMallocStats = self.mallocStatsProducer.makeMallocStats()
@@ -95,6 +97,7 @@ internal final class BenchmarkExecutor {
         }
 
         // And corresponding hook for then the benchmark has finished and capture finishing metrics here
+        // This closure will only be called once for a given run though.
         benchmark.measurementPostSynchronization = {
             stopTime = BenchmarkClock.now // must be first in closure
 
@@ -276,6 +279,7 @@ internal final class BenchmarkExecutor {
 
                 let maxPercentage = max(iterationsPercentage, timePercentage)
 
+                // Small optimization to not update every single percentage point
                 if Int(maxPercentage) > nextPercentageToUpdateProgressBar {
                     progressBar.setValue(Int(maxPercentage))
                     nextPercentageToUpdateProgressBar = Int(maxPercentage) + Int.random(in: 3 ... 9)

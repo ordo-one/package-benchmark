@@ -59,4 +59,19 @@ let benchmarks = {
     Benchmark("All metrics",
               configuration: .init(metrics: BenchmarkMetric.all, skip: true)) { _ in
     }
+
+    let stats = Statistics(numberOfSignificantDigits: .four)
+    let measurementCount = 8_340
+
+    for measurement in (0 ..< measurementCount).reversed() {
+        stats.add(measurement)
+    }
+
+    Benchmark("Statistics",
+              configuration: .init(metrics: BenchmarkMetric.arc + [.wallClock],
+                                   scalingFactor: .kilo, maxDuration: .seconds(1))) { benchmark in
+        for _ in benchmark.scaledIterations {
+            blackHole(stats.percentiles())
+        }
+    }
 }
