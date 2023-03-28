@@ -12,7 +12,7 @@
 
 ## Overview
 
-Performance is a key feature for many apps and frameworks. Benchmark helps make it easy to measure and track [many different metrics](https://swiftpackageindex.com/ordo-one/package-benchmark/documentation/benchmark/metrics) that affects performance, such as CPU usage, memory usage and use of operating system resources such as threads and system calls, as well as completely custom metric counters.
+Performance is a key feature for many apps and frameworks. Benchmark helps make it easy to measure and track [many different metrics](https://swiftpackageindex.com/ordo-one/package-benchmark/documentation/benchmark/metrics) that affects performance, such as CPU usage, ARC traffic, memory/malloc usage and use of operating system resources such as threads and system calls, as well as completely custom metric counters.
 
 Benchmark works on both macOS and Linux and supports several key workflows for performance measurements:
 
