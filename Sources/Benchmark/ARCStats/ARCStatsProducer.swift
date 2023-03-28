@@ -29,14 +29,16 @@ final class ARCStatsProducer {
 
         swift_runtime_set_retain_hook(retainHook, nil)
         swift_runtime_set_release_hook(releaseHook, nil)
-
-        ARCStatsProducer.retainCount.store(0, ordering: .relaxed)
-        ARCStatsProducer.releaseCount.store(0, ordering: .relaxed)
     }
 
     func unhook() {
         swift_runtime_set_release_hook(nil, nil)
         swift_runtime_set_retain_hook(nil, nil)
+    }
+
+    func reset() {
+        ARCStatsProducer.retainCount.store(0, ordering: .relaxed)
+        ARCStatsProducer.releaseCount.store(0, ordering: .relaxed)
     }
 
     func makeARCStats() -> ARCStats {

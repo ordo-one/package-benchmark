@@ -17,9 +17,10 @@ import ExtrasJSON
     // was used during development to figure out most relevant stats,
     // Keeping them around as we may want to expand malloc statistics
     // to become more detailed.
-    #if swift(>=5.8)
-        @_documentation(visibility: internal)
-    #endif
+    // Disable this for now as it gives unexpected error with Swift 5.7.1 toolchain
+//    #if swift(>=5.8)
+//        @_documentation(visibility: internal)
+//    #endif
     final class MallocStatsProducer {
         var threadCacheMIB: [size_t]
         var epochMIB: [size_t]
