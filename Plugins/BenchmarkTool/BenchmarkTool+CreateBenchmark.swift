@@ -34,8 +34,8 @@ extension BenchmarkTool {
             .executableTarget(
                 name: "\(targetName)",
                 dependencies: [
-                    "Benchmark",
-                    "BenchmarkPlugin"
+                    .product(name: "Benchmark", package: "package-benchmark"),
+                    .product(name: "BenchmarkPlugin", package: "package-benchmark")
                 ],
                 path: "Benchmarks/\(targetName)"
             ),
