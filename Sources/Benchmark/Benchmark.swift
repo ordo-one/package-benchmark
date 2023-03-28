@@ -259,7 +259,7 @@ public final class Benchmark: Codable, Hashable {
     }
 
     /// If the benchmark contains a postample that should not be part of the measurement
-    /// `startMeasurement` can be called explicitly to define when measurement should begin.
+    /// `stopMeasurement` can be called explicitly to define when measurement should stop.
     /// Otherwise the whole benchmark will be measured.
     public func stopMeasurement() {
         guard measurementCompleted == false else { // This is to skip the implicit stop if we did an explicit before
@@ -284,13 +284,17 @@ public final class Benchmark: Codable, Hashable {
     // https://forums.swift.org/t/actually-waiting-for-a-task/56230
     // Async closures can possibly show false memory leaks possibly due to Swift runtime allocations
     internal func runAsync() {
+        guard let asyncClosure else {
+            fatalError("Tried to runAsync on benchmark instance without any async closure set")
+        }
+
         let semaphore = DispatchSemaphore(value: 0)
 
         // Must do this in a separate thread, otherwise we block the concurrent thread pool
         DispatchQueue.global(qos: .userInitiated).async {
             Task {
                 self.startMeasurement()
-                await self.asyncClosure?(self)
+                await asyncClosure(self)
                 self.stopMeasurement()
 
                 semaphore.signal()
@@ -304,13 +308,11 @@ public final class Benchmark: Codable, Hashable {
         @_documentation(visibility: internal)
     #endif
     public func run() {
-        if closure != nil {
+        if let closure {
             startMeasurement()
-            closure?(self)
+            closure(self)
             stopMeasurement()
-        }
-
-        if asyncClosure != nil {
+        } else {
             runAsync()
         }
     }
