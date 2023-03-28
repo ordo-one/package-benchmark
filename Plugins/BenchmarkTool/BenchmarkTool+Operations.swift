@@ -89,8 +89,6 @@ extension BenchmarkTool {
         setvbuf(stdout, nil, _IOFBF, Int(BUFSIZ))
 
         switch command {
-        case .`init`:
-            return
         case .baseline:
             guard let baselineOperation else {
                 fatalError("Baseline command without specifying a baseline operation, internal error in Benchmark")

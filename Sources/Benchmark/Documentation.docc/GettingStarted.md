@@ -72,29 +72,9 @@ To add the dependency on Benchmark, add a dependency to your package:
 .package(url: "https://github.com/ordo-one/package-benchmark", .upToNextMajor(from: "1.0.0")),
 ```
 
-### Add benchmark exectuable targets using `benchmark init`
-The absolutely easiest way to add new benchmark executable targets to your project is by using:
-```bash
-swift package --allow-writing-to-package-directory benchmark init MyNewBenchmarkTarget
-```
+### Add benchmark exectuable targets
 
-This will perform the following steps for you:
-
-* Create a `Benchmarks/MyNewBenchmarkTarget` directory
-* Create a `Benchmarks/MyNewBenchmarkTarget/MyNewBenchmarkTarget.swift` benchmark target with the required boilerplate
-* Add a new executable target for the benchmark to the end of your `Package.swift` file
-
-The `init` command validates that the name you specify isn't used by any existing target and will not overwrite any existing file with that name in the Benchmarks/ location. 
-
-After you've created the new target, you can directly run it with e.g.:
-```bash
-swift package benchmark --target MyNewBenchmarkTarget
-```
-
-### Add benchmark exectuable targets manually
-Optionally if you don't want the plugin to modify your project for you, you can do those steps manually.
-
-First create an executable target in `Package.swift` for each benchmark suite you want to measure.
+Create an executable target in `Package.swift` for each benchmark suite you want to measure.
 
 The source for all benchmarks *must reside in a directory named `Benchmarks`* in the root of your swift package.
 
