@@ -118,7 +118,7 @@ extension BenchmarkTool {
         // Write out benchmark boilerplate, open with .exclusiveCreate to abort if file exists
         do {
             let fd = try FileDescriptor.open(
-                outputPath, .writeOnly, options: [.truncate, .create, .exclusiveCreate], permissions: .ownerReadWrite
+                outputPath, .writeOnly, options: [.create, .exclusiveCreate], permissions: .ownerReadWrite
             )
 
             do {
