@@ -55,7 +55,6 @@ struct Benchmark: AsyncParsableCommand {
         swift package benchmark <command>
 
         swift package benchmark [run] <options>
-        swift package benchmark init <benchmarkTargetName>
         swift package benchmark list
         swift package benchmark baseline list
         swift package benchmark baseline read <baseline> [<baseline2> ... <baselineN>] [<options>]
@@ -67,8 +66,6 @@ struct Benchmark: AsyncParsableCommand {
         """,
         discussion: """
         Performs operations on benchmarks (running or listing them), as well as storing, comparing baselines as well as checking them for threshold deviations.
-
-        The init command will create a skeleton benchmark suite for you and add it to Package.swift.
 
         For the 'text' default format, the output is implicitly 'stdout' unless otherwise specified.
         For all other formats, the output is to a file in either the current working directory, or
