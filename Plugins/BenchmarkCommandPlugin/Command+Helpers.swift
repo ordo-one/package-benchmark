@@ -10,7 +10,7 @@
 
 // This file need to be manually copied between the Benchmark plugin and
 // the BenchmarkTool when updated, as no external dependencies are allowed
-// for SwiftPM command tools. The source file is in Benchmark and should be
+// for SwiftPM command tools. The source file is in BenchmarkCommandPlugin and should be
 // edited there, then manually copied to BenchmarkTool AND BenchmarkHelpGenerator.
 
 enum Command: String, CaseIterable {
@@ -18,6 +18,7 @@ enum Command: String, CaseIterable {
     case list
     case baseline
     case help
+    case `init`
 }
 
 /// The benchmark data output format.

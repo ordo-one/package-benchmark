@@ -19,6 +19,7 @@ swift package benchmark <command verb> [<options>]
 ### Command verbs
 
 - term `run`: run the benchmarks - default action if none specified
+- term `init`: Create a benchmark target, create boilerplate and adds a target to Package.swift
 - term `list`: list available benchmarks that can be run per benchmark target
 - term `baseline list`: Lists the available baselines stored per benchmark target
 - term `baseline read|update|delete|compare|check`: perform the specified subaction on one or more specified benchmark baselines
@@ -48,7 +49,10 @@ swift package benchmark <command verb> [<options>]
 ```
 OVERVIEW: Run benchmarks or update, compare or check performance baselines
 
-Performs operations on benchmarks (running or listing them), as well as storing, comparing baselines as well as checking them for threshold deviations.
+Performs operations on benchmarks (running or listing them), as well as storing, comparing baselines as well as checking them for threshold
+deviations.
+
+The init command will create a skeleton benchmark suite for you and add it to Package.swift.
 
 For the 'text' default format, the output is implicitly 'stdout' unless otherwise specified.
 For all other formats, the output is to a file in either the current working directory, or
@@ -61,6 +65,7 @@ swift package --allow-writing-to-package-directory benchmark <command> <options>
 USAGE: swift package benchmark <command>
 
 swift package benchmark [run] <options>
+swift package benchmark init <benchmarkTargetName>
 swift package benchmark list
 swift package benchmark baseline list
 swift package benchmark baseline read <baseline> [<baseline2> ... <baselineN>] [<options>]
@@ -71,7 +76,8 @@ swift package benchmark baseline compare <baseline> [<otherBaseline>] [<options>
 swift package benchmark help
 
 ARGUMENTS:
-<command>               The benchmark command to perform, one of: ["run", "list", "baseline", "help"]. If not specified, 'run' is implied.
+<command>               The benchmark command to perform, one of: ["run", "list", "baseline", "help", "init"]. If not specified, 'run' is
+implied.
 
 OPTIONS:
 --filter <filter>       Benchmarks matching the regexp filter that should be run
@@ -79,11 +85,14 @@ OPTIONS:
 --target <target>       Benchmark targets matching the regexp filter that should be run
 --skip-target <skip-target>
 Benchmark targets matching the regexp filter that should be skipped
---format <format>       The output format to use, one of: ["text", "markdown", "influx", "jmh", "histogramEncoded", "histogram", "histogramSamples", "histogramPercentiles"], default is 'text'
---metric <metric>       Specifies that the benchmark run should use one or more specific metrics instead of the ones defined by the benchmarks, valid values are: ["cpuUser", "cpuSystem", "cpuTotal", "wallClock",
-"throughput", "peakMemoryResident", "peakMemoryVirtual", "mallocCountSmall", "mallocCountLarge", "mallocCountTotal", "allocatedResidentMemory", "memoryLeaked", "syscalls",
-"contextSwitches", "threads", "threadsRunning", "readSyscalls", "writeSyscalls", "readBytesLogical", "writeBytesLogical", "readBytesPhysical", "writeBytesPhysical", "retainCount",
-"releaseCount", "retainReleaseDelta", "custom"]
+--format <format>       The output format to use, one of: ["text", "markdown", "influx", "jmh", "histogramEncoded", "histogram",
+"histogramSamples", "histogramPercentiles"], default is 'text'
+--metric <metric>       Specifies that the benchmark run should use one or more specific metrics instead of the ones defined by the
+benchmarks, valid values are: ["cpuUser", "cpuSystem", "cpuTotal", "wallClock", "throughput", "peakMemoryResident",
+"peakMemoryVirtual", "mallocCountSmall", "mallocCountLarge", "mallocCountTotal", "allocatedResidentMemory",
+"memoryLeaked", "syscalls", "contextSwitches", "threads", "threadsRunning", "readSyscalls", "writeSyscalls",
+"readBytesLogical", "writeBytesLogical", "readBytesPhysical", "writeBytesPhysical", "retainCount", "releaseCount",
+"retainReleaseDelta", "custom"]
 --path <path>           The path where exported data is stored, default is the current directory ("."). 
 --quiet                 Specifies that output should be suppressed (useful for if you just want to check return code)
 --scale                 Specifies that some of the text output should be scaled using the scalingFactor (denoted by '*' in output)

@@ -106,11 +106,36 @@ import PackagePlugin
             }
         }
 
+        var targetName = "Invalid"
+
+        if commandToPerform == .`init` {
+            guard positionalArguments.count == 1 else {
+                print("Must specify exactly one benchmark target name to create, e.g.:")
+                print("swift package --allow-writing-to-package-directory benchmark init MyBenchmarkName")
+                return
+            }
+            targetName = positionalArguments.removeFirst()
+            do {
+                let targets = try context.package.targets(named: [targetName])
+                if targets.isEmpty == false {
+                    print("Can't create benchmark executable target named \(targetName), a target with that name already exists.")
+                    return
+                }
+            } catch { // We will throw if we can use the target name (it's unused!)
+            }
+        }
+
         let swiftSourceModuleTargets: [SwiftSourceModuleTarget]
-        if specifiedTargets.isEmpty {
-            swiftSourceModuleTargets = context.package.targets(ofType: SwiftSourceModuleTarget.self)
+
+        // don't build any targets if we're creating a benchmark, otherwise specified targets
+        if commandToPerform == .`init` {
+            swiftSourceModuleTargets = []
         } else {
-            swiftSourceModuleTargets = specifiedTargets
+            if specifiedTargets.isEmpty {
+                swiftSourceModuleTargets = context.package.targets(ofType: SwiftSourceModuleTarget.self)
+            } else {
+                swiftSourceModuleTargets = specifiedTargets
+            }
         }
 
         let filteredTargets = swiftSourceModuleTargets
@@ -210,6 +235,11 @@ import PackagePlugin
 
         if pathSpecified.count > 0 {
             args.append(contentsOf: ["--path", exportPath])
+        }
+
+        if commandToPerform == .`init` {
+            args.append(contentsOf: ["--benchmark-executable-paths", "/tmp/\(targetName)"])
+            args.append(contentsOf: ["--target-name", targetName])
         }
 
         if commandToPerform == .run, positionalArguments.count > 0 {
