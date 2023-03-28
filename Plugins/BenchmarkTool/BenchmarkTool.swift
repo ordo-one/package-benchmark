@@ -27,6 +27,7 @@ enum BenchmarkOperation: String, ExpressibleByArgument {
     case list
     case run
     case query // query all benchmarks from target, used internally in tool
+    case `init`
 }
 
 extension Grouping: ExpressibleByArgument {}
@@ -52,6 +53,9 @@ struct BenchmarkTool: AsyncParsableCommand {
 
     @Option(name: .long, help: "The path to export to")
     var path: String?
+
+    @Option(name: .long, help: "The name of the new benchmark target to create")
+    var targetName: String?
 
     @Option(name: .long, help: "The operation to perform on the specified baselines")
     var baselineOperation: BaselineOperation?
@@ -170,6 +174,11 @@ struct BenchmarkTool: AsyncParsableCommand {
         // Flush stdout so we see any failures clearly
         setbuf(stdout, nil)
 
+        guard command != .`init` else {
+            createBenchmarkTarget()
+            return
+        }
+
         // Skip reading baselines for baseline operations not needing them
         if let operation = baselineOperation, [.delete, .list, .update].contains(operation) == false {
             try readBaselines()
@@ -283,6 +292,9 @@ struct BenchmarkTool: AsyncParsableCommand {
 
             do {
                 switch benchmarkCommand {
+                case .`init`:
+                    fatalError("Should never come here")
+                    break
                 case .query:
                     try queryBenchmarks(benchmarkPath) // Get all available benchmarks first
                 case .list:
