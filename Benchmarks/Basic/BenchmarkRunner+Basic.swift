@@ -69,8 +69,7 @@ let benchmarks = {
 
     Benchmark("Statistics",
               configuration: .init(metrics: BenchmarkMetric.arc + [.wallClock],
-                                   scalingFactor: .kilo, maxDuration:.seconds(1))) { benchmark in
-
+                                   scalingFactor: .kilo, maxDuration: .seconds(1))) { benchmark in
         for _ in benchmark.scaledIterations {
             blackHole(stats.percentiles())
         }

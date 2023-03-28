@@ -10,6 +10,8 @@
 
 import Dispatch
 
+// swiftlint: disable file_length
+
 /// Defines a benchmark
 public final class Benchmark: Codable, Hashable {
     #if swift(>=5.8)
