@@ -373,6 +373,7 @@ public extension Benchmark {
             case maxIterations
             case thresholds
         }
+        // swiftlint:enable nesting
     }
 }
 

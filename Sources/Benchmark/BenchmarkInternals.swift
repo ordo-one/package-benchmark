@@ -36,3 +36,4 @@ public enum BenchmarkCommandReply: Codable {
     case end // end of query for list/result
     case error(_ description: String) // error while performing operation (e.g. 'run')
 }
+// swiftlint:enable all
