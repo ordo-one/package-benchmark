@@ -148,3 +148,4 @@ extension NIOLock {
 
 extension NIOLock: Sendable {}
 extension NIOLock._Storage: Sendable {}
+// swiftlint:disable all

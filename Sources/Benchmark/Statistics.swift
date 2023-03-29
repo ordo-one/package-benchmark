@@ -172,3 +172,5 @@ public final class Statistics: Codable {
         return original / factor
     }
 }
+
+// swiftlint:enable all

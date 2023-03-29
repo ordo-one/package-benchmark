@@ -199,7 +199,6 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
         return BenchmarkScalingFactor(rawValue: newScale)!
     }
 
-    // swiftlint:disable identifier_name
     // from SO to avoid Foundation/Numerics
     internal func pow<T: BinaryInteger>(_ base: T, _ power: T) -> T {
         func expBySq(_ y: T, _ x: T, _ n: T) -> T {
@@ -532,3 +531,4 @@ public extension BenchmarkTimeUnits {
         }
     }
 }
+// swiftlint:enable file_length identifier_name function_parameter_count function_body_length type_body_length

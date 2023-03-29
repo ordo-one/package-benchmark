@@ -92,3 +92,4 @@ public extension BenchmarkThresholds {
         BenchmarkThresholds()
     }
 }
+// swiftlint:enable discouraged_none_name

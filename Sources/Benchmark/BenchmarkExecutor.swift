@@ -320,3 +320,5 @@ internal final class BenchmarkExecutor {
         return results
     }
 }
+
+// swiftlint:enable cyclomatic_complexity function_body_length

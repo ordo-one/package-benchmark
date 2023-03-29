@@ -359,3 +359,5 @@ struct Large: Codable {
 struct MergedLextent: Codable {
     let curlextents: Int
 }
+
+// swiftlint:enable all

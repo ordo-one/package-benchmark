@@ -12,6 +12,7 @@ import Atomics
 import SwiftRuntimeHooks
 
 // swiftlint:disable prefer_self_in_static_references
+
 final class ARCStatsProducer {
     typealias SwiftRuntimeHook = @convention(c) (UnsafeRawPointer?, UnsafeMutableRawPointer?) -> Void
 
@@ -46,3 +47,5 @@ final class ARCStatsProducer {
                  releaseCount: ARCStatsProducer.releaseCount.load(ordering: .relaxed))
     }
 }
+
+// swiftlint:enable prefer_self_in_static_references

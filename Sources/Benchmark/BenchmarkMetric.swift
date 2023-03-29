@@ -338,3 +338,5 @@ public extension BenchmarkMetric {
         }
     }
 }
+
+// swiftlint:enable cyclomatic_complexity function_body_length

@@ -11,7 +11,7 @@
 @testable import Benchmark
 import XCTest
 
-// swiftlint:disable function_body_length type_body_length
+// swiftlint:disable function_body_length type_body_length file_length
 final class BenchmarkResultTests: XCTestCase {
     func testBenchmarkResultEqual() throws {
         let firstStatistics = Statistics()
@@ -398,3 +398,5 @@ final class BenchmarkResultTests: XCTestCase {
         XCTAssert(description.count > 4)
     }
 }
+
+// swiftlint:enable function_body_length type_body_length

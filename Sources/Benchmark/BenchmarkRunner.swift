@@ -205,3 +205,5 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
         }
     }
 }
+
+// swiftlint:enable cyclomatic_complexity function_body_length
