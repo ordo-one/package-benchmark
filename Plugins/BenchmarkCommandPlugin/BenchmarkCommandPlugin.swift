@@ -152,7 +152,8 @@ import PackagePlugin
             }
 
         // Build the targets
-        if outputFormat == .text {
+        let textFormats = [OutputFormat.text, OutputFormat.table]
+        if textFormats.contains(outputFormat) {
             if quietRunning == 0 {
                 print("Building benchmark targets in release mode for benchmark run...")
             }
@@ -167,7 +168,7 @@ import PackagePlugin
                               "--grouping", grouping]
 
         try filteredTargets.forEach { target in
-            if outputFormat == .text {
+            if textFormats.contains(outputFormat) {
                 if quietRunning == 0 {
                     print("Building \(target.name)")
                 }
@@ -203,7 +204,7 @@ import PackagePlugin
             args.append(contentsOf: ["--metrics", metric.description])
         }
 
-        if outputFormat == .text {
+        if textFormats.contains(outputFormat) {
             if quietRunning == 0 {
                 print("Build complete!")
             }

@@ -219,7 +219,7 @@ struct BenchmarkTool: AsyncParsableCommand {
             fatalError("Query command should never be specified to the BenchmarkTool")
         }
 
-        if quiet == false, format == .text {
+        if quiet == false, format == .table {
             "Running Benchmarks".printAsHeader()
         }
 

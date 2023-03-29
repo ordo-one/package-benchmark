@@ -26,6 +26,7 @@ let package = Package(
         .package(url: "https://github.com/ordo-one/package-datetime", .upToNextMajor(from: "0.0.0")),
         .package(url: "https://github.com/ordo-one/package-histogram", .upToNextMajor(from: "0.0.1")),
         .package(url: "https://github.com/ordo-one/Progress.swift", .upToNextMajor(from: "1.0.0")),
+        .package(url: "https://github.com/ordo-one/Rainbow", .upToNextMajor(from: "4.0.0")),
         .package(url: "https://github.com/apple/swift-docc-plugin", .upToNextMajor(from: "1.1.0")),
         .package(url: "https://github.com/apple/swift-atomics", .upToNextMajor(from: "1.0.0")),
     ],
@@ -65,6 +66,7 @@ let package = Package(
                 .product(name: "SystemPackage", package: "swift-system"),
                 .product(name: "ExtrasJSON", package: "swift-extras-json"),
                 .product(name: "TextTable", package: "TextTable"),
+                .product(name: "Rainbow", package: "Rainbow"),
                 "Benchmark",
             ],
             path: "Plugins/BenchmarkTool"

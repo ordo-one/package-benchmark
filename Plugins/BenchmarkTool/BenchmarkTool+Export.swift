@@ -146,9 +146,11 @@ extension BenchmarkTool {
         let baselineName = baseline.baselineName
         switch format {
         case .text:
+            prettyPrintText(baseline, header: "Baseline '\(baselineName)'")
+        case .table:
             fallthrough
         case .markdown:
-            prettyPrint(baseline, header: "Baseline '\(baselineName)'")
+            prettyPrintTable(baseline, header: "Baseline '\(baselineName)'")
         case .influx:
             try write(exportData: "\(convertToInflux(baseline))",
                       fileName: "\(baselineName).influx.csv")

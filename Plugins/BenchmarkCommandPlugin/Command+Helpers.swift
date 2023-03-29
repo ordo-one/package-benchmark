@@ -23,8 +23,10 @@ enum Command: String, CaseIterable {
 
 /// The benchmark data output format.
 enum OutputFormat: String, CaseIterable {
-    /// Text output formatted into a visual table suitable for console output
+    /// Compact text output formatted with colors suitable for console output
     case text
+    /// Text output formatted into a visual table suitable for console output
+    case table
     /// The text output format, formatted in markdown, suitable for GitHub workflows
     case markdown
     /// Influx data format

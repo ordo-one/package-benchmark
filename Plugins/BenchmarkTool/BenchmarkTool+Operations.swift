@@ -113,7 +113,7 @@ extension BenchmarkTool {
                     return
                 }
 
-                prettyPrintDelta(currentBaseline: benchmarkBaselines[0], baseline: benchmarkBaselines[1])
+                prettyPrintDeltaTable(currentBaseline: benchmarkBaselines[0], baseline: benchmarkBaselines[1])
             case .update:
                 guard benchmarkBaselines.count == 1 else {
                     print("Can only update a single benchmark baseline, got: \(benchmarkBaselines.count) baselines.")
@@ -156,7 +156,7 @@ extension BenchmarkTool {
                     if deviationResults.isEmpty {
                         print("Baseline '\(baselineName)' is BETTER (or equal) than the defined absolute baseline thresholds. (--check-absolute)")
                     } else {
-                        prettyPrintAbsoluteDeviation(baselineName: baselineName,
+                        prettyPrintAbsoluteDeviationTable(baselineName: baselineName,
                                                      deviationResults: deviationResults)
                         failBenchmark("New baseline '\(baselineName)' is WORSE than the defined absolute baseline thresholds. (--check-absolute)",
                                       exitCode: .thresholdViolation)
@@ -178,9 +178,16 @@ extension BenchmarkTool {
                     if betterOrEqual {
                         print("New baseline '\(checkBaselineName)' is BETTER (or equal) than the '\(baselineName)' baseline thresholds.")
                     } else {
-                        prettyPrintDeviation(baselineName: baselineName,
-                                             comparingBaselineName: checkBaselineName,
-                                             deviationResults: deviationResults)
+                        switch format {
+                        case .text:
+                            prettyPrintDeviationText(baselineName: baselineName,
+                                                     comparingBaselineName: checkBaselineName,
+                                                     deviationResults: deviationResults)
+                        default:
+                            prettyPrintDeviationTable(baselineName: baselineName,
+                                                      comparingBaselineName: checkBaselineName,
+                                                      deviationResults: deviationResults)
+                        }
                         failBenchmark("New baseline '\(checkBaselineName)' is WORSE than the '\(baselineName)' baseline thresholds.",
                                       exitCode: .thresholdViolation)
                     }

@@ -37,6 +37,15 @@
       }
     },
     {
+      "identity" : "rainbow",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/ordo-one/Rainbow",
+      "state" : {
+        "revision" : "b1d3e7ff7cd78bf956b3a075313c0d282bb12c63",
+        "version" : "4.0.1"
+      }
+    },
+    {
       "identity" : "swift-argument-parser",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/apple/swift-argument-parser",

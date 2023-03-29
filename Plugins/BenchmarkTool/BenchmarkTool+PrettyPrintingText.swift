@@ -8,24 +8,19 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 //
 
+// Pretty printing output as tables / tables with markdown
+
 import Benchmark
 import SystemPackage
-import TextTable
+import Rainbow
 
 private let percentileWidth = 7
 private let maxDescriptionWidth = 100
 
 extension BenchmarkTool {
-    private func printMarkdown(_ markdown: String, terminator: String = "\n") {
-        if format == .markdown {
-            print(markdown, terminator: terminator)
-        }
-    }
 
     private func printText(_ markdown: String, terminator: String = "\n") {
-        if format == .text {
-            print(markdown, terminator: terminator)
-        }
+        print(markdown, terminator: terminator)
     }
 
     private func formatTableEntry(_ base: Int, _ comparison: Int, _ reversePolarity: Bool = false) -> Int {
@@ -45,15 +40,12 @@ extension BenchmarkTool {
     private func printMachine(_ machine: BenchmarkMachine, _ header: String) {
         let separator = String(repeating: "=", count: machine.kernelVersion.count)
         print("")
-        printMarkdown("## ", terminator: "")
-        printText(separator)
+        print(separator)
         print(header)
-        printText(separator)
+        print(separator)
         print("")
-        printMarkdown("```")
-        print("Host '\(machine.hostname)' with \(machine.processors) '\(machine.processorType)' processors with \(machine.memory) GB memory, running:")
+        print("Host '\(machine.hostname.bold)' with \(machine.processors.description.bold) x '\(machine.processorType.bold)' processors (\(machine.memory.description.bold) GB RAM), running:")
         print("\(machine.kernelVersion)")
-        printMarkdown("```")
         printText("")
     }
 
@@ -78,6 +70,7 @@ extension BenchmarkTool {
                               results: [BenchmarkBaseline.ResultsEntry],
                               width: Int = 30,
                               useGroupingDescription: Bool = false) {
+/*
         let table = TextTable<ScaledResults> {
             [Column(title: title, value: "\($0.description)", width: width, align: .left),
              Column(title: "p0", value: $0.percentiles.p0, width: percentileWidth, align: .right),
@@ -89,7 +82,7 @@ extension BenchmarkTool {
              Column(title: "p100", value: $0.percentiles.p100, width: percentileWidth, align: .right),
              Column(title: "Samples", value: $0.samples, width: percentileWidth, align: .right)]
         }
-
+*/
         var scaledResults: [ScaledResults] = []
         results.forEach { result in
             let description: String
@@ -101,11 +94,11 @@ extension BenchmarkTool {
 
             if self.scale, result.metrics.metric.useScalingFactor {
                 description = useGroupingDescription ? "\(result.description) \(result.metrics.scaledUnitDescriptionPretty)"
-                    : "\(result.metrics.metric.description) \(result.metrics.scaledUnitDescriptionPretty)"
+                : "\(result.metrics.metric.description) \(result.metrics.scaledUnitDescriptionPretty)"
                 adjustmentFunction = result.metrics.scale
             } else {
                 description = useGroupingDescription ? "\(result.description) \(result.metrics.unitDescriptionPretty)"
-                    : "\(result.metrics.metric.description) \(result.metrics.unitDescriptionPretty)"
+                : "\(result.metrics.metric.description) \(result.metrics.unitDescriptionPretty)"
                 adjustmentFunction = result.metrics.normalize
             }
 
@@ -122,20 +115,28 @@ extension BenchmarkTool {
                                                samples: result.metrics.statistics.measurementCount))
         }
 
-        printMarkdown("### ", terminator: "")
-        print("\(key)")
-        printMarkdown("")
+        print("      \(key)".green)
 
-        printMarkdown("```")
-        table.print(scaledResults, style: Style.fancy)
-        printMarkdown("```")
+//        table.print(scaledResults, style: Style.fancy)
     }
 
-    func prettyPrint(_ baseline: BenchmarkBaseline,
-                     header: String, // = "Benchmark results",
-                     hostIdentifier _: String? = nil) {
+    func setupRainbow() {
+        switch path {
+        case nil:
+            fallthrough
+        case "stdout":
+            Rainbow.outputTarget = .console
+        default:
+            break
+        }
+    }
+
+    func prettyPrintText(_ baseline: BenchmarkBaseline,
+                          header: String, // = "Benchmark results",
+                          hostIdentifier _: String? = nil) {
         guard quiet == false else { return }
 
+        setupRainbow()
         printMachine(baseline.machine, header)
 
         switch grouping {
@@ -148,7 +149,6 @@ extension BenchmarkTool {
             width = min(maxDescriptionWidth, width + " (M)".count)
 
             baseline.targets.forEach { target in
-                let separator = String(repeating: "=", count: "\(target)".count)
                 var firstOutput = true
 
                 baseline.benchmarkNames.forEach { benchmarkName in
@@ -157,11 +157,7 @@ extension BenchmarkTool {
                     }
                     if results.count > 0 {
                         if firstOutput {
-                            printMarkdown("## ", terminator: "")
-                            printText(separator)
-                            print("\(target)")
-                            printText(separator)
-                            print("")
+                            print("\(target)".bold)
                             firstOutput = false
                         }
                         _prettyPrint(title: "Metric", key: benchmarkName, results: results, width: width)
@@ -185,10 +181,10 @@ extension BenchmarkTool {
             }
         }
     }
-
-    func prettyPrintDelta(currentBaseline: BenchmarkBaseline,
-                          baseline: BenchmarkBaseline,
-                          hostIdentifier _: String? = nil) {
+/*
+    func prettyPrintDeltaTable(currentBaseline: BenchmarkBaseline,
+                               baseline: BenchmarkBaseline,
+                               hostIdentifier _: String? = nil) {
         printMachine(baseline.machine, "Comparing results between '\(currentBaseline.baselineName)' and '\(baseline.baselineName)'")
         if currentBaseline.machine != baseline.machine {
             print("Warning: Machine configuration is different when comparing baselines, other config:")
@@ -213,14 +209,12 @@ extension BenchmarkTool {
                     }
 
                     if firstOutput {
-                        printMarkdown("## ", terminator: "")
                         print("\(target)")
                         printText("============================================================================================================================")
                         print("")
                         firstOutput = false
                     }
 
-                    printMarkdown("### ", terminator: "")
                     printText("----------------------------------------------------------------------------------------------------------------------------")
                     print("\(key.name) metrics")
                     printText("----------------------------------------------------------------------------------------------------------------------------")
@@ -347,9 +341,7 @@ extension BenchmarkTool {
                                                                percentiles: percentageDeltaPercentiles,
                                                                samples: samples))
 
-                            printMarkdown("```")
                             table.print(scaledResults, style: Style.fancy)
-                            printMarkdown("```")
 
                             if format == .markdown {
                                 if hideResults {
@@ -364,24 +356,36 @@ extension BenchmarkTool {
             }
         }
     }
-
-    func prettyPrintDeviation(baselineName: String,
-                              comparingBaselineName: String,
-                              deviationResults: [BenchmarkResult.ThresholdDeviation]) {
+*/
+    func prettyPrintDeviationText(baselineName: String,
+                                  comparingBaselineName: String,
+                                  deviationResults: [BenchmarkResult.ThresholdDeviation]) {
         guard quiet == false else { return }
-
+        setupRainbow()
         let metrics = deviationResults.map(\.metric).unique()
+
         // Get a unique set of all name/target pairs that have threshold violations, sorted lexically:
         let namesAndTargets = deviationResults.map { NameAndTarget(name: $0.name, target: $0.target) }
             .unique().sorted { ($0.target, $0.name) < ($1.target, $1.name) }
 
+        var deviationCount = 0
+
+        guard namesAndTargets.isEmpty == false else { return }
+
+        var benchmarkMetricsMaxLength = 10
+        namesAndTargets.forEach { _ in
+            metrics.forEach { metric in
+                benchmarkMetricsMaxLength = max(benchmarkMetricsMaxLength, metric.description.count)
+            }
+        }
+
+
         namesAndTargets.forEach { nameAndTarget in
 
-            printMarkdown("```")
-            "Threshold violations for \(nameAndTarget.name):\(nameAndTarget.target)".printAsHeader(addWhiteSpace: false)
-            printMarkdown("```")
+            print("\(nameAndTarget.target.bold):\(nameAndTarget.name.bold)")
 
             metrics.forEach { metric in
+                let indent = String(repeating: " ", count: benchmarkMetricsMaxLength - metric.description.count)
 
                 let relativeResults = deviationResults.filter { $0.name == nameAndTarget.name &&
                     $0.target == nameAndTarget.target &&
@@ -393,9 +397,23 @@ extension BenchmarkTool {
                     $0.metric == metric &&
                     $0.relative == false
                 }
-                let width = 40
-                let percentileWidth = 15
 
+
+                absoluteResults.forEach { result in
+                    let unitDescription = metric.countable ? "" : result.units.timeDescription
+                    let percentile = "\(result.percentile)".paddingToLeft(upTo: 4)
+
+                    print("    \(percentile) \(indent)\(metric.description) \((result.difference - result.differenceThreshold).description.bold)\(unitDescription.italic)")
+                    deviationCount += 1
+                }
+
+                relativeResults.forEach { result in
+                    let percentile = "\(result.percentile)".paddingToLeft(upTo: 4)
+                    print("    \(percentile) \(indent)\(metric.description) \((result.difference - result.differenceThreshold).description.bold)\("%".italic)")
+                    deviationCount += 1
+                }
+
+                /*
                 // The baseValue is the new baseline that we're using as the comparison base, so...
                 if absoluteResults.isEmpty == false {
                     let absoluteTable = TextTable<BenchmarkResult.ThresholdDeviation> {
@@ -407,9 +425,7 @@ extension BenchmarkTool {
                          Column(title: "Threshold Δ", value: $0.differenceThreshold, width: percentileWidth, align: .right)]
                     }
 
-                    printMarkdown("```")
                     absoluteTable.print(absoluteResults, style: Style.fancy)
-                    printMarkdown("```")
                 }
 
                 if relativeResults.isEmpty == false {
@@ -422,16 +438,16 @@ extension BenchmarkTool {
                          Column(title: "Threshold %", value: $0.differenceThreshold, width: percentileWidth, align: .right)]
                     }
 
-                    printMarkdown("```")
                     relativeTable.print(relativeResults, style: Style.fancy)
-                    printMarkdown("```")
-                }
+                } */
             }
         }
+//        print("\(deviationCount.description) threshold deviations.".bold)
+        print("")
     }
-
-    func prettyPrintAbsoluteDeviation(baselineName: String,
-                                      deviationResults: [BenchmarkResult.ThresholdDeviation]) {
+/*
+    func prettyPrintAbsoluteDeviationTable(baselineName: String,
+                                           deviationResults: [BenchmarkResult.ThresholdDeviation]) {
         guard quiet == false else { return }
 
         let metrics = deviationResults.map(\.metric).unique()
@@ -441,9 +457,7 @@ extension BenchmarkTool {
 
         namesAndTargets.forEach { nameAndTarget in
 
-            printMarkdown("```")
             "Absolute threshold violations for \(nameAndTarget.name):\(nameAndTarget.target)".printAsHeader(addWhiteSpace: false)
-            printMarkdown("```")
 
             metrics.forEach { metric in
 
@@ -465,11 +479,16 @@ extension BenchmarkTool {
                          Column(title: "Threshold Abs", value: $0.differenceThreshold, width: percentileWidth, align: .right)]
                     }
 
-                    printMarkdown("```")
                     absoluteTable.print(absoluteResults, style: Style.fancy)
-                    printMarkdown("```")
                 }
             }
         }
     }
+ */
 }
+extension RangeReplaceableCollection where Self: StringProtocol {
+    func paddingToLeft(upTo length: Int, using element: Element = " ") -> SubSequence {
+        return repeatElement(element, count: Swift.max(0, length-count)) + suffix(Swift.max(count, count-length))
+    }
+}
+

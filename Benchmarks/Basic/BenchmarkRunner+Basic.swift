@@ -30,7 +30,7 @@ let benchmarks = {
     }
 
     Benchmark.defaultConfiguration = .init(warmupIterations: 0,
-                                           maxDuration: .seconds(1),
+                                           maxDuration: .milliseconds(10), // .seconds(1),
                                            maxIterations: Int.max,
                                            thresholds: thresholds)
 
