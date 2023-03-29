@@ -60,7 +60,10 @@ extension BenchmarkTool {
             var p100: Int = 0
         }
 
+        var average: Int
+        var deviation: Int
         var description: String
+        var unitDescription: String
         var percentiles: Percentiles
         var samples: Int
     }
@@ -83,6 +86,7 @@ extension BenchmarkTool {
              Column(title: "Samples", value: $0.samples, width: percentileWidth, align: .right)]
         }
 */
+        var benchmarkMetricsMaxLength = 10
         var scaledResults: [ScaledResults] = []
         results.forEach { result in
             let description: String
@@ -110,13 +114,21 @@ extension BenchmarkTool {
             resultPercentiles.p99 = adjustmentFunction(percentiles[5])
             resultPercentiles.p100 = adjustmentFunction(percentiles[6])
 
-            scaledResults.append(ScaledResults(description: description,
+            scaledResults.append(ScaledResults(average: adjustmentFunction(Int(result.metrics.statistics.average)),
+                                               deviation: adjustmentFunction(Int(result.metrics.statistics.histogram.stdDeviation)),
+                                               description: description,
+                                               unitDescription: result.metrics.unitDescription,
                                                percentiles: resultPercentiles,
                                                samples: result.metrics.statistics.measurementCount))
+            benchmarkMetricsMaxLength = max(benchmarkMetricsMaxLength, description.count)
         }
 
-        print("      \(key)".green)
-
+        print("\(key)".bold)
+        scaledResults.forEach { result in
+            let indent = String(repeating: " ", count: benchmarkMetricsMaxLength - result.description.count)
+            let standardDev = result.deviation > 0 ? "\("SD = \(result.deviation)\(result.unitDescription)".italic)" : ""
+            print("      \(indent)  \(result.description) \(result.average.description.bold)\(result.unitDescription) \(standardDev)")
+        }
 //        table.print(scaledResults, style: Style.fancy)
     }
 
@@ -379,7 +391,6 @@ extension BenchmarkTool {
             }
         }
 
-
         namesAndTargets.forEach { nameAndTarget in
 
             print("\(nameAndTarget.target.bold):\(nameAndTarget.name.bold)")
@@ -412,42 +423,13 @@ extension BenchmarkTool {
                     print("    \(percentile) \(indent)\(metric.description) \((result.difference - result.differenceThreshold).description.bold)\("%".italic)")
                     deviationCount += 1
                 }
-
-                /*
-                // The baseValue is the new baseline that we're using as the comparison base, so...
-                if absoluteResults.isEmpty == false {
-                    let absoluteTable = TextTable<BenchmarkResult.ThresholdDeviation> {
-                        [Column(title: "\(metric.description) (\(metric.countable ? $0.units.description : $0.units.timeDescription), Δ)",
-                                value: $0.percentile, width: width, align: .left),
-                         Column(title: "\(baselineName)", value: $0.comparisonValue, width: percentileWidth, align: .right),
-                         Column(title: "\(comparingBaselineName)", value: $0.baseValue, width: percentileWidth, align: .right),
-                         Column(title: "Difference Δ", value: $0.difference, width: percentileWidth, align: .right),
-                         Column(title: "Threshold Δ", value: $0.differenceThreshold, width: percentileWidth, align: .right)]
-                    }
-
-                    absoluteTable.print(absoluteResults, style: Style.fancy)
-                }
-
-                if relativeResults.isEmpty == false {
-                    let relativeTable = TextTable<BenchmarkResult.ThresholdDeviation> {
-                        [Column(title: "\(metric.description) (\(metric.countable ? $0.units.description : $0.units.timeDescription), %)",
-                                value: $0.percentile, width: width, align: .left),
-                         Column(title: "\(baselineName)", value: $0.comparisonValue, width: percentileWidth, align: .right),
-                         Column(title: "\(comparingBaselineName)", value: $0.baseValue, width: percentileWidth, align: .right),
-                         Column(title: "Difference %", value: $0.difference, width: percentileWidth, align: .right),
-                         Column(title: "Threshold %", value: $0.differenceThreshold, width: percentileWidth, align: .right)]
-                    }
-
-                    relativeTable.print(relativeResults, style: Style.fancy)
-                } */
             }
         }
-//        print("\(deviationCount.description) threshold deviations.".bold)
         print("")
     }
-/*
-    func prettyPrintAbsoluteDeviationTable(baselineName: String,
-                                           deviationResults: [BenchmarkResult.ThresholdDeviation]) {
+
+    func prettyPrintAbsoluteDeviationText(baselineName: String,
+                                          deviationResults: [BenchmarkResult.ThresholdDeviation]) {
         guard quiet == false else { return }
 
         let metrics = deviationResults.map(\.metric).unique()
@@ -455,37 +437,40 @@ extension BenchmarkTool {
         let namesAndTargets = deviationResults.map { NameAndTarget(name: $0.name, target: $0.target) }
             .unique().sorted { ($0.target, $0.name) < ($1.target, $1.name) }
 
+        guard namesAndTargets.isEmpty == false else { return }
+
+        var benchmarkMetricsMaxLength = 10
+        namesAndTargets.forEach { _ in
+            metrics.forEach { metric in
+                benchmarkMetricsMaxLength = max(benchmarkMetricsMaxLength, metric.description.count)
+            }
+        }
+
         namesAndTargets.forEach { nameAndTarget in
 
-            "Absolute threshold violations for \(nameAndTarget.name):\(nameAndTarget.target)".printAsHeader(addWhiteSpace: false)
+            print("\(nameAndTarget.target.bold):\(nameAndTarget.name.bold)")
 
             metrics.forEach { metric in
+                let indent = String(repeating: " ", count: benchmarkMetricsMaxLength - metric.description.count)
 
                 let absoluteResults = deviationResults.filter { $0.name == nameAndTarget.name &&
                     $0.target == nameAndTarget.target &&
                     $0.metric == metric &&
                     $0.relative == false
                 }
-                let width = 40
-                let percentileWidth = 15
 
-                // The baseValue is the new baseline that we're using as the comparison base, so...
-                if absoluteResults.isEmpty == false {
-                    let absoluteTable = TextTable<BenchmarkResult.ThresholdDeviation> {
-                        [Column(title: "\(metric.description) (\(metric.countable ? $0.units.description : $0.units.timeDescription), Δ)",
-                                value: $0.percentile, width: width, align: .left),
-                         Column(title: "Threshold", value: $0.comparisonValue, width: percentileWidth, align: .right),
-                         Column(title: "\(baselineName)", value: $0.baseValue, width: percentileWidth, align: .right),
-                         Column(title: "Threshold Abs", value: $0.differenceThreshold, width: percentileWidth, align: .right)]
-                    }
+                absoluteResults.forEach { result in
+                    let unitDescription = metric.countable ? "" : result.units.timeDescription
+                    let percentile = "\(result.percentile)".paddingToLeft(upTo: 4)
 
-                    absoluteTable.print(absoluteResults, style: Style.fancy)
+                    print("    \(percentile) \(indent)\(metric.description) \((result.difference - result.differenceThreshold).description.bold)\(unitDescription.italic)")
                 }
             }
         }
+        print("")
     }
- */
 }
+
 extension RangeReplaceableCollection where Self: StringProtocol {
     func paddingToLeft(upTo length: Int, using element: Element = " ") -> SubSequence {
         return repeatElement(element, count: Swift.max(0, length-count)) + suffix(Swift.max(count, count-length))
