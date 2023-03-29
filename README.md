@@ -20,24 +20,51 @@ Benchmark works on both macOS and Linux and supports several key workflows for p
 * **[Manual comparison of multiple performance baselines](https://swiftpackageindex.com/ordo-one/package-benchmark/documentation/benchmark/creatingandcomparingbaselines)** for iterative or A/B performance work by an individual developer
 * **[Export of benchmark results in several formats](https://swiftpackageindex.com/ordo-one/package-benchmark/documentation/benchmark/exportingbenchmarks)** for analysis or visualization
 
-Benchmark provides a quick way for validation of performance metrics, while other more specialized tools such as Instruments, DTrace, Heaptrack, Leaks, Sample and more can be used for finding root causes for any deviations found.
+Benchmark provides a quick way for measuring and validating of performance metrics, while other more specialized tools such as Instruments, DTrace, Heaptrack, Leaks, Sample and more can be used for attributing performance problems or for finding root causes for any deviations found.
 
-Benchmark is suitable for both smaller ad-hoc benchmarks focusing on execution time and more extensive benchmarks that care about several additional metrics such as memory allocations, syscalls, thread usage, context switches, and more. Thanks to the [Histogram foundation](ttps://github.com/ordo-one/package-histogram) it’s especially suitable for capturing latency statistics for large number of samples.
+Benchmark is suitable for both smaller ad-hoc benchmarks focusing on execution time and more extensive benchmarks that care about several additional metrics such as memory allocations, syscalls, thread usage, context switches, ARC traffic, and more. Using [Histogram](https://github.com/ordo-one/package-histogram) it’s especially suitable for capturing latency statistics for large number of samples.
 
 ## Documentation
 
-Documentation on how to use Benchmark in your Swift package can be [viewed online](https://swiftpackageindex.com/ordo-one/package-benchmark/documentation/benchmark) (hosted by the Swift Package Index, thanks!) or inside Xcode using `Build Documentation`. 
+Documentation on how to use Benchmark in your Swift package can be [viewed online](https://swiftpackageindex.com/ordo-one/package-benchmark/documentation/benchmark) or inside Xcode using `Build Documentation`. 
+
 Additionally the command plugin provides help information if you run `swift package benchmark help` from the command line.
 
 ## Adding dependencies and getting started
 
-### Add a package dependency to Package.swift
-To add the dependency on Benchmark, add a dependency to your package:
+There are just a few steps required to get started benchmarking:
+1. Add a dependency to the Benchmark project
+2. Add benchmark executable targets with `swift package benchmark init`
+3. Add the snippet or code you want to benchmark
+4. Run `swift package benchmark`
+
+The steps in some detail:
+### Step 1: Add a package dependency to Package.swift
+To add the dependency on Benchmark, add the dependency to your package:
 ```swift
-.package(url: "https://github.com/ordo-one/package-benchmark", .upToNextMajor(from: "1.0.0")),
+.package(url: "https://github.com/ordo-one/package-benchmark", .upToNextMajor(from: "1.4.0")),
 ```
 
-### Add benchmark exectuable targets
+### Step 2: Add benchmark exectuable targets using `benchmark init`
+The absolutely easiest way to add new benchmark executable targets to your project is by using:
+```bash
+swift package --allow-writing-to-package-directory benchmark init MyNewBenchmarkTarget
+```
+
+This will perform the following steps for you:
+* Create a Benchmarks/MyNewBenchmarkTarget directory
+* Create a Benchmarks/MyNewBenchmarkTarget/MyNewBenchmarkTarget.swift benchmark target with the required boilerplate
+* Add a new executable target for the benchmark to the end of your Package.swift file
+
+The init command validates that the name you specify isn’t used by any existing target and will not overwrite any existing file with that name in the Benchmarks/ location. 
+
+After you’ve created the new target, you can directly run it with e.g.:
+```bash
+swift package benchmark --target MyNewBenchmarkTarget
+```
+
+### Step 2 (optional approach): Add benchmark exectuable targets manually
+Alternatively if you don't want the plugin to modify your project directory, you can do the same steps manually:
 Create an executable target in Package.swift for each benchmark suite you want to measure.
 The source for all benchmarks must reside in a directory named `Benchmarks` in the root of your swift package.
 The benchmark plugin uses this directory combined with the executable target information to automatically discover and run your benchmarks.
@@ -54,7 +81,7 @@ The following example shows an benchmark suite named `My-Benchmark` with the req
 ),
 ```
 
-## Writing benchmarks
+## Step 3: Writing benchmarks
 There are [documentation available](https://swiftpackageindex.com/ordo-one/package-benchmark/documentation/benchmark/writingbenchmarks) as well as a [a sample project](https://github.com/ordo-one/package-benchmark-samples) using various aspects of this package in practice.
 
 ## Sample benchmark code
@@ -82,7 +109,7 @@ let benchmarks = {
 }
 ```
 
-### Running benchmarks
+### Step 4: Running benchmarks
 To execute all defined benchmarks, simply run:
 
 ```swift package benchmark```
