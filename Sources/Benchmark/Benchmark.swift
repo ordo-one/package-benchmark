@@ -40,7 +40,7 @@ public final class Benchmark: Codable, Hashable {
     public typealias BenchmarkCustomMetricMeasurement = (BenchmarkMetric, Int) -> Void
 
     /// Alias for closures used to hook into setup / teardown
-    public typealias BenchmarkHook = () -> Void
+    public typealias BenchmarkHook = () async throws -> Void
 
     /// This closure if set, will be run before a targets benchmarks are run, but after they are registered
     public static var startupHook: BenchmarkHook?
