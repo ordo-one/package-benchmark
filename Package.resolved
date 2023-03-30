@@ -14,8 +14,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/ordo-one/package-histogram",
       "state" : {
-        "revision" : "604410b21ded1ebdf06ad98100f448c68e80f5a1",
-        "version" : "0.1.1"
+        "revision" : "a69fa24d7b70421870cafa86340ece900489e17e",
+        "version" : "0.1.2"
       }
     },
     {
