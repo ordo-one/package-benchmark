@@ -116,7 +116,8 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
         do {
             try await Benchmark.startupHook?()
         } catch {
-            fatalError("startup hook failed: \(error)")
+            try channel.write(.error("Benchmark.startupHook failed: \(error)"))
+            return
         }
 
         while true {
@@ -201,13 +202,15 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
                     print("Internal error: Couldn't find specified benchmark '\(benchmarkToRun.name)' to run.")
                 }
 
-                try channel.write(.end)
-            case .end:
                 do {
                     try await Benchmark.shutdownHook?()
                 } catch {
-                    fatalError("Benchmark shutdown hook failed: \(error)")
+                    try channel.write(.error("Benchmark.shutdownHook failed: \(error)"))
+                    return
                 }
+
+                try channel.write(.end)
+            case .end:
                 return
             }
         }

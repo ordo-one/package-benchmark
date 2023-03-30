@@ -38,6 +38,9 @@ extension BenchmarkTool {
                 benchmarks.append(benchmark)
             case .end:
                 break outerloop
+            case let .error(description):
+                failBenchmark(description)
+                break outerloop
             default:
                 print("Unexpected reply \(benchmarkReply)")
             }
@@ -59,11 +62,7 @@ extension BenchmarkTool {
             case .end:
                 break outerloop
             case let .error(description):
-                print("*****")
-                print("***** Benchmark '\(benchmark.name)' failed:")
-                print("***** \(description)")
-                print("*****")
-                failBenchmark("")
+                failBenchmark(description)
                 break outerloop
             default:
                 print("Unexpected reply \(benchmarkReply)")
