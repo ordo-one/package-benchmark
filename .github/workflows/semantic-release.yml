@@ -47,7 +47,9 @@ jobs:
                 - scope: 'major'
                   release: major
             - - '@semantic-release/release-notes-generator'
-            - '@semantic-release/github' "> .releaserc.yml
+            - - '@semantic-release/github'
+              - successComment: false
+                failTitle: false" > .releaserc.yml
 
       - name: Setup Node.js
         uses: actions/setup-node@v3
