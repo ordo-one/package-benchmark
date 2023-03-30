@@ -113,7 +113,11 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
         var benchmark: Benchmark?
         var results: [BenchmarkResult] = []
 
-        Benchmark.startupHook?()
+        do {
+            try await Benchmark.startupHook?()
+        } catch {
+            fatalError("startup hook failed: \(error)")
+        }
 
         while true {
             if debug { // in debug mode we run all benchmarks matching filter/skip specified
@@ -199,7 +203,11 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
 
                 try channel.write(.end)
             case .end:
-                Benchmark.shutdownHook?()
+                do {
+                    try await Benchmark.shutdownHook?()
+                } catch {
+                    fatalError("Benchmark shutdown hook failed: \(error)")
+                }
                 return
             }
         }
