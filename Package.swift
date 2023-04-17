@@ -144,7 +144,7 @@ var dependencies: [PackageDescription.Target.Dependency] = [
     "SwiftRuntimeHooks",
 ]
 
-if let disableJemalloc, disableJemalloc != "false", disableJemalloc != "0", spiBuild != true {
+if let disableJemalloc, disableJemalloc != "false", disableJemalloc != "0", spiBuild != false {
 } else {
     package.dependencies += [.package(url: "https://github.com/ordo-one/package-jemalloc", .upToNextMajor(from: "1.0.0"))]
     dependencies += [.product(name: "jemalloc", package: "package-jemalloc")]
