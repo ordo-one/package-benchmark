@@ -9,171 +9,169 @@
 //
 
 #if os(Linux)
-    import CLinuxOperatingSystemStats
-    import Dispatch
-    import Glibc
-    import SystemPackage
 
-#if swift(>=5.8) && os(Linux)
-@_documentation(visibility: internal)
-#endif
-    public class OperatingSystemStatsProducer {
-        var nsPerSchedulerTick: Int
-        var pageSize: Int
+import CLinuxOperatingSystemStats
+import Dispatch
+import Glibc
+import SystemPackage
 
-        let lock = NIOLock()
-        let semaphore = DispatchSemaphore(value: 0)
-        var peakThreads: Int = 0
-        var sampleRate: Int = 10_000
-        var runState: RunState = .running
+final class OperatingSystemStatsProducer {
+    var nsPerSchedulerTick: Int
+    var pageSize: Int
 
-        enum RunState {
-            case running
-            case shuttingDown
-            case done
-        }
+    let lock = NIOLock()
+    let semaphore = DispatchSemaphore(value: 0)
+    var peakThreads: Int = 0
+    var sampleRate: Int = 10_000
+    var runState: RunState = .running
 
-        public init() {
-            let schedulerTicksPerSecond = sysconf(Int32(_SC_CLK_TCK))
+    enum RunState {
+        case running
+        case shuttingDown
+        case done
+    }
 
-            nsPerSchedulerTick = 1_000_000_000 / schedulerTicksPerSecond
-            pageSize = sysconf(Int32(_SC_PAGESIZE))
-        }
+    public init() {
+        let schedulerTicksPerSecond = sysconf(Int32(_SC_CLK_TCK))
 
-        deinit {}
+        nsPerSchedulerTick = 1_000_000_000 / schedulerTicksPerSecond
+        pageSize = sysconf(Int32(_SC_PAGESIZE))
+    }
 
-        // We should cache the open file(s) and just read from file offset 0 to reduce overhead
-        func read(path: FilePath) -> String {
-            var string = ""
+    deinit {}
 
+    // We should cache the open file(s) and just read from file offset 0 to reduce overhead
+    func read(path: FilePath) -> String {
+        var string = ""
+
+        do {
+            let fileDescriptor = try FileDescriptor.open(path, .readOnly, options: [], permissions: .ownerRead)
             do {
-                let fileDescriptor = try FileDescriptor.open(path, .readOnly, options: [], permissions: .ownerRead)
-                do {
-                    try fileDescriptor.closeAfter {
-                        do {
-                            let fileData = try [UInt8](unsafeUninitializedCapacity: 1_024) { buf, count in
-                                count = try fileDescriptor.read(into: UnsafeMutableRawBufferPointer(buf))
-                            }
-
-                            fileData.withUnsafeBufferPointer {
-                                string = String(cString: $0.baseAddress!)
-                            }
-                        } catch {
-                            print("Failed to open file for reading \(path)")
+                try fileDescriptor.closeAfter {
+                    do {
+                        let fileData = try [UInt8](unsafeUninitializedCapacity: 1_024) { buf, count in
+                            count = try fileDescriptor.read(into: UnsafeMutableRawBufferPointer(buf))
                         }
+
+                        fileData.withUnsafeBufferPointer {
+                            string = String(cString: $0.baseAddress!)
+                        }
+                    } catch {
+                        print("Failed to open file for reading \(path)")
                     }
-                } catch {
-                    print("Failed to close fileDescriptor for \(path) after reading.")
                 }
             } catch {
-                if errno != ENOENT { // file not found is ok, e.g. when no baselines exist
-                    print("Failed to open file \(path), errno = [\(errno)]")
-                }
+                print("Failed to close fileDescriptor for \(path) after reading.")
             }
-
-            return string
-        }
-
-        func readIOStats() -> ioStats {
-            let stats = read(path: FilePath("/proc/self/io"))
-            var ioStats: ioStats = .init()
-            CLinuxIOStats(stats, &ioStats)
-            return ioStats
-        }
-
-        func readProcessStats() -> processStats {
-            let statsRead = read(path: FilePath("/proc/self/stat"))
-
-            var stats: processStats = .init()
-            CLinuxProcessStats(statsRead, &stats)
-            stats.cpuUser *= nsPerSchedulerTick
-            stats.cpuSystem *= nsPerSchedulerTick
-            stats.cpuTotal *= nsPerSchedulerTick
-            stats.peakMemoryResident *= pageSize
-
-            return stats
-        }
-
-        func makeOperatingSystemStats() -> OperatingSystemStats {
-            let ioStats = readIOStats()
-            let processStats = readProcessStats()
-
-            return OperatingSystemStats(cpuUser: Int(processStats.cpuUser),
-                                        cpuSystem: Int(processStats.cpuSystem),
-                                        cpuTotal: Int(processStats.cpuTotal),
-                                        peakMemoryResident: Int(processStats.peakMemoryResident),
-                                        peakMemoryVirtual: Int(processStats.peakMemoryVirtual),
-                                        syscalls: 0,
-                                        contextSwitches: 0,
-                                        threads: Int(processStats.threads),
-                                        threadsRunning: 0, // we can go dig in /proc/self/task/ later if want this
-                                        readSyscalls: Int(ioStats.readSyscalls),
-                                        writeSyscalls: Int(ioStats.writeSyscalls),
-                                        readBytesLogical: Int(ioStats.readBytesLogical),
-                                        writeBytesLogical: Int(ioStats.writeBytesLogical),
-                                        readBytesPhysical: Int(ioStats.readBytesPhysical),
-                                        writeBytesPhysical: Int(ioStats.writeBytesPhysical))
-        }
-
-        func metricSupported(_ metric: BenchmarkMetric) -> Bool {
-            switch metric {
-            case .syscalls:
-                return false
-            case .contextSwitches:
-                return false
-            case .threadsRunning:
-                return false
-            default:
-                return true
+        } catch {
+            if errno != ENOENT { // file not found is ok, e.g. when no baselines exist
+                print("Failed to open file \(path), errno = [\(errno)]")
             }
         }
 
-        func startSampling(_: Int = 10_000) { // sample rate in microseconds
-            DispatchQueue.global(qos: .userInitiated).async {
+        return string
+    }
+
+    func readIOStats() -> ioStats {
+        let stats = read(path: FilePath("/proc/self/io"))
+        var ioStats: ioStats = .init()
+        CLinuxIOStats(stats, &ioStats)
+        return ioStats
+    }
+
+    func readProcessStats() -> processStats {
+        let statsRead = read(path: FilePath("/proc/self/stat"))
+
+        var stats: processStats = .init()
+        CLinuxProcessStats(statsRead, &stats)
+        stats.cpuUser *= nsPerSchedulerTick
+        stats.cpuSystem *= nsPerSchedulerTick
+        stats.cpuTotal *= nsPerSchedulerTick
+        stats.peakMemoryResident *= pageSize
+
+        return stats
+    }
+
+    func makeOperatingSystemStats() -> OperatingSystemStats {
+        let ioStats = readIOStats()
+        let processStats = readProcessStats()
+
+        return OperatingSystemStats(cpuUser: Int(processStats.cpuUser),
+                                    cpuSystem: Int(processStats.cpuSystem),
+                                    cpuTotal: Int(processStats.cpuTotal),
+                                    peakMemoryResident: Int(processStats.peakMemoryResident),
+                                    peakMemoryVirtual: Int(processStats.peakMemoryVirtual),
+                                    syscalls: 0,
+                                    contextSwitches: 0,
+                                    threads: Int(processStats.threads),
+                                    threadsRunning: 0, // we can go dig in /proc/self/task/ later if want this
+                                    readSyscalls: Int(ioStats.readSyscalls),
+                                    writeSyscalls: Int(ioStats.writeSyscalls),
+                                    readBytesLogical: Int(ioStats.readBytesLogical),
+                                    writeBytesLogical: Int(ioStats.writeBytesLogical),
+                                    readBytesPhysical: Int(ioStats.readBytesPhysical),
+                                    writeBytesPhysical: Int(ioStats.writeBytesPhysical))
+    }
+
+    func metricSupported(_ metric: BenchmarkMetric) -> Bool {
+        switch metric {
+        case .syscalls:
+            return false
+        case .contextSwitches:
+            return false
+        case .threadsRunning:
+            return false
+        default:
+            return true
+        }
+    }
+
+    func startSampling(_: Int = 10_000) { // sample rate in microseconds
+        DispatchQueue.global(qos: .userInitiated).async {
+            self.lock.lock()
+
+            let rate = self.sampleRate
+            self.peakThreads = 0
+            self.runState = .running
+
+            self.lock.unlock()
+
+            while true {
+                let processStats = self.readProcessStats()
+
                 self.lock.lock()
 
-                let rate = self.sampleRate
-                self.peakThreads = 0
-                self.runState = .running
+                if processStats.threads > self.peakThreads {
+                    self.peakThreads = processStats.threads
+                }
+
+                if self.runState == .shuttingDown {
+                    self.runState = .done
+                    self.semaphore.signal()
+                }
+
+                let quit = self.runState
 
                 self.lock.unlock()
 
-                while true {
-                    let processStats = self.readProcessStats()
-
-                    self.lock.lock()
-
-                    if processStats.threads > self.peakThreads {
-                        self.peakThreads = processStats.threads
-                    }
-
-                    if self.runState == .shuttingDown {
-                        self.runState = .done
-                        self.semaphore.signal()
-                    }
-
-                    let quit = self.runState
-
-                    self.lock.unlock()
-
-                    if quit == .done {
-                        return
-                    }
-
-                    usleep(UInt32.random(in: UInt32(Double(rate) * 0.9) ... UInt32(Double(rate) * 1.1)))
+                if quit == .done {
+                    return
                 }
+
+                usleep(UInt32.random(in: UInt32(Double(rate) * 0.9) ... UInt32(Double(rate) * 1.1)))
             }
-            // We'll sleep just a little bit to let the sampler thread get going so we try to avoid 0 samples
-            usleep(1_000)
         }
-
-        func stopSampling() {
-            lock.lock()
-            runState = .shuttingDown
-            lock.unlock()
-
-            semaphore.wait()
-        }
+        // We'll sleep just a little bit to let the sampler thread get going so we try to avoid 0 samples
+        usleep(1_000)
     }
+
+    func stopSampling() {
+        lock.lock()
+        runState = .shuttingDown
+        lock.unlock()
+
+        semaphore.wait()
+    }
+}
 
 #endif
