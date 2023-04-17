@@ -1,4 +1,4 @@
-name: Swift thread sanitizer
+name: Thread sanitizer
 
 on:
   workflow_dispatch:
