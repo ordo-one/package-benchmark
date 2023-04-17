@@ -36,7 +36,7 @@ final class OperatingSystemStatsProducer {
         init(_ data: T) {
             self.data = data
         }
-        
+
         var data: T
     }
 

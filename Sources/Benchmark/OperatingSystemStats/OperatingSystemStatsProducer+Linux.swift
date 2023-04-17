@@ -31,7 +31,7 @@ final class OperatingSystemStatsProducer {
         case done
     }
 
-    public init() {
+    init() {
         let schedulerTicksPerSecond = sysconf(Int32(_SC_CLK_TCK))
 
         nsPerSchedulerTick = 1_000_000_000 / schedulerTicksPerSecond
