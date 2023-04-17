@@ -14,6 +14,9 @@
     import Glibc
     import SystemPackage
 
+#if swift(>=5.8)
+@_documentation(visibility: internal)
+#endif
     public class OperatingSystemStatsProducer {
         var nsPerSchedulerTick: Int
         var pageSize: Int

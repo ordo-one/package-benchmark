@@ -13,6 +13,9 @@
     import Darwin
     import Dispatch
 
+#if swift(>=5.8)
+@_documentation(visibility: internal)
+#endif
     final class OperatingSystemStatsProducer {
         var nsPerMachTick: Double
         var nsPerSchedulerTick: Int

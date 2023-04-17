@@ -114,6 +114,19 @@ let package = Package(
         ),
     ]
 )
+// Check if this is a SPI build, then we need to disable jemalloc for macOS
+
+let spiBuild: Bool
+
+#if canImport(Darwin)
+if let spiBuildEnvironment = ProcessInfo.processInfo.environment["SPI_BUILD"], spiBuildEnvironment == "1" {
+    spiBuild = true
+} else {
+    spiBuild = false
+}
+#else
+spiBuild = false
+#endif
 
 // Add Benchmark target dynamically
 
@@ -131,7 +144,7 @@ var dependencies: [PackageDescription.Target.Dependency] = [
     "SwiftRuntimeHooks",
 ]
 
-if let disableJemalloc, disableJemalloc != "false", disableJemalloc != "0" {
+if let disableJemalloc, disableJemalloc != "false", disableJemalloc != "0", spiBuild != true {
 } else {
     package.dependencies += [.package(url: "https://github.com/ordo-one/package-jemalloc", .upToNextMajor(from: "1.0.0"))]
     dependencies += [.product(name: "jemalloc", package: "package-jemalloc")]
