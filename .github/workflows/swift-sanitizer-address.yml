@@ -1,4 +1,4 @@
-name: Swift address sanitizer
+name: Address sanitizer
 
 on:
   workflow_dispatch:
