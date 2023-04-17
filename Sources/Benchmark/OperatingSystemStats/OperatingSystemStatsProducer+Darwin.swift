@@ -13,7 +13,7 @@
     import Darwin
     import Dispatch
 
-#if swift(>=5.8)
+#if swift(>=5.8) && (os(macOS) || os(iOS) || os(watchOS) || os(tvOS))
 @_documentation(visibility: internal)
 #endif
     final class OperatingSystemStatsProducer {

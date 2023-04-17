@@ -14,7 +14,7 @@
     import Glibc
     import SystemPackage
 
-#if swift(>=5.8)
+#if swift(>=5.8) && os(Linux)
 @_documentation(visibility: internal)
 #endif
     public class OperatingSystemStatsProducer {
