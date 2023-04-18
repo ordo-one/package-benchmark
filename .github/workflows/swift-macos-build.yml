@@ -10,9 +10,19 @@ on:
 jobs:
   build-macos:
     timeout-minutes: 60
-    runs-on: [macos-12]
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-12]
+        swift: ["5.7", "5.8"]
+
+    runs-on: ${{ matrix.os }}
 
     steps:
+    - uses: fwal/setup-swift@v1.23.0
+      with:
+        swift-version: ${{ matrix.swift }}
+
     - name: Homebrew Mac
       if: ${{ runner.os == 'Macos' }}
       run: |
