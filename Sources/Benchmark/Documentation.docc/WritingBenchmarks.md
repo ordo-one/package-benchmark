@@ -273,13 +273,13 @@ let benchmarks = {
 // only shared setup
 Benchmark("Minimal benchmark", 
     configuration: .init(setup: setupFunction, teardown: teardownFunction)) { benchmark in 
-// Some work to measure here
+    // Some work to measure here
 }
 
 Benchmark("Minimal benchmark 2", 
     configuration: .init(setup: setupFunction, teardown: teardownFunction)) { benchmark in
-// Some work to measure here, use mySharedSetup here too
-}
+    // Some work to measure here
+    }
 }
 ```
 
@@ -290,14 +290,12 @@ import Benchmark
 
 let benchmarks = {
 
-// only shared setup
-Benchmark("Minimal benchmark", 
-configuration: .init(setup: setupFunction, teardown: teardownFunction)) { benchmark in 
-} setup: {
- // do setup for this benchmark here
-} teardown: {
- // do teardown here
-}
+Benchmark("Minimal benchmark") { benchmark in 
+    } setup: {
+     // do setup for this benchmark here
+    } teardown: {
+     // do teardown here
+    }
 }
 ```
 
@@ -308,6 +306,34 @@ All of these setup/teardown hooks can be combined, the order of execution is:
 * Closure provided setup
 
 with teardown in reverse order.
+
+So to use all hooks at the same time:
+
+```swift
+import Benchmark
+
+func sharedSetup() {
+}
+
+func sharedTeardown() {
+}
+
+let benchmarks = {
+
+    Benchmark.setup = { print("global setup closure, used for all benchmarks") }
+    Benchmark.teardown = { print("global teardown closure, used for all benchmarks") }
+
+
+    Benchmark("Minimal benchmark", 
+    configuration: .init(setup: setupFunction, teardown: teardownFunction)) { benchmark in 
+    } setup: {
+    // do setup for this benchmark here
+    } teardown: {
+    // do teardown here
+    }
+}
+```
+
 
 ### Async vs Sync
 
