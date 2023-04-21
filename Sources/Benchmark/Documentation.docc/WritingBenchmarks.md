@@ -216,6 +216,125 @@ Benchmark.defaultConfiguration = .init(...)
 
 There are a number of convenience methods in `BenchmarkThreshold+Defaults.swift`.
 
+### Customize startup/teardown code for benchmarks
+
+There are multiple ways to setup shared benchmark setup/teardown code.
+
+First off, one can easily setup global shared state that can be reused by just defining it in the closure:
+
+```swift
+import Benchmark
+
+let benchmarks = {
+    let mySharedSetup = [1, 2, 3, 4]
+
+    Benchmark("Minimal benchmark") { benchmark in
+    // Some work to measure here, use mySharedSetup
+    }
+
+    Benchmark("Minimal benchmark 2") { benchmark in
+    // Some work to measure here, use mySharedSetup here too
+    }
+}
+```
+
+Secondly, one can have setup/teardown closures that are shared across all benchmarks:
+
+```swift
+import Benchmark
+
+let benchmarks = {
+    Benchmark.setup = { print("global setup closure, used for all benchmarks") }
+    Benchmark.teardown = { print("global teardown closure, used for all benchmarks") }
+
+    Benchmark("Minimal benchmark") { benchmark in
+    // Some work to measure here, use mySharedSetup
+    }
+
+    Benchmark("Minimal benchmark 2") { benchmark in
+    // Some work to measure here, use mySharedSetup here too
+    }
+}
+```
+
+Thirdly, one can have setup/teardown closures as part of the configuration for a subset of benchmarks
+
+```swift
+import Benchmark
+
+func setupFunction() {
+}
+
+func teardownFunction() {
+}
+
+let benchmarks = {
+
+// only shared setup
+Benchmark("Minimal benchmark", 
+    configuration: .init(setup: setupFunction, teardown: teardownFunction)) { benchmark in 
+    // Some work to measure here
+}
+
+Benchmark("Minimal benchmark 2", 
+    configuration: .init(setup: setupFunction, teardown: teardownFunction)) { benchmark in
+    // Some work to measure here
+    }
+}
+```
+
+Finally, one can have setup/teardown closures that are specific to a given benchmark
+
+```swift
+import Benchmark
+
+let benchmarks = {
+
+Benchmark("Minimal benchmark") { benchmark in 
+    } setup: {
+     // do setup for this benchmark here
+    } teardown: {
+     // do teardown here
+    }
+}
+```
+
+All of these setup/teardown hooks can be combined, the order of execution is:
+
+* Global setup
+* Configuration provided setup
+* Closure provided setup
+
+with teardown in reverse order.
+
+So to use all hooks at the same time:
+
+```swift
+import Benchmark
+
+func sharedSetup() {
+}
+
+func sharedTeardown() {
+}
+
+let benchmarks = {
+
+    Benchmark.setup = { print("global setup closure, used for all benchmarks") }
+    Benchmark.teardown = { print("global teardown closure, used for all benchmarks") }
+
+
+    Benchmark("Minimal benchmark", 
+    configuration: .init(setup: setupFunction, teardown: teardownFunction)) { benchmark in 
+    } setup: {
+    // do setup for this benchmark here
+    } teardown: {
+    // do teardown here
+    }
+}
+```
+
+
 ### Async vs Sync
 
 The framework supports both synchronous and asynchronous benchmark closures, it should transparently "just work".
