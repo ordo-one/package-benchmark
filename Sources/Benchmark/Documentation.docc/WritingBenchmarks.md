@@ -238,7 +238,7 @@ let benchmarks = {
 }
 ```
 
-Secondly, one can do have setup/teardown closures that are shared across all benchmarks:
+Secondly, one can have setup/teardown closures that are shared across all benchmarks:
 
 ```swift
 import Benchmark
