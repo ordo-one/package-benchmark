@@ -273,7 +273,7 @@ let benchmarks = {
 // only shared setup
 Benchmark("Minimal benchmark", 
     configuration: .init(setup: setupFunction, teardown: teardownFunction)) { benchmark in 
-// Some work to measure here, use mySharedSetup
+// Some work to measure here
 }
 
 Benchmark("Minimal benchmark 2", 
