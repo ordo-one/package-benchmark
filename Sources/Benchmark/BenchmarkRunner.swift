@@ -113,13 +113,6 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
         var benchmark: Benchmark?
         var results: [BenchmarkResult] = []
 
-        do {
-            try await Benchmark.startupHook?()
-        } catch {
-            try channel.write(.error("Benchmark.startupHook failed: \(error)"))
-            return
-        }
-
         while true {
             if debug { // in debug mode we run all benchmarks matching filter/skip specified
                 var benchmark: Benchmark?
@@ -174,7 +167,39 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
 
                     benchmark.target = benchmarkToRun.target
 
+                    do {
+                        try await Benchmark.startupHook?()
+                        try await Benchmark.setup?()
+
+                        if let setup = benchmark.configuration.setup {
+                            try await setup()
+                        }
+
+                        if let setup = benchmark.setup {
+                            try await setup()
+                        }
+                    } catch {
+                        try channel.write(.error("Benchmark.setup or local benchmark setup failed: \(error)"))
+                        return
+                    }
+
                     results = benchmarkExecutor.run(benchmark)
+
+                    do {
+                        if let teardown = benchmark.teardown {
+                            try await teardown()
+                        }
+
+                        if let teardown = benchmark.configuration.teardown {
+                            try await teardown()
+                        }
+
+                        try await Benchmark.shutdownHook?()
+                        try await Benchmark.teardown?()
+                    } catch {
+                        try channel.write(.error("Benchmark.teardown or local benchmark teardown failed: \(error)"))
+                        return
+                    }
 
                     guard benchmark.failureReason == nil else {
                         try channel.write(.error(benchmark.failureReason!))
@@ -200,13 +225,6 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
                     }
                 } else {
                     print("Internal error: Couldn't find specified benchmark '\(benchmarkToRun.name)' to run.")
-                }
-
-                do {
-                    try await Benchmark.shutdownHook?()
-                } catch {
-                    try channel.write(.error("Benchmark.shutdownHook failed: \(error)"))
-                    return
                 }
 
                 try channel.write(.end)

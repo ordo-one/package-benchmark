@@ -34,8 +34,8 @@ let benchmarks = {
                                            maxIterations: Int.max,
                                            thresholds: thresholds)
 
-    // Benchmark.startupHook = { print("Startup hook") }
-    // Benchmark.shutdownHook = { print("Shutdown hook") }
+    testSetUpTearDown()
+
     // A way to define custom metrics fairly compact
     enum CustomMetrics {
         static var one: BenchmarkMetric { .custom("CustomMetricOne") }
