@@ -220,7 +220,7 @@ There are a number of convenience methods in `BenchmarkThreshold+Defaults.swift`
 
 There are multiple ways to setup shared benchmark setup/teardown code.
 
-First off, one can easily setup global shared state that can be resued by just defining it in the closure:
+First off, one can easily setup global shared state that can be reused by just defining it in the closure:
 
 ```swift
 import Benchmark
