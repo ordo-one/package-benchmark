@@ -35,4 +35,5 @@ jobs:
       run: swift build
     - name: Run tests
       run: |
+        export BENCHMARK_DISABLE_JEMALLOC=true
         [ -d Tests ] && swift test --parallel
