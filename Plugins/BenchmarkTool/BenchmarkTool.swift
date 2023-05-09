@@ -113,11 +113,6 @@ struct BenchmarkTool: AsyncParsableCommand {
             print(reason)
             print("")
         }
-        #if canImport(Darwin)
-            Darwin.exit(exitCode.rawValue)
-        #elseif canImport(Glibc)
-            Glibc.exit(exitCode.rawValue)
-        #endif
     }
 
     func printChildRunError(error: Int32, benchmarkExecutablePath: String) {
@@ -256,7 +251,7 @@ struct BenchmarkTool: AsyncParsableCommand {
     }
 
     enum RunCommandError: Error {
-        case WaitPIDError
+        case WaitPIDError(String)
         case POSIXSpawnError(Int32)
     }
 
@@ -310,7 +305,7 @@ struct BenchmarkTool: AsyncParsableCommand {
 
                 try write(.end)
             } catch {
-                fatalError("\(error)")
+                print("process failed: \(error)")
             }
 
             if status == 0 {
@@ -318,7 +313,7 @@ struct BenchmarkTool: AsyncParsableCommand {
                     completion?(status)
                 } else {
                     print("waitpiderror")
-                    throw RunCommandError.WaitPIDError
+                    throw RunCommandError.WaitPIDError("process failed")
                 }
             } else {
                 throw RunCommandError.POSIXSpawnError(status)
