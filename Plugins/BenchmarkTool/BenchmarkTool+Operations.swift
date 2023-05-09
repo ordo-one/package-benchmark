@@ -63,6 +63,7 @@ extension BenchmarkTool {
                 break outerloop
             case let .error(description):
                 failBenchmark(description)
+                benchmarkResults[BenchmarkIdentifier(target: target, name: benchmark.name)] = []
                 break outerloop
             default:
                 print("Unexpected reply \(benchmarkReply)")

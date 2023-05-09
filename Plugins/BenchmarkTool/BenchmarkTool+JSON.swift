@@ -39,7 +39,7 @@ extension BenchmarkTool {
         try withUnsafeMutableBytes(of: &bufferLength) { (intPtr: UnsafeMutableRawBufferPointer) in
             let readBytes = try input.read(into: intPtr)
             if readBytes == 0 {
-                throw RunCommandError.WaitPIDError
+                throw RunCommandError.WaitPIDError("no command sent to controlled process.")
             }
         }
 
