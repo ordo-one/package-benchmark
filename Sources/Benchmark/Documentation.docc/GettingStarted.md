@@ -6,22 +6,29 @@ Before creating your own benchmarks, you must install the required prerequisites
 
 There are three steps that needs to be performed to get up and running with your own benchmarks:
 
-* Install prerequisite dependencies if needed (currently only `jemalloc`) 
+* Install prerequisite dependencies if needed (currently that's only `jemalloc`) 
 * Add a dependency on Benchmark to your `Package.swift` file
 * Add one or more benchmark executable targets to the top level `Benchmarks/` directory for auto discovery
 
 After having done those, running your benchmarks are as simple as running `swift package benchmark`.
 
-
 ### Installing Prerequisites and Platform Support
 
 Benchmark requires Swift 5.7 support as it uses Regex and Duration types introduced with the `macOS 13` runtime, most versions of Linux will work as long as Swift 5.7+ is used. 
 
-Benchmark also depends and needs the [jemalloc](https://jemalloc.net) memory allocation library, which is used by the Benchmark infrastructure to capture memory allocation statistics, as `jemalloc` provides a rich programmatic API for extracting memory allocation statistics at runtime. 
+Benchmark also by default depends on and uses the [jemalloc](https://jemalloc.net) memory allocation library, which is used by the Benchmark infrastructure to capture memory allocation statistics.
 
-The Benchmark package requires you to install jemalloc on any machine used for benchmarking. 
+For platforms where `jemalloc` isn't available it's possible to build the Benchmark package without a `jemalloc` dependency by setting the environment variable BENCHMARK_DISABLE_JEMALLOC to any value except `false` or `0`.
 
-If you want to avoid adding the `jemalloc` dependency to your project, the recommended approach is to embed a separate Swift project in a subdirectory that uses your project, then the dependency on `jemalloc` is contained to that subproject only.
+E.g. to run the benchmark on the command line without memory allocation stats could look like:
+
+```bash
+BENCHMARK_DISABLE_JEMALLOC=true swift package benchmark
+```
+
+The Benchmark package requires you to install jemalloc on any machine used for benchmarking if you want malloc statistics. 
+
+If you want to avoid adding the `jemalloc` dependency to your main project while still getting malloc statistics when benchmarking, the recommended approach is to embed a separate Swift project in a subdirectory that uses your project, then the dependency on `jemalloc` is contained to that subproject only.
 
 #### Installing `jemalloc` on macOS
 
@@ -65,23 +72,44 @@ To add the dependency on Benchmark, add a dependency to your package:
 .package(url: "https://github.com/ordo-one/package-benchmark", .upToNextMajor(from: "1.0.0")),
 ```
 
-### Add benchmark exectuable targets
+### Add benchmark exectuable targets using `benchmark init`
+The absolutely easiest way to add new benchmark executable targets to your project is by using:
+```bash
+swift package --allow-writing-to-package-directory benchmark init MyNewBenchmarkTarget
+```
 
-Create an executable target in `Package.swift` for each benchmark suite you want to measure.
+This will perform the following steps for you:
+
+* Create a `Benchmarks/MyNewBenchmarkTarget` directory
+* Create a `Benchmarks/MyNewBenchmarkTarget/MyNewBenchmarkTarget.swift` benchmark target with the required boilerplate
+* Add a new executable target for the benchmark to the end of your `Package.swift` file
+
+The `init` command validates that the name you specify isn't used by any existing target and will not overwrite any existing file with that name in the Benchmarks/ location. 
+
+After you've created the new target, you can directly run it with e.g.:
+```bash
+swift package benchmark --target MyNewBenchmarkTarget
+```
+
+### Add benchmark exectuable targets manually
+Optionally if you don't want the plugin to modify your project for you, you can do those steps manually.
+
+First create an executable target in `Package.swift` for each benchmark suite you want to measure.
 
 The source for all benchmarks *must reside in a directory named `Benchmarks`* in the root of your swift package.
 
 The benchmark plugin uses this directory combined with the executable target information to automatically discover and run your benchmarks.
 
-For each executable target, include a dependency on `BenchmarkSupport` from `package-benchmark`.
+For each executable target, include dependencies on both `Benchmark` (supporting framework) and `BenchmarkPlugin` (boilerplate generator) from `package-benchmark`.
 
-The following example shows an benchmark suite named `My-Benchmark` with the required dependency on `BenchmarkSupport` and the source files for the benchmark that reside in the directory `Benchmarks/My-Benchmark`:
+The following example shows an benchmark suite named `My-Benchmark` with the required dependency on `Benchmark` and the source files for the benchmark that reside in the directory `Benchmarks/My-Benchmark`:
 
 ```
 .executableTarget(
     name: "My-Benchmark",
     dependencies: [
-        .product(name: "BenchmarkSupport", package: "package-benchmark"),
+        .product(name: "Benchmark", package: "package-benchmark"),
+        .product(name: "BenchmarkPlugin", package: "package-benchmark"),
     ],
     path: "Benchmarks/My-Benchmark"
 ),

@@ -4,19 +4,19 @@
 
 ### Creating Configurations
 
-- ``Benchmark/Benchmark/Configuration-swift.struct/init(metrics:timeUnits:warmupIterations:scalingFactor:maxDuration:maxIterations:skip:thresholds:)``
+- ``Benchmark/Configuration-swift.struct/init(metrics:timeUnits:warmupIterations:scalingFactor:maxDuration:maxIterations:skip:thresholds:)``
 
 ### Inspecting Configurations
 
-- ``Benchmark/Benchmark/Configuration-swift.struct/maxDuration``
-- ``Benchmark/Benchmark/Configuration-swift.struct/maxIterations``
-- ``Benchmark/Benchmark/Configuration-swift.struct/metrics``
-- ``Benchmark/Benchmark/Configuration-swift.struct/skip``
-- ``Benchmark/Benchmark/Configuration-swift.struct/thresholds``
-- ``Benchmark/Benchmark/Configuration-swift.struct/scalingFactor``
-- ``Benchmark/Benchmark/Configuration-swift.struct/timeUnits``
-- ``Benchmark/Benchmark/Configuration-swift.struct/warmupIterations``
+- ``Benchmark/Configuration-swift.struct/maxDuration``
+- ``Benchmark/Configuration-swift.struct/maxIterations``
+- ``Benchmark/Configuration-swift.struct/metrics``
+- ``Benchmark/Configuration-swift.struct/skip``
+- ``Benchmark/Configuration-swift.struct/thresholds``
+- ``Benchmark/Configuration-swift.struct/scalingFactor``
+- ``Benchmark/Configuration-swift.struct/timeUnits``
+- ``Benchmark/Configuration-swift.struct/warmupIterations``
 
 ### Decoding Configurations
 
-- ``Benchmark/Benchmark/Configuration-swift.struct/init(from:)``
+- ``Benchmark/Configuration-swift.struct/init(from:)``

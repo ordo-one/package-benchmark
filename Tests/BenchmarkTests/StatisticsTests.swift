@@ -8,8 +8,7 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 //
 
-@testable import BenchmarkSupport
-@testable import Statistics
+@testable import Benchmark
 import XCTest
 
 final class StatisticsTests: XCTestCase {

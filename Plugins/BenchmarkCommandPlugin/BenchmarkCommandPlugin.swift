@@ -22,29 +22,7 @@ import PackagePlugin
 #endif
 
 @available(macOS 13.0, *)
-@main struct Benchmark: CommandPlugin {
-    enum Command: String {
-        case run
-        case list
-        case baseline
-        case help
-    }
-
-    enum Format: String {
-        case text
-        case markdown
-        case influx
-        case percentiles
-        case tsv
-        case jmh
-        case encodedHistogram
-    }
-
-    enum Grouping: String {
-        case metric
-        case benchmark
-    }
-
+@main struct BenchmarkCommandPlugin: CommandPlugin {
     func withCStrings(_ strings: [String], scoped: ([UnsafeMutablePointer<CChar>?]) throws -> Void) rethrows {
         let cStrings = strings.map { strdup($0) }
         try scoped(cStrings + [nil])
@@ -60,18 +38,19 @@ import PackagePlugin
         let skipTargets = try argumentExtractor.extractSpecifiedTargets(in: context.package, withOption: "skip-target")
         let outputFormats = argumentExtractor.extractOption(named: "format")
         let pathSpecified = argumentExtractor.extractOption(named: "path") // export path
-        let compareSpecified = argumentExtractor.extractOption(named: "compare")
-//        let updateBaseline = argumentExtractor.extractFlag(named: "update")
-//        let deleteBaseline = argumentExtractor.extractFlag(named: "delete")
         let quietRunning = argumentExtractor.extractFlag(named: "quiet")
         let noProgress = argumentExtractor.extractFlag(named: "no-progress")
+        let checkAbsoluteThresholds = argumentExtractor.extractFlag(named: "check-absolute")
         let groupingToUse = argumentExtractor.extractOption(named: "grouping")
+        let metricsToUse = argumentExtractor.extractOption(named: "metric")
         let debug = argumentExtractor.extractFlag(named: "debug")
         let scale = argumentExtractor.extractFlag(named: "scale")
-        var outputFormat: Format = .text
+        var outputFormat: OutputFormat = .text
         var grouping = "benchmark"
         var exportPath = "."
-        var comparisonBaseline = "default"
+
+        // Flush stdout so we see any failures clearly
+        setbuf(stdout, nil)
 
         if argumentExtractor.unextractedOptionsOrFlags.count > 0 {
             print("Unknown option/flag specfied: \(argumentExtractor.unextractedOptionsOrFlags)")
@@ -103,15 +82,8 @@ import PackagePlugin
             }
         }
 
-        if compareSpecified.count > 0 {
-            comparisonBaseline = compareSpecified.first!
-            if compareSpecified.count > 1 {
-                print("Only a single comparison baseline may be specified, will use the first one specified '\(comparisonBaseline)'")
-            }
-        }
-
         if outputFormats.count > 0 {
-            if let format = Format(rawValue: outputFormats.first!) {
+            if let format = OutputFormat(rawValue: outputFormats.first!) {
                 outputFormat = format
             } else {
                 print("Unknown output format '\(outputFormats.first!)'")
@@ -134,11 +106,36 @@ import PackagePlugin
             }
         }
 
+        var targetName = "Invalid"
+
+        if commandToPerform == .`init` {
+            guard positionalArguments.count == 1 else {
+                print("Must specify exactly one benchmark target name to create, e.g.:")
+                print("swift package --allow-writing-to-package-directory benchmark init MyBenchmarkName")
+                return
+            }
+            targetName = positionalArguments.removeFirst()
+            do {
+                let targets = try context.package.targets(named: [targetName])
+                if targets.isEmpty == false {
+                    print("Can't create benchmark executable target named \(targetName), a target with that name already exists.")
+                    return
+                }
+            } catch { // We will throw if we can use the target name (it's unused!)
+            }
+        }
+
         let swiftSourceModuleTargets: [SwiftSourceModuleTarget]
-        if specifiedTargets.isEmpty {
-            swiftSourceModuleTargets = context.package.targets(ofType: SwiftSourceModuleTarget.self)
+
+        // don't build any targets if we're creating a benchmark, otherwise specified targets
+        if commandToPerform == .`init` {
+            swiftSourceModuleTargets = []
         } else {
-            swiftSourceModuleTargets = specifiedTargets
+            if specifiedTargets.isEmpty {
+                swiftSourceModuleTargets = context.package.targets(ofType: SwiftSourceModuleTarget.self)
+            } else {
+                swiftSourceModuleTargets = specifiedTargets
+            }
         }
 
         let filteredTargets = swiftSourceModuleTargets
@@ -158,7 +155,6 @@ import PackagePlugin
         if outputFormat == .text {
             if quietRunning == 0 {
                 print("Building benchmark targets in release mode for benchmark run...")
-                fflush(nil)
             }
         }
 
@@ -171,8 +167,10 @@ import PackagePlugin
                               "--grouping", grouping]
 
         try filteredTargets.forEach { target in
-            if quietRunning == 0 {
-                print("Building \(target.name)")
+            if outputFormat == .text {
+                if quietRunning == 0 {
+                    print("Building \(target.name)")
+                }
             }
 
             let buildResult = try packageManager.build(
@@ -201,6 +199,10 @@ import PackagePlugin
             }
         }
 
+        metricsToUse.forEach { metric in
+            args.append(contentsOf: ["--metrics", metric.description])
+        }
+
         if outputFormat == .text {
             if quietRunning == 0 {
                 print("Build complete!")
@@ -215,12 +217,12 @@ import PackagePlugin
             args.append(contentsOf: ["--no-progress"])
         }
 
-        if scale > 0 {
-            args.append(contentsOf: ["--scale"])
+        if checkAbsoluteThresholds > 0 {
+            args.append(contentsOf: ["--check-absolute-thresholds"])
         }
 
-        if compareSpecified.count > 0 {
-            args.append(contentsOf: ["--compare", comparisonBaseline])
+        if scale > 0 {
+            args.append(contentsOf: ["--scale"])
         }
 
         filterSpecified.forEach { filter in
@@ -235,48 +237,58 @@ import PackagePlugin
             args.append(contentsOf: ["--path", exportPath])
         }
 
+        if commandToPerform == .`init` {
+            args.append(contentsOf: ["--benchmark-executable-paths", "/tmp/\(targetName)"])
+            args.append(contentsOf: ["--target-name", targetName])
+        }
+
         if commandToPerform == .run, positionalArguments.count > 0 {
             print("Can't specify baselines for normal run operation, superfluous arguments [\(positionalArguments)]")
             return
         }
 
         if commandToPerform == .baseline {
-            if let firstBaselineArgument = positionalArguments.first {
-                switch firstBaselineArgument {
-                case "update":
-                    positionalArguments.removeFirst()
-                    args.append(contentsOf: ["--update"])
+            guard positionalArguments.count > 0,
+                  let baselineOperation = BaselineOperation(rawValue: positionalArguments.removeFirst()) else {
+                print("")
+                print("A valid baseline command must be specified, one of: '\(BaselineOperation.allCases.description)'.")
+                print("")
+                print(help)
+                print("")
+                print("Please visit https://github.com/ordo-one/package-benchmark for more in-depth documentation")
+                print("")
+                return
+            }
 
-                    if positionalArguments.count > 1 {
-                        print("Only a single baseline may be specified for update operations \(positionalArguments)")
-                        return
-                    }
-                case "delete":
-                    positionalArguments.removeFirst()
-                    args.append(contentsOf: ["--delete"])
-                case "compare":
-                    positionalArguments.removeFirst()
-                    if positionalArguments.count > 2 {
-                        print("Multiple baselines can't be compared, only one or two baselines may be specified for comparisons \(positionalArguments)")
+            args.append(contentsOf: ["--baseline-operation", baselineOperation.rawValue])
+
+            // Check valid number of baselines specified per baseline operation
+            switch baselineOperation {
+            case .update:
+                guard positionalArguments.count == 1 else {
+                    print("A single baseline must be specified for update operations, got: \(positionalArguments)")
+                    return
+                }
+            case .compare:
+                fallthrough
+            case .check:
+                if checkAbsoluteThresholds > 0 {
+                    let validRange = 0 ... 1
+                    guard validRange.contains(positionalArguments.count) else {
+                        print("Must specify exactly zero or one baseline for check against absolute thresholds, got: \(positionalArguments)")
                         throw MyError.invalidArgument
                     }
-
-                    // This will be the second if two, the first otherwise
-                    args.append(contentsOf: ["--compare", positionalArguments.removeLast()])
-                case "read": // to allow for a baseline named 'update'
-                    positionalArguments.removeFirst()
-                case "list":
-                    positionalArguments.removeFirst()
-                    args.append(contentsOf: ["--list-baselines"])
-                default:
-                    break
+                } else {
+                    let validRange = 1 ... 2
+                    guard validRange.contains(positionalArguments.count) else {
+                        print("Must specify exactly one or two baselines for comparisons or threshold violation checks, got: \(positionalArguments)")
+                        throw MyError.invalidArgument
+                    }
                 }
+            default:
+                break
             }
-        }
 
-        if commandToPerform == .baseline, positionalArguments.count == 0 {
-            args.append(contentsOf: ["--baseline", "default"])
-        } else {
             positionalArguments.forEach { baseline in
                 args.append(contentsOf: ["--baseline", baseline])
             }
@@ -305,9 +317,23 @@ import PackagePlugin
 
             if status == 0 {
                 if waitpid(pid, &status, 0) != -1 {
-                    if status != 0 {
-                        print("One or more benchmark suites had a threshold violation or crashed during runtime.")
-                        throw MyError.benchmarkDeviationOrBenchmarkFailed
+                    // Ok, this sucks, but there is no way to get a C support target for plugins and
+                    // the way the status is extracted portably is with macros - so we just need to
+                    // reimplement the logic here in Swift according to the waitpid man page to
+                    // get some nicer feedback on failure reason.
+                    if let waitStatus = ExitCode(rawValue: (status & 0xFF00) >> 8) {
+                        switch waitStatus {
+                        case .success:
+                            break
+                        case .genericFailure:
+                            print("One or more benchmark suites crashed during runtime.")
+                            throw MyError.benchmarkCrashed
+                        case .thresholdViolation:
+                            throw MyError.benchmarkThresholdDeviation
+                        }
+                    } else {
+                        print("One or more benchmarks returned an unexpected return code \(status)")
+                        throw MyError.benchmarkUnexpectedReturnCode
                     }
                 } else {
                     print("waitpid() for pid \(pid) returned a non-zero exit code \(status), errno = \(errno)")
@@ -320,7 +346,9 @@ import PackagePlugin
     }
 
     enum MyError: Error {
-        case benchmarkDeviationOrBenchmarkFailed
+        case benchmarkThresholdDeviation
+        case benchmarkCrashed
+        case benchmarkUnexpectedReturnCode
         case invalidArgument
     }
 }

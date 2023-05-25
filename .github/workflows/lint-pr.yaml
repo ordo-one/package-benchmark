@@ -10,9 +10,11 @@ on:
 jobs:
   main:
     name: Validate PR title
-    runs-on: [ubuntu-latest]
+#    runs-on: [self-hosted, ubuntu-latest]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
-      - uses: amannn/action-semantic-pull-request@v4
+      - uses: amannn/action-semantic-pull-request@v5
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -32,8 +34,10 @@ jobs:
             revert 
           # Configure which scopes are allowed.
           scopes: |
-            core
-            ui
+            patch
+            hotfix
+            minor
+            major
           # Configure that a scope must always be provided.
           requireScope: false 
           # Configure which scopes are disallowed in PR titles. For instance by setting

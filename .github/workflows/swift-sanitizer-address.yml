@@ -1,4 +1,4 @@
-name: Swift address sanitizer
+name: Address sanitizer
 
 on:
   workflow_dispatch:
@@ -21,6 +21,7 @@ jobs:
       if: ${{ runner.os == 'Macos' }}
       run: |
         echo "/opt/homebrew/bin:/usr/local/bin" >> $GITHUB_PATH
+        echo BENCHMARK_DISABLE_JEMALLOC=true >> $GITHUB_ENV
         brew install jemalloc
 
     - name: Ubuntu deps
@@ -38,10 +39,10 @@ jobs:
       run: swift package clean
 
     - name: Run address sanitizer
-      run: swift test --sanitize=address | swift demangle
+      run: swift test --sanitize=address
       
     - name: Clean before release build sanitizier
       run: swift package clean
       
     - name: Run address sanitizer on release build
-      run: swift test --sanitize=address -c release -Xswiftc -enable-testing | swift demangle
+      run: swift test --sanitize=address -c release -Xswiftc -enable-testing

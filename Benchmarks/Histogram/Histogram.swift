@@ -1,27 +1,22 @@
 //
-// Copyright (c) 2022 Ordo One AB.
+// Copyright (c) 2023 Ordo One AB
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
-//
 // You may obtain a copy of the License at
-// http://www.apache.org/licenses/LICENSE-2.0
 //
-import BenchmarkSupport
+// http://www.apache.org/licenses/LICENSE-2.0
+
+import Benchmark
 import Histogram
 
-@main
-extension BenchmarkRunner {}
-
-// swiftlint disable: attributes
-@_dynamicReplacement(for: registerBenchmarks)
-func benchmarks() {
-    Benchmark.defaultConfiguration = .init(scalingFactor: .mega,
+let benchmarks = {
+    let metrics = [.wallClock, .throughput] + BenchmarkMetric.memory + BenchmarkMetric.arc
+    Benchmark.defaultConfiguration = .init(metrics: metrics,
+                                           scalingFactor: .mega,
                                            maxDuration: .seconds(1),
                                            maxIterations: .kilo(1))
-
-    Benchmark("Record",
-              configuration: .init(metrics: [.wallClock, .throughput] + BenchmarkMetric.memory)) { benchmark in
+    Benchmark("Record") { benchmark in
         let maxValue: UInt64 = 1_000_000
 
         var histogram = Histogram<UInt64>(highestTrackableValue: maxValue, numberOfSignificantValueDigits: .three)
@@ -34,25 +29,26 @@ func benchmarks() {
         for i in benchmark.scaledIterations {
             blackHole(histogram.record(values[i % numValues]))
         }
+
+        benchmark.stopMeasurement()
     }
 
-    Benchmark("Record to autoresizing",
-              configuration: .init(metrics: [.wallClock, .throughput] + BenchmarkMetric.memory)) { benchmark in
+    Benchmark("Record to autoresizing") { benchmark in
+        benchmark.startMeasurement()
         var histogram = Histogram<UInt64>(numberOfSignificantValueDigits: .three)
 
         let numValues = 1_024 // so compiler can optimize modulo below
         let values = [UInt64]((0 ..< numValues).map { _ in UInt64.random(in: 100 ... 10_000) })
 
-        benchmark.startMeasurement()
-
         for i in benchmark.scaledIterations {
             blackHole(histogram.record(values[i % numValues]))
         }
+
+        benchmark.stopMeasurement()
     }
 
     Benchmark("ValueAtPercentile",
-              configuration: .init(metrics: [.wallClock, .throughput] + BenchmarkMetric.memory,
-                                   scalingFactor: .kilo)) { benchmark in
+              configuration: .init(scalingFactor: .kilo)) { benchmark in
         let maxValue: UInt64 = 1_000_000
 
         var histogram = Histogram<UInt64>(highestTrackableValue: maxValue, numberOfSignificantValueDigits: .three)
@@ -69,10 +65,12 @@ func benchmarks() {
         for i in benchmark.scaledIterations {
             blackHole(histogram.valueAtPercentile(percentiles[i % percentiles.count]))
         }
+
+        benchmark.stopMeasurement()
     }
 
     Benchmark("Mean",
-              configuration: .init(metrics: BenchmarkMetric.all, scalingFactor: .kilo)) { benchmark in
+              configuration: .init(scalingFactor: .kilo)) { benchmark in
         let maxValue: UInt64 = 1_000_000
 
         var histogram = Histogram<UInt64>(highestTrackableValue: maxValue, numberOfSignificantValueDigits: .three)
@@ -87,5 +85,7 @@ func benchmarks() {
         for _ in benchmark.scaledIterations {
             blackHole(histogram.mean)
         }
+
+        benchmark.stopMeasurement()
     }
 }

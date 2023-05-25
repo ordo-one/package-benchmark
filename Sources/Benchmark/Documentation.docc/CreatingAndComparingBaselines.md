@@ -4,20 +4,13 @@ Benchmark supports storing, and comparing, benchmark results as you develop.
 
 ## Overview
 
-While developing locally, you can set benchmark baselines, compare against a baseline, or compare two different baselines.
+While developing locally, you can set benchmark baselines, compare a baseline against a benchmark run, or compare two different baselines.
 
 ### Creating a Baseline
 
 Typical workflow for a developer who wants to track performance metrics on the local machine while during performance work, would be to store one or more baselines. 
-The default command to create a baseline uses the name `default`.
 
-To create or update a default baseline, run the following command:
-
-```bash
-swift package --allow-writing-to-package-directory benchmark baseline update
-```
-
-The following command creates or updates a baseline named `alpha`:
+To create or update a baseline named `alpha`, run the following command:
 
 ```bash
 swift package --allow-writing-to-package-directory benchmark baseline update alpha
@@ -25,23 +18,22 @@ swift package --allow-writing-to-package-directory benchmark baseline update alp
 
 ### Comparing against a Baseline
 
-As you are making performance updates to your code, compare the current state of your code against the default recorded baseline with the following command:
+As you are making performance updates to your code, compare the current state of your code against a recorded baseline with the following command:
 
 ```bash
-swift package benchmark baseline compare
+swift package benchmark baseline compare alpha
 ```
-
-The following command compares your current run against the baseline named `alpha`:
-
-```bash
-swift package benchmark compare alpha
-```
-
 
 If you have stored multiple baselines (for example for different approaches to solving a given performance issue), you can easily compare the two approaches by using named baselines for each and then compare them.
 The following command compares a baseline named `alpha` against baseline named `beta`:
 
 ```bash
-swift package benchmark compare alpha beta
+swift package benchmark baseline compare alpha beta
 ```
 
+### Comparing a test run against hardcoded thresholds
+
+The following will run all benchmarks and compare them against a fixed absolute threshold (as defined by the benchmark setup code)
+```bash
+swift package benchmark baseline check --check-absolute
+```

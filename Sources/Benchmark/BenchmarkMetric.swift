@@ -8,8 +8,6 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 //
 
-// swiftlint:disable line_length
-
 /// Metrics supported by benchmark.
 ///
 /// Some metrics are only available on macOS or Linux, but you can specify all the metrics without worrying about platform availability.
@@ -60,6 +58,12 @@ public enum BenchmarkMetric: Hashable, Equatable, Codable, CustomStringConvertib
     case readBytesPhysical
     /// The number of bytes physicall written to a block device (i.e. disk) -- Linux only
     case writeBytesPhysical
+    /// Number of retains (ARC)
+    case retainCount
+    /// Number of releases (ARC)
+    case releaseCount
+    /// ABS(retains-releases) - if this is non-zero, it would typically mean the benchmark has a retain cycle (use Memory Graph Debugger to troubleshoot) or that startMeasurement/stopMeasurement aren't used properly
+    case retainReleaseDelta
     /// Custom metric
     case custom(_ name: String, polarity: Polarity = .prefersSmaller, useScalingFactor: Bool = true)
 
@@ -72,6 +76,20 @@ public enum BenchmarkMetric: Hashable, Equatable, Codable, CustomStringConvertib
         @_documentation(visibility: internal)
     #endif
     case deltaPercentage
+}
+
+// We don't want to take polarity and useScalingFactor into consideration as it makes dealing with custom metrics hard
+#if swift(>=5.8)
+    @_documentation(visibility: internal)
+#endif
+public extension BenchmarkMetric {
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(description)
+    }
+
+    static func == (lhs: BenchmarkMetric, rhs: BenchmarkMetric) -> Bool {
+        lhs.description == rhs.description
+    }
 }
 
 public extension BenchmarkMetric {
@@ -107,6 +125,8 @@ public extension BenchmarkMetric {
         case .readSyscalls, .readBytesLogical, .readBytesPhysical:
             return true
         case .writeSyscalls, .writeBytesLogical, .writeBytesPhysical:
+            return true
+        case .retainCount, .releaseCount, .retainReleaseDelta:
             return true
         case let .custom(_, _, useScaleFactor):
             return useScaleFactor
@@ -173,6 +193,12 @@ public extension BenchmarkMetric {
             return "Bytes (read physical)"
         case .writeBytesPhysical:
             return "Bytes (write physical)"
+        case .retainCount:
+            return "Retains"
+        case .releaseCount:
+            return "Releases"
+        case .retainReleaseDelta:
+            return "Retain / Release Δ"
         case .delta:
             return "Δ"
         case .deltaPercentage:
@@ -183,14 +209,80 @@ public extension BenchmarkMetric {
     }
 }
 
-// swiftlint:disable cyclomatic_complexity
+#if swift(>=5.8)
+    @_documentation(visibility: internal)
+#endif
+public extension BenchmarkMetric {
+    var rawDescription: String { // As we can't have raw values due to custom support, we do this...
+        switch self {
+        case .cpuUser:
+            return "cpuUser"
+        case .cpuSystem:
+            return "cpuSystem"
+        case .cpuTotal:
+            return "cpuTotal"
+        case .wallClock:
+            return "wallClock"
+        case .throughput:
+            return "throughput"
+        case .peakMemoryResident:
+            return "peakMemoryResident"
+        case .peakMemoryVirtual:
+            return "peakMemoryVirtual"
+        case .mallocCountSmall:
+            return "mallocCountSmall"
+        case .mallocCountLarge:
+            return "mallocCountLarge"
+        case .mallocCountTotal:
+            return "mallocCountTotal"
+        case .allocatedResidentMemory:
+            return "allocatedResidentMemory"
+        case .memoryLeaked:
+            return "memoryLeaked"
+        case .syscalls:
+            return "syscalls"
+        case .contextSwitches:
+            return "contextSwitches"
+        case .threads:
+            return "threads"
+        case .threadsRunning:
+            return "threadsRunning"
+        case .readSyscalls:
+            return "readSyscalls"
+        case .writeSyscalls:
+            return "writeSyscalls"
+        case .readBytesLogical:
+            return "readBytesLogical"
+        case .writeBytesLogical:
+            return "writeBytesLogical"
+        case .readBytesPhysical:
+            return "readBytesPhysical"
+        case .writeBytesPhysical:
+            return "writeBytesPhysical"
+        case .retainCount:
+            return "retainCount"
+        case .releaseCount:
+            return "releaseCount"
+        case .retainReleaseDelta:
+            return "retainReleaseDelta"
+        case .delta:
+            return "Δ"
+        case .deltaPercentage:
+            return "Δ %"
+        case let .custom(name, _, _):
+            return name
+        }
+    }
+}
+
+// swiftlint:disable cyclomatic_complexity function_body_length
 // As we can't have raw values and associated data we add this...
 #if swift(>=5.8)
     @_documentation(visibility: internal)
 #endif
-extension BenchmarkMetric {
-    init(_ textualMetric: String) {
-        switch textualMetric {
+public extension BenchmarkMetric {
+    init?(argument: String) {
+        switch argument {
         case "cpuUser":
             self = BenchmarkMetric.cpuUser
         case "cpuSystem":
@@ -235,8 +327,16 @@ extension BenchmarkMetric {
             self = BenchmarkMetric.readBytesPhysical
         case "writeBytesPhysical":
             self = BenchmarkMetric.writeBytesPhysical
+        case "retainCount":
+            self = BenchmarkMetric.retainCount
+        case "releaseCount":
+            self = BenchmarkMetric.releaseCount
+        case "retainReleaseDelta":
+            self = BenchmarkMetric.retainReleaseDelta
         default:
-            self = BenchmarkMetric.custom(textualMetric)
+            self = BenchmarkMetric.custom(argument)
         }
     }
 }
+
+// swiftlint:enable cyclomatic_complexity function_body_length

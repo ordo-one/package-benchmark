@@ -10,15 +10,6 @@
 
 import DateTime
 import Progress
-import Statistics
-
-#if canImport(Darwin)
-    import Darwin
-#elseif canImport(Glibc)
-    import Glibc
-#else
-    #error("Unsupported Platform")
-#endif
 
 internal final class BenchmarkExecutor {
     internal init(quiet: Bool = false) {
@@ -28,6 +19,7 @@ internal final class BenchmarkExecutor {
     var quiet: Bool
     let mallocStatsProducer = MallocStatsProducer()
     let operatingSystemStatsProducer = OperatingSystemStatsProducer()
+    let arcStatsProducer = ARCStatsProducer()
 
     // swiftlint:disable cyclomatic_complexity function_body_length
     func run(_ benchmark: Benchmark) -> [BenchmarkResult] {
@@ -36,6 +28,8 @@ internal final class BenchmarkExecutor {
         var stopMallocStats = MallocStats()
         var startOperatingSystemStats = OperatingSystemStats()
         var stopOperatingSystemStats = OperatingSystemStats()
+        var startARCStats = ARCStats(retainCount: 0, releaseCount: 0)
+        var stopARCStats = ARCStats(retainCount: 0, releaseCount: 0)
         var startTime = BenchmarkClock.now
         var stopTime = BenchmarkClock.now
 
@@ -51,10 +45,13 @@ internal final class BenchmarkExecutor {
         var statistics: [BenchmarkMetric: Statistics] = [:]
         var operatingSystemStatsRequested = false
         var mallocStatsRequested = false
+        var arcStatsRequested = false
 
         // Create metric statistics as needed
         benchmark.configuration.metrics.forEach { metric in
             switch metric {
+            case .custom:
+                statistics[metric] = Statistics(prefersLarger: metric.polarity == .prefersLarger)
             case .wallClock, .cpuUser, .cpuTotal, .cpuSystem:
                 let units = Statistics.Units(benchmark.configuration.timeUnits)
                 statistics[metric] = Statistics(units: units)
@@ -71,12 +68,18 @@ internal final class BenchmarkExecutor {
             if operatingSystemsStatsProducerNeeded(metric) {
                 operatingSystemStatsRequested = true
             }
+
+            if arcStatsProducerNeeded(metric) {
+                arcStatsRequested = true
+            }
         }
 
         var iterations = 0
         let initialStartTime = BenchmarkClock.now
 
         // Hook that is called before the actual benchmark closure run, so we can capture metrics here
+        // NB this code may be called twice if the user calls startMeasurement() manually and should
+        // then reset to a new starting state.
         benchmark.measurementPreSynchronization = {
             if mallocStatsRequested {
                 startMallocStats = self.mallocStatsProducer.makeMallocStats()
@@ -86,12 +89,21 @@ internal final class BenchmarkExecutor {
                 startOperatingSystemStats = self.operatingSystemStatsProducer.makeOperatingSystemStats()
             }
 
+            if arcStatsRequested {
+                startARCStats = self.arcStatsProducer.makeARCStats()
+            }
+
             startTime = BenchmarkClock.now // must be last in closure
         }
 
         // And corresponding hook for then the benchmark has finished and capture finishing metrics here
+        // This closure will only be called once for a given run though.
         benchmark.measurementPostSynchronization = {
             stopTime = BenchmarkClock.now // must be first in closure
+
+            if arcStatsRequested {
+                stopARCStats = self.arcStatsProducer.makeARCStats()
+            }
 
             if operatingSystemStatsRequested {
                 stopOperatingSystemStats = self.operatingSystemStatsProducer.makeOperatingSystemStats()
@@ -121,6 +133,16 @@ internal final class BenchmarkExecutor {
                 }
             } else {
                 //  fatalError("Zero running time \(self.startTime), \(self.stopTime), \(runningTime)")
+            }
+
+            if arcStatsRequested {
+                let retainDelta = stopARCStats.retainCount - startARCStats.retainCount
+                statistics[.retainCount]?.add(Int(retainDelta))
+
+                let releaseDelta = stopARCStats.releaseCount - startARCStats.releaseCount
+                statistics[.releaseCount]?.add(Int(releaseDelta))
+
+                statistics[.retainReleaseDelta]?.add(Int(abs(retainDelta - releaseDelta)))
             }
 
             if mallocStatsRequested {
@@ -219,10 +241,13 @@ internal final class BenchmarkExecutor {
             if var progressBar {
                 progressBar.setValue(0)
             }
-            fflush(stdout)
         }
 
         var nextPercentageToUpdateProgressBar = 0
+
+        if arcStatsRequested {
+            arcStatsProducer.hook()
+        }
 
         // Run the benchmark at a minimum the desired iterations/runtime --
 
@@ -254,17 +279,20 @@ internal final class BenchmarkExecutor {
 
                 let maxPercentage = max(iterationsPercentage, timePercentage)
 
+                // Small optimization to not update every single percentage point
                 if Int(maxPercentage) > nextPercentageToUpdateProgressBar {
                     progressBar.setValue(Int(maxPercentage))
-                    fflush(stdout)
                     nextPercentageToUpdateProgressBar = Int(maxPercentage) + Int.random(in: 3 ... 9)
                 }
             }
         }
 
+        if arcStatsRequested {
+            arcStatsProducer.unhook()
+        }
+
         if var progressBar {
             progressBar.setValue(100)
-            fflush(stdout)
         }
 
         if benchmark.configuration.metrics.contains(.threads) ||
@@ -292,3 +320,5 @@ internal final class BenchmarkExecutor {
         return results
     }
 }
+
+// swiftlint:enable cyclomatic_complexity function_body_length

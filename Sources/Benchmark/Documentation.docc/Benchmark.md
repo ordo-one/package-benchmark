@@ -7,37 +7,40 @@
 ### Creating Benchmarks
 
 - ``Benchmark/Benchmark/init(_:configuration:closure:)-5ra7m``
+- ``Benchmark/Benchmark/init(_:configuration:closure:)-7wcl8``
 - ``Benchmark/Benchmark/init(_:configuration:closure:)-699lk``
+- ``Benchmark/Benchmark/init(_:configuration:closure:)-48cka``
 
 ### Configuring Benchmarks
 
-- ``Benchmark/Benchmark/configuration-swift.property``
-- ``Benchmark/Benchmark/defaultConfiguration``
-- ``Benchmark/Benchmark/Configuration-swift.struct``
+- ``Benchmark/configuration-swift.property``
+- ``Benchmark/defaultConfiguration``
+- ``Benchmark/Configuration-swift.struct``
+- ``Benchmark/checkAbsoluteThresholds``
 
 ### Writing Benchmarks
 
-- ``Benchmark/Benchmark/scaledIterations``
-- ``Benchmark/Benchmark/startMeasurement()``
-- ``Benchmark/Benchmark/stopMeasurement()``
+- ``Benchmark/scaledIterations``
+- ``Benchmark/startMeasurement()``
+- ``Benchmark/stopMeasurement()``
 
 ### Inspecting Benchmarks
 
-- ``Benchmark/Benchmark/name``
-- ``Benchmark/Benchmark/currentIteration``
-- ``Benchmark/Benchmark/error(_:)``
-- ``Benchmark/Benchmark/failureReason``
+- ``Benchmark/name``
+- ``Benchmark/currentIteration``
+- ``Benchmark/error(_:)``
+- ``Benchmark/failureReason``
 
 ### Collecting Custom Metrics
 
-- ``Benchmark/Benchmark/measurement(_:_:)``
-- ``Benchmark/Benchmark/customMetricMeasurement``
+- ``Benchmark/measurement(_:_:)``
+- ``Benchmark/customMetricMeasurement``
 
 ### Decoding Benchmarks
 
-- ``Benchmark/Benchmark/init(from:)``
+- ``Benchmark/init(from:)``
 
 ### Comparing Benchmarks
 
-- ``Benchmark/Benchmark/!=(_:_:)``
+- ``Benchmark/!=(_:_:)``
 

@@ -4,16 +4,16 @@
 
 ### Selecting Scaling Factors
 
-- ``Benchmark/BenchmarkScalingFactor/one``
-- ``Benchmark/BenchmarkScalingFactor/kilo``
-- ``Benchmark/BenchmarkScalingFactor/mega``
-- ``Benchmark/BenchmarkScalingFactor/giga``
-- ``Benchmark/BenchmarkScalingFactor/tera``
-- ``Benchmark/BenchmarkScalingFactor/peta``
-- ``Benchmark/BenchmarkScalingFactor/init(_:)``
-- ``Benchmark/BenchmarkScalingFactor/init(rawValue:)``
+- ``BenchmarkScalingFactor/one``
+- ``BenchmarkScalingFactor/kilo``
+- ``BenchmarkScalingFactor/mega``
+- ``BenchmarkScalingFactor/giga``
+- ``BenchmarkScalingFactor/tera``
+- ``BenchmarkScalingFactor/peta``
+- ``BenchmarkScalingFactor/init(_:)``
+- ``BenchmarkScalingFactor/init(rawValue:)``
 
 ### Describing the Scaling Factor
 
-- ``Benchmark/BenchmarkScalingFactor/description``
+- ``BenchmarkScalingFactor/description``
 

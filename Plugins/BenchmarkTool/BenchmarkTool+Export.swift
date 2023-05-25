@@ -56,6 +56,8 @@ extension BenchmarkTool {
 
         outputPath.append(csvFile.components)
 
+        print("Writing output to \(outputPath)")
+
         do {
             let fd = try FileDescriptor.open(
                 outputPath, .writeOnly, options: [.truncate, .create], permissions: .ownerReadWrite
@@ -107,6 +109,8 @@ extension BenchmarkTool {
 
         outputPath.append(jsonFile.components)
 
+        print("Writing output to \(outputPath)")
+
         do {
             let fd = try FileDescriptor.open(
                 outputPath, .writeOnly, options: [.truncate, .create], permissions: .ownerReadWrite
@@ -130,7 +134,7 @@ extension BenchmarkTool {
                 print("Lacking permissions to write to \(outputPath)")
                 print("Give benchmark plugin permissions by running with e.g.:")
                 print("")
-                print("swift package --allow-writing-to-package-directory benchmark --format encodedHistogram")
+                print("swift package --allow-writing-to-package-directory benchmark --format histogramEncoded")
                 print("")
             } else {
                 print("Failed to open file \(outputPath), errno = [\(errno)]")
@@ -139,7 +143,7 @@ extension BenchmarkTool {
     }
 
     func exportResults(baseline: BenchmarkBaseline) throws {
-        let baselineName = baseline.baselineName == "Current baseline" ? "default" : baseline.baselineName
+        let baselineName = baseline.baselineName
         switch format {
         case .text:
             fallthrough
@@ -147,44 +151,68 @@ extension BenchmarkTool {
             prettyPrint(baseline, header: "Baseline '\(baselineName)'")
         case .influx:
             try write(exportData: "\(convertToInflux(baseline))",
-                      fileName: "\(baselineName)-influx-export.csv")
-        case .percentiles:
+                      fileName: "\(baselineName).influx.csv")
+        case .histogram:
             try baseline.results.forEach { key, results in
                 try results.forEach { values in
                     let outputString = values.statistics.histogram
-                    let description = values.metric.description
+                    let description = values.metric.rawDescription
                     try write(exportData: "\(outputString)",
-                              fileName: cleanupStringForShellSafety("\(baselineName).\(key.name).\(description).histogram-export.txt"))
+                              fileName: cleanupStringForShellSafety("\(baselineName).\(key.target).\(key.name).\(description).histogram.txt"))
                 }
             }
         case .jmh:
             try write(exportData: "\(convertToJMH(baseline))",
-                      fileName: cleanupStringForShellSafety("\(baselineName)-jmh-export.json"))
-        case .tsv:
+                      fileName: cleanupStringForShellSafety("\(baselineName).jmh.json"))
+        case .histogramSamples:
             try baseline.results.forEach { key, results in
                 var outputString = ""
 
                 try results.forEach { values in
                     let histogram = values.statistics.histogram
 
+                    outputString += "\(values.metric.description) \(values.unitDescriptionPretty)\n"
+
                     histogram.recordedValues().forEach { value in
                         for _ in 0 ..< value.count {
-                            outputString += "\(value.value)\n"
+                            outputString += "\(values.normalize(Int(value.value)))\n"
                         }
                     }
+                    let description = values.metric.rawDescription
                     try write(exportData: "\(outputString)",
-                              fileName: cleanupStringForShellSafety("\(baselineName).\(key.target).\(key.name).\(values.metric).tsv"))
+                              fileName: cleanupStringForShellSafety("\(baselineName).\(key.target).\(key.name).\(description).histogram.samples.tsv"))
+                    outputString = ""
                 }
             }
-        case .encodedHistogram:
+        case .histogramEncoded:
             try baseline.results.forEach { key, results in
                 let encoder = XJSONEncoder()
 
                 try results.forEach { values in
                     let histogram = values.statistics.histogram
                     let jsonData = try encoder.encode(histogram)
+                    let description = values.metric.rawDescription
                     try write(exportData: jsonData,
-                              fileName: cleanupStringForShellSafety("\(baselineName).\(key.target).\(key.name).\(values.metric).json"))
+                              fileName: cleanupStringForShellSafety("\(baselineName).\(key.target).\(key.name).\(description).histogram.json"))
+                }
+            }
+        case .histogramPercentiles:
+            var outputString = ""
+
+            try baseline.results.forEach { key, results in
+                try results.forEach { values in
+                    let histogram = values.statistics.histogram
+
+                    outputString += "Percentile\t" + "\(values.metric.description) \(values.unitDescriptionPretty)\n"
+
+                    for percentile in 0 ... 100 {
+                        outputString += "\(percentile)\t" + "\(values.normalize(Int(histogram.valueAtPercentile(Double(percentile)))))\n"
+                    }
+
+                    let description = values.metric.rawDescription
+                    try write(exportData: "\(outputString)",
+                              fileName: cleanupStringForShellSafety("\(baselineName).\(key.target).\(key.name).\(description).histogram.percentiles.tsv"))
+                    outputString = ""
                 }
             }
         }

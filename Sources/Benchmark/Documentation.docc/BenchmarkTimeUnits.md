@@ -4,19 +4,19 @@
 
 ### Creating Time Units
 
-- ``Benchmark/BenchmarkTimeUnits/automatic``
-- ``Benchmark/BenchmarkTimeUnits/seconds``
-- ``Benchmark/BenchmarkTimeUnits/milliseconds``
-- ``Benchmark/BenchmarkTimeUnits/microseconds``
-- ``Benchmark/BenchmarkTimeUnits/nanoseconds``
-- ``Benchmark/BenchmarkTimeUnits/init(_:)``
-- ``Benchmark/BenchmarkTimeUnits/init(rawValue:)``
+- ``BenchmarkTimeUnits/automatic``
+- ``BenchmarkTimeUnits/seconds``
+- ``BenchmarkTimeUnits/milliseconds``
+- ``BenchmarkTimeUnits/microseconds``
+- ``BenchmarkTimeUnits/nanoseconds``
+- ``BenchmarkTimeUnits/init(_:)``
+- ``BenchmarkTimeUnits/init(rawValue:)``
 
 ### Describing Time Units
 
-- ``Benchmark/BenchmarkTimeUnits/description``
+- ``BenchmarkTimeUnits/description``
 
 ### Encoding and Decoding Time Units
 
-- ``Benchmark/BenchmarkTimeUnits/encode(to:)``
-- ``Benchmark/BenchmarkTimeUnits/init(from:)``
+- ``BenchmarkTimeUnits/encode(to:)``
+- ``BenchmarkTimeUnits/init(from:)``

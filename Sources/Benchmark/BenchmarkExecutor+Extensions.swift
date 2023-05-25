@@ -66,3 +66,15 @@ extension BenchmarkExecutor {
         }
     }
 }
+
+extension BenchmarkExecutor {
+    func arcStatsProducerNeeded(_ metric: BenchmarkMetric) -> Bool {
+        switch metric {
+        case .retainCount, .releaseCount, .retainReleaseDelta:
+            return true
+        default:
+            return false
+        }
+    }
+}
+// swiftlint:enable cyclomatic_complexity

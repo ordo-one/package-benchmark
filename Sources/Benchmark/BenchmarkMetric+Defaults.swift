@@ -7,7 +7,6 @@
 // You may obtain a copy of the License at
 // http://www.apache.org/licenses/LICENSE-2.0
 //
-// swiftlint:disable line_length
 
 // Convenience sets of metrics
 public extension BenchmarkMetric {
@@ -43,6 +42,13 @@ public extension BenchmarkMetric {
          .mallocCountTotal,
          .memoryLeaked,
          .allocatedResidentMemory]
+    }
+
+    /// A collection of ARC metrics
+    static var arc: [BenchmarkMetric] {
+        [.retainCount,
+         .releaseCount,
+         .retainReleaseDelta]
     }
 
     /// A collection of system benchmarks.
@@ -88,6 +94,9 @@ public extension BenchmarkMetric {
          .writeBytesLogical,
          .readBytesPhysical,
          .writeBytesPhysical,
-         .allocatedResidentMemory]
+         .allocatedResidentMemory,
+         .retainCount,
+         .releaseCount,
+         .retainReleaseDelta]
     }
 }

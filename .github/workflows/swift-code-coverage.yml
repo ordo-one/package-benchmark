@@ -16,7 +16,7 @@ jobs:
     - name: Ubuntu deps
       if: ${{ runner.os == 'Linux' }}
       run: |
-        sudo apt-get install -y libjemalloc-dev llvm-14
+        sudo apt-get install -y libjemalloc-dev llvm-15
 
     - name: Run tests
       continue-on-error: true
@@ -32,7 +32,7 @@ jobs:
          fi
 
          if [ -f ${xctest_binary} ]; then
-             llvm-cov-14 export -format="lcov" ${xctest_binary} -instr-profile .build/debug/codecov/default.profdata > info.lcov
+             llvm-cov-15 export -format="lcov" ${xctest_binary} -instr-profile .build/debug/codecov/default.profdata > info.lcov
          fi
 
     - name: Upload codecov

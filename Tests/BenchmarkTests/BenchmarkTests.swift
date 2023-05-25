@@ -9,7 +9,6 @@
 //
 
 @testable import Benchmark
-@testable import BenchmarkSupport
 import XCTest
 
 final class BenchmarkTests: XCTestCase {

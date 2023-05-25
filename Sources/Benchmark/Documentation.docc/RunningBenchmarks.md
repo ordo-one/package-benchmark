@@ -19,9 +19,10 @@ swift package benchmark <command verb> [<options>]
 ### Command verbs
 
 - term `run`: run the benchmarks - default action if none specified
+- term `init`: Create a benchmark target, create boilerplate and adds a target to Package.swift
 - term `list`: list available benchmarks that can be run per benchmark target
 - term `baseline list`: Lists the available baselines stored per benchmark target
-- term `baseline read|update|delete|compare`: perform the specified subaction on one or more specified benchmark baselines
+- term `baseline read|update|delete|compare|check`: perform the specified subaction on one or more specified benchmark baselines
 - term `help`: Display usage help to the terminal
 
 ### Options 
@@ -31,10 +32,14 @@ swift package benchmark <command verb> [<options>]
 - term `--target <target>`: Benchmark targets matching the regexp filter that should be run
 - term `--skip-target <skip-target>`: Benchmark targets matching the regexp filter that should be skipped
 - term `--format <format>`: The output format to use, one of: ["text", "markdown", "influx", "percentiles", "tsv", "jmh"], default is 'text'
+- term `--metric <metric>`: Specified one or more metrics that should be used instead of the benchmark defined ones. Valid values are string representation of ``BenchmarkMetric``
+
 - term `--path <path>`: The path where exported data is stored, default is the current directory ("."). 
-- term `--quiet`: Specifies that output should be supressed (useful for if you just want to check return code)
+- term `--quiet`: Specifies that output should be suppressed (useful for if you just want to check return code)
 - term `--scale`: Specifies that some of the text output should be scaled using the scalingFactor (denoted by '*' in output)
+- term `--metric`: Specifies that the benchmark run should use a specific metric instead of the ones defined by the benchmarks
 - term `--no-progress`: Specifies that benchmark progress information should not be displayed
+- term `--check-absolute`: Set to true if thresholds should be checked against an absolute reference point rather than delta between baselines.
 - term `--grouping <grouping>`: The grouping to use, one of: ["metric", "benchmark"]. default is 'benchmark'
 
 ## Usage
@@ -42,9 +47,12 @@ swift package benchmark <command verb> [<options>]
 `swift package benchmark help` provides usage notes
 
 ```
-OVERVIEW: Runs your benchmark targets located in Benchmarks/
+OVERVIEW: Run benchmarks or update, compare or check performance baselines
 
-Runs the benchmarks, lists or operates on baselines (a named, stored set of results).
+Performs operations on benchmarks (running or listing them), as well as storing, comparing baselines as well as checking them for threshold
+deviations.
+
+The init command will create a skeleton benchmark suite for you and add it to Package.swift.
 
 For the 'text' default format, the output is implicitly 'stdout' unless otherwise specified.
 For all other formats, the output is to a file in either the current working directory, or
@@ -56,14 +64,20 @@ swift package --allow-writing-to-package-directory benchmark <command> <options>
 
 USAGE: swift package benchmark <command>
 
-swift package benchmark run <options>
+swift package benchmark [run] <options>
+swift package benchmark init <benchmarkTargetName>
 swift package benchmark list
 swift package benchmark baseline list
-swift package benchmark baseline [read|update|delete|compare] [baseline1 baseline2 ... baselineN] <options>
+swift package benchmark baseline read <baseline> [<baseline2> ... <baselineN>] [<options>]
+swift package benchmark baseline update <baseline> [<options>]
+swift package benchmark baseline delete <baseline> [<baseline2> ... <baselineN>] [<options>]
+swift package benchmark baseline check <baseline> [<otherBaseline>] [<options>]
+swift package benchmark baseline compare <baseline> [<otherBaseline>] [<options>]
 swift package benchmark help
 
 ARGUMENTS:
-<command>               The benchmark command to perform, one of: ["run", "list", "baseline", "help"]. If not specified, 'run' is implied.
+<command>               The benchmark command to perform, one of: ["run", "list", "baseline", "help", "init"]. If not specified, 'run' is
+implied.
 
 OPTIONS:
 --filter <filter>       Benchmarks matching the regexp filter that should be run
@@ -71,13 +85,81 @@ OPTIONS:
 --target <target>       Benchmark targets matching the regexp filter that should be run
 --skip-target <skip-target>
 Benchmark targets matching the regexp filter that should be skipped
---format <format>       The output format to use, one of: ["text", "markdown", "influx", "percentiles", "tsv", "jmh"], default is 'text'
+--format <format>       The output format to use, one of: ["text", "markdown", "influx", "jmh", "histogramEncoded", "histogram",
+"histogramSamples", "histogramPercentiles"], default is 'text'
+--metric <metric>       Specifies that the benchmark run should use one or more specific metrics instead of the ones defined by the
+benchmarks, valid values are: ["cpuUser", "cpuSystem", "cpuTotal", "wallClock", "throughput", "peakMemoryResident",
+"peakMemoryVirtual", "mallocCountSmall", "mallocCountLarge", "mallocCountTotal", "allocatedResidentMemory",
+"memoryLeaked", "syscalls", "contextSwitches", "threads", "threadsRunning", "readSyscalls", "writeSyscalls",
+"readBytesLogical", "writeBytesLogical", "readBytesPhysical", "writeBytesPhysical", "retainCount", "releaseCount",
+"retainReleaseDelta", "custom"]
 --path <path>           The path where exported data is stored, default is the current directory ("."). 
---quiet                 Specifies that output should be supressed (useful for if you just want to check return code)
+--quiet                 Specifies that output should be suppressed (useful for if you just want to check return code)
 --scale                 Specifies that some of the text output should be scaled using the scalingFactor (denoted by '*' in output)
+--check-absolute-thresholds
+Set to true if thresholds should be checked against an absolute reference point rather than delta between baselines.
+This is used for CI workflows when you want to validate the thresholds vs. a persisted benchmark baseline
+rather than comparing PR vs main or vs a current run. This is useful to cut down the build matrix needed
+for those wanting to validate performance of e.g. toolchains or OS:s as well (or have other reasons for wanting
+a specific check against a given absolute reference.).
+If this is enabled, zero or one baselines should be specified for the check operation.
+By default, thresholds are checked comparing two baselines, or a baseline and a benchmark run.
 --no-progress           Specifies that benchmark progress information should not be displayed
 --grouping <grouping>   The grouping to use, one of: ["metric", "benchmark"]. default is 'benchmark'
+-h, --help              Show help information.
 ```
+
+## Troubleshooting problems
+If you have a benchmark that crashes, it's possible to run that specific benchmark in the debugger easily.
+
+E.g. for the target `BenchmarkDateTime`, you can run it manually with
+```
+.build/arm64-apple-macosx/release/BenchmarkDateTime
+```
+
+There are some additional options too that can be displayed with `--help`:
+```
+hassila@max ~/G/package-benchmark (various-fixes)> .build/arm64-apple-macosx/release/BenchmarkDateTime --help
+USAGE: benchmark-runner [--quiet <quiet>] [--input-fd <input-fd>] [--output-fd <output-fd>] [--filter <filter> ...] [--skip <skip> ...] [--check-absolute]
+
+OPTIONS:
+-q, --quiet <quiet>     Whether to suppress progress output. (default: false)
+-i, --input-fd <input-fd>
+The input pipe filedescriptor used for communication with host process.
+-o, --output-fd <output-fd>
+The output pipe filedescriptor used for communication with host process.
+--filter <filter>       Benchmarks matching the regexp filter that should be run
+--skip <skip>           Benchmarks matching the regexp filter that should be skipped
+--check-absolute        Set to true if thresholds should be checked against an absolute reference point rather than delta between baselines.
+This is used for CI workflows when you want to validate the thresholds vs. a persisted benchmark baseline
+rather than comparing PR vs main or vs a current run. This is useful to cut down the build matrix needed
+for those wanting to validate performance of e.g. toolchains or OS:s as well (or have other reasons for wanting
+a specific check against a given absolute reference.).
+If this is enabled, zero or one baselines should be specified for the check operation.
+By default, thresholds are checked comparing two baselines, or a baseline and a benchmark run.
+-h, --help              Show help information.
+```
+
+So to run a specific troubling benchmark target you can run it with:
+```
+.build/arm64-apple-macosx/release/BenchmarkDateTime --filter Foundation-Date
+```
+
+And use standard troubleshooting tools like LLDB etc on that binary, it simply runs the benchmark code.
+
+Additionally, if there would be any internal failure in the benchmark plugin, please run your failed
+command and append `--debug` to the end for instructions on how to run it with a debugger to generate
+a backtrace for a bug report. E.g:
+```
+> swift package benchmark --debug
+...
+To debug, start BenchmarkTool in LLDB using:
+lldb /Users/hassila/GitHub/package-benchmark/.build/arm64-apple-macosx/debug/BenchmarkTool
+
+Then launch BenchmarkTool with:
+run --command run --baseline-storage-path /Users/hassila/GitHub/package-benchmark --format text --grouping benchmark --benchmark-executable-paths /Users/hassila/GitHub/package-benchmark/.build/arm64-apple-macosx/release/HistogramBenchmark --benchmark-executable-paths /Users/hassila/GitHub/package-benchmark/.build/arm64-apple-macosx/release/BenchmarkDateTime --benchmark-executable-paths /Users/hassila/GitHub/package-benchmark/.build/arm64-apple-macosx/release/Basic
+```
+
 
 ## Network or disk permissions failures
 
@@ -102,6 +184,7 @@ swift package benchmark
 ```
 swift package benchmark --grouping metric
 ```
+
 ### Run targets / benchmarks with regex matching
 ```
 swift package benchmark --target ".*Time" --filter ".*k\." --skip ".*UTC.*" --skip-target ".*Time"
@@ -117,7 +200,7 @@ swift package benchmark list
 swift package benchmark run --target Frostflake
 ```
 
-### Compare with the current baseline:
+### Compare a stored baseline with a benchmark run
 ```
 swift package benchmark baseline compare baseline1
 ```
@@ -127,32 +210,32 @@ swift package benchmark baseline compare baseline1
 swift package benchmark baseline compare alpha beta
 ```
 
-### Compare two named baselines suppressing table output
+### Check a stored baseline with a benchmark run for deviations
 ```
-swift package benchmark baseline compare alpha beta --quiet
-```
-
-### Update benchmark baseline for all targets:
-```
-swift package --allow-writing-to-package-directory benchmark baseline update
+swift package benchmark baseline check baseline1
 ```
 
-### Update benchmark named baseline for all targets:
+### Check two name baselines for deviations
+```
+swift package benchmark baseline check alpha beta
+```
+
+### Update a named benchmark baseline for all targets
 ```
 swift package --allow-writing-to-package-directory benchmark baseline update alpha
 ```
 
-### Update benchmark baseline for a specific target:
+### Update benchmark baseline for a specific target
 ```
 swift package --allow-writing-to-package-directory benchmark baseline update --target Frostflake-Benchmark
 ```
 
-### Export benchmark data:
+### Export benchmark data
 ```
 swift package --allow-writing-to-package-directory benchmark --format jmh 
 ```
 
-### Export benchmark data:
+### Export benchmark data to a specific location
 ```
 swift package --allow-writing-to-package-directory benchmark --format jmh --path xyz
 ```

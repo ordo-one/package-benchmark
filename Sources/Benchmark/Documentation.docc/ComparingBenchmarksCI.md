@@ -6,7 +6,23 @@ Benchmark was written with continuous integration in mind, and allows you to set
 
 It may be useful to compare code performance against a baseline in an automated fashion.
 Benchmark was developed to be invoked through command line options to support automation.
-Additionally, the `swift package benchmark compare` command exits with a non-zero error if there are performance degradations found during the comparison.
+Additionally, the `swift package benchmark baseline check` command exits with a non-zero error if there are performance degradations found during the comparison.
+
+It's possible to do both checks for a PR vs the main baseline, or for simply checking a baseline / benchmark run vs a fixed reference point using `--check-absolute`.
+
+### Comparing two baselines (e.g. PR vs main)
+
+The following will check two previously stored baselines for deviations vs the defined thresholds
+```bash
+swift package benchmark baseline check main pull_request
+```
+
+### Comparing a test run against hardcoded thresholds
+
+The following will run all benchmarks and compare them against a fixed absolute threshold (as defined by the benchmark setup code)
+```bash
+swift package benchmark baseline check --check-absolute
+```
 
 ### Example GitHub CI workflow comparing against a baseline
 
@@ -60,7 +76,7 @@ jobs:
       - name: Run benchmarks for PR branch
         if: ${{ env.hasBenchmark == '1' }}
         run: |
-          swift package --allow-writing-to-directory .benchmarkBaselines/ benchmark baseline update pull_request
+          swift package --allow-writing-to-directory .benchmarkBaselines/ benchmark baseline update pull_request --no-progress --quiet
       - name: Switch to branch 'main'
         if: ${{ env.hasBenchmark == '1' }}
         run: |
@@ -69,7 +85,7 @@ jobs:
       - name: Run benchmarks for branch 'main'
         if: ${{ env.hasBenchmark == '1' }}
         run: |
-          swift package --allow-writing-to-directory .benchmarkBaselines/ benchmark baseline update main
+          swift package --allow-writing-to-directory .benchmarkBaselines/ benchmark baseline update main --no-progress --quiet
       - name: Compare PR and main
         if: ${{ env.hasBenchmark == '1' }}
         id: benchmark

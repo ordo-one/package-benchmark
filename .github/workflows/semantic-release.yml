@@ -1,0 +1,66 @@
+name: Semantic Release
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main, next ]
+
+jobs:
+  semantic-release:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Semantic Release Config
+        run: |
+          echo "
+          branches:
+            - main
+            - name: 'next'
+              prerelease: true
+          preset: 'conventionalcommits'
+          tagFormat: '\${version}'
+          plugins:
+            - - '@semantic-release/commit-analyzer'
+              - releaseRules:
+                - breaking: true
+                  release: major
+                - type: build
+                  release: patch
+                - type: chore
+                  release: false
+                - type: feat
+                  release: false
+                - type: fix
+                  release: false
+
+                - scope: 'no-release'
+                  release: false
+                - scope: 'hotfix'
+                  release: patch
+                - scope: 'patch'
+                  release: patch
+                - scope: 'minor'
+                  release: minor
+                - scope: 'major'
+                  release: major
+            - - '@semantic-release/release-notes-generator'
+            - - '@semantic-release/github'
+              - successComment: false
+                failTitle: false" > .releaserc.yml
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "lts/*"
+
+      - name: Install semantic-release
+        run: |
+          npm install semantic-release conventional-changelog-conventionalcommits -D
+
+      - name: Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npx semantic-release

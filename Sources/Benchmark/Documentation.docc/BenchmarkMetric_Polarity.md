@@ -4,9 +4,9 @@
 
 ### Types of Polarity
 
-- ``Benchmark/BenchmarkMetric/Polarity/prefersLarger``
-- ``Benchmark/BenchmarkMetric/Polarity/prefersSmaller``
+- ``BenchmarkMetric/Polarity/prefersLarger``
+- ``BenchmarkMetric/Polarity/prefersSmaller``
 
 ### Decoding Polarity
 
-- ``Benchmark/BenchmarkMetric/Polarity/init(from:)``
+- ``BenchmarkMetric/Polarity/init(from:)``

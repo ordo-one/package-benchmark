@@ -4,21 +4,14 @@ Create benchmark suites to run and measure your benchmarks.
 
 ## Overview
 
-Create benchmarks declaratively using the ``Benchmark/Benchmark`` initalizer, specifying configuration and the work to be measured in a trailing closure.
+Create benchmarks declaratively using the ``Benchmark`` initalizer, specifying configuration and the work to be measured in a trailing closure.
 
 The minimal code for a benchmark suite running with a default configuration would be:
 
 ```swift
-// import supporting infrastructure
-import BenchmarkSupport
+import Benchmark
 
-// Required for main() definition to not get linker errors
-@main extension BenchmarkRunner {}      
-
-// Register benchmarks
-@_dynamicReplacement(for: registerBenchmarks) 
-func benchmarks() {
-
+let benchmarks = {
     Benchmark("Minimal benchmark") { benchmark in
         // Some work to measure here
     }
@@ -29,21 +22,20 @@ func benchmarks() {
 
 A more real test for a couple of Foundation features would be:
 
+
 ```swift
 import SystemPackage
 import Foundation
-import BenchmarkSupport
-@main extension BenchmarkRunner {}
+import Benchmark
 
-@_dynamicReplacement(for: registerBenchmarks)
-func benchmarks() {
-    let customThreshold = BenchmarkResult.PercentileThresholds(
+let benchmarks = {
+    let customThreshold = BenchmarkThresholds(
         relative: [.p50: 5.0, .p75: 10.0],
-        absolute: [.p25: 10, .p50: 15])
-    let customThreshold2 = BenchmarkResult.PercentileThresholds(
-        relative: .strict)
-    let customThreshold3 = BenchmarkResult.PercentileThresholds(
-        absolute: .relaxed)
+        absolute: [.p25: .kilo(10), .p90: .mega(1])
+    let customThreshold2 = BenchmarkThresholds(
+        relative: BenchmarkThresholds.Relative.strict)
+    let customThreshold3 = BenchmarkThresholds(
+        absolute: BenchmarkThresholds.Absolute.relaxed)
 
     Benchmark.defaultConfiguration = .init(
         timeUnits: .microseconds,
@@ -53,13 +45,13 @@ func benchmarks() {
                      .cpuUser: .strict])
 
     Benchmark("Foundation Date()",
-        configuration: .init(
-            metrics: [.throughput, .wallClock], 
-            scalingFactor: .mega)) { benchmark in
-        for _ in benchmark.scaledIterations {
-            blackHole(Date())
-        }
-    }
+              configuration: .init(
+                metrics: [.throughput, .wallClock],
+                scalingFactor: .mega)) { benchmark in
+                    for _ in benchmark.scaledIterations {
+                        blackHole(Date())
+                    }
+                }
 
     Benchmark("Foundation AttributedString()") { benchmark in
         let count = 200
@@ -70,7 +62,7 @@ func benchmarks() {
         str += AttributedString(
             String(repeating: "c", count: count))
         let idx = str.characters.index(
-            str.startIndex, 
+            str.startIndex,
             offsetBy: str.characters.count / 2)
         let toInsert = AttributedString(
             String(repeating: "c", count: str.characters.count))
@@ -81,7 +73,7 @@ func benchmarks() {
 }
 ```
 
-The ``Benchmark/Benchmark`` initializer includes options to allow you to tune how the benchmark should be run, as well as what metrics and thresholds should be captured.
+The ``Benchmark`` initializer includes options to allow you to tune how the benchmark should be run, as well as what metrics and thresholds should be captured.
 These benchmark options are applied through the ``Benchmark/configuration-swift.property`` parameter.
 
 <!-- I think there's a way to reference code in source control/GitHub that may be appropriate here. -->
@@ -134,7 +126,7 @@ public extension Benchmark {
         public var skip = false
         /// Customized CI failure thresholds for a given metric 
         /// for the Benchmark
-        public var thresholds: [BenchmarkMetric: BenchmarkResult.PercentileThresholds]?
+        public var thresholds: [BenchmarkMetric: BenchmarkThresholds]?
 ...
 ```
 
@@ -156,20 +148,39 @@ Benchmark("Foundation Date()", configuration: .init(scalingFactor: .mega)) { ben
 
 ### Metrics
 
-Benchmark supports a wide range of measurements defined by ``Benchmark/BenchmarkMetric``.
+Benchmark supports a wide range of measurements defined by ``BenchmarkMetric``.
 
-Benchmark provides a number of convenience methods for commonly useful sets of metrics, for example ``Benchmark/BenchmarkMetric/memory`` and - ``Benchmark/BenchmarkMetric/all``.
+Benchmark provides a number of convenience methods for commonly useful sets of metrics, for example ``BenchmarkMetric/memory`` and - ``BenchmarkMetric/all``.
 
 Metrics can also be specified explicitly, for example `[.throughput, .wallClock]`, or even by combining the default set with individual metrics.
+
+Benchmark also supports completely custom metric measurements using ``Benchmark/measurement(_:_:)`` if there are specific things you want to capture:
+
+```swift
+...
+// A way to define custom metrics fairly compact
+enum CustomMetrics {
+    static var one: BenchmarkMetric { .custom("CustomMetricOne") }
+    static var two: BenchmarkMetric { .custom("CustomMetricTwo", polarity: .prefersLarger, useScalingFactor: true) }
+}
+
+Benchmark("Custom metrics", configuration: .init(metrics: BenchmarkMetric.all + [CustomMetrics.two, CustomMetrics.one], scalingFactor: .kilo)) { benchmark in
+    for _ in benchmark.scaledIterations {
+        blackHole(Int.random(in: benchmark.scaledIterations))
+    }
+    benchmark.measurement(CustomMetrics.one, Int.random(in: 1 ... 1_000))
+    benchmark.measurement(CustomMetrics.two, Int.random(in: 1 ... 1_000_000))
+}
+```
 
 ### Settings defaults for all benchmarks within a suite
 
 Set the desired time units for all benchmarks within a suite easily by setting ``Benchmark/Configuration-swift.struct/timeUnits``:
 
 ```swift
-@_dynamicReplacement(for: registerBenchmarks)
-func benchmarks() {
+import Benchmark
 
+let benchmarks = {
     Benchmark.defaultConfiguration.timeUnits = .nanoseconds
 
     Benchmark("Foundation Date()") {
@@ -186,26 +197,143 @@ Benchmark.defaultConfiguration = .init(...)
 ### Custom thresholds
 
 ```swift
-let customThreshold = BenchmarkResult.PercentileThresholds(
-    relative: [.p50 : 13.0, .p75 : 18.0],
-    absolute: [.p50 : 170, .p75 : 1200])
+    let customThreshold = BenchmarkThresholds(
+        relative: [.p50 : 13.0, .p75 : 18.0],
+        absolute: [.p50 : .millseconds(170), .p75 : .milliseconds(1200]))
 
-Benchmark(
-    "Foundation Date()",
-    configuration: .init(
-    metrics: [.throughput, .wallClock],
-    scalingFactor: .mega,
-    thresholds: [
-        .throughput : customThreshold,
-        .wallClock : customThreshold])
-) { benchmark in
-    for _ in benchmark.scaledIterations {
-        blackHole(Date())
+    Benchmark(
+        "Foundation Date()",
+        configuration: .init(
+            metrics: [.throughput, .wallClock],
+            scalingFactor: .mega,
+            thresholds: [.wallClock : customThreshold])
+    ) { benchmark in
+        for _ in benchmark.scaledIterations {
+            blackHole(Date())
+        }
+    }
+```
+
+There are a number of convenience methods in `BenchmarkThreshold+Defaults.swift`.
+
+### Customize startup/teardown code for benchmarks
+
+There are multiple ways to setup shared benchmark setup/teardown code.
+
+First off, one can easily setup global shared state that can be reused by just defining it in the closure:
+
+```swift
+import Benchmark
+
+let benchmarks = {
+    let mySharedSetup = [1, 2, 3, 4]
+
+    Benchmark("Minimal benchmark") { benchmark in
+    // Some work to measure here, use mySharedSetup
+    }
+
+    Benchmark("Minimal benchmark 2") { benchmark in
+    // Some work to measure here, use mySharedSetup here too
     }
 }
 ```
 
-There are a number of convenience methods in `BenchmarkResult+Defaults.swift`.
+Secondly, one can have setup/teardown closures that are shared across all benchmarks:
+
+```swift
+import Benchmark
+
+let benchmarks = {
+    Benchmark.setup = { print("global setup closure, used for all benchmarks") }
+    Benchmark.teardown = { print("global teardown closure, used for all benchmarks") }
+
+    Benchmark("Minimal benchmark") { benchmark in
+    // Some work to measure here, use mySharedSetup
+    }
+
+    Benchmark("Minimal benchmark 2") { benchmark in
+    // Some work to measure here, use mySharedSetup here too
+    }
+}
+```
+
+Thirdly, one can have setup/teardown closures as part of the configuration for a subset of benchmarks
+
+```swift
+import Benchmark
+
+func setupFunction() {
+}
+
+func teardownFunction() {
+}
+
+let benchmarks = {
+
+// only shared setup
+Benchmark("Minimal benchmark", 
+    configuration: .init(setup: setupFunction, teardown: teardownFunction)) { benchmark in 
+    // Some work to measure here
+}
+
+Benchmark("Minimal benchmark 2", 
+    configuration: .init(setup: setupFunction, teardown: teardownFunction)) { benchmark in
+    // Some work to measure here
+    }
+}
+```
+
+Finally, one can have setup/teardown closures that are specific to a given benchmark
+
+```swift
+import Benchmark
+
+let benchmarks = {
+
+Benchmark("Minimal benchmark") { benchmark in 
+    } setup: {
+     // do setup for this benchmark here
+    } teardown: {
+     // do teardown here
+    }
+}
+```
+
+All of these setup/teardown hooks can be combined, the order of execution is:
+
+* Global setup
+* Configuration provided setup
+* Closure provided setup
+
+with teardown in reverse order.
+
+So to use all hooks at the same time:
+
+```swift
+import Benchmark
+
+func sharedSetup() {
+}
+
+func sharedTeardown() {
+}
+
+let benchmarks = {
+
+    Benchmark.setup = { print("global setup closure, used for all benchmarks") }
+    Benchmark.teardown = { print("global teardown closure, used for all benchmarks") }
+
+
+    Benchmark("Minimal benchmark", 
+    configuration: .init(setup: setupFunction, teardown: teardownFunction)) { benchmark in 
+    } setup: {
+    // do setup for this benchmark here
+    } teardown: {
+    // do teardown here
+    }
+}
+```
+
 
 ### Async vs Sync
 
@@ -226,5 +354,3 @@ The Benchmark SwiftPM plugins executes the `BenchmarkTool` executable which is t
 The `BenchmarkTool` in turns runs each executable target that is defined and uses JSON to communicate with the target process over pipes.
 
 The executable benchmark targets just implements the actual benchmark tests, as much boilerplate code as possible has been hidden. The executable benchmark must depend on the `Benchmark` library target which also will pull in `jemalloc` for malloc stats.
-
-`@_dynamicReplacement(for:)` is used to hook in the benchmarks for the target, hopefully it will be an integrated supported part of Swift in the future.

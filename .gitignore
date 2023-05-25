@@ -9,6 +9,9 @@
 ## User settings
 xcuserdata/
 
+## Benchmark data
+.benchmarkBaselines/
+
 ## DocC build directories
 **/.docc-build/
 

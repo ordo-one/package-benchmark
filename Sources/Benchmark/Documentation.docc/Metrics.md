@@ -32,11 +32,18 @@ Currently supported metrics are:
 - term `writeBytesLogical`: The number bytes written to storage (but may be cached) -- Linux only
 - term `readBytesPhysical`: The number of bytes physically read from a block device (i.e. disk) -- Linux only
 - term `writeBytesPhysical`: The number of bytes physicall written to a block device (i.e. disk) -- Linux only
+- term `retainCount`: The number of retain calls (ARC)
+- term `releaseCount`: The number of release calls (ARC)
+- term `retainReleaseDelta`: abs(retainCount - releaseCount) - if this is non-zero, it would typically mean the benchmark has a retain cycle (use Memory Graph Debugger to troubleshoot)
 
-Additionally, _custom metrics_ are supported `custom(_ name: String, polarity: Polarity = .prefersSmaller)` as outlined in the writing benchmarks documentation.
+Additionally, _custom metrics_ are supported `custom(_ name: String, polarity: Polarity = .prefersSmaller, useScalingFactor: Bool = true)` as outlined in the writing benchmarks documentation.
 
 ### Thresholds
 
-For comparison (`swift package benchmark compare`) operations, there's a set of default thresholds that are used which are fairly strict. It is also possible to define both absolute and relative thresholds, _per metric_, that will be used for such comparisons (or that a given metric should be skipped completely).
+For comparison (`swift package benchmark baseline compare` or `swift package benchmark baseline check`) operations, there's a set of default thresholds that are used which are strict. It is also possible to define both absolute and relative thresholds, _per metric_, that will be used for such comparisons (or that a given metric should be skipped completely).
+
+In addition to comparing the delta between e.g. a `PR` and `main`, there's also an option to compare against an absolute threshold which is useful for more complex projects that may want to reduce the size of the build matrix required to validate all thresholds. 
+
+Absolute thresholds are usually setup with e.g. `.mega(10` or `.milliseconds(600)`.
 
 See <doc:WritingBenchmarks> or look at the sample code to see how custom thresholds can be set up.

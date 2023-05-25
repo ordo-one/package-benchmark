@@ -9,11 +9,11 @@
 //
 
 import Benchmark
-import Statistics
 import SystemPackage
 import TextTable
 
-private let percentileWidth = 8
+private let percentileWidth = 7
+private let maxDescriptionWidth = 100
 
 extension BenchmarkTool {
     private func printMarkdown(_ markdown: String, terminator: String = "\n") {
@@ -76,7 +76,8 @@ extension BenchmarkTool {
     private func _prettyPrint(title: String,
                               key: String,
                               results: [BenchmarkBaseline.ResultsEntry],
-                              width: Int = 30) {
+                              width: Int = 30,
+                              useGroupingDescription: Bool = false) {
         let table = TextTable<ScaledResults> {
             [Column(title: title, value: "\($0.description)", width: width, align: .left),
              Column(title: "p0", value: $0.percentiles.p0, width: percentileWidth, align: .right),
@@ -98,11 +99,13 @@ extension BenchmarkTool {
 
             var adjustmentFunction: (Int) -> Int
 
-            if self.scale > 0, result.metrics.metric.useScalingFactor {
-                description = "\(result.metrics.metric.description) \(result.metrics.scaledUnitDescriptionPretty)"
+            if self.scale, result.metrics.metric.useScalingFactor {
+                description = useGroupingDescription ? "\(result.description) \(result.metrics.scaledUnitDescriptionPretty)"
+                    : "\(result.metrics.metric.description) \(result.metrics.scaledUnitDescriptionPretty)"
                 adjustmentFunction = result.metrics.scale
             } else {
-                description = "\(result.metrics.metric.description) \(result.metrics.unitDescriptionPretty)"
+                description = useGroupingDescription ? "\(result.description) \(result.metrics.unitDescriptionPretty)"
+                    : "\(result.metrics.metric.description) \(result.metrics.unitDescriptionPretty)"
                 adjustmentFunction = result.metrics.normalize
             }
 
@@ -131,9 +134,7 @@ extension BenchmarkTool {
     func prettyPrint(_ baseline: BenchmarkBaseline,
                      header: String, // = "Benchmark results",
                      hostIdentifier _: String? = nil) {
-        if quiet > 0 {
-            return
-        }
+        guard quiet == false else { return }
 
         printMachine(baseline.machine, header)
 
@@ -144,20 +145,25 @@ extension BenchmarkTool {
             metrics.forEach { metric in
                 width = max(width, metric.description.count)
             }
-            width = min(70, width + 5) // add 5 for ' (M)'
+            width = min(maxDescriptionWidth, width + " (M)".count)
 
             baseline.targets.forEach { target in
                 let separator = String(repeating: "=", count: "\(target)".count)
-                printMarkdown("## ", terminator: "")
-                printText(separator)
-                print("\(target)")
-                printText(separator)
-                print("")
+                var firstOutput = true
+
                 baseline.benchmarkNames.forEach { benchmarkName in
                     let results = baseline.resultEntriesMatching { identifier, result in
                         (identifier.name == benchmarkName && identifier.target == target, result.metric.description)
                     }
                     if results.count > 0 {
+                        if firstOutput {
+                            printMarkdown("## ", terminator: "")
+                            printText(separator)
+                            print("\(target)")
+                            printText(separator)
+                            print("")
+                            firstOutput = false
+                        }
                         _prettyPrint(title: "Metric", key: benchmarkName, results: results, width: width)
                     }
                 }
@@ -167,14 +173,15 @@ extension BenchmarkTool {
             baseline.benchmarkIdentifiers.forEach { identifier in
                 width = max(width, "\(identifier.target):\(identifier.name)".count)
             }
-            width = min(70, width + 5) // add 5 for ' (M)'
+            width = min(maxDescriptionWidth, width + " (M)".count)
 
             baseline.benchmarkMetrics.forEach { metric in
 
                 let results = baseline.resultEntriesMatching { identifier, result in
                     (result.metric == metric, "\(identifier.target):\(identifier.name)")
                 }
-                _prettyPrint(title: "Test", key: metric.description, results: results, width: width)
+
+                _prettyPrint(title: "Test", key: metric.description, results: results, width: width, useGroupingDescription: true)
             }
         }
     }
@@ -182,30 +189,35 @@ extension BenchmarkTool {
     func prettyPrintDelta(currentBaseline: BenchmarkBaseline,
                           baseline: BenchmarkBaseline,
                           hostIdentifier _: String? = nil) {
-        printMachine(baseline.machine, "Comparing results from '\(baseline.baselineName)' with '\(currentBaseline.baselineName)'")
+        printMachine(baseline.machine, "Comparing results between '\(currentBaseline.baselineName)' and '\(baseline.baselineName)'")
         if currentBaseline.machine != baseline.machine {
             print("Warning: Machine configuration is different when comparing baselines, other config:")
             printMachine(currentBaseline.machine, "")
         }
 
         baseline.targets.forEach { target in
-
-            printMarkdown("## ", terminator: "")
-            print("\(target)")
-            printText("============================================================================================================================")
-            print("")
-
             let baseBaselineName = currentBaseline.baselineName
             let comparisonBaselineName = baseline.baselineName
 
             var keys = baseline.results.keys.sorted(by: { $0.name < $1.name })
 
-            keys.removeAll(where: { $0.target == target })
+            keys.removeAll(where: { $0.target != target })
+
+            var firstOutput = true
+
             keys.forEach { key in
                 if let value = baseline.results[key] {
                     guard let baselineComparison = currentBaseline.results[key] else {
                         //       print("No baseline to compare with for `\(key.target):\(key.name)`.")
                         return
+                    }
+
+                    if firstOutput {
+                        printMarkdown("## ", terminator: "")
+                        print("\(target)")
+                        printText("============================================================================================================================")
+                        print("")
+                        firstOutput = false
                     }
 
                     printMarkdown("### ", terminator: "")
@@ -217,147 +229,245 @@ extension BenchmarkTool {
                     value.forEach { currentResult in
                         var result = currentResult
                         if let base = baselineComparison.first(where: { $0.metric == result.metric }) {
-                            if result == base {
-                                //                            print(" \(result.metric) results were identical.")
-                                //                            print("")
+                            let (hideResults, _) = result.betterResultsOrEqual(than: base, thresholds: result.thresholds ?? BenchmarkThresholds.none)
+
+                            // We hide the markdown results if they are better than baseline to cut down noise
+                            if format == .markdown {
+                                if hideResults {
+                                    print("<details><summary>\(result.metric): results within specified thresholds, fold down for details.</summary>")
+                                    print("<p>")
+                                    print("")
+                                }
+                            }
+
+                            let title = "\(result.metric.description) \(result.unitDescriptionPretty)"
+                            let width = 40
+                            let table = TextTable<ScaledResults> {
+                                [Column(title: title, value: "\($0.description)", width: width, align: .center),
+                                 Column(title: "p0", value: $0.percentiles.p0, width: percentileWidth, align: .right),
+                                 Column(title: "p25", value: $0.percentiles.p25, width: percentileWidth, align: .right),
+                                 Column(title: "p50", value: $0.percentiles.p50, width: percentileWidth, align: .right),
+                                 Column(title: "p75", value: $0.percentiles.p75, width: percentileWidth, align: .right),
+                                 Column(title: "p90", value: $0.percentiles.p90, width: percentileWidth, align: .right),
+                                 Column(title: "p99", value: $0.percentiles.p99, width: percentileWidth, align: .right),
+                                 Column(title: "p100", value: $0.percentiles.p100, width: percentileWidth, align: .right),
+                                 Column(title: "Samples", value: $0.samples, width: percentileWidth, align: .right)]
+                            }
+
+                            // Rescale result to base if needed
+                            result.timeUnits = base.timeUnits
+
+                            var scaledResults: [ScaledResults] = []
+
+                            let percentiles = result.statistics.percentiles()
+                            let percentilesBase = base.statistics.percentiles()
+
+                            var resultPercentiles = ScaledResults.Percentiles()
+                            var basePercentiles = ScaledResults.Percentiles()
+                            var adjustmentFunction: (Int) -> Int
+                            let samples = result.statistics.measurementCount - base.statistics.measurementCount
+
+                            if self.scale, base.metric.useScalingFactor {
+                                adjustmentFunction = base.scale
                             } else {
-                                var hideResults: Bool = true
+                                adjustmentFunction = base.normalize
+                            }
 
-                                if result.betterResultsOrEqual(than: base, thresholds: result.thresholds ?? BenchmarkResult.PercentileThresholds.default) {
-                                    hideResults = true
-                                } else {
-                                    hideResults = false
-                                }
+                            basePercentiles.p0 = adjustmentFunction(percentilesBase[0])
+                            basePercentiles.p25 = adjustmentFunction(percentilesBase[1])
+                            basePercentiles.p50 = adjustmentFunction(percentilesBase[2])
+                            basePercentiles.p75 = adjustmentFunction(percentilesBase[3])
+                            basePercentiles.p90 = adjustmentFunction(percentilesBase[4])
+                            basePercentiles.p99 = adjustmentFunction(percentilesBase[5])
+                            basePercentiles.p100 = adjustmentFunction(percentilesBase[6])
 
-                                if format == .markdown {
-                                    if hideResults {
-                                        print("<details><summary>\(result.metric): results within specified thresholds, fold down for details.</summary>")
-                                        print("<p>")
-                                        print("")
-                                    }
-                                }
+                            scaledResults.append(ScaledResults(description: baseBaselineName,
+                                                               percentiles: basePercentiles,
+                                                               samples: base.statistics.measurementCount))
 
-                                let title = "\(result.metric.description) \(result.unitDescriptionPretty)"
-                                let width = 40
-                                let table = TextTable<ScaledResults> {
-                                    [Column(title: title, value: "\($0.description)", width: width, align: .center),
-                                     Column(title: "p0", value: $0.percentiles.p0, width: percentileWidth, align: .right),
-                                     Column(title: "p25", value: $0.percentiles.p25, width: percentileWidth, align: .right),
-                                     Column(title: "p50", value: $0.percentiles.p50, width: percentileWidth, align: .right),
-                                     Column(title: "p75", value: $0.percentiles.p75, width: percentileWidth, align: .right),
-                                     Column(title: "p90", value: $0.percentiles.p90, width: percentileWidth, align: .right),
-                                     Column(title: "p99", value: $0.percentiles.p99, width: percentileWidth, align: .right),
-                                     Column(title: "p100", value: $0.percentiles.p100, width: percentileWidth, align: .right),
-                                     Column(title: "Samples", value: $0.samples, width: percentileWidth, align: .right)]
-                                }
+                            if self.scale, result.metric.useScalingFactor {
+                                adjustmentFunction = result.scale
+                            } else {
+                                adjustmentFunction = result.normalize
+                            }
 
-                                // Rescale result to base if needed
-                                result.timeUnits = base.timeUnits
+                            resultPercentiles.p0 = adjustmentFunction(percentiles[0])
+                            resultPercentiles.p25 = adjustmentFunction(percentiles[1])
+                            resultPercentiles.p50 = adjustmentFunction(percentiles[2])
+                            resultPercentiles.p75 = adjustmentFunction(percentiles[3])
+                            resultPercentiles.p90 = adjustmentFunction(percentiles[4])
+                            resultPercentiles.p99 = adjustmentFunction(percentiles[5])
+                            resultPercentiles.p100 = adjustmentFunction(percentiles[6])
 
-                                var scaledResults: [ScaledResults] = []
+                            scaledResults.append(ScaledResults(description: comparisonBaselineName,
+                                                               percentiles: resultPercentiles,
+                                                               samples: result.statistics.measurementCount))
 
-                                let percentiles = result.statistics.percentiles()
-                                let percentilesBase = base.statistics.percentiles()
+                            var deltaPercentiles = ScaledResults.Percentiles()
 
-                                var resultPercentiles = ScaledResults.Percentiles()
-                                var basePercentiles = ScaledResults.Percentiles()
-                                var adjustmentFunction: (Int) -> Int
-                                let samples = result.statistics.measurementCount - base.statistics.measurementCount
+                            deltaPercentiles.p0 = resultPercentiles.p0 - basePercentiles.p0
+                            deltaPercentiles.p25 = resultPercentiles.p25 - basePercentiles.p25
+                            deltaPercentiles.p50 = resultPercentiles.p50 - basePercentiles.p50
+                            deltaPercentiles.p75 = resultPercentiles.p75 - basePercentiles.p75
+                            deltaPercentiles.p90 = resultPercentiles.p90 - basePercentiles.p90
+                            deltaPercentiles.p99 = resultPercentiles.p99 - basePercentiles.p99
+                            deltaPercentiles.p100 = resultPercentiles.p100 - basePercentiles.p100
 
-                                if self.scale > 0, base.metric.useScalingFactor {
-                                    adjustmentFunction = base.scale
-                                } else {
-                                    adjustmentFunction = base.normalize
-                                }
+                            scaledResults.append(ScaledResults(description: BenchmarkMetric.delta.description,
+                                                               percentiles: deltaPercentiles,
+                                                               samples: samples))
 
-                                basePercentiles.p0 = adjustmentFunction(percentilesBase[0])
-                                basePercentiles.p25 = adjustmentFunction(percentilesBase[1])
-                                basePercentiles.p50 = adjustmentFunction(percentilesBase[2])
-                                basePercentiles.p75 = adjustmentFunction(percentilesBase[3])
-                                basePercentiles.p90 = adjustmentFunction(percentilesBase[4])
-                                basePercentiles.p99 = adjustmentFunction(percentilesBase[5])
-                                basePercentiles.p100 = adjustmentFunction(percentilesBase[6])
+                            let reversedPolarity = base.metric.polarity == .prefersLarger
 
-                                scaledResults.append(ScaledResults(description: baseBaselineName,
-                                                                   percentiles: basePercentiles,
-                                                                   samples: base.statistics.measurementCount))
+                            var percentageDeltaPercentiles = ScaledResults.Percentiles()
 
-                                if self.scale > 0, result.metric.useScalingFactor {
-                                    adjustmentFunction = result.scale
-                                } else {
-                                    adjustmentFunction = result.normalize
-                                }
+                            percentageDeltaPercentiles.p0 = formatTableEntry(basePercentiles.p0,
+                                                                             resultPercentiles.p0,
+                                                                             reversedPolarity)
+                            percentageDeltaPercentiles.p25 = formatTableEntry(basePercentiles.p25,
+                                                                              resultPercentiles.p25,
+                                                                              reversedPolarity)
+                            percentageDeltaPercentiles.p50 = formatTableEntry(basePercentiles.p50,
+                                                                              resultPercentiles.p50,
+                                                                              reversedPolarity)
+                            percentageDeltaPercentiles.p75 = formatTableEntry(basePercentiles.p75,
+                                                                              resultPercentiles.p75,
+                                                                              reversedPolarity)
+                            percentageDeltaPercentiles.p90 = formatTableEntry(basePercentiles.p90,
+                                                                              resultPercentiles.p90,
+                                                                              reversedPolarity)
+                            percentageDeltaPercentiles.p99 = formatTableEntry(basePercentiles.p99,
+                                                                              resultPercentiles.p99,
+                                                                              reversedPolarity)
+                            percentageDeltaPercentiles.p100 = formatTableEntry(basePercentiles.p100,
+                                                                               resultPercentiles.p100,
+                                                                               reversedPolarity)
 
-                                resultPercentiles.p0 = adjustmentFunction(percentiles[0])
-                                resultPercentiles.p25 = adjustmentFunction(percentiles[1])
-                                resultPercentiles.p50 = adjustmentFunction(percentiles[2])
-                                resultPercentiles.p75 = adjustmentFunction(percentiles[3])
-                                resultPercentiles.p90 = adjustmentFunction(percentiles[4])
-                                resultPercentiles.p99 = adjustmentFunction(percentiles[5])
-                                resultPercentiles.p100 = adjustmentFunction(percentiles[6])
+                            scaledResults.append(ScaledResults(description: "Improvement %",
+                                                               percentiles: percentageDeltaPercentiles,
+                                                               samples: samples))
 
-                                scaledResults.append(ScaledResults(description: comparisonBaselineName,
-                                                                   percentiles: resultPercentiles,
-                                                                   samples: result.statistics.measurementCount))
+                            printMarkdown("```")
+                            table.print(scaledResults, style: Style.fancy)
+                            printMarkdown("```")
 
-                                var deltaPercentiles = ScaledResults.Percentiles()
-
-                                deltaPercentiles.p0 = resultPercentiles.p0 - basePercentiles.p0
-                                deltaPercentiles.p25 = resultPercentiles.p25 - basePercentiles.p25
-                                deltaPercentiles.p50 = resultPercentiles.p50 - basePercentiles.p50
-                                deltaPercentiles.p75 = resultPercentiles.p75 - basePercentiles.p75
-                                deltaPercentiles.p90 = resultPercentiles.p90 - basePercentiles.p90
-                                deltaPercentiles.p99 = resultPercentiles.p99 - basePercentiles.p99
-                                deltaPercentiles.p100 = resultPercentiles.p100 - basePercentiles.p100
-
-                                scaledResults.append(ScaledResults(description: BenchmarkMetric.delta.description,
-                                                                   percentiles: deltaPercentiles,
-                                                                   samples: samples))
-
-                                let reversedPolarity = base.metric.polarity == .prefersLarger
-
-                                var percentageDeltaPercentiles = ScaledResults.Percentiles()
-
-                                percentageDeltaPercentiles.p0 = formatTableEntry(basePercentiles.p0,
-                                                                                 resultPercentiles.p0,
-                                                                                 reversedPolarity)
-                                percentageDeltaPercentiles.p25 = formatTableEntry(basePercentiles.p25,
-                                                                                  resultPercentiles.p25,
-                                                                                  reversedPolarity)
-                                percentageDeltaPercentiles.p50 = formatTableEntry(basePercentiles.p50,
-                                                                                  resultPercentiles.p50,
-                                                                                  reversedPolarity)
-                                percentageDeltaPercentiles.p75 = formatTableEntry(basePercentiles.p75,
-                                                                                  resultPercentiles.p75,
-                                                                                  reversedPolarity)
-                                percentageDeltaPercentiles.p90 = formatTableEntry(basePercentiles.p90,
-                                                                                  resultPercentiles.p90,
-                                                                                  reversedPolarity)
-                                percentageDeltaPercentiles.p99 = formatTableEntry(basePercentiles.p99,
-                                                                                  resultPercentiles.p99,
-                                                                                  reversedPolarity)
-                                percentageDeltaPercentiles.p100 = formatTableEntry(basePercentiles.p100,
-                                                                                   resultPercentiles.p100,
-                                                                                   reversedPolarity)
-
-                                scaledResults.append(ScaledResults(description: "Improvement %",
-                                                                   percentiles: percentageDeltaPercentiles,
-                                                                   samples: samples))
-
-                                printMarkdown("```")
-                                table.print(scaledResults, style: Style.fancy)
-                                printMarkdown("```")
-
-                                if format == .markdown {
-                                    if hideResults {
-                                        print("<p>")
-                                        print("</details>")
-                                        print("")
-                                    }
+                            if format == .markdown {
+                                if hideResults {
+                                    print("<p>")
+                                    print("</details>")
+                                    print("")
                                 }
                             }
                         }
                     }
+                }
+            }
+        }
+    }
+
+    func prettyPrintDeviation(baselineName: String,
+                              comparingBaselineName: String,
+                              deviationResults: [BenchmarkResult.ThresholdDeviation]) {
+        guard quiet == false else { return }
+
+        let metrics = deviationResults.map(\.metric).unique()
+        // Get a unique set of all name/target pairs that have threshold violations, sorted lexically:
+        let namesAndTargets = deviationResults.map { NameAndTarget(name: $0.name, target: $0.target) }
+            .unique().sorted { ($0.target, $0.name) < ($1.target, $1.name) }
+
+        namesAndTargets.forEach { nameAndTarget in
+
+            printMarkdown("```")
+            "Threshold violations for \(nameAndTarget.name):\(nameAndTarget.target)".printAsHeader(addWhiteSpace: false)
+            printMarkdown("```")
+
+            metrics.forEach { metric in
+
+                let relativeResults = deviationResults.filter { $0.name == nameAndTarget.name &&
+                    $0.target == nameAndTarget.target &&
+                    $0.metric == metric &&
+                    $0.relative == true
+                }
+                let absoluteResults = deviationResults.filter { $0.name == nameAndTarget.name &&
+                    $0.target == nameAndTarget.target &&
+                    $0.metric == metric &&
+                    $0.relative == false
+                }
+                let width = 40
+                let percentileWidth = 15
+
+                // The baseValue is the new baseline that we're using as the comparison base, so...
+                if absoluteResults.isEmpty == false {
+                    let absoluteTable = TextTable<BenchmarkResult.ThresholdDeviation> {
+                        [Column(title: "\(metric.description) (\(metric.countable ? $0.units.description : $0.units.timeDescription), Δ)",
+                                value: $0.percentile, width: width, align: .left),
+                         Column(title: "\(baselineName)", value: $0.comparisonValue, width: percentileWidth, align: .right),
+                         Column(title: "\(comparingBaselineName)", value: $0.baseValue, width: percentileWidth, align: .right),
+                         Column(title: "Difference Δ", value: $0.difference, width: percentileWidth, align: .right),
+                         Column(title: "Threshold Δ", value: $0.differenceThreshold, width: percentileWidth, align: .right)]
+                    }
+
+                    printMarkdown("```")
+                    absoluteTable.print(absoluteResults, style: Style.fancy)
+                    printMarkdown("```")
+                }
+
+                if relativeResults.isEmpty == false {
+                    let relativeTable = TextTable<BenchmarkResult.ThresholdDeviation> {
+                        [Column(title: "\(metric.description) (\(metric.countable ? $0.units.description : $0.units.timeDescription), %)",
+                                value: $0.percentile, width: width, align: .left),
+                         Column(title: "\(baselineName)", value: $0.comparisonValue, width: percentileWidth, align: .right),
+                         Column(title: "\(comparingBaselineName)", value: $0.baseValue, width: percentileWidth, align: .right),
+                         Column(title: "Difference %", value: $0.difference, width: percentileWidth, align: .right),
+                         Column(title: "Threshold %", value: $0.differenceThreshold, width: percentileWidth, align: .right)]
+                    }
+
+                    printMarkdown("```")
+                    relativeTable.print(relativeResults, style: Style.fancy)
+                    printMarkdown("```")
+                }
+            }
+        }
+    }
+
+    func prettyPrintAbsoluteDeviation(baselineName: String,
+                                      deviationResults: [BenchmarkResult.ThresholdDeviation]) {
+        guard quiet == false else { return }
+
+        let metrics = deviationResults.map(\.metric).unique()
+        // Get a unique set of all name/target pairs that have threshold violations, sorted lexically:
+        let namesAndTargets = deviationResults.map { NameAndTarget(name: $0.name, target: $0.target) }
+            .unique().sorted { ($0.target, $0.name) < ($1.target, $1.name) }
+
+        namesAndTargets.forEach { nameAndTarget in
+
+            printMarkdown("```")
+            "Absolute threshold violations for \(nameAndTarget.name):\(nameAndTarget.target)".printAsHeader(addWhiteSpace: false)
+            printMarkdown("```")
+
+            metrics.forEach { metric in
+
+                let absoluteResults = deviationResults.filter { $0.name == nameAndTarget.name &&
+                    $0.target == nameAndTarget.target &&
+                    $0.metric == metric &&
+                    $0.relative == false
+                }
+                let width = 40
+                let percentileWidth = 15
+
+                // The baseValue is the new baseline that we're using as the comparison base, so...
+                if absoluteResults.isEmpty == false {
+                    let absoluteTable = TextTable<BenchmarkResult.ThresholdDeviation> {
+                        [Column(title: "\(metric.description) (\(metric.countable ? $0.units.description : $0.units.timeDescription), Δ)",
+                                value: $0.percentile, width: width, align: .left),
+                         Column(title: "Threshold", value: $0.comparisonValue, width: percentileWidth, align: .right),
+                         Column(title: "\(baselineName)", value: $0.baseValue, width: percentileWidth, align: .right),
+                         Column(title: "Threshold Abs", value: $0.differenceThreshold, width: percentileWidth, align: .right)]
+                    }
+
+                    printMarkdown("```")
+                    absoluteTable.print(absoluteResults, style: Style.fancy)
+                    printMarkdown("```")
                 }
             }
         }

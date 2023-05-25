@@ -1,4 +1,4 @@
-name: Swift thread sanitizer
+name: Thread sanitizer
 
 on:
   workflow_dispatch:
@@ -21,6 +21,7 @@ jobs:
       if: ${{ runner.os == 'Macos' }}
       run: |
         echo "/opt/homebrew/bin:/usr/local/bin" >> $GITHUB_PATH
+        echo BENCHMARK_DISABLE_JEMALLOC=true >> $GITHUB_ENV
         brew install jemalloc
 
     - name: Ubuntu deps
@@ -38,10 +39,10 @@ jobs:
       run: swift package clean
 
     - name: Run thread sanitizer
-      run: swift test --sanitize=thread | swift demangle
+      run: swift test --sanitize=thread
       
     - name: Clean before release build sanitizier
       run: swift package clean
       
     - name: Run thread sanitizer on release build
-      run: swift test --sanitize=thread -c release -Xswiftc -enable-testing | swift demangle
+      run: swift test --sanitize=thread -c release -Xswiftc -enable-testing

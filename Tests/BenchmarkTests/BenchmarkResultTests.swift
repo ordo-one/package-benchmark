@@ -8,10 +8,10 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 //
 
-@testable import BenchmarkSupport
+@testable import Benchmark
 import XCTest
 
-// swiftlint:disable function_body_length
+// swiftlint:disable function_body_length type_body_length file_length
 final class BenchmarkResultTests: XCTestCase {
     func testBenchmarkResultEqual() throws {
         let firstStatistics = Statistics()
@@ -158,7 +158,8 @@ final class BenchmarkResultTests: XCTestCase {
                                            thresholds: .default,
                                            statistics: secondStatistics)
 
-        XCTAssert(secondResult.betterResultsOrEqual(than: firstResult))
+        let (betterOrEqual, _) = secondResult.betterResultsOrEqual(than: firstResult)
+        XCTAssert(betterOrEqual)
     }
 
     func testBenchmarkResultBetterOrEqualWithCustomThresholds() throws {
@@ -172,41 +173,42 @@ final class BenchmarkResultTests: XCTestCase {
         firstStatistics.add(200)
 
         let secondStatistics = Statistics()
-        secondStatistics.add(0)
-        secondStatistics.add(126)
+        secondStatistics.add(5)
+        secondStatistics.add(136)
         secondStatistics.add(160)
         secondStatistics.add(175)
         secondStatistics.add(190)
         secondStatistics.add(199)
-        secondStatistics.add(200)
+        secondStatistics.add(210)
 
-        let relative: BenchmarkResult.PercentileRelativeThresholds = [.p0: 0.0,
-                                                                      .p25: 0.0,
-                                                                      .p50: 0.0,
-                                                                      .p75: 0.0,
-                                                                      .p90: 0.0,
-                                                                      .p99: 0.0,
-                                                                      .p100: 0.0]
+        let relative: BenchmarkThresholds.RelativeThresholds = [.p0: 0.0,
+                                                                .p25: 0.0,
+                                                                .p50: 0.0,
+                                                                .p75: 0.0,
+                                                                .p90: 0.0,
+                                                                .p99: 0.0,
+                                                                .p100: 0.0]
 
-        let relativeRelaxed: BenchmarkResult.PercentileRelativeThresholds = [.p0: 10.0,
-                                                                             .p25: 10.0,
-                                                                             .p50: 10.0,
-                                                                             .p75: 10.0,
-                                                                             .p90: 10.0,
-                                                                             .p99: 10.0,
-                                                                             .p100: 10.0]
+        let relativeRelaxed: BenchmarkThresholds.RelativeThresholds = [.p0: 10.0,
+                                                                       .p25: 10.0,
+                                                                       .p50: 10.0,
+                                                                       .p75: 10.0,
+                                                                       .p90: 10.0,
+                                                                       .p99: 10.0,
+                                                                       .p100: 10.0]
 
-        let absolute: BenchmarkResult.PercentileAbsoluteThresholds = [.p0: 1,
-                                                                      .p25: 1,
-                                                                      .p50: 1,
-                                                                      .p75: 0,
-                                                                      .p90: 0,
-                                                                      .p99: 0,
-                                                                      .p100: 0]
-        let bothThresholds = BenchmarkResult.PercentileThresholds(relative: relative, absolute: absolute)
-        let absoluteThresholds = BenchmarkResult.PercentileThresholds(absolute: absolute)
-        let relativeThresholds = BenchmarkResult.PercentileThresholds(relative: relative)
-        let relativeRelaxedThresholds = BenchmarkResult.PercentileThresholds(relative: relativeRelaxed)
+        let absolute: BenchmarkThresholds.AbsoluteThresholds = [.p0: 1,
+                                                                .p25: 1,
+                                                                .p50: 1,
+                                                                .p75: 0,
+                                                                .p90: 0,
+                                                                .p99: 0,
+                                                                .p100: 0]
+
+        let bothThresholds = BenchmarkThresholds(relative: relative, absolute: absolute)
+        let absoluteThresholds = BenchmarkThresholds(absolute: absolute)
+        let relativeThresholds = BenchmarkThresholds(relative: relative)
+        let relativeRelaxedThresholds = BenchmarkThresholds(relative: relativeRelaxed)
 
         let firstResult = BenchmarkResult(metric: .cpuUser,
                                           timeUnits: .nanoseconds,
@@ -222,15 +224,111 @@ final class BenchmarkResultTests: XCTestCase {
                                            thresholds: .default,
                                            statistics: secondStatistics)
 
-        XCTAssertFalse(secondResult.betterResultsOrEqual(than: firstResult, thresholds: bothThresholds))
-        XCTAssert(secondResult.betterResultsOrEqual(than: firstResult, thresholds: relativeRelaxedThresholds))
-        XCTAssertFalse(secondResult.betterResultsOrEqual(than: firstResult, thresholds: relativeThresholds))
-        XCTAssertFalse(secondResult.betterResultsOrEqual(than: firstResult, thresholds: absoluteThresholds))
+        var (betterOrEqual, _) = secondResult.betterResultsOrEqual(than: firstResult, thresholds: bothThresholds)
+        XCTAssertFalse(betterOrEqual)
 
-        XCTAssert(firstResult.betterResultsOrEqual(than: secondResult, thresholds: bothThresholds))
-        XCTAssert(firstResult.betterResultsOrEqual(than: secondResult, thresholds: relativeRelaxedThresholds))
-        XCTAssert(firstResult.betterResultsOrEqual(than: secondResult, thresholds: relativeThresholds))
-        XCTAssert(firstResult.betterResultsOrEqual(than: secondResult, thresholds: absoluteThresholds))
+        (betterOrEqual, _) = secondResult.betterResultsOrEqual(than: firstResult, thresholds: relativeRelaxedThresholds)
+        XCTAssert(betterOrEqual)
+
+        (betterOrEqual, _) = secondResult.betterResultsOrEqual(than: firstResult, thresholds: relativeThresholds)
+        XCTAssertFalse(betterOrEqual)
+
+        (betterOrEqual, _) = secondResult.betterResultsOrEqual(than: firstResult, thresholds: absoluteThresholds)
+        XCTAssertFalse(betterOrEqual)
+
+        (betterOrEqual, _) = firstResult.betterResultsOrEqual(than: secondResult, thresholds: bothThresholds)
+        XCTAssert(betterOrEqual)
+
+        (betterOrEqual, _) = firstResult.betterResultsOrEqual(than: secondResult, thresholds: relativeRelaxedThresholds)
+        XCTAssert(betterOrEqual)
+
+        (betterOrEqual, _) = firstResult.betterResultsOrEqual(than: secondResult, thresholds: relativeThresholds)
+        XCTAssert(betterOrEqual)
+
+        (betterOrEqual, _) = firstResult.betterResultsOrEqual(than: secondResult, thresholds: absoluteThresholds)
+        XCTAssert(betterOrEqual)
+    }
+
+    func testBenchmarkAbsoluteThresholds() throws {
+        let firstStatistics = Statistics()
+        firstStatistics.add(0)
+        firstStatistics.add(125)
+        firstStatistics.add(150)
+        firstStatistics.add(175)
+        firstStatistics.add(190)
+        firstStatistics.add(199)
+        firstStatistics.add(200)
+
+        let secondStatistics = Statistics()
+        secondStatistics.add(5)
+        secondStatistics.add(136)
+        secondStatistics.add(160)
+        secondStatistics.add(175)
+        secondStatistics.add(190)
+        secondStatistics.add(199)
+        secondStatistics.add(210)
+
+        let thirdStatistics = Statistics()
+        thirdStatistics.add(1_501)
+        thirdStatistics.add(1_501)
+        thirdStatistics.add(1_501)
+        thirdStatistics.add(1_501)
+        thirdStatistics.add(1_501)
+
+        let absolute: BenchmarkThresholds.AbsoluteThresholds = [.p0: 1,
+                                                                .p25: 1,
+                                                                .p50: 1,
+                                                                .p75: 1,
+                                                                .p90: 1,
+                                                                .p99: 1]
+
+        let absoluteThresholds = BenchmarkThresholds(absolute: absolute)
+
+        let absoluteTwo: BenchmarkThresholds.AbsoluteThresholds = [.p0: 1_500,
+                                                                   .p25: 1_500,
+                                                                   .p50: 1_500,
+                                                                   .p75: 1_500,
+                                                                   .p90: 1_500,
+                                                                   .p99: 1_500]
+
+        let absoluteThresholdsTwo = BenchmarkThresholds(absolute: absoluteTwo)
+
+        let firstResult = BenchmarkResult(metric: .cpuUser,
+                                          timeUnits: .nanoseconds,
+                                          scalingFactor: .one,
+                                          warmupIterations: 0,
+                                          thresholds: .default,
+                                          statistics: firstStatistics)
+
+        let secondResult = BenchmarkResult(metric: .cpuUser,
+                                           timeUnits: .nanoseconds,
+                                           scalingFactor: .one,
+                                           warmupIterations: 0,
+                                           thresholds: .default,
+                                           statistics: secondStatistics)
+
+        let thirdResult = BenchmarkResult(metric: .cpuUser,
+                                          timeUnits: .nanoseconds,
+                                          scalingFactor: .one,
+                                          warmupIterations: 0,
+                                          thresholds: .default,
+                                          statistics: thirdStatistics)
+
+        var (betterOrEqual, failures) = secondResult.betterResultsOrEqual(than: firstResult,
+                                                                          thresholds: absoluteThresholds)
+        XCTAssertFalse(betterOrEqual)
+        XCTAssertFalse(failures.isEmpty, "Failures: \(failures)")
+
+        (betterOrEqual, failures) = firstResult.betterResultsOrEqual(than: secondResult,
+                                                                     thresholds: absoluteThresholds)
+        XCTAssert(betterOrEqual)
+        XCTAssert(failures.isEmpty)
+
+        Benchmark.checkAbsoluteThresholds = true
+        failures = thirdResult.failsAbsoluteThresholdChecks(thresholds: absoluteThresholdsTwo,
+                                                            name: "test",
+                                                            target: "test")
+        XCTAssert(failures.count > 4)
     }
 
     func testBenchmarkResultDescriptions() throws {
@@ -300,3 +398,5 @@ final class BenchmarkResultTests: XCTestCase {
         XCTAssert(description.count > 4)
     }
 }
+
+// swiftlint:enable function_body_length type_body_length

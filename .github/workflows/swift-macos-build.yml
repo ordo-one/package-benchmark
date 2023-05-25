@@ -10,13 +10,24 @@ on:
 jobs:
   build-macos:
     timeout-minutes: 60
-    runs-on: [macos-12]
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-13]
+        swift: ["5.7", "5.8"]
+
+    runs-on: ${{ matrix.os }}
 
     steps:
+    - uses: fwal/setup-swift@v1.23.0
+      with:
+        swift-version: ${{ matrix.swift }}
+
     - name: Homebrew Mac
       if: ${{ runner.os == 'Macos' }}
       run: |
         echo "/opt/homebrew/bin:/usr/local/bin" >> $GITHUB_PATH
+        echo BENCHMARK_DISABLE_JEMALLOC=true >> $GITHUB_ENV
         brew install jemalloc
     - uses: actions/checkout@v3
     - name: Swift version
@@ -25,4 +36,6 @@ jobs:
       run: swift build
     - name: Run tests
       run: |
-        [ -d Tests ] && swift test --parallel
+        if [ -d Tests ]; then
+          swift test --parallel
+        fi

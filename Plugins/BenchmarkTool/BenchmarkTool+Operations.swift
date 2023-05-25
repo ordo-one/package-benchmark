@@ -9,10 +9,18 @@
 //
 
 // run/list benchmarks by talking to controlled process
+#if canImport(Darwin)
+    import Darwin
+#elseif canImport(Glibc)
+    import Glibc
+#else
+    #error("Unsupported Platform")
+#endif
 
 import Benchmark
 import ExtrasJSON
 import SystemPackage
+import TextTable
 
 extension BenchmarkTool {
     mutating func queryBenchmarks(_ benchmarkPath: String) throws {
@@ -24,8 +32,14 @@ extension BenchmarkTool {
             case let .list(benchmark):
                 benchmark.executablePath = benchmarkPath
                 benchmark.target = FilePath(benchmarkPath).lastComponent!.description
+                if metrics.isEmpty == false {
+                    benchmark.configuration.metrics = metrics
+                }
                 benchmarks.append(benchmark)
             case .end:
+                break outerloop
+            case let .error(description):
+                failBenchmark(description)
                 break outerloop
             default:
                 print("Unexpected reply \(benchmarkReply)")
@@ -48,11 +62,7 @@ extension BenchmarkTool {
             case .end:
                 break outerloop
             case let .error(description):
-                print("*****")
-                print("***** Benchmark '\(benchmark.name)' failed:")
-                print("***** \(description)")
-                print("*****")
-                failBenchmark("")
+                failBenchmark(description)
                 break outerloop
             default:
                 print("Unexpected reply \(benchmarkReply)")
@@ -68,86 +78,122 @@ extension BenchmarkTool {
         return cleanedString
     }
 
+    struct NameAndTarget: Hashable {
+        let name: String
+        let target: String
+    }
+
     mutating func postProcessBenchmarkResults() throws {
+        // Turn on buffering again for output
+        setvbuf(stdout, nil, _IOFBF, Int(BUFSIZ))
+
         switch command {
+        case .`init`:
+            return
         case .baseline:
-            if delete > 0 {
+            guard let baselineOperation else {
+                fatalError("Baseline command without specifying a baseline operation, internal error in Benchmark")
+            }
+
+            switch baselineOperation {
+            case .delete:
                 benchmarkExecutablePaths.forEach { path in
                     let target = FilePath(path).lastComponent!.description
-                    print("")
                     baseline.forEach {
-                        print("Removing baseline for \(target): '\($0)'")
                         removeBaselinesNamed(target: target, baselineName: $0)
                     }
                 }
                 return
-            }
-
-            if listBaselines > 0 {
-                print("")
+            case .list:
                 printAllBaselines()
-                return
-            }
-
-            if let comparisonBaseline {
-                guard benchmarkBaselines.count > 0 else {
-                    print("Only had \(benchmarkBaselines.count) baselines, can't compare.")
+            case .compare:
+                guard benchmarkBaselines.count == 2 else {
+                    print("Can only compare exactly 2 benchmark baselines, got: \(benchmarkBaselines.count) baselines.")
                     return
                 }
 
-                let currentBaseline = benchmarkBaselines[0]
-                let baselineName = baseline[0] == "default" ? "Current baseline" : baseline[0]
-                let comparingBaselineName = compare ?? "unknown"
-
-                prettyPrintDelta(currentBaseline: currentBaseline, baseline: comparisonBaseline)
-
-                if currentBaseline.betterResultsOrEqual(than: comparisonBaseline, printOutput: true) {
-                    print("New baseline '\(comparingBaselineName)' is BETTER (or equal) than the '\(baselineName)' baseline thresholds.")
-                    print("")
-
-                } else {
-                    failBenchmark("New baseline '\(comparingBaselineName)' is WORSE than the '\(baselineName)' baseline thresholds.")
-                }
-
-                return
-            }
-
-            if update > 0 {
-                guard benchmarkBaselines.count > 0 else {
-                    print("Only had \(benchmarkBaselines.count) baselines, can't update.")
+                prettyPrintDelta(currentBaseline: benchmarkBaselines[0], baseline: benchmarkBaselines[1])
+            case .update:
+                guard benchmarkBaselines.count == 1 else {
+                    print("Can only update a single benchmark baseline, got: \(benchmarkBaselines.count) baselines.")
                     return
                 }
 
                 let baseline = benchmarkBaselines[0]
-                let baselineName = self.baseline.first ?? "default"
+                if let baselineName = self.baseline.first {
+                    try baseline.targets.forEach { target in
+                        let results = baseline.results.filter { $0.key.target == target }
+                        let subset = BenchmarkBaseline(baselineName: baselineName,
+                                                       machine: baseline.machine,
+                                                       results: results)
+                        try write(baseline: subset,
+                                  baselineName: baselineName,
+                                  target: target)
+                    }
 
-                if quiet == 0 {
-                    prettyPrint(baseline, header: "Updating baseline '\(baselineName)'")
+                    if quiet == false {
+                        print("")
+                        print("Updated baseline '\(baselineName)'")
+                    }
+                } else {
+                    fatalError("Could not get first baselinename")
                 }
 
-                try baseline.targets.forEach { target in
-                    let results = baseline.results.filter { $0.key.target == target }
-                    let subset = BenchmarkBaseline(baselineName: baselineName == "default" ? "Current baseline" : baselineName,
-                                                   machine: baseline.machine,
-                                                   results: results)
-                    try write(baseline: subset,
-                              baselineName: baselineName,
-                              target: target)
+            case .check:
+                if checkAbsoluteThresholds {
+                    guard benchmarkBaselines.count == 1 else {
+                        print("Can only do threshold violation checks for exactly 1 benchmark baseline, got: \(benchmarkBaselines.count) baselines.")
+                        return
+                    }
+
+                    print("")
+                    let currentBaseline = benchmarkBaselines[0]
+                    let baselineName = baseline[0]
+
+                    let deviationResults = currentBaseline.failsAbsoluteThresholdChecks(benchmarks: benchmarks)
+
+                    if deviationResults.isEmpty {
+                        print("Baseline '\(baselineName)' is BETTER (or equal) than the defined absolute baseline thresholds. (--check-absolute)")
+                    } else {
+                        prettyPrintAbsoluteDeviation(baselineName: baselineName,
+                                                     deviationResults: deviationResults)
+                        failBenchmark("New baseline '\(baselineName)' is WORSE than the defined absolute baseline thresholds. (--check-absolute)",
+                                      exitCode: .thresholdViolation)
+                    }
+                } else {
+                    guard benchmarkBaselines.count == 2 else {
+                        print("Can only do threshold violation checks for exactly 2 benchmark baselines, got: \(benchmarkBaselines.count) baselines.")
+                        return
+                    }
+
+                    let currentBaseline = benchmarkBaselines[0]
+                    let checkBaseline = benchmarkBaselines[1]
+                    let baselineName = baseline[0]
+                    let checkBaselineName = baseline[1]
+
+                    let (betterOrEqual, deviationResults) = checkBaseline.betterResultsOrEqual(than: currentBaseline,
+                                                                                               benchmarks: benchmarks)
+
+                    if betterOrEqual {
+                        print("New baseline '\(checkBaselineName)' is BETTER (or equal) than the '\(baselineName)' baseline thresholds.")
+                    } else {
+                        prettyPrintDeviation(baselineName: baselineName,
+                                             comparingBaselineName: checkBaselineName,
+                                             deviationResults: deviationResults)
+                        failBenchmark("New baseline '\(checkBaselineName)' is WORSE than the '\(baselineName)' baseline thresholds.",
+                                      exitCode: .thresholdViolation)
+                    }
                 }
-                return
+            case .read:
+                if benchmarkBaselines.isEmpty {
+                    print("No baseline found.")
+                } else {
+                    try benchmarkBaselines.forEach { baseline in
+                        try exportResults(baseline: baseline)
+                    }
+                }
             }
-
-            if benchmarkBaselines.isEmpty {
-                print("No baseline found.")
-            } else {
-                try benchmarkBaselines.forEach { baseline in
-                    try exportResults(baseline: baseline)
-                }
-            }
-
-            return
         case .run:
-
             guard let baseline = benchmarkBaselines.first else {
                 fatalError("Internal error, no baseline data after benchmark run.")
             }
