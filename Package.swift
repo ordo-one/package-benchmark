@@ -164,9 +164,11 @@ package.targets += [
         name: "BenchmarkDateTime",
         dependencies: [
             "Benchmark",
-            "BenchmarkPlugin"
         ],
-        path: "Benchmarks/DateTime"
+        path: "Benchmarks/DateTime",
+        plugins: [
+            "BenchmarkPlugin"
+        ]
     )
 ]
 
@@ -176,9 +178,11 @@ package.targets += [
         name: "Basic",
         dependencies: [
             "Benchmark",
-            "BenchmarkPlugin"
         ],
-        path: "Benchmarks/Basic"
+        path: "Benchmarks/Basic",
+        plugins: [
+            "BenchmarkPlugin"
+        ]
     ),
 ]
 
@@ -188,9 +192,11 @@ package.targets += [
         name: "HistogramBenchmark",
         dependencies: [
             "Benchmark",
-            "BenchmarkPlugin",
             .product(name: "Histogram", package: "package-histogram"),
         ],
-        path: "Benchmarks/Histogram"
+        path: "Benchmarks/Histogram",
+        plugins: [
+            "BenchmarkPlugin"
+        ]
     ),
 ]
