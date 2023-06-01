@@ -38,7 +38,7 @@ extension BenchmarkTool {
                 ],
                 path: "Benchmarks/\(targetName)",
                 plugins: [
-                    .product(name: "BenchmarkPlugin", package: "package-benchmark")
+                    .plugin(name: "BenchmarkPlugin", package: "package-benchmark")
                 ]
             ),
         ]
