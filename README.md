@@ -70,12 +70,14 @@ For each executable target, include dependencies on both `Benchmark` (supporting
 The following example shows an benchmark suite named `My-Benchmark` with the required dependency on `Benchmark` and the source files for the benchmark that reside in the directory `Benchmarks/My-Benchmark`:
 ```swift
 .executableTarget(
-    name: "My-Benchmark",
-    dependencies: [
-        .product(name: "Benchmark", package: "package-benchmark"),
-        .product(name: "BenchmarkPlugin", package: "package-benchmark"),
-    ],
-    path: "Benchmarks/My-Benchmark"
+      name: "My-Benchmark",
+      dependencies: [
+          .product(name: "Benchmark", package: "package-benchmark"),
+      ],
+      path: "Benchmarks/My-Benchmark",
+      plugins: [
+          .plugin(name: "BenchmarkPlugin", package: "package-benchmark"),
+      ]
 ),
 ```
 
