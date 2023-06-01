@@ -42,6 +42,9 @@ jobs:
 
     runs-on: ${{ matrix.os }}
     continue-on-error: true
+    permissions:
+        issues: write
+        pull-requests: write
 
     strategy:
       matrix:
@@ -87,9 +90,12 @@ jobs:
         if: ${{ env.hasBenchmark == '1' }}
         id: benchmark
         run: |
+          echo '## Summary' >> $GITHUB_STEP_SUMMARY
           echo $(date) >> $GITHUB_STEP_SUMMARY
           echo "exitStatus=1" >> $GITHUB_ENV
           swift package benchmark baseline check main pull_request --format markdown >> $GITHUB_STEP_SUMMARY
+          echo '---' >> $GITHUB_STEP_SUMMARY
+          swift package benchmark baseline compare main pull_request --no-progress --quiet --format markdown >> $GITHUB_STEP_SUMMARY
           echo "exitStatus=0" >> $GITHUB_ENV
         continue-on-error: true
       - if: ${{ env.exitStatus == '0' }}
@@ -109,7 +115,7 @@ jobs:
           echo 'EOF' >> $GITHUB_ENV
       - name: Comment PR
         if: ${{ env.hasBenchmark == '1' }}
-        uses: thollander/actions-comment-pull-request@v1
+        uses: thollander/actions-comment-pull-request@v2
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           message: ${{ env.PRTEST }}

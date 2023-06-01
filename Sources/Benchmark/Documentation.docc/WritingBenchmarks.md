@@ -101,30 +101,30 @@ public extension Benchmark {
     struct Configuration: Codable {
         /// Defines the metrics that should be measured for the benchmark
         public var metrics: [BenchmarkMetric]
-        /// Override the automatic detection of timeunits for metrics 
-        /// related to time to a specific one 
+        /// Override the automatic detection of timeunits for metrics
+        /// related to time to a specific one
         /// (auto should work for most use cases)
         public var timeUnits: BenchmarkTimeUnits
-        /// Specifies a number of warmup iterations should be performed before   
+        /// Specifies a number of warmup iterations should be performed before
         /// the measurement to reduce outliers due to e.g. cache population
         public var warmupIterations: Int
-        /// Specifies the number of logical subiterations being done, scaling 
+        /// Specifies the number of logical subiterations being done, scaling
         /// throughput measurements accordingly.
-        /// E.g. `.kilo`will scale results with 1000. 
+        /// E.g. `.kilo` will scale results with 1000.
         /// Any iteration done in the benchmark should use
-        /// `benchmark.scalingFactor.rawvalue` for 
+        /// `benchmark.scalingFactor.rawValue` for
         /// the number of iterations.
-        public var scalingFactor: StatisticsUnits
-        /// The target wall clock runtime for the benchmark. 
+        public var scalingFactor: BenchmarkScalingFactor
+        /// The target wall clock runtime for the benchmark.
         /// Defaults to `.seconds(1)` if not set.
         public var maxDuration: Duration
         /// The target number of iterations for the benchmark.
         /// Defaults to 100K iterations if not set.
         public var maxIterations: Int
-        /// Whether to skip this test (convenience for not 
+        /// Whether to skip this test (convenience for not
         /// having to comment out tests that have issues)
         public var skip = false
-        /// Customized CI failure thresholds for a given metric 
+        /// Customized CI failure thresholds for a given metric
         /// for the Benchmark
         public var thresholds: [BenchmarkMetric: BenchmarkThresholds]?
 ...
@@ -271,12 +271,12 @@ func teardownFunction() {
 let benchmarks = {
 
 // only shared setup
-Benchmark("Minimal benchmark", 
-    configuration: .init(setup: setupFunction, teardown: teardownFunction)) { benchmark in 
+Benchmark("Minimal benchmark",
+    configuration: .init(setup: setupFunction, teardown: teardownFunction)) { benchmark in
     // Some work to measure here
 }
 
-Benchmark("Minimal benchmark 2", 
+Benchmark("Minimal benchmark 2",
     configuration: .init(setup: setupFunction, teardown: teardownFunction)) { benchmark in
     // Some work to measure here
     }
@@ -290,7 +290,7 @@ import Benchmark
 
 let benchmarks = {
 
-Benchmark("Minimal benchmark") { benchmark in 
+Benchmark("Minimal benchmark") { benchmark in
     } setup: {
      // do setup for this benchmark here
     } teardown: {
@@ -324,8 +324,8 @@ let benchmarks = {
     Benchmark.teardown = { print("global teardown closure, used for all benchmarks") }
 
 
-    Benchmark("Minimal benchmark", 
-    configuration: .init(setup: setupFunction, teardown: teardownFunction)) { benchmark in 
+    Benchmark("Minimal benchmark",
+    configuration: .init(setup: setupFunction, teardown: teardownFunction)) { benchmark in
     } setup: {
     // do setup for this benchmark here
     } teardown: {
