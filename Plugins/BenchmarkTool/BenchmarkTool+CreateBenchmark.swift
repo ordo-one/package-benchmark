@@ -35,9 +35,11 @@ extension BenchmarkTool {
                 name: "\(targetName)",
                 dependencies: [
                     .product(name: "Benchmark", package: "package-benchmark"),
-                    .product(name: "BenchmarkPlugin", package: "package-benchmark")
                 ],
-                path: "Benchmarks/\(targetName)"
+                path: "Benchmarks/\(targetName)",
+                plugins: [
+                    .product(name: "BenchmarkPlugin", package: "package-benchmark")
+                ]
             ),
         ]
         """
