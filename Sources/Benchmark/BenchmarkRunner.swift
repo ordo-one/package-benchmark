@@ -179,20 +179,20 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
                             try await setup()
                         }
                     } catch {
-                        let errorDescription = """
-                                               Benchmark.setup or local benchmark setup failed:
+                        let description = """
+                                          Benchmark.setup or local benchmark setup failed:
 
-                                               \(error)
+                                          \(error)
 
-                                               If it is a filesystem permissioning error or if the benchmark uses networking, you may need
-                                               to give permissions or even disable SwiftPM:s sandbox environment and run the benchmark using:
+                                          If it is a filesystem permissioning error or if the benchmark uses networking, you may need
+                                          to give permissions or even disable SwiftPM:s sandbox environment and run the benchmark using:
 
-                                               swift package --allow-writing-to-package-directory benchmark
-                                               or
-                                               swift package --disable-sandbox benchmark
-                                               """
+                                          swift package --allow-writing-to-package-directory benchmark
+                                          or
+                                          swift package --disable-sandbox benchmark
+                                          """
 
-                        try channel.write(.error(errorDescription))
+                        try channel.write(.error(description))
                         return
                     }
 
