@@ -185,7 +185,7 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
                                           \(error)
 
                                           If it is a filesystem permissioning error or if the benchmark uses networking, you may need
-                                          to give permissions or even disable SwiftPM:s sandbox environment and run the benchmark using:
+                                          to give permissions or even disable SwiftPM's sandbox environment and run the benchmark using:
 
                                           swift package --allow-writing-to-package-directory benchmark
                                           or
