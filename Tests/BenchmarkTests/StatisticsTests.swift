@@ -25,7 +25,7 @@ final class StatisticsTests: XCTestCase {
             stats.add(measurement)
         }
 
-        XCTAssert(Statistics.roundToDecimalplaces(123.4567898972239487234) == 123.46)
+        XCTAssertEqual(Statistics.roundToDecimalplaces(123.4567898972239487234), 123.46)
         XCTAssertEqual(stats.measurementCount, measurementCount * 2)
         XCTAssertEqual(stats.units(), .count)
         XCTAssertEqual(round(stats.histogram.mean), round(Double(measurementCount / 2)))

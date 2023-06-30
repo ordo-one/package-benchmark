@@ -294,7 +294,7 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
             "(\(scaledTimeUnits.description)) *" : "(\(timeUnits.description)) *"
     }
 
-    public static func == (lhs: BenchmarkResult, rhs: BenchmarkResult) -> Bool {
+    public static func == (lhs: Self, rhs: Self) -> Bool {
         guard lhs.metric == rhs.metric else {
             return false
         }
@@ -314,7 +314,7 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
         return true
     }
 
-    public static func < (lhs: BenchmarkResult, rhs: BenchmarkResult) -> Bool {
+    public static func < (lhs: Self, rhs: Self) -> Bool {
         let reversedComparison = lhs.metric.polarity == .prefersLarger
 
         guard lhs.metric == rhs.metric else {
@@ -353,13 +353,13 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
     }
 
     // swiftlint:disable function_body_length
-    public func betterResultsOrEqual(than otherResult: BenchmarkResult,
+    public func betterResultsOrEqual(than otherResult: Self,
                                      thresholds: BenchmarkThresholds = .default,
                                      name: String = "unknown name",
                                      target: String = "unknown target") -> (Bool, [ThresholdDeviation]) {
         var violationDescriptions: [ThresholdDeviation] = []
-        var rhs: BenchmarkResult
-        var lhs: BenchmarkResult
+        var rhs: Self
+        var lhs: Self
 
         lhs = self
         rhs = otherResult
@@ -372,7 +372,7 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
         func worseResult(_ metric: BenchmarkMetric,
                          _ lhs: Int,
                          _ rhs: Int,
-                         _ percentile: BenchmarkResult.Percentile,
+                         _ percentile: Self.Percentile,
                          _ thresholds: BenchmarkThresholds,
                          _ scalingFactor: Statistics.Units) -> (Bool, [ThresholdDeviation]) {
             let relativeDifference = rhs != 0 ? (100 - (100.0 * Double(lhs) / Double(rhs))) : 0.0
@@ -439,7 +439,7 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
                                              target: String) -> [ThresholdDeviation] {
         func worseResult(_ metric: BenchmarkMetric,
                          _ lhs: Int,
-                         _ percentile: BenchmarkResult.Percentile,
+                         _ percentile: Self.Percentile,
                          _ thresholds: BenchmarkThresholds,
                          _ scalingFactor: Statistics.Units) -> [ThresholdDeviation] {
             let reverseComparison = metric.polarity == .prefersLarger

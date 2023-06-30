@@ -10,7 +10,7 @@
 
 import Dispatch
 
-// swiftlint: disable file_length
+// swiftlint: disable file_length prefer_self_in_static_references
 
 /// Defines a benchmark
 public final class Benchmark: Codable, Hashable {
@@ -38,6 +38,8 @@ public final class Benchmark: Codable, Hashable {
         @_documentation(visibility: internal)
     #endif
     public typealias BenchmarkCustomMetricMeasurement = (BenchmarkMetric, Int) -> Void
+
+// swiftlint: enable prefer_self_in_static_references
 
     /// Alias for closures used to hook into setup / teardown
     public typealias BenchmarkHook = () async throws -> Void

@@ -236,8 +236,8 @@ struct BenchmarkTool: AsyncParsableCommand {
         }
 
         // Insert benchmark run at first position of baselines
-        baseline.append("Current run")
-        benchmarkBaselines.append(BenchmarkBaseline(baselineName: "Current run",
+        baseline.append("Current_run")
+        benchmarkBaselines.append(BenchmarkBaseline(baselineName: "Current_run",
                                                     machine: benchmarkMachine(),
                                                     results: benchmarkResults))
 
@@ -251,7 +251,7 @@ struct BenchmarkTool: AsyncParsableCommand {
     }
 
     enum RunCommandError: Error {
-        case WaitPIDError(String)
+        case WaitPIDError
         case POSIXSpawnError(Int32)
     }
 
@@ -313,7 +313,7 @@ struct BenchmarkTool: AsyncParsableCommand {
                     completion?(status)
                 } else {
                     print("waitpiderror")
-                    throw RunCommandError.WaitPIDError("process failed")
+                    throw RunCommandError.WaitPIDError
                 }
             } else {
                 throw RunCommandError.POSIXSpawnError(status)
