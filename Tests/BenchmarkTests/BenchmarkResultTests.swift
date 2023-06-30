@@ -119,10 +119,10 @@ final class BenchmarkResultTests: XCTestCase {
                                            thresholds: .default,
                                            statistics: firstStatistics)
 
-        XCTAssert(firstResult != secondResult)
+        XCTAssertNotEqual(firstResult, secondResult)
         XCTAssertFalse(firstResult > secondResult)
         XCTAssertFalse(firstResult < secondResult)
-        XCTAssertFalse(firstResult == secondResult)
+        XCTAssertNotEqual(firstResult, secondResult)
     }
 
     func testBenchmarkResultBetterOrEqualWithDefaultThresholds() throws {
@@ -362,7 +362,7 @@ final class BenchmarkResultTests: XCTestCase {
                                      thresholds: .default,
                                      statistics: firstStatistics)
 
-        XCTAssert(result.normalize(125_000_000) == result.scale(125_000_000_000))
+        XCTAssertEqual(result.normalize(125_000_000), result.scale(125_000_000_000))
 
         result = BenchmarkResult(metric: .cpuUser,
                                  timeUnits: .microseconds,
@@ -371,7 +371,7 @@ final class BenchmarkResultTests: XCTestCase {
                                  thresholds: .default,
                                  statistics: firstStatistics)
 
-        XCTAssert(result.normalize(125_000_000) == result.scale(125_000_000_000))
+        XCTAssertEqual(result.normalize(125_000_000), result.scale(125_000_000_000))
 
         result = BenchmarkResult(metric: .cpuUser,
                                  timeUnits: .nanoseconds,
@@ -380,7 +380,7 @@ final class BenchmarkResultTests: XCTestCase {
                                  thresholds: .default,
                                  statistics: firstStatistics)
 
-        XCTAssert(result.normalize(125_000_000) == result.scale(125_000_000_000))
+        XCTAssertEqual(result.normalize(125_000_000), result.scale(125_000_000_000))
     }
 
     func testBenchmarkResultEnumerations() throws {
