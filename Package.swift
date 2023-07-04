@@ -142,7 +142,7 @@ var dependencies: [PackageDescription.Target.Dependency] = [
     .product(name: "SystemPackage", package: "swift-system"),
     .product(name: "DateTime", package: "package-datetime"),
     .product(name: "Progress", package: "Progress.swift"),
-    .byNameItem(name: "CDarwinOperatingSystemStats", condition: .when(platforms: [.macOS])),
+    .byNameItem(name: "CDarwinOperatingSystemStats", condition: .when(platforms: [.macOS, .iOS])),
     .byNameItem(name: "CLinuxOperatingSystemStats", condition: .when(platforms: [.linux])),
     .product(name: "Atomics", package: "swift-atomics"),
     "SwiftRuntimeHooks",

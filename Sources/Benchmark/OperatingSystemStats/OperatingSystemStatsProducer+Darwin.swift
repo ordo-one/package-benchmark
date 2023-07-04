@@ -52,6 +52,7 @@ final class OperatingSystemStatsProducer {
         nsPerSchedulerTick = 1_000_000_000 / schedulerTicksPerSecond
     }
 
+#if !os(iOS)
     fileprivate
     func getProcInfo() -> proc_taskinfo {
         var procTaskInfo = proc_taskinfo()
@@ -64,8 +65,10 @@ final class OperatingSystemStatsProducer {
         }
         return procTaskInfo
     }
+#endif
 
     func startSampling(_: Int = 10_000) { // sample rate in microseconds
+#if !os(iOS)
         DispatchQueue.global(qos: .userInitiated).async {
             self.lock.lock()
             let rate = self.sampleRate
@@ -103,16 +106,20 @@ final class OperatingSystemStatsProducer {
         }
         // We'll sleep just a little bit to let the sampler thread get going so we don't get 0 samples
         usleep(1_000)
+#endif
     }
 
     func stopSampling() {
+#if !os(iOS)
         lock.withLock {
             runState = .shuttingDown
         }
         semaphore.wait()
+#endif
     }
 
     func makeOperatingSystemStats() -> OperatingSystemStats {
+#if !os(iOS)
         let procTaskInfo = getProcInfo()
         let userTime = Int(nsPerMachTick * Double(procTaskInfo.pti_total_user))
         let systemTime = Int(nsPerMachTick * Double(procTaskInfo.pti_total_system))
@@ -141,6 +148,30 @@ final class OperatingSystemStatsProducer {
                                          writeBytesPhysical: 0)
 
         return stats
+#else
+        lock.lock()
+        let threads = peakThreads
+        let threadsRunning = peakThreadsRunning
+        lock.unlock()
+
+        let stats = OperatingSystemStats(cpuUser: 0,
+                                         cpuSystem: 0,
+                                         cpuTotal: 0,
+                                         peakMemoryResident: 0,
+                                         peakMemoryVirtual: 0,
+                                         syscalls: 0,
+                                         contextSwitches: 0,
+                                         threads: threads,
+                                         threadsRunning: threadsRunning,
+                                         readSyscalls: 0,
+                                         writeSyscalls: 0,
+                                         readBytesLogical: 0,
+                                         writeBytesLogical: 0,
+                                         readBytesPhysical: 0,
+                                         writeBytesPhysical: 0)
+
+        return stats
+#endif
     }
 
     func metricSupported(_ metric: BenchmarkMetric) -> Bool {
