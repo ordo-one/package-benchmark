@@ -8,10 +8,7 @@ let disableJemalloc = ProcessInfo.processInfo.environment["BENCHMARK_DISABLE_JEM
 
 let package = Package(
     name: "Benchmark",
-    platforms: [
-        .macOS(.v13),
-        .iOS(.v16)
-    ],
+    platforms: [.macOS(.v13)],
     products: [
         .plugin(name: "BenchmarkCommandPlugin", targets: ["BenchmarkCommandPlugin"]),
         .plugin(name: "BenchmarkPlugin", targets: ["BenchmarkPlugin"]),
@@ -121,7 +118,7 @@ let package = Package(
 
 let macOSSPIBuild: Bool // Disables jemalloc for macOS SPI builds as the infrastructure doesn't have jemalloc there
 
-#if os(macOS) || os(iOS)
+#if os(macOS)
 if let spiBuildEnvironment = ProcessInfo.processInfo.environment["SPI_BUILD"], spiBuildEnvironment == "1" {
     macOSSPIBuild = true
     print("Building for SPI@macOS, disabling Jemalloc")
