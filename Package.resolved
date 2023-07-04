@@ -5,8 +5,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/ordo-one/package-datetime",
       "state" : {
-        "revision" : "9c1e16bfe7683e787161f866ff8b5cbc88089cb4",
-        "version" : "0.0.6"
+        "revision" : "42b948be6493bfbe81a6930a3d6986af028758bb",
+        "version" : "1.0.1"
       }
     },
     {
