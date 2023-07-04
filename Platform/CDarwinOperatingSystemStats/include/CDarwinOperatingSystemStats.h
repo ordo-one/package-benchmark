@@ -13,13 +13,6 @@
 #ifndef CDarwinOperatingSystemStats_h
 #define CDarwinOperatingSystemStats_h
 
-#if defined(__APPLE__)
-#include "TargetConditionals.h"
-#if !TARGET_OS_IPHONE
 #include <libproc.h>
-#endif
-#else
-#include <libproc.h>
-#endif
 
 #endif /* CDarwinOperatingSystemStats_h */
