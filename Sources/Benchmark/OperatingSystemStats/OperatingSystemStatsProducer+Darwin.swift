@@ -52,7 +52,7 @@ final class OperatingSystemStatsProducer {
         nsPerSchedulerTick = 1_000_000_000 / schedulerTicksPerSecond
     }
 
-#if !os(iOS)
+#if os(macOS)
     fileprivate
     func getProcInfo() -> proc_taskinfo {
         var procTaskInfo = proc_taskinfo()
@@ -68,7 +68,7 @@ final class OperatingSystemStatsProducer {
 #endif
 
     func startSampling(_: Int = 10_000) { // sample rate in microseconds
-#if !os(iOS)
+#if os(macOS)
         DispatchQueue.global(qos: .userInitiated).async {
             self.lock.lock()
             let rate = self.sampleRate
@@ -110,7 +110,7 @@ final class OperatingSystemStatsProducer {
     }
 
     func stopSampling() {
-#if !os(iOS)
+#if os(macOS)
         lock.withLock {
             runState = .shuttingDown
         }
@@ -119,7 +119,7 @@ final class OperatingSystemStatsProducer {
     }
 
     func makeOperatingSystemStats() -> OperatingSystemStats {
-#if !os(iOS)
+#if os(macOS)
         let procTaskInfo = getProcInfo()
         let userTime = Int(nsPerMachTick * Double(procTaskInfo.pti_total_user))
         let systemTime = Int(nsPerMachTick * Double(procTaskInfo.pti_total_system))
@@ -149,28 +149,12 @@ final class OperatingSystemStatsProducer {
 
         return stats
 #else
-        let stats = OperatingSystemStats(cpuUser: 0,
-                                         cpuSystem: 0,
-                                         cpuTotal: 0,
-                                         peakMemoryResident: 0,
-                                         peakMemoryVirtual: 0,
-                                         syscalls: 0,
-                                         contextSwitches: 0,
-                                         threads: 0,
-                                         threadsRunning: 0,
-                                         readSyscalls: 0,
-                                         writeSyscalls: 0,
-                                         readBytesLogical: 0,
-                                         writeBytesLogical: 0,
-                                         readBytesPhysical: 0,
-                                         writeBytesPhysical: 0)
-
-        return stats
+        return .init()
 #endif
     }
 
     func metricSupported(_ metric: BenchmarkMetric) -> Bool {
-#if !os(iOS)
+#if os(macOS)
         switch metric {
         case .readSyscalls:
             return false
@@ -188,7 +172,7 @@ final class OperatingSystemStatsProducer {
             return true
         }
 #else
-        // No metrics supported on iOS due to lack of libproc.h
+        // No metrics supported due to lack of libproc.h
         return false
 #endif
     }
