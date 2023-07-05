@@ -149,11 +149,6 @@ final class OperatingSystemStatsProducer {
 
         return stats
 #else
-        lock.lock()
-        let threads = peakThreads
-        let threadsRunning = peakThreadsRunning
-        lock.unlock()
-
         let stats = OperatingSystemStats(cpuUser: 0,
                                          cpuSystem: 0,
                                          cpuTotal: 0,
@@ -161,8 +156,8 @@ final class OperatingSystemStatsProducer {
                                          peakMemoryVirtual: 0,
                                          syscalls: 0,
                                          contextSwitches: 0,
-                                         threads: threads,
-                                         threadsRunning: threadsRunning,
+                                         threads: 0,
+                                         threadsRunning: 0,
                                          readSyscalls: 0,
                                          writeSyscalls: 0,
                                          readBytesLogical: 0,
@@ -175,6 +170,7 @@ final class OperatingSystemStatsProducer {
     }
 
     func metricSupported(_ metric: BenchmarkMetric) -> Bool {
+#if !os(iOS)
         switch metric {
         case .readSyscalls:
             return false
@@ -191,6 +187,10 @@ final class OperatingSystemStatsProducer {
         default:
             return true
         }
+#else
+        // No metrics supported on iOS due to lack of libproc.h
+        return false
+#endif
     }
 }
 
