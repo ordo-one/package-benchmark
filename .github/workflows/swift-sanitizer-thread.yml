@@ -28,6 +28,7 @@ jobs:
       if: ${{ runner.os == 'Linux' }}
       run: |
         sudo apt-get install -y libjemalloc-dev
+        echo BENCHMARK_DISABLE_JEMALLOC=true >> $GITHUB_ENV
 
     - uses: actions/checkout@v3
 

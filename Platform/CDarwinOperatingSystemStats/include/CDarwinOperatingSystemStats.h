@@ -13,6 +13,8 @@
 #ifndef CDarwinOperatingSystemStats_h
 #define CDarwinOperatingSystemStats_h
 
+#if __has_include(<libproc.h>)
 #include <libproc.h>
+#endif
 
 #endif /* CDarwinOperatingSystemStats_h */

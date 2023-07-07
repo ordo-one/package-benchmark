@@ -52,6 +52,7 @@ final class OperatingSystemStatsProducer {
         nsPerSchedulerTick = 1_000_000_000 / schedulerTicksPerSecond
     }
 
+#if os(macOS)
     fileprivate
     func getProcInfo() -> proc_taskinfo {
         var procTaskInfo = proc_taskinfo()
@@ -64,8 +65,10 @@ final class OperatingSystemStatsProducer {
         }
         return procTaskInfo
     }
+#endif
 
     func startSampling(_: Int = 10_000) { // sample rate in microseconds
+#if os(macOS)
         DispatchQueue.global(qos: .userInitiated).async {
             self.lock.lock()
             let rate = self.sampleRate
@@ -103,16 +106,20 @@ final class OperatingSystemStatsProducer {
         }
         // We'll sleep just a little bit to let the sampler thread get going so we don't get 0 samples
         usleep(1_000)
+#endif
     }
 
     func stopSampling() {
+#if os(macOS)
         lock.withLock {
             runState = .shuttingDown
         }
         semaphore.wait()
+#endif
     }
 
     func makeOperatingSystemStats() -> OperatingSystemStats {
+#if os(macOS)
         let procTaskInfo = getProcInfo()
         let userTime = Int(nsPerMachTick * Double(procTaskInfo.pti_total_user))
         let systemTime = Int(nsPerMachTick * Double(procTaskInfo.pti_total_system))
@@ -141,9 +148,13 @@ final class OperatingSystemStatsProducer {
                                          writeBytesPhysical: 0)
 
         return stats
+#else
+        return .init()
+#endif
     }
 
     func metricSupported(_ metric: BenchmarkMetric) -> Bool {
+#if os(macOS)
         switch metric {
         case .readSyscalls:
             return false
@@ -160,6 +171,10 @@ final class OperatingSystemStatsProducer {
         default:
             return true
         }
+#else
+        // No metrics supported due to lack of libproc.h
+        return false
+#endif
     }
 }
 

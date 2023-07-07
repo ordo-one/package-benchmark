@@ -8,7 +8,10 @@ let disableJemalloc = ProcessInfo.processInfo.environment["BENCHMARK_DISABLE_JEM
 
 let package = Package(
     name: "Benchmark",
-    platforms: [.macOS(.v13)],
+    platforms: [
+        .macOS(.v13),
+        .iOS(.v16)
+    ],
     products: [
         .plugin(name: "BenchmarkCommandPlugin", targets: ["BenchmarkCommandPlugin"]),
         .plugin(name: "BenchmarkPlugin", targets: ["BenchmarkPlugin"]),
@@ -23,7 +26,7 @@ let package = Package(
         .package(url: "https://github.com/swift-extras/swift-extras-json", .upToNextMajor(from: "0.6.0")),
 //        .package(url: "https://github.com/SwiftPackageIndex/SPIManifest", from: "0.12.0"),
         .package(url: "https://github.com/ordo-one/TextTable", .upToNextMajor(from: "0.0.1")),
-        .package(url: "https://github.com/ordo-one/package-datetime", .upToNextMajor(from: "0.0.0")),
+        .package(url: "https://github.com/ordo-one/package-datetime", .upToNextMajor(from: "1.0.1")),
         .package(url: "https://github.com/ordo-one/package-histogram", .upToNextMajor(from: "0.0.1")),
         .package(url: "https://github.com/ordo-one/Progress.swift", .upToNextMajor(from: "1.0.0")),
         .package(url: "https://github.com/apple/swift-docc-plugin", .upToNextMajor(from: "1.1.0")),
@@ -118,7 +121,7 @@ let package = Package(
 
 let macOSSPIBuild: Bool // Disables jemalloc for macOS SPI builds as the infrastructure doesn't have jemalloc there
 
-#if os(macOS)
+#if os(macOS) || os(iOS)
 if let spiBuildEnvironment = ProcessInfo.processInfo.environment["SPI_BUILD"], spiBuildEnvironment == "1" {
     macOSSPIBuild = true
     print("Building for SPI@macOS, disabling Jemalloc")
@@ -139,7 +142,7 @@ var dependencies: [PackageDescription.Target.Dependency] = [
     .product(name: "SystemPackage", package: "swift-system"),
     .product(name: "DateTime", package: "package-datetime"),
     .product(name: "Progress", package: "Progress.swift"),
-    .byNameItem(name: "CDarwinOperatingSystemStats", condition: .when(platforms: [.macOS])),
+    .byNameItem(name: "CDarwinOperatingSystemStats", condition: .when(platforms: [.macOS, .iOS])),
     .byNameItem(name: "CLinuxOperatingSystemStats", condition: .when(platforms: [.linux])),
     .product(name: "Atomics", package: "swift-atomics"),
     "SwiftRuntimeHooks",
