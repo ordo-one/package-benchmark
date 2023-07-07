@@ -57,7 +57,9 @@ extension BenchmarkTool {
         outputPath.append(csvFile.components)
 
         print("Writing output to \(outputPath)")
-
+        
+        printFailedBenchmarks()
+        
         do {
             let fd = try FileDescriptor.open(
                 outputPath, .writeOnly, options: [.truncate, .create], permissions: .ownerReadWrite
@@ -110,6 +112,8 @@ extension BenchmarkTool {
         outputPath.append(jsonFile.components)
 
         print("Writing output to \(outputPath)")
+        
+        printFailedBenchmarks()
 
         do {
             let fd = try FileDescriptor.open(
@@ -214,6 +218,17 @@ extension BenchmarkTool {
                               fileName: cleanupStringForShellSafety("\(baselineName).\(key.target).\(key.name).\(description).histogram.percentiles.tsv"))
                     outputString = ""
                 }
+            }
+        }
+    }
+    
+    func printFailedBenchmarks() {
+        print("failed backups: \(failedBenchmarkList.isEmpty)")
+        
+        if !failedBenchmarkList.isEmpty {
+            print("The following benchmarks failed: \n")
+            for benchmark in failedBenchmarkList {
+                print("\(benchmark)")
             }
         }
     }
