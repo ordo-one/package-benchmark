@@ -107,11 +107,25 @@ struct BenchmarkTool: AsyncParsableCommand {
     var benchmarkBaselines: [BenchmarkBaseline] = [] // The baselines read from disk, merged + current run if needed
     var comparisonBaseline: BenchmarkBaseline?
     var checkBaseline: BenchmarkBaseline?
+    
+    var failedBenchmarkList: [String] = []
 
-    mutating func failBenchmark(_ reason: String? = nil, exitCode: ExitCode = .genericFailure) {
+    mutating func failBenchmark(_ reason: String? = nil, exitCode: ExitCode = .genericFailure, _ failedBenchmark: String? = nil) {
         if let reason {
             print(reason)
             print("")
+        }
+        
+        if exitCode == .thresholdViolation {
+            #if canImport(Darwin)
+                Darwin.exit(exitCode.rawValue)
+            #elseif canImport(Glibc)
+                Glibc.exit(exitCode.rawValue)
+            #endif
+        } else if exitCode == .benchmarkJobFailed {
+            if let failedBenchmark {
+                failedBenchmarkList.append(failedBenchmark)
+            }
         }
     }
 
@@ -321,5 +335,10 @@ struct BenchmarkTool: AsyncParsableCommand {
         }
 
         return benchmarkResults
+    }
+    
+    struct FailedBenchmark: Codable {
+        let benchmarkName: String
+        let failureReason: String
     }
 }

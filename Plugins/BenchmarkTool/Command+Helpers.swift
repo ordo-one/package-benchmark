@@ -59,4 +59,5 @@ enum ExitCode: Int32 {
     case success = 0
     case genericFailure = 1
     case thresholdViolation = 2
+    case benchmarkJobFailed = 3
 }
