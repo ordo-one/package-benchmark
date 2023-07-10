@@ -116,18 +116,29 @@ struct BenchmarkTool: AsyncParsableCommand {
             print("")
         }
         
-        if exitCode == .thresholdViolation {
-            #if canImport(Darwin)
-                Darwin.exit(exitCode.rawValue)
-            #elseif canImport(Glibc)
-                Glibc.exit(exitCode.rawValue)
-            #endif
-        } else if exitCode == .benchmarkJobFailed {
-            if let failedBenchmark {
-                failedBenchmarkList.append(failedBenchmark)
-            }
+        // check what failed and react accordingly
+        switch exitCode {
+            case .genericFailure:
+                exitBenchmark(exitCode: exitCode)
+            case .thresholdViolation:
+                exitBenchmark(exitCode: exitCode)
+            case .benchmarkJobFailed:
+                if let failedBenchmark {
+                    failedBenchmarkList.append(failedBenchmark)
+                }
+            default:
+                exitBenchmark(exitCode: exitCode)
         }
     }
+    
+    func exitBenchmark(exitCode: ExitCode) {
+        #if canImport(Darwin)
+            Darwin.exit(exitCode.rawValue)
+        #elseif canImport(Glibc)
+            Glibc.exit(exitCode.rawValue)
+        #endif
+    }
+    
 
     func printChildRunError(error: Int32, benchmarkExecutablePath: String) {
         print("Failed to run '\(command)' for \(benchmarkExecutablePath), error code [\(error)]")
@@ -319,7 +330,7 @@ struct BenchmarkTool: AsyncParsableCommand {
 
                 try write(.end)
             } catch {
-                print("process failed: \(error)")
+                print("Process failed: \(error)")
             }
 
             if status == 0 {

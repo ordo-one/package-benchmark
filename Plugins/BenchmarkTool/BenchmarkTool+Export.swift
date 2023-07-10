@@ -223,12 +223,10 @@ extension BenchmarkTool {
     }
     
     func printFailedBenchmarks() {
-        print("failed backups: \(failedBenchmarkList.isEmpty)")
-        
         if !failedBenchmarkList.isEmpty {
             print("The following benchmarks failed: \n")
             for benchmark in failedBenchmarkList {
-                print("\(benchmark)")
+                print(benchmark)
             }
         }
     }
