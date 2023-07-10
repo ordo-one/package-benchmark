@@ -49,7 +49,6 @@ extension BenchmarkTool {
 
     mutating func runBenchmark(target: String, benchmark: Benchmark) throws -> BenchmarkResults {
         var benchmarkResults: BenchmarkResults = [:]
-        
         try write(.run(benchmark: benchmark))
 
         outerloop: while true {
