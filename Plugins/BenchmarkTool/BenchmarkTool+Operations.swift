@@ -49,7 +49,6 @@ extension BenchmarkTool {
 
     mutating func runBenchmark(target: String, benchmark: Benchmark) throws -> BenchmarkResults {
         var benchmarkResults: BenchmarkResults = [:]
-
         try write(.run(benchmark: benchmark))
 
         outerloop: while true {
@@ -62,7 +61,9 @@ extension BenchmarkTool {
             case .end:
                 break outerloop
             case let .error(description):
-                failBenchmark(description)
+                failBenchmark(description, exitCode: .benchmarkJobFailed, "\(target)/\(benchmark.name)")
+                
+                benchmarkResults[BenchmarkIdentifier(target: target, name: benchmark.name)] = []
                 break outerloop
             default:
                 print("Unexpected reply \(benchmarkReply)")

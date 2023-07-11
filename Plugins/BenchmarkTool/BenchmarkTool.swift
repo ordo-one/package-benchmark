@@ -107,18 +107,38 @@ struct BenchmarkTool: AsyncParsableCommand {
     var benchmarkBaselines: [BenchmarkBaseline] = [] // The baselines read from disk, merged + current run if needed
     var comparisonBaseline: BenchmarkBaseline?
     var checkBaseline: BenchmarkBaseline?
+    
+    var failedBenchmarkList: [String] = []
 
-    mutating func failBenchmark(_ reason: String? = nil, exitCode: ExitCode = .genericFailure) {
+    mutating func failBenchmark(_ reason: String? = nil, exitCode: ExitCode = .genericFailure, _ failedBenchmark: String? = nil) {
         if let reason {
             print(reason)
             print("")
         }
+        
+        // check what failed and react accordingly
+        switch exitCode {
+            case .genericFailure:
+                exitBenchmark(exitCode: exitCode)
+            case .thresholdViolation:
+                exitBenchmark(exitCode: exitCode)
+            case .benchmarkJobFailed:
+                if let failedBenchmark {
+                    failedBenchmarkList.append(failedBenchmark)
+                }
+            default:
+                exitBenchmark(exitCode: exitCode)
+        }
+    }
+    
+    func exitBenchmark(exitCode: ExitCode) {
         #if canImport(Darwin)
             Darwin.exit(exitCode.rawValue)
         #elseif canImport(Glibc)
             Glibc.exit(exitCode.rawValue)
         #endif
     }
+    
 
     func printChildRunError(error: Int32, benchmarkExecutablePath: String) {
         print("Failed to run '\(command)' for \(benchmarkExecutablePath), error code [\(error)]")
@@ -241,8 +261,8 @@ struct BenchmarkTool: AsyncParsableCommand {
         }
 
         // Insert benchmark run at first position of baselines
-        baseline.append("Current run")
-        benchmarkBaselines.append(BenchmarkBaseline(baselineName: "Current run",
+        baseline.append("Current_run")
+        benchmarkBaselines.append(BenchmarkBaseline(baselineName: "Current_run",
                                                     machine: benchmarkMachine(),
                                                     results: benchmarkResults))
 
@@ -310,7 +330,7 @@ struct BenchmarkTool: AsyncParsableCommand {
 
                 try write(.end)
             } catch {
-                fatalError("\(error)")
+                print("Process failed: \(error)")
             }
 
             if status == 0 {
@@ -326,5 +346,10 @@ struct BenchmarkTool: AsyncParsableCommand {
         }
 
         return benchmarkResults
+    }
+    
+    struct FailedBenchmark: Codable {
+        let benchmarkName: String
+        let failureReason: String
     }
 }
