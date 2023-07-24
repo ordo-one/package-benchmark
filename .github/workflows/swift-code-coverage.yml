@@ -40,3 +40,4 @@ jobs:
       with: 
         token: ${{ secrets.CODECOV_REPO_TOKEN }} 
         files: info.lcov
+        fail_ci_if_error: true
