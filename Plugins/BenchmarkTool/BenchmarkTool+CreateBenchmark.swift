@@ -11,11 +11,11 @@
 import SystemPackage
 
 #if canImport(Darwin)
-import Darwin
+    import Darwin
 #elseif canImport(Glibc)
-import Glibc
+    import Glibc
 #else
-#error("Unsupported Platform")
+    #error("Unsupported Platform")
 #endif
 
 extension BenchmarkTool {

@@ -31,3 +31,8 @@
 /// ```
 @inline(never)
 public func blackHole(_: some Any) {}
+
+@inline(never)
+public func identity<T>(_ value: T) -> T {
+    value
+}

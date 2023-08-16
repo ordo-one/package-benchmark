@@ -62,7 +62,7 @@ extension BenchmarkTool {
                 break outerloop
             case let .error(description):
                 failBenchmark(description, exitCode: .benchmarkJobFailed, "\(target)/\(benchmark.name)")
-                
+
                 benchmarkResults[BenchmarkIdentifier(target: target, name: benchmark.name)] = []
                 break outerloop
             default:

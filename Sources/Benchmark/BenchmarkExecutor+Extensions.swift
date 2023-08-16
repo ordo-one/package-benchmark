@@ -77,4 +77,5 @@ extension BenchmarkExecutor {
         }
     }
 }
+
 // swiftlint:enable cyclomatic_complexity
