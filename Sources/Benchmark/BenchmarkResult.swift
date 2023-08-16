@@ -531,4 +531,5 @@ public extension BenchmarkTimeUnits {
         }
     }
 }
+
 // swiftlint:enable file_length identifier_name function_parameter_count function_body_length type_body_length

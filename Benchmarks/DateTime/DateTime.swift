@@ -11,7 +11,7 @@ import Benchmark
 import DateTime
 
 let benchmarks = {
-    Benchmark.defaultConfiguration = .init(metrics: [.throughput, .wallClock] + BenchmarkMetric.arc,
+    Benchmark.defaultConfiguration = .init(metrics: [.throughput, .wallClock] + .arc,
                                            warmupIterations: 10,
                                            scalingFactor: .kilo,
                                            maxDuration: .seconds(1),

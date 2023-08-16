@@ -122,14 +122,14 @@ let package = Package(
 let macOSSPIBuild: Bool // Disables jemalloc for macOS SPI builds as the infrastructure doesn't have jemalloc there
 
 #if os(macOS) || os(iOS)
-if let spiBuildEnvironment = ProcessInfo.processInfo.environment["SPI_BUILD"], spiBuildEnvironment == "1" {
-    macOSSPIBuild = true
-    print("Building for SPI@macOS, disabling Jemalloc")
-} else {
-    macOSSPIBuild = false
-}
+    if let spiBuildEnvironment = ProcessInfo.processInfo.environment["SPI_BUILD"], spiBuildEnvironment == "1" {
+        macOSSPIBuild = true
+        print("Building for SPI@macOS, disabling Jemalloc")
+    } else {
+        macOSSPIBuild = false
+    }
 #else
-macOSSPIBuild = false
+    macOSSPIBuild = false
 #endif
 
 // Add Benchmark target dynamically
