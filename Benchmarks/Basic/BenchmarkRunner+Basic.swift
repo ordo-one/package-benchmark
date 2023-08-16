@@ -24,9 +24,9 @@ let benchmarks = {
                                                                 .p99: .milliseconds(3),
                                                                 .p100: .milliseconds(1)]
 
-        thresholds = [.wallClock : .init(absolute: absolute)]
+        thresholds = [.wallClock: .init(absolute: absolute)]
     } else {
-        thresholds = [.wallClock : .relaxed]
+        thresholds = [.wallClock: .relaxed]
     }
 
     Benchmark.defaultConfiguration = .init(warmupIterations: 0,

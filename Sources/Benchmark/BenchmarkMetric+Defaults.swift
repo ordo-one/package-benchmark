@@ -105,7 +105,7 @@ public extension BenchmarkMetric {
 }
 
 // Nicer convenience extension for Array so one can write `.extended` instead of `BenchmarkMetric.extended`
-public extension Array where Element == BenchmarkMetric {
+public extension [BenchmarkMetric] {
     /// The default collection of metrics used for a benchmark.
     ///
     /// The defaults include ``wallClock``, ``cpuTotal``, ``mallocCountTotal``, ``throughput``, and ``peakMemoryResident``.
@@ -143,4 +143,3 @@ public extension Array where Element == BenchmarkMetric {
         BenchmarkMetric.all
     }
 }
-

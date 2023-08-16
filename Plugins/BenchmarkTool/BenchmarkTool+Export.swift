@@ -57,9 +57,9 @@ extension BenchmarkTool {
         outputPath.append(csvFile.components)
 
         print("Writing output to \(outputPath)")
-        
+
         printFailedBenchmarks()
-        
+
         do {
             let fd = try FileDescriptor.open(
                 outputPath, .writeOnly, options: [.truncate, .create], permissions: .ownerReadWrite
@@ -112,7 +112,7 @@ extension BenchmarkTool {
         outputPath.append(jsonFile.components)
 
         print("Writing output to \(outputPath)")
-        
+
         printFailedBenchmarks()
 
         do {
@@ -221,7 +221,7 @@ extension BenchmarkTool {
             }
         }
     }
-    
+
     func printFailedBenchmarks() {
         if !failedBenchmarkList.isEmpty {
             print("The following benchmarks failed: \n")

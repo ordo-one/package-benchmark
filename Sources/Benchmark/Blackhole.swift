@@ -33,6 +33,6 @@
 public func blackHole(_: some Any) {}
 
 @inline(never)
-public func identity<T>(_ x: T) -> T {
-    return x
+public func identity<T>(_ value: T) -> T {
+    value
 }

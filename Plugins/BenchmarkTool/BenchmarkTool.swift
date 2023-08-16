@@ -107,7 +107,7 @@ struct BenchmarkTool: AsyncParsableCommand {
     var benchmarkBaselines: [BenchmarkBaseline] = [] // The baselines read from disk, merged + current run if needed
     var comparisonBaseline: BenchmarkBaseline?
     var checkBaseline: BenchmarkBaseline?
-    
+
     var failedBenchmarkList: [String] = []
 
     mutating func failBenchmark(_ reason: String? = nil, exitCode: ExitCode = .genericFailure, _ failedBenchmark: String? = nil) {
@@ -115,22 +115,22 @@ struct BenchmarkTool: AsyncParsableCommand {
             print(reason)
             print("")
         }
-        
+
         // check what failed and react accordingly
         switch exitCode {
-            case .genericFailure:
-                exitBenchmark(exitCode: exitCode)
-            case .thresholdViolation:
-                exitBenchmark(exitCode: exitCode)
-            case .benchmarkJobFailed:
-                if let failedBenchmark {
-                    failedBenchmarkList.append(failedBenchmark)
-                }
-            default:
-                exitBenchmark(exitCode: exitCode)
+        case .genericFailure:
+            exitBenchmark(exitCode: exitCode)
+        case .thresholdViolation:
+            exitBenchmark(exitCode: exitCode)
+        case .benchmarkJobFailed:
+            if let failedBenchmark {
+                failedBenchmarkList.append(failedBenchmark)
+            }
+        default:
+            exitBenchmark(exitCode: exitCode)
         }
     }
-    
+
     func exitBenchmark(exitCode: ExitCode) {
         #if canImport(Darwin)
             Darwin.exit(exitCode.rawValue)
@@ -138,7 +138,6 @@ struct BenchmarkTool: AsyncParsableCommand {
             Glibc.exit(exitCode.rawValue)
         #endif
     }
-    
 
     func printChildRunError(error: Int32, benchmarkExecutablePath: String) {
         print("Failed to run '\(command)' for \(benchmarkExecutablePath), error code [\(error)]")
@@ -314,7 +313,6 @@ struct BenchmarkTool: AsyncParsableCommand {
                 switch benchmarkCommand {
                 case .`init`:
                     fatalError("Should never come here")
-                    break
                 case .query:
                     try queryBenchmarks(benchmarkPath) // Get all available benchmarks first
                 case .list:
@@ -347,7 +345,7 @@ struct BenchmarkTool: AsyncParsableCommand {
 
         return benchmarkResults
     }
-    
+
     struct FailedBenchmark: Codable {
         let benchmarkName: String
         let failureReason: String
