@@ -240,6 +240,8 @@ struct BenchmarkTool: AsyncParsableCommand {
 
         var benchmarkResults: BenchmarkResults = [:]
 
+        benchmarks.sort { ($0.target, $0.name) < ($1.target, $1.name) }
+
         // run each benchmark for the target as a separate process
         try benchmarks.forEach { benchmark in
             if try shouldIncludeBenchmark(benchmark.name) {
