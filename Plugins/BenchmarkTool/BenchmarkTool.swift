@@ -118,10 +118,6 @@ struct BenchmarkTool: AsyncParsableCommand {
 
         // check what failed and react accordingly
         switch exitCode {
-        case .genericFailure:
-            exitBenchmark(exitCode: exitCode)
-        case .thresholdViolation:
-            exitBenchmark(exitCode: exitCode)
         case .benchmarkJobFailed:
             if let failedBenchmark {
                 failedBenchmarkList.append(failedBenchmark)
