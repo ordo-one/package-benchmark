@@ -13,6 +13,9 @@ public extension BenchmarkMetric {
     /// The default collection of metrics used for a benchmark.
     ///
     /// The defaults include ``wallClock``, ``cpuTotal``, ``mallocCountTotal``, ``throughput``, and ``peakMemoryResident``.
+    ///
+    /// There is also an convenience extension on Array defined such that you can write just `.default` rather than `BenchmarkMetric.default`
+    ///
     static var `default`: [BenchmarkMetric] {
         [.wallClock,
          .cpuTotal,
@@ -100,3 +103,44 @@ public extension BenchmarkMetric {
          .retainReleaseDelta]
     }
 }
+
+// Nicer convenience extension for Array so one can write `.extended` instead of `BenchmarkMetric.extended`
+public extension Array where Element == BenchmarkMetric {
+    /// The default collection of metrics used for a benchmark.
+    ///
+    /// The defaults include ``wallClock``, ``cpuTotal``, ``mallocCountTotal``, ``throughput``, and ``peakMemoryResident``.
+    static var `default`: [BenchmarkMetric] {
+        BenchmarkMetric.default
+    }
+
+    /// A collection of extended system benchmarks.
+    static var extended: [BenchmarkMetric] {
+        BenchmarkMetric.extended
+    }
+
+    /// A collection of memory benchmarks.
+    static var memory: [BenchmarkMetric] {
+        BenchmarkMetric.memory
+    }
+
+    /// A collection of ARC metrics
+    static var arc: [BenchmarkMetric] {
+        BenchmarkMetric.arc
+    }
+
+    /// A collection of system benchmarks.
+    static var system: [BenchmarkMetric] {
+        BenchmarkMetric.system
+    }
+
+    /// A collection of disk benchmarks.
+    static var disk: [BenchmarkMetric] {
+        BenchmarkMetric.disk
+    }
+
+    /// A collection of all benchmarks supported by this library.
+    static var all: [BenchmarkMetric] {
+        BenchmarkMetric.all
+    }
+}
+

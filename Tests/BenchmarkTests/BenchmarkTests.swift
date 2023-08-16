@@ -61,7 +61,7 @@ final class BenchmarkTests: XCTestCase {
     func testBenchmarkRunMoreParameters() throws {
         let benchmark = Benchmark("testBenchmarkRunMoreParameters benchmark",
                                   configuration: .init(
-                                      metrics: BenchmarkMetric.all,
+                                        metrics: .all,
                                       timeUnits: .milliseconds,
                                       warmupIterations: 0,
                                       scalingFactor: .mega

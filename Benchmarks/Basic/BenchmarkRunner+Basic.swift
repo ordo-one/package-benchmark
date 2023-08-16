@@ -24,9 +24,9 @@ let benchmarks = {
                                                                 .p99: .milliseconds(3),
                                                                 .p100: .milliseconds(1)]
 
-        thresholds = [BenchmarkMetric.wallClock: BenchmarkThresholds(absolute: absolute)]
+        thresholds = [.wallClock : .init(absolute: absolute)]
     } else {
-        thresholds = [BenchmarkMetric.wallClock: BenchmarkThresholds.relaxed]
+        thresholds = [.wallClock : .relaxed]
     }
 
     Benchmark.defaultConfiguration = .init(warmupIterations: 0,
@@ -47,7 +47,7 @@ let benchmarks = {
     }
 
     Benchmark("Scaled metrics",
-              configuration: .init(metrics: BenchmarkMetric.all + [CustomMetrics.two, CustomMetrics.one],
+              configuration: .init(metrics: .all + [CustomMetrics.two, CustomMetrics.one],
                                    scalingFactor: .kilo)) { benchmark in
         for _ in benchmark.scaledIterations {
             blackHole(Int.random(in: benchmark.scaledIterations))
@@ -57,7 +57,7 @@ let benchmarks = {
     }
 
     Benchmark("All metrics",
-              configuration: .init(metrics: BenchmarkMetric.all, skip: true)) { _ in
+              configuration: .init(metrics: .all, skip: true)) { _ in
     }
 
     let stats = Statistics(numberOfSignificantDigits: .four)
@@ -68,7 +68,7 @@ let benchmarks = {
     }
 
     Benchmark("Statistics",
-              configuration: .init(metrics: BenchmarkMetric.arc + [.wallClock],
+              configuration: .init(metrics: .arc + [.wallClock],
                                    scalingFactor: .kilo, maxDuration: .seconds(1))) { benchmark in
         for _ in benchmark.scaledIterations {
             blackHole(stats.percentiles())

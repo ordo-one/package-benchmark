@@ -162,7 +162,7 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
                     }
 
                     if debug, allMetrics {
-                        benchmark.configuration.metrics = BenchmarkMetric.all
+                        benchmark.configuration.metrics = .all
                     }
 
                     benchmark.target = benchmarkToRun.target
