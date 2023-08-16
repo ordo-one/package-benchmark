@@ -10,7 +10,7 @@
 
 import Dispatch
 
-// swiftlint: disable file_length prefer_self_in_static_references
+// swiftlint: disable file_length
 
 /// Defines a benchmark
 public final class Benchmark: Codable, Hashable {
@@ -410,8 +410,6 @@ public extension Benchmark {
         // swiftlint:enable nesting
     }
 }
-
-// swiftlint:enable prefer_self_in_static_references
 
 // This is an additional convenience duplicating the free standing function blackHole() for those cases where
 // another module happens to define it, as we have a type clash between module name and type name and otherwise
