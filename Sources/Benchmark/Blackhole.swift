@@ -30,9 +30,11 @@
 /// }
 /// ```
 @inline(never)
+@_semantics("optimize.no.crossmodule") // https://github.com/apple/swift/commit/1fceeab71e79dc96f1b6f560bf745b016d7fcdcf
 public func blackHole(_: some Any) {}
 
 @inline(never)
+@_semantics("optimize.no.crossmodule") // https://github.com/apple/swift/commit/1fceeab71e79dc96f1b6f560bf745b016d7fcdcf
 public func identity<T>(_ value: T) -> T {
     value
 }
