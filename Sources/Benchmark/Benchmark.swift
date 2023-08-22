@@ -433,6 +433,6 @@ public extension Benchmark {
     ///     }
     /// }
     /// ```
-    @inline(never)
+    @_optimize(none) // Used after tip here: https://forums.swift.org/t/compiler-swallows-blackhole/64305/10 - see also https://github.com/apple/swift/commit/1fceeab71e79dc96f1b6f560bf745b016d7fcdcf
     static func blackHole(_: some Any) {}
 }
