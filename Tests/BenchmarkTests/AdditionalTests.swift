@@ -9,8 +9,8 @@
 //
 
 @testable import Benchmark
-import XCTest
 import Foundation
+import XCTest
 
 final class AdditionalTests: XCTestCase {
     func testBlackhole() throws { // due to https://github.com/ordo-one/package-benchmark/issues/178
