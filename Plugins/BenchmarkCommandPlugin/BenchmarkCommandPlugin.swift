@@ -330,6 +330,9 @@ import PackagePlugin
                             throw MyError.benchmarkCrashed
                         case .thresholdViolation:
                             throw MyError.benchmarkThresholdDeviation
+                        case .benchmarkJobFailed:
+                            print("One benchmark job failed during runtime, continuing with remaining.")
+                            break
                         }
                     } else {
                         print("One or more benchmarks returned an unexpected return code \(status)")

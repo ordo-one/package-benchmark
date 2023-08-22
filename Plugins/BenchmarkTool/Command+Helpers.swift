@@ -39,6 +39,8 @@ enum OutputFormat: String, CaseIterable {
     case histogramSamples
     /// The percentiles values betwen (0-100) in TSV format for processing by external tools (e.g. Youplot)
     case histogramPercentiles
+    /// The p90 percentile values per metric as a `[BenchmarkMetric: BenchmarkThresholds]` in JSON format, suitable for static thresholds
+    case metricP90AbsoluteThresholds
 }
 
 enum Grouping: String, CaseIterable {
