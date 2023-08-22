@@ -227,7 +227,6 @@ extension BenchmarkTool {
 
                 var outputResults : [BenchmarkMetric: BenchmarkThresholds] = [:]
                 results.forEach { values in
-                    let description = values.metric.rawDescription
                     var thresholds: BenchmarkThresholds.AbsoluteThresholds = [:]
                     thresholds[.p90] = Int(values.statistics.histogram.valueAtPercentile(90.0))
                     outputResults[values.metric] = .init(absolute: thresholds)
