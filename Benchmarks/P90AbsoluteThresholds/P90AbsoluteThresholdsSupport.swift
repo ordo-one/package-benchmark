@@ -24,7 +24,7 @@ import Glibc
 // We expect static thresholds to be in $CWD/Thresholds
 
 func makeConfigurationFor(_ name: String) -> Benchmark.Configuration {
-    var configuration: Benchmark.Configuration = .init(metrics: [.mallocCountTotal, .syscalls],
+    var configuration: Benchmark.Configuration = .init(metrics: [.mallocCountTotal, .syscalls] + .arc,
                                                        warmupIterations: 1,
                                                        scalingFactor: .kilo,
                                                        maxDuration: .seconds(2),
