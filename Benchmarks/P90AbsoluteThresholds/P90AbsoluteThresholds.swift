@@ -43,7 +43,7 @@ let benchmarks = {
     Benchmark(testName, configuration: makeConfigurationFor(testName)) { benchmark in
         for _ in benchmark.scaledIterations {
             var array: [Int] = []
-            array.append(contentsOf: 0...1000)
+            array.append(contentsOf: 0 ... 1_000)
             blackHole(array)
         }
     }

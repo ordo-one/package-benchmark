@@ -13,14 +13,14 @@ import Foundation
 import SystemPackage
 
 #if canImport(Darwin)
-import Darwin
+    import Darwin
 #elseif canImport(Glibc)
-import Glibc
+    import Glibc
 #else
-#error("Unsupported Platform")
+    #error("Unsupported Platform")
 #endif
 
-extension BenchmarkThresholds {
+public extension BenchmarkThresholds {
     /// `makeBenchmarkThresholds` is a convenience function for reading p90 static thresholds that previously have been exported with `metricP90AbsoluteThresholds`
     ///
     /// - Parameters:
@@ -29,9 +29,9 @@ extension BenchmarkThresholds {
     ///   - moduleName: The name of the benchmark module, can be extracted using `String("\(#fileID)".prefix(while: { $0 != "/" }))` in the benchmark
     ///   - benchmarkName: The name of the benchmark
     /// - Returns: A dictionary with static benchmark thresholds per metric or nil if
-    public static func makeBenchmarkThresholds(path: String,
-                                               moduleName: String,
-                                               benchmarkName: String) -> [BenchmarkMetric: BenchmarkThresholds]? {
+    static func makeBenchmarkThresholds(path: String,
+                                        moduleName: String,
+                                        benchmarkName: String) -> [BenchmarkMetric: BenchmarkThresholds]? {
         var path = FilePath(path)
         path.append("Thresholds")
         path.append("\(moduleName).\(benchmarkName).p90.json")
@@ -39,17 +39,17 @@ extension BenchmarkThresholds {
         var p90Thresholds: [BenchmarkMetric: BenchmarkThresholds]?
 
         do {
-            let fd = try FileDescriptor.open(path, .readOnly, options: [], permissions: .ownerRead)
+            let fileDescriptor = try FileDescriptor.open(path, .readOnly, options: [], permissions: .ownerRead)
 
             do {
-                try fd.closeAfter {
+                try fileDescriptor.closeAfter {
                     do {
                         var readBytes = [UInt8]()
                         let bufferSize = 16 * 1_024 * 1_024
 
                         while true {
                             let nextBytes = try [UInt8](unsafeUninitializedCapacity: bufferSize) { buf, count in
-                                count = try fd.read(into: UnsafeMutableRawBufferPointer(buf))
+                                count = try fileDescriptor.read(into: UnsafeMutableRawBufferPointer(buf))
                             }
                             if nextBytes.isEmpty {
                                 break
@@ -58,7 +58,6 @@ extension BenchmarkThresholds {
                         }
 
                         p90Thresholds = try XJSONDecoder().decode([BenchmarkMetric: BenchmarkThresholds].self, from: readBytes)
-
                     } catch {
                         print("Failed to read file at \(path) [\(error)] \(Errno(rawValue: errno).description)")
                     }
