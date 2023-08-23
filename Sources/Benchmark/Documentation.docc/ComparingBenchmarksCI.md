@@ -23,6 +23,53 @@ The following will run all benchmarks and compare them against a fixed absolute 
 ```bash
 swift package benchmark baseline check --check-absolute
 ```
+This is typically used in conjunction with the built in support for exporting absolute p90 baselines using the `metricP90AbsoluteThresholds` export format.
+`swift package --allow-writing-to-package-directory benchmark --filter "P90.*" --format metricP90AbsoluteThresholds --path Thresholds/`
+
+These baselines are easily read using``BenchmarkThresholds/makeBenchmarkThresholds(path:moduleName:benchmarkName:)``.
+
+Sample usage:
+```swift
+import Benchmark
+import DateTime
+import Foundation
+
+func makeConfigurationFor(_ name: String) -> Benchmark.Configuration {
+  let moduleName = String("\(#fileID)".prefix(while: { $0 != "/" }))
+
+  var configuration: Benchmark.Configuration = .init(metrics: [.mallocCountTotal, .syscalls] + .arc,
+                                            warmupIterations: 1,
+                                               scalingFactor: .kilo,
+                                                 maxDuration: .seconds(2),
+                                               maxIterations: .kilo(100))
+
+  configuration.thresholds = BenchmarkThresholds.makeBenchmarkThresholds(path: FileManager.default.currentDirectoryPath,
+                                                                   moduleName: moduleName,
+                                                                benchmarkName: name)
+  // if thresholds are nil here, we failed to read anything from the file and might want to warn or set up other thresholds
+  return configuration
+}
+
+let benchmarks = {
+  var testName: String!
+
+  testName = "P90Date"
+  Benchmark(testName, configuration: makeConfigurationFor(testName)) { benchmark in
+    for _ in benchmark.scaledIterations {
+      blackHole(Foundation.Date())
+    }
+  }
+
+  testName = "P90Malloc"
+  Benchmark(testName, configuration: makeConfigurationFor(testName)) { benchmark in
+    for _ in benchmark.scaledIterations {
+      var array: [Int] = []
+      array.append(contentsOf: 0 ... 1_000)
+      blackHole(array)
+    }
+  }
+}
+```
 
 ### Example GitHub CI workflow comparing against a baseline
 
