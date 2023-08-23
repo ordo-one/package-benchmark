@@ -24,9 +24,11 @@ The following will run all benchmarks and compare them against a fixed absolute 
 swift package benchmark baseline check --check-absolute
 ```
 This is typically used in conjunction with the built in support for exporting absolute p90 baselines using the `metricP90AbsoluteThresholds` export format.
-`swift package --allow-writing-to-package-directory benchmark --filter "P90.*" --format metricP90AbsoluteThresholds --path Thresholds/`
+```bash
+swift package --allow-writing-to-package-directory benchmark --filter "P90.*" --format metricP90AbsoluteThresholds --path Thresholds/
+```
 
-These baselines are easily read using``BenchmarkThresholds/makeBenchmarkThresholds(path:moduleName:benchmarkName:)``.
+These baselines are easily read using ``BenchmarkThresholds/makeBenchmarkThresholds(path:moduleName:benchmarkName:)``.
 
 Sample usage:
 ```swift
