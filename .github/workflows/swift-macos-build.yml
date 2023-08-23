@@ -19,7 +19,7 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-    - uses: fwal/setup-swift@v1.23.0
+    - uses: fwal/setup-swift@v1.24.0
       with:
         swift-version: ${{ matrix.swift }}
 
@@ -38,4 +38,9 @@ jobs:
       run: |
         if [ -d Tests ]; then
           swift test --parallel
+        fi
+    - name: Run tests (release)
+      run: |
+        if [ -d Tests ]; then
+          swift test -c release --parallel
         fi
