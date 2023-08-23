@@ -24,11 +24,12 @@ public extension BenchmarkThresholds {
     /// `makeBenchmarkThresholds` is a convenience function for reading p90 static thresholds that previously have been exported with `metricP90AbsoluteThresholds`
     ///
     /// - Parameters:
-    ///   - path: The path where the `Thresholds` directory should be located, containing statis thresholds files using the naming pattern
+    ///   - path: The path where the `Thresholds` directory should be located, containing static thresholds files using the naming pattern:
     ///   `moduleName.benchmarkName.p90.json`
-    ///   - moduleName: The name of the benchmark module, can be extracted using `String("\(#fileID)".prefix(while: { $0 != "/" }))` in the benchmark
+    ///   - moduleName: The name of the benchmark module, can be extracted in the benchmark using:
+    ///   `String("\(#fileID)".prefix(while: { $0 != "/" }))`
     ///   - benchmarkName: The name of the benchmark
-    /// - Returns: A dictionary with static benchmark thresholds per metric or nil if
+    /// - Returns: A dictionary with static benchmark thresholds per metric or nil if the file could not be found or read
     static func makeBenchmarkThresholds(path: String,
                                         moduleName: String,
                                         benchmarkName: String) -> [BenchmarkMetric: BenchmarkThresholds]? {
