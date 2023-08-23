@@ -8,6 +8,7 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 //
 
+import Benchmark
 import ExtrasJSON
 import Foundation
 import SystemPackage
@@ -20,7 +21,7 @@ import SystemPackage
     #error("Unsupported Platform")
 #endif
 
-public extension BenchmarkThresholds {
+extension BenchmarkTool {
     /// `makeBenchmarkThresholds` is a convenience function for reading p90 static thresholds that previously have been exported with `metricP90AbsoluteThresholds`
     ///
     /// - Parameters:
@@ -34,8 +35,14 @@ public extension BenchmarkThresholds {
                                         moduleName: String,
                                         benchmarkName: String) -> [BenchmarkMetric: BenchmarkThresholds]? {
         var path = FilePath(path)
-        path.append("Thresholds")
-        path.append("\(moduleName).\(benchmarkName).p90.json")
+        if path.isAbsolute {
+            path.append("\(moduleName).\(benchmarkName).p90.json")
+        } else {
+            var cwdPath = FilePath(FileManager.default.currentDirectoryPath)
+            cwdPath.append(path.components)
+            cwdPath.append("\(moduleName).\(benchmarkName).p90.json")
+            path = cwdPath
+        }
 
         var p90Thresholds: [BenchmarkMetric: BenchmarkThresholds]?
 

@@ -84,9 +84,9 @@ OPTIONS:
 --skip-target <skip-target>
 Benchmark targets matching the regexp filter that should be skipped
 --format <format>       The output format to use, one of: ["text", "markdown", "influx", "jmh", "histogramEncoded", "histogram", "histogramSamples", "histogramPercentiles", "metricP90AbsoluteThresholds"], default is 'text'
---metric <metric>       Specifies that the benchmark run should use one or more specific metrics instead of the ones defined by the benchmarks, valid values are: ["cpuUser", "cpuSystem", "cpuTotal", "wallClock", "throughput", "peakMemoryResident",
-"peakMemoryVirtual", "mallocCountSmall", "mallocCountLarge", "mallocCountTotal", "allocatedResidentMemory", "memoryLeaked", "syscalls", "contextSwitches", "threads", "threadsRunning", "readSyscalls", "writeSyscalls", "readBytesLogical",
-"writeBytesLogical", "readBytesPhysical", "writeBytesPhysical", "retainCount", "releaseCount", "retainReleaseDelta", "custom"]
+--metric <metric>       Specifies that the benchmark run should use one or more specific metrics instead of the ones defined by the benchmarks, valid values are: ["cpuUser", "cpuSystem", "cpuTotal", "wallClock", "throughput", "peakMemoryResident", "peakMemoryVirtual", "mallocCountSmall", "mallocCountLarge",
+"mallocCountTotal", "allocatedResidentMemory", "memoryLeaked", "syscalls", "contextSwitches", "threads", "threadsRunning", "readSyscalls", "writeSyscalls", "readBytesLogical", "writeBytesLogical", "readBytesPhysical", "writeBytesPhysical", "retainCount", "releaseCount",
+"retainReleaseDelta", "custom"]
 --path <path>           The path where exported data is stored, default is the current directory ("."). 
 --quiet                 Specifies that output should be suppressed (useful for if you just want to check return code)
 --scale                 Specifies that some of the text output should be scaled using the scalingFactor (denoted by '*' in output)
@@ -98,6 +98,8 @@ for those wanting to validate performance of e.g. toolchains or OS:s as well (or
 a specific check against a given absolute reference.).
 If this is enabled, zero or one baselines should be specified for the check operation.
 By default, thresholds are checked comparing two baselines, or a baseline and a benchmark run.
+--check-absolute-thresholds-path <check-absolute-thresholds-path>
+The path from which p90 thresholds will be loaded for absolute threshold checks.
 --no-progress           Specifies that benchmark progress information should not be displayed
 --grouping <grouping>   The grouping to use, one of: ["metric", "benchmark"]. default is 'benchmark'
 -h, --help              Show help information.

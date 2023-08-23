@@ -41,6 +41,7 @@ import PackagePlugin
         let quietRunning = argumentExtractor.extractFlag(named: "quiet")
         let noProgress = argumentExtractor.extractFlag(named: "no-progress")
         let checkAbsoluteThresholds = argumentExtractor.extractFlag(named: "check-absolute")
+        let checkAbsoluteThresholdsPath = argumentExtractor.extractOption(named: "check-absolute-path")
         let groupingToUse = argumentExtractor.extractOption(named: "grouping")
         let metricsToUse = argumentExtractor.extractOption(named: "metric")
         let debug = argumentExtractor.extractFlag(named: "debug")
@@ -218,7 +219,14 @@ import PackagePlugin
         }
 
         if checkAbsoluteThresholds > 0 {
+            if checkAbsoluteThresholdsPath.count > 1 {
+                print("Only a single path for thresholds can be specified, got \(checkAbsoluteThresholdsPath.count).")
+                return
+            }
             args.append(contentsOf: ["--check-absolute-thresholds"])
+            if let path = checkAbsoluteThresholdsPath.first {
+                args.append(contentsOf: ["--check-absolute-thresholds-path", path])
+            }
         }
 
         if scale > 0 {
