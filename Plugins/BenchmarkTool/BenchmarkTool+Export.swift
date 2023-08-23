@@ -225,11 +225,9 @@ extension BenchmarkTool {
                 let jsonEncoder = JSONEncoder()
                 jsonEncoder.outputFormatting = .prettyPrinted
 
-                var outputResults : [BenchmarkMetric: BenchmarkThresholds] = [:]
+                var outputResults : [String : BenchmarkThresholds.AbsoluteThreshold] = [:]
                 results.forEach { values in
-                    var thresholds: BenchmarkThresholds.AbsoluteThresholds = [:]
-                    thresholds[.p90] = Int(values.statistics.histogram.valueAtPercentile(90.0))
-                    outputResults[values.metric] = .init(absolute: thresholds)
+                    outputResults[values.metric.rawDescription] = Int(values.statistics.histogram.valueAtPercentile(90.0))
                 }
 
                 let jsonResultData = try jsonEncoder.encode(outputResults)
