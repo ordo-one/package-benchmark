@@ -235,7 +235,7 @@ extension BenchmarkTool {
                 let jsonResultData = try jsonEncoder.encode(outputResults)
 
                 if let stringOutput = String(data: jsonResultData, encoding: .utf8) {
-                    try write(exportData: "\(stringOutput)",
+                    try write(exportData: stringOutput,
                               fileName: cleanupStringForShellSafety("\(key.target).\(key.name).p90.json"))
                 } else {
                     print("Failed to encode json for \(outputResults)")

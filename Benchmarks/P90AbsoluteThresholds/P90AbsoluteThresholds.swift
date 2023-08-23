@@ -9,9 +9,28 @@
 
 import Benchmark
 import DateTime
+import Foundation
+
+func makeConfigurationFor(_ name: String) -> Benchmark.Configuration {
+    // https://forums.swift.org/t/pitch-introduce-module-to-get-the-current-module-name/45806/8
+    let moduleName = String("\(#fileID)".prefix(while: { $0 != "/" }))
+
+    var configuration: Benchmark.Configuration = .init(metrics: [.mallocCountTotal, .syscalls] + .arc,
+                                                       warmupIterations: 1,
+                                                       scalingFactor: .kilo,
+                                                       maxDuration: .seconds(2),
+                                                       maxIterations: .kilo(100))
+
+    configuration.thresholds = BenchmarkThresholds.makeBenchmarkThresholds(path: FileManager.default.currentDirectoryPath,
+                                                                           moduleName: moduleName,
+                                                                           benchmarkName: name)
+    // if thresholds are nil here, we failed to read anything from the file and might want to warn or set up
+    // other thresholds
+    return configuration
+}
 
 let benchmarks = {
-    var testName: String = "testName should be set"
+    var testName: String!
 
     testName = "P90Date"
     Benchmark(testName, configuration: makeConfigurationFor(testName)) { benchmark in
