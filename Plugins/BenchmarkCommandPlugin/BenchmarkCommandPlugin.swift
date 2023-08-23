@@ -40,8 +40,8 @@ import PackagePlugin
         let pathSpecified = argumentExtractor.extractOption(named: "path") // export path
         let quietRunning = argumentExtractor.extractFlag(named: "quiet")
         let noProgress = argumentExtractor.extractFlag(named: "no-progress")
-        let checkAbsoluteThresholds = argumentExtractor.extractFlag(named: "check-absolute")
         let checkAbsoluteThresholdsPath = argumentExtractor.extractOption(named: "check-absolute-path")
+        let checkAbsoluteThresholds = checkAbsoluteThresholdsPath.count > 0 ? 1 : argumentExtractor.extractFlag(named: "check-absolute")
         let groupingToUse = argumentExtractor.extractOption(named: "grouping")
         let metricsToUse = argumentExtractor.extractOption(named: "metric")
         let debug = argumentExtractor.extractFlag(named: "debug")

@@ -125,6 +125,7 @@ struct Benchmark: AsyncParsableCommand {
     @Option(name: .long, help:
         """
         The path from which p90 thresholds will be loaded for absolute threshold checks.
+        This implicitly sets --check-absolute to true as well.
         """)
     var checkAbsoluteThresholdsPath: String?
 
