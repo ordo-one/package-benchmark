@@ -1,0 +1,72 @@
+[
+  {
+    "retainCount" : {
+
+    }
+  },
+  {
+    "absolute" : [
+      4,
+      1
+    ],
+    "relative" : [
+
+    ]
+  },
+  {
+    "syscalls" : {
+
+    }
+  },
+  {
+    "absolute" : [
+      4,
+      1
+    ],
+    "relative" : [
+
+    ]
+  },
+  {
+    "releaseCount" : {
+
+    }
+  },
+  {
+    "absolute" : [
+      4,
+      2001
+    ],
+    "relative" : [
+
+    ]
+  },
+  {
+    "mallocCountTotal" : {
+
+    }
+  },
+  {
+    "absolute" : [
+      4,
+      1000
+    ],
+    "relative" : [
+
+    ]
+  },
+  {
+    "retainReleaseDelta" : {
+
+    }
+  },
+  {
+    "absolute" : [
+      4,
+      2000
+    ],
+    "relative" : [
+
+    ]
+  }
+]
