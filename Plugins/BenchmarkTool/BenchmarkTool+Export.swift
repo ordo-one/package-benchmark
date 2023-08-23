@@ -223,7 +223,7 @@ extension BenchmarkTool {
         case .metricP90AbsoluteThresholds:
             try baseline.results.forEach { key, results in
                 let jsonEncoder = JSONEncoder()
-                jsonEncoder.outputFormatting = .prettyPrinted
+                jsonEncoder.outputFormatting = [.prettyPrinted, .sortedKeys]
 
                 var outputResults : [String : BenchmarkThresholds.AbsoluteThreshold] = [:]
                 results.forEach { values in

@@ -9,7 +9,6 @@
 //
 
 import Benchmark
-import ExtrasJSON
 import Foundation
 import SystemPackage
 
@@ -65,7 +64,7 @@ extension BenchmarkTool {
                             readBytes.append(contentsOf: nextBytes)
                         }
 
-                        p90Thresholds = try XJSONDecoder().decode([String : BenchmarkThresholds.AbsoluteThreshold].self, from: readBytes)
+                        p90Thresholds = try JSONDecoder().decode([String : BenchmarkThresholds.AbsoluteThreshold].self, from: Data(readBytes))
                     } catch {
                         print("Failed to read file at \(path) [\(error)] \(Errno(rawValue: errno).description)")
                     }
