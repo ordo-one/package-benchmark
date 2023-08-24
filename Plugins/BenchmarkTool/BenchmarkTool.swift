@@ -81,6 +81,13 @@ struct BenchmarkTool: AsyncParsableCommand {
         """)
     var checkAbsoluteThresholds = false
 
+    @Option(name: .long, help:
+        """
+        The path from which p90 thresholds will be loaded for absolute threshold checks.
+        This implicitly sets --check-absolute to true as well.
+        """)
+    var checkAbsoluteThresholdsPath: String?
+
     @Option(name: .long, help: "The named baseline(s) we should display, update, delete or compare with")
     var baseline: [String] = []
 

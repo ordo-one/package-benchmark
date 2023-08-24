@@ -11,6 +11,7 @@
 import Benchmark
 import DateTime
 import ExtrasJSON
+import Foundation
 import SystemPackage
 
 #if canImport(Darwin)
@@ -217,6 +218,25 @@ extension BenchmarkTool {
                     try write(exportData: "\(outputString)",
                               fileName: cleanupStringForShellSafety("\(baselineName).\(key.target).\(key.name).\(description).histogram.percentiles.tsv"))
                     outputString = ""
+                }
+            }
+        case .metricP90AbsoluteThresholds:
+            try baseline.results.forEach { key, results in
+                let jsonEncoder = JSONEncoder()
+                jsonEncoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+
+                var outputResults : [String : BenchmarkThresholds.AbsoluteThreshold] = [:]
+                results.forEach { values in
+                    outputResults[values.metric.rawDescription] = Int(values.statistics.histogram.valueAtPercentile(90.0))
+                }
+
+                let jsonResultData = try jsonEncoder.encode(outputResults)
+
+                if let stringOutput = String(data: jsonResultData, encoding: .utf8) {
+                    try write(exportData: stringOutput,
+                              fileName: cleanupStringForShellSafety("\(key.target).\(key.name).p90.json"))
+                } else {
+                    print("Failed to encode json for \(outputResults)")
                 }
             }
         }

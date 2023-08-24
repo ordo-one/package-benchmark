@@ -40,7 +40,8 @@ import PackagePlugin
         let pathSpecified = argumentExtractor.extractOption(named: "path") // export path
         let quietRunning = argumentExtractor.extractFlag(named: "quiet")
         let noProgress = argumentExtractor.extractFlag(named: "no-progress")
-        let checkAbsoluteThresholds = argumentExtractor.extractFlag(named: "check-absolute")
+        let checkAbsoluteThresholdsPath = argumentExtractor.extractOption(named: "check-absolute-path")
+        let checkAbsoluteThresholds = checkAbsoluteThresholdsPath.count > 0 ? 1 : argumentExtractor.extractFlag(named: "check-absolute")
         let groupingToUse = argumentExtractor.extractOption(named: "grouping")
         let metricsToUse = argumentExtractor.extractOption(named: "metric")
         let debug = argumentExtractor.extractFlag(named: "debug")
@@ -218,7 +219,14 @@ import PackagePlugin
         }
 
         if checkAbsoluteThresholds > 0 {
+            if checkAbsoluteThresholdsPath.count > 1 {
+                print("Only a single path for thresholds can be specified, got \(checkAbsoluteThresholdsPath.count).")
+                return
+            }
             args.append(contentsOf: ["--check-absolute-thresholds"])
+            if let path = checkAbsoluteThresholdsPath.first {
+                args.append(contentsOf: ["--check-absolute-thresholds-path", path])
+            }
         }
 
         if scale > 0 {
@@ -330,6 +338,9 @@ import PackagePlugin
                             throw MyError.benchmarkCrashed
                         case .thresholdViolation:
                             throw MyError.benchmarkThresholdDeviation
+                        case .benchmarkJobFailed:
+                            print("One benchmark job failed during runtime, continuing with remaining.")
+                            break
                         }
                     } else {
                         print("One or more benchmarks returned an unexpected return code \(status)")

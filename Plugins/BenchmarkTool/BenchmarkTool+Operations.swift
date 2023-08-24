@@ -146,7 +146,25 @@ extension BenchmarkTool {
                         print("Can only do threshold violation checks for exactly 1 benchmark baseline, got: \(benchmarkBaselines.count) baselines.")
                         return
                     }
-
+                    if let benchmarkPath = checkAbsoluteThresholdsPath { // load statically defined threshods for .p90
+                        benchmarks.forEach { benchmark in
+                            let thresholds = BenchmarkTool.makeBenchmarkThresholds(path: benchmarkPath,
+                                                                                   moduleName: benchmark.target,
+                                                                                   benchmarkName: benchmark.name)
+                            var transformed: [BenchmarkMetric : BenchmarkThresholds] = [:]
+                            if let thresholds {
+                                thresholds.forEach { key, value in
+                                    if let metric = BenchmarkMetric(argument: key) {
+                                        let absoluteThreshold : BenchmarkThresholds.AbsoluteThresholds = [.p90 : value]
+                                        transformed[metric] = BenchmarkThresholds(absolute: absoluteThreshold)
+                                    }
+                                }
+                                if transformed.isEmpty == false {
+                                    benchmark.configuration.thresholds = transformed
+                                }
+                            }
+                        }
+                    }
                     print("")
                     let currentBaseline = benchmarkBaselines[0]
                     let baselineName = baseline[0]

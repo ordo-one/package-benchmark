@@ -12,8 +12,7 @@ let help =
     """
     OVERVIEW: Run benchmarks or update, compare or check performance baselines
 
-    Performs operations on benchmarks (running or listing them), as well as storing, comparing baselines as well as checking them for threshold
-    deviations.
+    Performs operations on benchmarks (running or listing them), as well as storing, comparing baselines as well as checking them for threshold deviations.
 
     The init command will create a skeleton benchmark suite for you and add it to Package.swift.
 
@@ -39,8 +38,7 @@ let help =
        swift package benchmark help
 
     ARGUMENTS:
-    <command>               The benchmark command to perform, one of: ["run", "list", "baseline", "help", "init"]. If not specified, 'run' is
-                          implied.
+    <command>               The benchmark command to perform, one of: ["run", "list", "baseline", "help", "init"]. If not specified, 'run' is implied.
 
     OPTIONS:
     --filter <filter>       Benchmarks matching the regexp filter that should be run
@@ -48,13 +46,9 @@ let help =
     --target <target>       Benchmark targets matching the regexp filter that should be run
     --skip-target <skip-target>
                           Benchmark targets matching the regexp filter that should be skipped
-    --format <format>       The output format to use, one of: ["text", "markdown", "influx", "jmh", "histogramEncoded", "histogram",
-                          "histogramSamples", "histogramPercentiles"], default is 'text'
-    --metric <metric>       Specifies that the benchmark run should use one or more specific metrics instead of the ones defined by the
-                          benchmarks, valid values are: ["cpuUser", "cpuSystem", "cpuTotal", "wallClock", "throughput", "peakMemoryResident",
-                          "peakMemoryVirtual", "mallocCountSmall", "mallocCountLarge", "mallocCountTotal", "allocatedResidentMemory",
-                          "memoryLeaked", "syscalls", "contextSwitches", "threads", "threadsRunning", "readSyscalls", "writeSyscalls",
-                          "readBytesLogical", "writeBytesLogical", "readBytesPhysical", "writeBytesPhysical", "retainCount", "releaseCount",
+    --format <format>       The output format to use, one of: ["text", "markdown", "influx", "jmh", "histogramEncoded", "histogram", "histogramSamples", "histogramPercentiles", "metricP90AbsoluteThresholds"], default is 'text'
+    --metric <metric>       Specifies that the benchmark run should use one or more specific metrics instead of the ones defined by the benchmarks, valid values are: ["cpuUser", "cpuSystem", "cpuTotal", "wallClock", "throughput", "peakMemoryResident", "peakMemoryVirtual", "mallocCountSmall", "mallocCountLarge",
+                          "mallocCountTotal", "allocatedResidentMemory", "memoryLeaked", "syscalls", "contextSwitches", "threads", "threadsRunning", "readSyscalls", "writeSyscalls", "readBytesLogical", "writeBytesLogical", "readBytesPhysical", "writeBytesPhysical", "retainCount", "releaseCount",
                           "retainReleaseDelta", "custom"]
     --path <path>           The path where exported data is stored, default is the current directory (".").
     --quiet                 Specifies that output should be suppressed (useful for if you just want to check return code)
@@ -67,6 +61,9 @@ let help =
                           a specific check against a given absolute reference.).
                           If this is enabled, zero or one baselines should be specified for the check operation.
                           By default, thresholds are checked comparing two baselines, or a baseline and a benchmark run.
+    --check-absolute-thresholds-path <check-absolute-thresholds-path>
+                          The path from which p90 thresholds will be loaded for absolute threshold checks.
+                          This implicitly sets --check-absolute to true as well.
     --no-progress           Specifies that benchmark progress information should not be displayed
     --grouping <grouping>   The grouping to use, one of: ["metric", "benchmark"]. default is 'benchmark'
     -h, --help              Show help information.

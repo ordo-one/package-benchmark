@@ -23,6 +23,15 @@ The following will run all benchmarks and compare them against a fixed absolute 
 ```bash
 swift package benchmark baseline check --check-absolute
 ```
+This is typically used in conjunction with the built in support for exporting absolute p90 baselines using the `metricP90AbsoluteThresholds` export format.
+```bash
+swift package --allow-writing-to-package-directory benchmark --filter "P90.*" --format metricP90AbsoluteThresholds --path Thresholds/
+```
+
+These baselines can then be checked with:
+```bash
+swift package benchmark baseline check --check-absolute-path /relative/or/absolute/path/to/Thresholds
+```
 
 ### Example GitHub CI workflow comparing against a baseline
 

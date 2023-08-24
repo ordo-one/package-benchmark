@@ -203,3 +203,17 @@ package.targets += [
         ]
     ),
 ]
+
+// Benchmark testing loading of p90 absolute thresholds
+package.targets += [
+    .executableTarget(
+        name: "P90AbsoluteThresholdsBenchmark",
+        dependencies: [
+            "Benchmark",
+        ],
+        path: "Benchmarks/P90AbsoluteThresholds",
+        plugins: [
+            "BenchmarkPlugin"
+        ]
+    ),
+]

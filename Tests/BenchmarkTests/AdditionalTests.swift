@@ -17,7 +17,7 @@ final class AdditionalTests: XCTestCase {
         func runWork(_ testIterations: Int) -> ContinuousClock.Duration {
             let clock = ContinuousClock()
             return clock.measure {
-                for idx in 1...testIterations {
+                for idx in 1 ... testIterations {
                     Benchmark.blackHole(idx)
                 }
             }
@@ -25,7 +25,7 @@ final class AdditionalTests: XCTestCase {
 
         var results: [ContinuousClock.Duration] = []
         var testIterations = 500_000
-        for _ in 0..<3 {
+        for _ in 0 ..< 3 {
             results.append(runWork(testIterations))
             testIterations *= 10
         }
