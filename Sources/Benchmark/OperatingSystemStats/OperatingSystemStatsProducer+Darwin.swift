@@ -65,6 +65,23 @@
                 }
                 return procTaskInfo
             }
+
+            struct IOStats {
+                var bytesRead, bytesWritten: UInt64
+            }
+
+            private func getIOStats() -> IOStats {
+                var rinfo = rusage_info_v2()
+                let result = withUnsafeMutablePointer(to: &rinfo) {
+                    $0.withMemoryRebound(to: Optional<rusage_info_t>.self, capacity: 1) {
+                        proc_pid_rusage(getpid(), RUSAGE_INFO_V2, $0)
+                    }
+                }
+                if result != 0 {
+                    fatalError("proc_pid_rusage returned an error \(errno)")
+                }
+                return .init(bytesRead: rinfo.ri_diskio_bytesread, bytesWritten: rinfo.ri_diskio_byteswritten)
+            }
         #endif
 
         func startSampling(_: Int = 10_000) { // sample rate in microseconds
@@ -130,6 +147,8 @@
                 let threadsRunning = peakThreadsRunning
                 lock.unlock()
 
+                let ioStats = getIOStats()
+
                 let stats = OperatingSystemStats(cpuUser: userTime,
                                                  cpuSystem: systemTime,
                                                  cpuTotal: totalTime,
@@ -144,8 +163,8 @@
                                                  writeSyscalls: 0,
                                                  readBytesLogical: 0,
                                                  writeBytesLogical: 0,
-                                                 readBytesPhysical: 0,
-                                                 writeBytesPhysical: 0)
+                                                 readBytesPhysical: Int(ioStats.bytesRead),
+                                                 writeBytesPhysical: Int(ioStats.bytesWritten))
 
                 return stats
             #else
@@ -165,9 +184,9 @@
                 case .writeBytesLogical:
                     return false
                 case .readBytesPhysical:
-                    return false
+                    return true
                 case .writeBytesPhysical:
-                    return false
+                    return true
                 default:
                     return true
                 }
