@@ -183,10 +183,6 @@
                     return false
                 case .writeBytesLogical:
                     return false
-                case .readBytesPhysical:
-                    return true
-                case .writeBytesPhysical:
-                    return true
                 default:
                     return true
                 }
