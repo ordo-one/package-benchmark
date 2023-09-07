@@ -102,26 +102,25 @@ final class OperatingSystemAndMallocTests: XCTestCase {
 
         let amplificationFactor = 1_000
 
-        let filename = "test-file"
+        let tempFile = tmpfile()
+        XCTAssertNotNil(tempFile, "tmpfile() failed: \(errno)")
 
-        let fd = open(filename, O_CREAT | O_TRUNC | O_WRONLY, S_IRWXU)
-        XCTAssertNotEqual(fd, -1, "open() failed: \(errno)")
+        let fdesc = fileno(tempFile)
 
-        var st = stat()
-        XCTAssertEqual(fstat(fd, &st), 0, "fstat() failed: \(errno)")
+        var stat = stat()
+        XCTAssertEqual(fstat(fdesc, &stat), 0, "fstat() failed: \(errno)")
 
-        let buffer = (0 ..< st.st_blksize).map { _ in UInt8.random(in: 0 ... UInt8.max) }
+        let buffer = (0 ..< stat.st_blksize).map { _ in UInt8.random(in: 0 ... UInt8.max) }
 
         for _ in (0 ..< amplificationFactor) {
             buffer.withUnsafeBytes { buffer in
-                XCTAssertEqual(write(fd, buffer.baseAddress, buffer.count), buffer.count, "write() failed: \(errno)")
+                XCTAssertEqual(write(fdesc, buffer.baseAddress, buffer.count), buffer.count, "write() failed: \(errno)")
             }
-            XCTAssertEqual(lseek(fd, 0, SEEK_SET), 0, "lseek() failed: \(errno)")
+            XCTAssertEqual(lseek(fdesc, 0, SEEK_SET), 0, "lseek() failed: \(errno)")
         }
 
-        XCTAssertEqual(fsync(fd), 0, "fsync() failed: \(errno)")
-        XCTAssertEqual(close(fd), 0, "close() failed: \(errno)")
-        XCTAssertEqual(unlink(filename), 0, "unlink() failed: \(errno)")
+        XCTAssertEqual(fflush(tempFile), 0, "fflush() failed: \(errno)")
+        XCTAssertEqual(fclose(tempFile), 0, "fclose() failed: \(errno)")
 
         let stopStats = statsProducer.makeOperatingSystemStats()
 
