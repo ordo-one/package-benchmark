@@ -58,8 +58,8 @@ jobs:
 
       - name: Install semantic-release
         run: |
-          npm install semantic-release conventional-changelog-conventionalcommits -D
-
+          npm install semantic-release conventional-changelog-conventionalcommits@6.1.0 -D
+          npm list
       - name: Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
