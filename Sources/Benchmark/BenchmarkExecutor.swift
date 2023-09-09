@@ -11,6 +11,10 @@
 import DateTime
 import Progress
 
+#if canImport(OSLog)
+import OSLog
+#endif
+
 internal final class BenchmarkExecutor {
     internal init(quiet: Bool = false) {
         self.quiet = quiet
@@ -35,10 +39,27 @@ internal final class BenchmarkExecutor {
 
         // optionally run a few warmup iterations by default to clean out outliers due to cacheing etc.
 
+#if canImport(OSLog)
+        let logHandler = OSLog(subsystem: "one.ordo.benchmark", category: .pointsOfInterest)
+        let signPost = OSSignposter(logHandle: logHandler)
+        let signpostID = OSSignpostID(log: logHandler)
+        var interval: OSSignpostIntervalState?
+
+        if benchmark.configuration.warmupIterations > 0 {
+            interval = signPost.beginInterval("Benchmark", id: signpostID, "\(benchmark.name) warmup")
+        }
+#endif
+
         for iterations in 0 ..< benchmark.configuration.warmupIterations {
             benchmark.currentIteration = iterations
             benchmark.run()
         }
+
+#if canImport(OSLog)
+        if let interval, benchmark.configuration.warmupIterations > 0 {
+            signPost.endInterval("Benchmark", interval, "\(benchmark.configuration.warmupIterations)")
+        }
+#endif
 
         // Could make an array with raw value indexing on enum for
         // performance if needed instead of dictionary
@@ -249,6 +270,9 @@ internal final class BenchmarkExecutor {
             arcStatsProducer.hook()
         }
 
+#if canImport(OSLog)
+        let benchmarkInterval = signPost.beginInterval("Benchmark", id: signpostID, "\(benchmark.name)")
+#endif
         // Run the benchmark at a minimum the desired iterations/runtime --
 
         while iterations <= benchmark.configuration.maxIterations ||
@@ -286,6 +310,10 @@ internal final class BenchmarkExecutor {
                 }
             }
         }
+
+#if canImport(OSLog)
+        signPost.endInterval("Benchmark", benchmarkInterval, "\(iterations)")
+#endif
 
         if arcStatsRequested {
             arcStatsProducer.unhook()
