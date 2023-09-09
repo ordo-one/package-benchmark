@@ -275,6 +275,14 @@ final class BenchmarkResultTests: XCTestCase {
         thirdStatistics.add(1_501)
         thirdStatistics.add(1_501)
 
+        let fourthStatistics = Statistics()
+        fourthStatistics.add(1_499)
+        fourthStatistics.add(1_500)
+        fourthStatistics.add(1_501)
+        fourthStatistics.add(1_501)
+        fourthStatistics.add(1_501)
+        fourthStatistics.add(1_501)
+
         let absolute: BenchmarkThresholds.AbsoluteThresholds = [.p0: 1,
                                                                 .p25: 1,
                                                                 .p50: 1,
@@ -314,6 +322,13 @@ final class BenchmarkResultTests: XCTestCase {
                                           thresholds: .default,
                                           statistics: thirdStatistics)
 
+        let fourthResult = BenchmarkResult(metric: .cpuUser,
+                                           timeUnits: .nanoseconds,
+                                           scalingFactor: .one,
+                                           warmupIterations: 0,
+                                           thresholds: .default,
+                                           statistics: fourthStatistics)
+
         var (betterOrEqual, failures) = secondResult.betterResultsOrEqual(than: firstResult,
                                                                           thresholds: absoluteThresholds)
         XCTAssertFalse(betterOrEqual)
@@ -325,10 +340,17 @@ final class BenchmarkResultTests: XCTestCase {
         XCTAssert(failures.isEmpty)
 
         Benchmark.checkAbsoluteThresholds = true
-        failures = thirdResult.failsAbsoluteThresholdChecks(thresholds: absoluteThresholdsTwo,
-                                                            name: "test",
-                                                            target: "test")
-        XCTAssert(failures.count > 4)
+        let results = thirdResult.failsAbsoluteThresholdChecks(thresholds: absoluteThresholdsTwo,
+                                                               name: "test",
+                                                               target: "test")
+        XCTAssert(results.regressions.count > 4)
+
+        Benchmark.checkAbsoluteThresholds = true
+        let mixedResults = fourthResult.failsAbsoluteThresholdChecks(thresholds: absoluteThresholdsTwo,
+                                                                     name: "test",
+                                                                     target: "test")
+        XCTAssert(mixedResults.regressions.count == 4)
+        XCTAssert(mixedResults.improvements.count == 1)
     }
 
     func testBenchmarkResultDescriptions() throws {

@@ -1,4 +1,4 @@
 {
-  "syscalls" : 1,
-  "mallocCountTotal" : 999
+  "syscalls" : 2,
+  "mallocCountTotal" : 1000
 }

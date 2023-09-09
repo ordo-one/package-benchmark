@@ -451,8 +451,8 @@ extension BenchmarkBaseline: Equatable {
         return (worseResult == false, allDeviationResults)
     }
 
-    public func failsAbsoluteThresholdChecks(benchmarks: [Benchmark]) -> [BenchmarkResult.ThresholdDeviation] {
-        var allDeviationResults: [BenchmarkResult.ThresholdDeviation] = []
+    public func failsAbsoluteThresholdChecks(benchmarks: [Benchmark]) -> BenchmarkResult.ThresholdComparisonResults {
+        var allDeviationResults = BenchmarkResult.ThresholdComparisonResults()
 
         for (lhsBenchmarkIdentifier, lhsBenchmarkResults) in results {
             for lhsBenchmarkResult in lhsBenchmarkResults {
@@ -464,7 +464,8 @@ extension BenchmarkBaseline: Equatable {
                 let deviationResults = lhsBenchmarkResult.failsAbsoluteThresholdChecks(thresholds: thresholds,
                                                                                        name: lhsBenchmarkIdentifier.name,
                                                                                        target: lhsBenchmarkIdentifier.target)
-                allDeviationResults.append(contentsOf: deviationResults)
+                allDeviationResults.improvements.append(contentsOf: deviationResults.improvements)
+                allDeviationResults.regressions.append(contentsOf: deviationResults.regressions)
             }
         }
 
