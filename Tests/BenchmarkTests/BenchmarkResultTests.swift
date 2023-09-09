@@ -349,8 +349,8 @@ final class BenchmarkResultTests: XCTestCase {
         let mixedResults = fourthResult.failsAbsoluteThresholdChecks(thresholds: absoluteThresholdsTwo,
                                                                      name: "test",
                                                                      target: "test")
-        XCTAssert(mixedResults.regressions.count == 4)
-        XCTAssert(mixedResults.improvements.count == 1)
+        XCTAssertEqual(mixedResults.regressions.count, 4)
+        XCTAssertEqual(mixedResults.improvements.count, 1)
     }
 
     func testBenchmarkResultDescriptions() throws {
