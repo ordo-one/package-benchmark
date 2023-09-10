@@ -158,8 +158,7 @@ final class BenchmarkResultTests: XCTestCase {
                                            thresholds: .default,
                                            statistics: secondStatistics)
 
-        let (betterOrEqual, _) = secondResult.betterResultsOrEqual(than: firstResult)
-        XCTAssert(betterOrEqual)
+        XCTAssert(secondResult.deviationsComparedWith(firstResult).regressions.isEmpty)
     }
 
     func testBenchmarkResultBetterOrEqualWithCustomThresholds() throws {
@@ -224,28 +223,28 @@ final class BenchmarkResultTests: XCTestCase {
                                            thresholds: .default,
                                            statistics: secondStatistics)
 
-        var (betterOrEqual, _) = secondResult.betterResultsOrEqual(than: firstResult, thresholds: bothThresholds)
+        var betterOrEqual = secondResult.deviationsComparedWith(firstResult, thresholds: bothThresholds).regressions.isEmpty
         XCTAssertFalse(betterOrEqual)
 
-        (betterOrEqual, _) = secondResult.betterResultsOrEqual(than: firstResult, thresholds: relativeRelaxedThresholds)
+        betterOrEqual = secondResult.deviationsComparedWith(firstResult, thresholds: relativeRelaxedThresholds).regressions.isEmpty
         XCTAssert(betterOrEqual)
 
-        (betterOrEqual, _) = secondResult.betterResultsOrEqual(than: firstResult, thresholds: relativeThresholds)
+        betterOrEqual = secondResult.deviationsComparedWith(firstResult, thresholds: relativeThresholds).regressions.isEmpty
         XCTAssertFalse(betterOrEqual)
 
-        (betterOrEqual, _) = secondResult.betterResultsOrEqual(than: firstResult, thresholds: absoluteThresholds)
+        betterOrEqual = secondResult.deviationsComparedWith(firstResult, thresholds: absoluteThresholds).regressions.isEmpty
         XCTAssertFalse(betterOrEqual)
 
-        (betterOrEqual, _) = firstResult.betterResultsOrEqual(than: secondResult, thresholds: bothThresholds)
+        betterOrEqual = firstResult.deviationsComparedWith(secondResult, thresholds: bothThresholds).regressions.isEmpty
         XCTAssert(betterOrEqual)
 
-        (betterOrEqual, _) = firstResult.betterResultsOrEqual(than: secondResult, thresholds: relativeRelaxedThresholds)
+        betterOrEqual = firstResult.deviationsComparedWith(secondResult, thresholds: relativeRelaxedThresholds).regressions.isEmpty
         XCTAssert(betterOrEqual)
 
-        (betterOrEqual, _) = firstResult.betterResultsOrEqual(than: secondResult, thresholds: relativeThresholds)
+        betterOrEqual = firstResult.deviationsComparedWith(secondResult, thresholds: relativeThresholds).regressions.isEmpty
         XCTAssert(betterOrEqual)
 
-        (betterOrEqual, _) = firstResult.betterResultsOrEqual(than: secondResult, thresholds: absoluteThresholds)
+        betterOrEqual = firstResult.deviationsComparedWith(secondResult, thresholds: absoluteThresholds).regressions.isEmpty
         XCTAssert(betterOrEqual)
     }
 
@@ -329,28 +328,22 @@ final class BenchmarkResultTests: XCTestCase {
                                            thresholds: .default,
                                            statistics: fourthStatistics)
 
-        var (betterOrEqual, failures) = secondResult.betterResultsOrEqual(than: firstResult,
-                                                                          thresholds: absoluteThresholds)
-        XCTAssertFalse(betterOrEqual)
-        XCTAssertFalse(failures.isEmpty, "Failures: \(failures)")
+        var deviations = secondResult.deviationsComparedWith(firstResult,
+                                                             thresholds: absoluteThresholds)
+        XCTAssertFalse(deviations.regressions.isEmpty, "Regressions: \(deviations.regressions)")
 
-        (betterOrEqual, failures) = firstResult.betterResultsOrEqual(than: secondResult,
-                                                                     thresholds: absoluteThresholds)
-        XCTAssert(betterOrEqual)
-        XCTAssert(failures.isEmpty)
+        deviations = firstResult.deviationsComparedWith(secondResult,
+                                                        thresholds: absoluteThresholds)
+        XCTAssert(deviations.regressions.isEmpty)
 
         Benchmark.checkAbsoluteThresholds = true
-        let results = thirdResult.failsAbsoluteThresholdChecks(thresholds: absoluteThresholdsTwo,
-                                                               name: "test",
-                                                               target: "test")
-        XCTAssert(results.regressions.count > 4)
+        deviations = thirdResult.deviationsAgainstAbsoluteThresholds(absoluteThresholdsTwo)
+        XCTAssert(deviations.regressions.count > 4)
 
         Benchmark.checkAbsoluteThresholds = true
-        let mixedResults = fourthResult.failsAbsoluteThresholdChecks(thresholds: absoluteThresholdsTwo,
-                                                                     name: "test",
-                                                                     target: "test")
-        XCTAssertEqual(mixedResults.regressions.count, 4)
-        XCTAssertEqual(mixedResults.improvements.count, 1)
+        deviations = fourthResult.deviationsAgainstAbsoluteThresholds(absoluteThresholdsTwo)
+        XCTAssertEqual(deviations.regressions.count, 4)
+        XCTAssertEqual(deviations.improvements.count, 1)
     }
 
     func testBenchmarkResultDescriptions() throws {

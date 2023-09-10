@@ -384,7 +384,7 @@ extension BenchmarkTool {
 }
 
 extension BenchmarkBaseline {
-    func thresholdFor(benchmarks: [Benchmark], name: String, target: String, metric: BenchmarkMetric) -> BenchmarkThresholds {
+    func thresholdsForBenchmarks(_ benchmarks: [Benchmark], name: String, target: String, metric: BenchmarkMetric) -> BenchmarkThresholds {
         let benchmark = benchmarks.filter { $0.name == name && $0.target == target }.first
 
         guard let benchmark else {
@@ -404,32 +404,28 @@ extension BenchmarkBaseline {
 }
 
 extension BenchmarkBaseline: Equatable {
-    public func betterResultsOrEqual(than otherBaseline: BenchmarkBaseline,
-                                     benchmarks: [Benchmark]) -> (Bool, [BenchmarkResult.ThresholdDeviation]) {
+    public func deviationsComparedToBaseline(_ rhs: BenchmarkBaseline,
+                                             benchmarks: [Benchmark]) -> BenchmarkResult.ThresholdDeviations {
         let lhs = self
-        let rhs = otherBaseline
         var warningPrintedForMetric: Set<BenchmarkMetric> = []
         var warningPrinted = false
-        var worseResult = false
-        var betterOrEqualForIdentifier = true
-        var deviationResults: [BenchmarkResult.ThresholdDeviation] = []
-        var allDeviationResults: [BenchmarkResult.ThresholdDeviation] = []
+        var allDeviationResults = BenchmarkResult.ThresholdDeviations()
 
         for (lhsBenchmarkIdentifier, lhsBenchmarkResults) in lhs.results {
             for lhsBenchmarkResult in lhsBenchmarkResults {
                 if let rhsResults = rhs.results.first(where: { $0.key == lhsBenchmarkIdentifier }) {
                     if let rhsBenchmarkResult = rhsResults.value.first(where: { $0.metric == lhsBenchmarkResult.metric }) {
-                        let thresholds = thresholdFor(benchmarks: benchmarks,
-                                                      name: lhsBenchmarkIdentifier.name,
-                                                      target: lhsBenchmarkIdentifier.target,
-                                                      metric: lhsBenchmarkResult.metric)
+                        let thresholds = thresholdsForBenchmarks(benchmarks,
+                                                                 name: lhsBenchmarkIdentifier.name,
+                                                                 target: lhsBenchmarkIdentifier.target,
+                                                                 metric: lhsBenchmarkResult.metric)
 
-                        (betterOrEqualForIdentifier, deviationResults) =
-                            lhsBenchmarkResult.betterResultsOrEqual(than: rhsBenchmarkResult,
-                                                                    thresholds: thresholds,
-                                                                    name: lhsBenchmarkIdentifier.name,
-                                                                    target: lhsBenchmarkIdentifier.target)
-                        allDeviationResults.append(contentsOf: deviationResults)
+                        let deviationResults = lhsBenchmarkResult.deviationsComparedWith(rhsBenchmarkResult,
+                                                                                         thresholds: thresholds,
+                                                                                         name: lhsBenchmarkIdentifier.name,
+                                                                                         target: lhsBenchmarkIdentifier.target)
+                        allDeviationResults.regressions.append(contentsOf: deviationResults.regressions)
+                        allDeviationResults.improvements.append(contentsOf: deviationResults.improvements)
                     } else {
                         if warningPrintedForMetric.contains(lhsBenchmarkResult.metric) == false {
                             print("`\(lhsBenchmarkResult.metric)` not found in both baselines, skipping it.")
@@ -442,26 +438,23 @@ extension BenchmarkBaseline: Equatable {
                         warningPrinted = true
                     }
                 }
-
-                worseResult = worseResult || (betterOrEqualForIdentifier == false)
-                betterOrEqualForIdentifier = true
             }
         }
 
-        return (worseResult == false, allDeviationResults)
+        return allDeviationResults
     }
 
-    public func failsAbsoluteThresholdChecks(benchmarks: [Benchmark]) -> BenchmarkResult.ThresholdComparisonResults {
-        var allDeviationResults = BenchmarkResult.ThresholdComparisonResults()
+    public func failsAbsoluteThresholdChecks(benchmarks: [Benchmark]) -> BenchmarkResult.ThresholdDeviations {
+        var allDeviationResults = BenchmarkResult.ThresholdDeviations()
 
         for (lhsBenchmarkIdentifier, lhsBenchmarkResults) in results {
             for lhsBenchmarkResult in lhsBenchmarkResults {
-                let thresholds = thresholdFor(benchmarks: benchmarks,
+                let thresholds = thresholdsForBenchmarks(benchmarks,
                                               name: lhsBenchmarkIdentifier.name,
                                               target: lhsBenchmarkIdentifier.target,
                                               metric: lhsBenchmarkResult.metric)
 
-                let deviationResults = lhsBenchmarkResult.failsAbsoluteThresholdChecks(thresholds: thresholds,
+                let deviationResults = lhsBenchmarkResult.deviationsAgainstAbsoluteThresholds(thresholds,
                                                                                        name: lhsBenchmarkIdentifier.name,
                                                                                        target: lhsBenchmarkIdentifier.target)
                 allDeviationResults.improvements.append(contentsOf: deviationResults.improvements)

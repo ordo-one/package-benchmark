@@ -11,11 +11,17 @@ import Benchmark
 import Foundation
 
 let benchmarks = {
+    var thresholds: [BenchmarkMetric: BenchmarkThresholds]
+    let relative: BenchmarkThresholds.RelativeThresholds = [.p25: 25.0, .p50: 50.0, .p75: 75.0, .p90: 100.0, .p99: 101.0, .p100: 201.0]
+    let absolute: BenchmarkThresholds.AbsoluteThresholds = [.p75: 999, .p90: 1_000, .p99: 1_001, .p100: 2_001]
+    thresholds = [.mallocCountTotal: .init(relative: relative, absolute: absolute)]
+
     Benchmark.defaultConfiguration = .init(metrics: [.mallocCountTotal, .syscalls],
                                            warmupIterations: 1,
                                            scalingFactor: .kilo,
                                            maxDuration: .seconds(2),
-                                           maxIterations: .kilo(100))
+                                           maxIterations: .kilo(100),
+                                           thresholds: thresholds)
 
     Benchmark("P90Date") { benchmark in
         for _ in benchmark.scaledIterations {
