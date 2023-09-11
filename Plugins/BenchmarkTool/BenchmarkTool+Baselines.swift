@@ -424,8 +424,7 @@ extension BenchmarkBaseline: Equatable {
                                                                                          thresholds: thresholds,
                                                                                          name: lhsBenchmarkIdentifier.name,
                                                                                          target: lhsBenchmarkIdentifier.target)
-                        allDeviationResults.regressions.append(contentsOf: deviationResults.regressions)
-                        allDeviationResults.improvements.append(contentsOf: deviationResults.improvements)
+                        allDeviationResults.append(deviationResults)
                     } else {
                         if warningPrintedForMetric.contains(lhsBenchmarkResult.metric) == false {
                             print("`\(lhsBenchmarkResult.metric)` not found in both baselines, skipping it.")
@@ -457,8 +456,7 @@ extension BenchmarkBaseline: Equatable {
                 let deviationResults = lhsBenchmarkResult.deviationsAgainstAbsoluteThresholds(thresholds,
                                                                                        name: lhsBenchmarkIdentifier.name,
                                                                                        target: lhsBenchmarkIdentifier.target)
-                allDeviationResults.improvements.append(contentsOf: deviationResults.improvements)
-                allDeviationResults.regressions.append(contentsOf: deviationResults.regressions)
+                allDeviationResults.append(deviationResults)
             }
         }
 

@@ -43,10 +43,10 @@ internal final class BenchmarkExecutor {
         let logHandler = OSLog(subsystem: "one.ordo.benchmark", category: .pointsOfInterest)
         let signPost = OSSignposter(logHandle: logHandler)
         let signpostID = OSSignpostID(log: logHandler)
-        var interval: OSSignpostIntervalState?
+        var warmupInterval: OSSignpostIntervalState?
 
         if benchmark.configuration.warmupIterations > 0 {
-            interval = signPost.beginInterval("Benchmark", id: signpostID, "\(benchmark.name) warmup")
+            warmupInterval = signPost.beginInterval("Benchmark", id: signpostID, "\(benchmark.name) warmup")
         }
 #endif
 
@@ -56,8 +56,8 @@ internal final class BenchmarkExecutor {
         }
 
 #if canImport(OSLog)
-        if let interval, benchmark.configuration.warmupIterations > 0 {
-            signPost.endInterval("Benchmark", interval, "\(benchmark.configuration.warmupIterations)")
+        if let warmupInterval {
+            signPost.endInterval("Benchmark", warmupInterval, "\(benchmark.configuration.warmupIterations)")
         }
 #endif
 

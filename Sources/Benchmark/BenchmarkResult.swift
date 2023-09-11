@@ -360,6 +360,11 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
 
         public var regressions: [ThresholdDeviation] = []
         public var improvements: [ThresholdDeviation] = []
+
+        public mutating func append(_ otherDeviations: Self) {
+            self.improvements.append(contentsOf: otherDeviations.improvements)
+            self.regressions.append(contentsOf: otherDeviations.regressions)
+        }
     }
 
     // swiftlint:disable function_body_length
@@ -385,15 +390,14 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
             let absoluteDifference = (reverseComparison ? -1 : 1) * (lhs - rhs)
             let relativeDifference = (reverseComparison ? 1 : -1) * (rhs != 0 ? (100 - (100.0 * Double(lhs) / Double(rhs))) : 0.0)
 
-            if let threshold = thresholds.relative[percentile] {
-                let relativeDiff = Statistics.roundToDecimalplaces(abs(relativeDifference), 1)
+            if let threshold = thresholds.relative[percentile], !(-threshold...threshold).contains(relativeDifference) {
                 let deviation = ThresholdDeviation(name: name,
                                                    target: target,
                                                    metric: metric,
                                                    percentile: percentile,
                                                    baseValue: normalize(lhs),
                                                    comparisonValue: normalize(rhs),
-                                                   difference: Int(relativeDiff),
+                                                   difference: Int(Statistics.roundToDecimalplaces(abs(relativeDifference), 1)),
                                                    differenceThreshold: Int(threshold),
                                                    relative: true,
                                                    units: scalingFactor)
@@ -404,7 +408,7 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
                 }
             }
 
-            if let threshold = thresholds.absolute[percentile], threshold != absoluteDifference {
+            if let threshold = thresholds.absolute[percentile], abs(absoluteDifference) > threshold {
                 let deviation = ThresholdDeviation(name: name,
                                                    target: target,
                                                    metric: metric,
@@ -456,31 +460,22 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
             if let threshold = thresholds.absolute[percentile] {
                 let absoluteDifference = (reverseComparison ? -1 : 1) * (lhs - threshold)
 
-                switch absoluteDifference {
-                case ..<0:
-                    thresholdResults.improvements.append(ThresholdDeviation(name: name,
-                                                                            target: target,
-                                                                            metric: metric,
-                                                                            percentile: percentile,
-                                                                            baseValue: normalize(lhs),
-                                                                            comparisonValue: normalize(threshold),
-                                                                            difference: normalize(absoluteDifference),
-                                                                            differenceThreshold: normalize(absoluteDifference),
-                                                                            relative: false,
-                                                                            units: scalingFactor))
-                case 1...:
-                    thresholdResults.regressions.append(ThresholdDeviation(name: name,
-                                                                           target: target,
-                                                                           metric: metric,
-                                                                           percentile: percentile,
-                                                                           baseValue: normalize(lhs),
-                                                                           comparisonValue: normalize(threshold),
-                                                                           difference: normalize(absoluteDifference),
-                                                                           differenceThreshold: normalize(absoluteDifference),
-                                                                           relative: false,
-                                                                           units: scalingFactor))
-                default:
-                    break
+                if absoluteDifference != 0 {
+                    let deviation = ThresholdDeviation(name: name,
+                                                       target: target,
+                                                       metric: metric,
+                                                       percentile: percentile,
+                                                       baseValue: normalize(lhs),
+                                                       comparisonValue: normalize(threshold),
+                                                       difference: normalize(absoluteDifference),
+                                                       differenceThreshold: normalize(absoluteDifference),
+                                                       relative: false,
+                                                       units: scalingFactor)
+                    if absoluteDifference < 0 {
+                        thresholdResults.improvements.append(deviation)
+                    } else {
+                        thresholdResults.regressions.append(deviation)
+                    }
                 }
             }
         }

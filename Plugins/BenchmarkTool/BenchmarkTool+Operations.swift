@@ -173,7 +173,7 @@ extension BenchmarkTool {
 
                     if deviationResults.regressions.isEmpty {
                         if deviationResults.improvements.isEmpty {
-                            print("Baseline '\(baselineName)' is WITHIN the defined absolute baseline thresholds. (--check-absolute)")
+                            print("Baseline '\(baselineName)' is EQUAL to the defined absolute baseline thresholds. (--check-absolute)")
                         } else {
                             prettyPrintAbsoluteDeviation(baselineName: baselineName,
                                                          deviationResults: deviationResults.improvements)
