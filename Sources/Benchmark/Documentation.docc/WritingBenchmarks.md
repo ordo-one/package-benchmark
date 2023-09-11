@@ -334,6 +334,35 @@ let benchmarks = {
 }
 ```
 
+Also, the setup can return an optional value of Any type, that can subsequently be accessed by the 
+benchmark in the standard benchmark execution closure through the ``Benchmark/Benchmark/setupState`` property.
+This is useful for benchmarks that need to set up some computed state that is then reused for each benchmark
+iteration loop. This can be done for all setup closures, like this:
+
+```swift
+import Benchmark
+
+func setupFunction() -> [Int] {
+    [1, 2, 3]
+}
+
+let benchmarks = {
+
+  Benchmark.setup = { 
+    print("global setup closure, used for all benchmarks") 
+    return 4711 // possible to return here
+  }
+
+  Benchmark("Minimal benchmark",
+  configuration: .init(setup: setupFunction)) { benchmark in
+    if let state = benchmark.setupState as? [Int] {
+    }
+  } setup: {
+    return "test" // or here
+  } 
+}
+```
+Only the most specific (and last) return value will be set.
 
 ### Async vs Sync
 

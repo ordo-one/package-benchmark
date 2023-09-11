@@ -40,24 +40,24 @@ public final class Benchmark: Codable, Hashable {
     public typealias BenchmarkCustomMetricMeasurement = (BenchmarkMetric, Int) -> Void
 
     /// Alias for closures used to hook into setup / teardown
-    public typealias BenchmarkHook = () async throws -> Void
-    public typealias BenchmarkSetupTeardownHook = BenchmarkHook
+    public typealias BenchmarkSetupHook = () async throws -> Any?
+    public typealias BenchmarkTeardownHook = () async throws -> Void
 
     #if swift(>=5.8)
         @_documentation(visibility: internal)
     #endif
-    public static var startupHook: BenchmarkSetupTeardownHook? // Should be removed when going to 2.0, just kept for API compatiblity
+    public static var startupHook: BenchmarkSetupHook? // Should be removed when going to 2.0, just kept for API compatiblity
 
     #if swift(>=5.8)
         @_documentation(visibility: internal)
     #endif
-    public static var shutdownHook: BenchmarkSetupTeardownHook? // Should be removed when going to 2.0, just kept for API compatiblity
+    public static var shutdownHook: BenchmarkTeardownHook? // Should be removed when going to 2.0, just kept for API compatiblity
 
     /// This closure if set, will be run before a targets benchmarks are run, but after they are registered
-    public static var setup: BenchmarkSetupTeardownHook?
+    public static var setup: BenchmarkSetupHook?
 
     /// This closure if set, will be run after a targets benchmarks run, but after they are registered
-    public static var teardown: BenchmarkSetupTeardownHook?
+    public static var teardown: BenchmarkTeardownHook?
 
     /// Set to true if this benchmark results should be compared with an absolute threshold when `--check-absolute` is
     /// specified on the command line. An implementation can then choose to configure thresholds differently for
@@ -95,8 +95,11 @@ public final class Benchmark: Codable, Hashable {
     /// asyncClosure: The actual benchmark (async) closure that will be measured
     var asyncClosure: BenchmarkAsyncClosure? // The actual benchmark to run
     // setup/teardown hooks for the instance
-    var setup: BenchmarkSetupTeardownHook?
-    var teardown: BenchmarkSetupTeardownHook?
+    var setup: BenchmarkSetupHook?
+    var teardown: BenchmarkTeardownHook?
+
+    /// The state returned from setup, if any - need to be cast as required
+    public var setupState: Any?
 
     // Hooks for benchmark infrastructure to capture metrics of actual measurement() block without preamble:
     #if swift(>=5.8)
@@ -159,8 +162,8 @@ public final class Benchmark: Codable, Hashable {
     public init?(_ name: String,
                  configuration: Benchmark.Configuration = Benchmark.defaultConfiguration,
                  closure: @escaping BenchmarkClosure,
-                 setup: BenchmarkSetupTeardownHook? = nil,
-                 teardown: BenchmarkSetupTeardownHook? = nil) {
+                 setup: BenchmarkSetupHook? = nil,
+                 teardown: BenchmarkTeardownHook? = nil) {
         if configuration.skip {
             return nil
         }
@@ -184,8 +187,8 @@ public final class Benchmark: Codable, Hashable {
     public init?(_ name: String,
                  configuration: Benchmark.Configuration = Benchmark.defaultConfiguration,
                  closure: @escaping BenchmarkAsyncClosure,
-                 setup: BenchmarkSetupTeardownHook? = nil,
-                 teardown: BenchmarkSetupTeardownHook? = nil) {
+                 setup: BenchmarkSetupHook? = nil,
+                 teardown: BenchmarkTeardownHook? = nil) {
         if configuration.skip {
             return nil
         }
@@ -209,8 +212,8 @@ public final class Benchmark: Codable, Hashable {
     public convenience init?(_ name: String,
                              configuration: Benchmark.Configuration = Benchmark.defaultConfiguration,
                              closure: @escaping BenchmarkThrowingClosure,
-                             setup: BenchmarkSetupTeardownHook? = nil,
-                             teardown: BenchmarkSetupTeardownHook? = nil) {
+                             setup: BenchmarkSetupHook? = nil,
+                             teardown: BenchmarkTeardownHook? = nil) {
         self.init(name, configuration: configuration, closure: { benchmark in
             do {
                 try closure(benchmark)
@@ -230,8 +233,8 @@ public final class Benchmark: Codable, Hashable {
     public convenience init?(_ name: String,
                              configuration: Benchmark.Configuration = Benchmark.defaultConfiguration,
                              closure: @escaping BenchmarkAsyncThrowingClosure,
-                             setup: BenchmarkSetupTeardownHook? = nil,
-                             teardown: BenchmarkSetupTeardownHook? = nil) {
+                             setup: BenchmarkSetupHook? = nil,
+                             teardown: BenchmarkTeardownHook? = nil) {
         self.init(name, configuration: configuration, closure: { benchmark in
             do {
                 try await closure(benchmark)
@@ -370,9 +373,9 @@ public extension Benchmark {
         /// Customized CI failure thresholds for a given metric for the Benchmark
         public var thresholds: [BenchmarkMetric: BenchmarkThresholds]?
         /// Optional per-benchmark specific setup done before warmup and all iterations
-        public var setup: BenchmarkSetupTeardownHook?
+        public var setup: BenchmarkSetupHook?
         /// Optional per-benchmark specific teardown done after final run is done
-        public var teardown: BenchmarkSetupTeardownHook?
+        public var teardown: BenchmarkTeardownHook?
 
         public init(metrics: [BenchmarkMetric] = defaultConfiguration.metrics,
                     timeUnits: BenchmarkTimeUnits = defaultConfiguration.timeUnits,
@@ -383,8 +386,8 @@ public extension Benchmark {
                     skip: Bool = defaultConfiguration.skip,
                     thresholds: [BenchmarkMetric: BenchmarkThresholds]? =
                         defaultConfiguration.thresholds,
-                    setup: BenchmarkSetupTeardownHook? = nil,
-                    teardown: BenchmarkSetupTeardownHook? = nil) {
+                    setup: BenchmarkSetupHook? = nil,
+                    teardown: BenchmarkTeardownHook? = nil) {
             self.metrics = metrics
             self.timeUnits = timeUnits
             self.warmupIterations = warmupIterations

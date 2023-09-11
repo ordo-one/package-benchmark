@@ -168,15 +168,28 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
                     benchmark.target = benchmarkToRun.target
 
                     do {
-                        try await Benchmark.startupHook?()
-                        try await Benchmark.setup?()
+                        var setupState = try await Benchmark.startupHook?()
+                        if let setupState {
+                            benchmark.setupState = setupState
+                        }
+                        
+                        setupState = try await Benchmark.setup?()
+                        if let setupState {
+                            benchmark.setupState = setupState
+                        }
 
                         if let setup = benchmark.configuration.setup {
-                            try await setup()
+                            setupState = try await setup()
+                            if let setupState {
+                                benchmark.setupState = setupState
+                            }
                         }
 
                         if let setup = benchmark.setup {
-                            try await setup()
+                            setupState = try await setup()
+                            if let setupState {
+                                benchmark.setupState = setupState
+                            }
                         }
                     } catch {
                         let description = """
