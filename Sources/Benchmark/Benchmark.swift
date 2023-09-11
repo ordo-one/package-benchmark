@@ -10,7 +10,7 @@
 
 import Dispatch
 
-// swiftlint: disable file_length
+// swiftlint: disable file_length prefer_self_in_static_references
 
 /// Defines a benchmark
 public final class Benchmark: Codable, Hashable {
@@ -127,7 +127,7 @@ public final class Benchmark: Codable, Hashable {
                                                                   skip: false,
                                                                   thresholds: nil)
 
-    internal static var testSkipBenchmarkRegistrations = false // true in test to avoid bench registration fail
+    static var testSkipBenchmarkRegistrations = false // true in test to avoid bench registration fail
     var measurementCompleted = false // Keep track so we skip multiple 'end of measurement'
 
     enum CodingKeys: String, CodingKey {
@@ -245,7 +245,7 @@ public final class Benchmark: Codable, Hashable {
     }
 
     // Shared between sync/async actual benchmark registration
-    internal func benchmarkRegistration() {
+    func benchmarkRegistration() {
         if Self.testSkipBenchmarkRegistrations == false {
             guard Self.benchmarks.contains(self) == false else {
                 fatalError("Duplicate registration of benchmark '\(name)', name must be unique.")
@@ -314,7 +314,7 @@ public final class Benchmark: Codable, Hashable {
 
     // https://forums.swift.org/t/actually-waiting-for-a-task/56230
     // Async closures can possibly show false memory leaks possibly due to Swift runtime allocations
-    internal func runAsync() {
+    func runAsync() {
         guard let asyncClosure else {
             fatalError("Tried to runAsync on benchmark instance without any async closure set")
         }
@@ -348,6 +348,7 @@ public final class Benchmark: Codable, Hashable {
         }
     }
 }
+// swiftlint:enable prefer_self_in_static_references
 
 public extension Benchmark {
     /// The configuration settings for running a benchmark.

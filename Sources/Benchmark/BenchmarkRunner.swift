@@ -172,7 +172,7 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
                         if let setupState {
                             benchmark.setupState = setupState
                         }
-                        
+
                         setupState = try await Benchmark.setup?()
                         if let setupState {
                             benchmark.setupState = setupState

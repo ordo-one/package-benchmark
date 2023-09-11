@@ -7,12 +7,11 @@
 
 import Benchmark
 
-func sharedSetup() {
-}
+func sharedSetup() {}
 
-//func sharedSetup() -> [Int] {
+// func sharedSetup() -> [Int] {
 //    [1, 2, 3]
-//}
+// }
 
 func sharedTeardown() {
 //    print("Shared teardown hook")
@@ -22,7 +21,6 @@ func testSetUpTearDown() {
 //    Benchmark.setup = { print("Global setup hook")}
 //    Benchmark.setup = { 123 }
 //    Benchmark.teardown = { print("Global teardown hook") }
-
 
     Benchmark("SetupTeardown",
               configuration: .init(setup: sharedSetup, teardown: sharedTeardown)) { _ in
@@ -37,7 +35,7 @@ func testSetUpTearDown() {
     }
 
     Benchmark("SetupTeardown3",
-              configuration: .init(setup: sharedSetup)) { benchmark in
+              configuration: .init(setup: sharedSetup)) { _ in
 //        let x = benchmark.setupState as! [Int]
 //        print("\(x)")
     } teardown: {
@@ -45,14 +43,14 @@ func testSetUpTearDown() {
     }
 
     Benchmark("SetupTeardown4",
-              configuration: .init(setup: sharedSetup)) { benchmark in
+              configuration: .init(setup: sharedSetup)) { _ in
 //        print("\(benchmark.setupState)")
     } setup: {
-  //      return 7
+        //      return 7
         //        print("Local setup hook")
     }
 
-    Benchmark("SetupTeardown5") { benchmark in
+    Benchmark("SetupTeardown5") { _ in
 //        print("\(benchmark.setupState)")
     }
 }
