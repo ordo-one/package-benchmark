@@ -141,12 +141,12 @@ extension BenchmarkTool {
                 }
 
             case .check:
-                if checkAbsoluteThresholds {
+                if checkAbsolute {
                     guard benchmarkBaselines.count == 1 else {
                         print("Can only do absolute threshold violation checks for a single benchmark baseline, got: \(benchmarkBaselines.count) baselines.")
                         return
                     }
-                    if let benchmarkPath = checkAbsoluteThresholdsPath { // load statically defined threshods for .p90
+                    if let benchmarkPath = checkAbsolutePath { // load statically defined threshods for .p90
                         benchmarks.forEach { benchmark in
                             let thresholds = BenchmarkTool.makeBenchmarkThresholds(path: benchmarkPath,
                                                                                    moduleName: benchmark.target,

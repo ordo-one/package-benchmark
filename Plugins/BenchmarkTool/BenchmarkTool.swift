@@ -79,14 +79,14 @@ struct BenchmarkTool: AsyncParsableCommand {
         If this is enabled, zero or one baselines should be specified for the check operation.
         By default, thresholds are checked comparing two baselines, or a baseline and a benchmark run.
         """)
-    var checkAbsoluteThresholds = false
+    var checkAbsolute = false
 
     @Option(name: .long, help:
         """
         The path from which p90 thresholds will be loaded for absolute threshold checks.
         This implicitly sets --check-absolute to true as well.
         """)
-    var checkAbsoluteThresholdsPath: String?
+    var checkAbsolutePath: String?
 
     @Option(name: .long, help: "The named baseline(s) we should display, update, delete or compare with")
     var baseline: [String] = []
@@ -204,7 +204,7 @@ struct BenchmarkTool: AsyncParsableCommand {
         // Skip reading baselines for baseline operations not needing them
         if let operation = baselineOperation, [.delete, .list, .update].contains(operation) == false {
             try readBaselines()
-            if [.compare, .check].contains(operation), benchmarkBaselines.count < 1, checkAbsoluteThresholds == false {
+            if [.compare, .check].contains(operation), benchmarkBaselines.count < 1, checkAbsolute == false {
                 print("Failed to read at least one benchmark baseline for compare/check operations.")
                 return
             }
@@ -300,8 +300,8 @@ struct BenchmarkTool: AsyncParsableCommand {
                               "--output-fd", fromChild.writeEnd.rawValue.description,
                               "--quiet", noProgress.description]
 
-        if checkAbsoluteThresholds {
-            args.append("--check-absolute-thresholds")
+        if checkAbsolute {
+            args.append("--check-absolute")
         }
 
         inputFD = fromChild.readEnd.rawValue

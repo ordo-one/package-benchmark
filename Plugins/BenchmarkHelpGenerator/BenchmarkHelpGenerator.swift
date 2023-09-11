@@ -120,14 +120,14 @@ struct Benchmark: AsyncParsableCommand {
         If this is enabled, zero or one baselines should be specified for the check operation.
         By default, thresholds are checked comparing two baselines, or a baseline and a benchmark run.
         """)
-    var checkAbsoluteThresholds = false
+    var checkAbsolute = false
 
     @Option(name: .long, help:
         """
         The path from which p90 thresholds will be loaded for absolute threshold checks.
         This implicitly sets --check-absolute to true as well.
         """)
-    var checkAbsoluteThresholdsPath: String?
+    var checkAbsolutePath: String?
 
     @Flag(name: .long, help: "Specifies that benchmark progress information should not be displayed")
     var noProgress: Int

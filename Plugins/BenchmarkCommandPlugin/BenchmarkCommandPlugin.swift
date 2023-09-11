@@ -223,9 +223,9 @@ import PackagePlugin
                 print("Only a single path for thresholds can be specified, got \(checkAbsoluteThresholdsPath.count).")
                 return
             }
-            args.append(contentsOf: ["--check-absolute-thresholds"])
+            args.append(contentsOf: ["--check-absolute"])
             if let path = checkAbsoluteThresholdsPath.first {
-                args.append(contentsOf: ["--check-absolute-thresholds-path", path])
+                args.append(contentsOf: ["--check-absolute-path", path])
             }
         }
 
