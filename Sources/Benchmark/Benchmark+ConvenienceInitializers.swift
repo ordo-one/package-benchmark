@@ -9,12 +9,12 @@ extension Benchmark {
     @discardableResult
     convenience public init?<SetupResult>(_ name: String,
                                           configuration: Benchmark.Configuration = Benchmark.defaultConfiguration,
-                                          closure: @escaping (_ benchmark: Benchmark, inout SetupResult) -> Void,
+                                          closure: @escaping (_ benchmark: Benchmark, SetupResult) -> Void,
                                           setup: @escaping (() async throws -> SetupResult),
                                           teardown: BenchmarkTeardownHook? = nil) {
         self.init(name, configuration: configuration) { benchmark in
             var setupResult = benchmark.setupState! as! SetupResult
-            closure(benchmark, &setupResult)
+            closure(benchmark, setupResult)
         } setup: {
             try await setup()
         } teardown: {
@@ -32,12 +32,12 @@ extension Benchmark {
     @discardableResult
     convenience public init?<SetupResult>(_ name: String,
                  configuration: Benchmark.Configuration = Benchmark.defaultConfiguration,
-                 closure: @escaping (_ benchmark: Benchmark, inout SetupResult) async -> Void,
+                 closure: @escaping (_ benchmark: Benchmark, SetupResult) async -> Void,
                  setup: @escaping (() async throws -> SetupResult),
                  teardown: BenchmarkTeardownHook? = nil) {
         self.init(name, configuration: configuration) { benchmark in
             var setupResult = benchmark.setupState! as! SetupResult
-            await closure(benchmark, &setupResult)
+            await closure(benchmark, setupResult)
         } setup: {
             try await setup()
         } teardown: {
@@ -55,13 +55,13 @@ extension Benchmark {
     @discardableResult
     convenience public init?<SetupResult>(_ name: String,
                                           configuration: Benchmark.Configuration = Benchmark.defaultConfiguration,
-                                          closure: @escaping (_ benchmark: Benchmark, inout SetupResult) throws -> Void,
+                                          closure: @escaping (_ benchmark: Benchmark, SetupResult) throws -> Void,
                                           setup: (() async throws -> SetupResult)? = nil,
                                           teardown: BenchmarkTeardownHook? = nil) {
         self.init(name, configuration: configuration, closure: { benchmark in
             do {
                 var setupResult = benchmark.setupState! as! SetupResult
-                try closure(benchmark, &setupResult)
+                try closure(benchmark, setupResult)
             } catch {
                 benchmark.error("Benchmark \(name) failed with \(error)")
             }
@@ -78,13 +78,13 @@ extension Benchmark {
     @discardableResult
     public convenience init?<SetupResult>(_ name: String,
                              configuration: Benchmark.Configuration = Benchmark.defaultConfiguration,
-                             closure: @escaping (_ benchmark: Benchmark, inout SetupResult) async throws -> Void,
+                             closure: @escaping (_ benchmark: Benchmark, SetupResult) async throws -> Void,
                              setup: (() async throws -> SetupResult)? = nil,
                              teardown: BenchmarkTeardownHook? = nil) {
         self.init(name, configuration: configuration, closure: { benchmark in
             do {
                 var setupResult = benchmark.setupState! as! SetupResult
-                try await closure(benchmark, &setupResult)
+                try await closure(benchmark, setupResult)
             } catch {
                 benchmark.error("Benchmark \(name) failed with \(error)")
             }
