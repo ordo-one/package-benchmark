@@ -10,7 +10,7 @@
 
 import Dispatch
 
-// swiftlint: disable file_length prefer_self_in_static_references
+// swiftlint: disable file_length
 
 /// Defines a benchmark
 public final class Benchmark: Codable, Hashable {
@@ -348,7 +348,6 @@ public final class Benchmark: Codable, Hashable {
         }
     }
 }
-// swiftlint:enable prefer_self_in_static_references
 
 public extension Benchmark {
     /// The configuration settings for running a benchmark.
