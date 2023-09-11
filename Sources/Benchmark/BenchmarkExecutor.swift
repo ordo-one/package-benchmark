@@ -102,16 +102,16 @@ internal final class BenchmarkExecutor {
         // NB this code may be called twice if the user calls startMeasurement() manually and should
         // then reset to a new starting state.
         benchmark.measurementPreSynchronization = {
-            if mallocStatsRequested {
-                startMallocStats = self.mallocStatsProducer.makeMallocStats()
-            }
-
             if operatingSystemStatsRequested {
                 startOperatingSystemStats = self.operatingSystemStatsProducer.makeOperatingSystemStats()
             }
 
             if arcStatsRequested {
                 startARCStats = self.arcStatsProducer.makeARCStats()
+            }
+
+            if mallocStatsRequested {
+                startMallocStats = self.mallocStatsProducer.makeMallocStats()
             }
 
             startTime = BenchmarkClock.now // must be last in closure
@@ -122,16 +122,16 @@ internal final class BenchmarkExecutor {
         benchmark.measurementPostSynchronization = {
             stopTime = BenchmarkClock.now // must be first in closure
 
+            if mallocStatsRequested {
+                stopMallocStats = self.mallocStatsProducer.makeMallocStats()
+            }
+
             if arcStatsRequested {
                 stopARCStats = self.arcStatsProducer.makeARCStats()
             }
 
             if operatingSystemStatsRequested {
                 stopOperatingSystemStats = self.operatingSystemStatsProducer.makeOperatingSystemStats()
-            }
-
-            if mallocStatsRequested {
-                stopMallocStats = self.mallocStatsProducer.makeMallocStats()
             }
 
             var delta = 0
