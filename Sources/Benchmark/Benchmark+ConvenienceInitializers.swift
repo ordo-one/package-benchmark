@@ -13,7 +13,7 @@ extension Benchmark {
                                           setup: @escaping (() async throws -> SetupResult),
                                           teardown: BenchmarkTeardownHook? = nil) {
         self.init(name, configuration: configuration) { benchmark in
-            var setupResult = benchmark.setupState! as! SetupResult
+            let setupResult = benchmark.setupState! as! SetupResult
             closure(benchmark, setupResult)
         } setup: {
             try await setup()
@@ -36,7 +36,7 @@ extension Benchmark {
                  setup: @escaping (() async throws -> SetupResult),
                  teardown: BenchmarkTeardownHook? = nil) {
         self.init(name, configuration: configuration) { benchmark in
-            var setupResult = benchmark.setupState! as! SetupResult
+            let setupResult = benchmark.setupState! as! SetupResult
             await closure(benchmark, setupResult)
         } setup: {
             try await setup()
@@ -60,7 +60,7 @@ extension Benchmark {
                                           teardown: BenchmarkTeardownHook? = nil) {
         self.init(name, configuration: configuration, closure: { benchmark in
             do {
-                var setupResult = benchmark.setupState! as! SetupResult
+                let setupResult = benchmark.setupState! as! SetupResult
                 try closure(benchmark, setupResult)
             } catch {
                 benchmark.error("Benchmark \(name) failed with \(error)")
@@ -83,7 +83,7 @@ extension Benchmark {
                              teardown: BenchmarkTeardownHook? = nil) {
         self.init(name, configuration: configuration, closure: { benchmark in
             do {
-                var setupResult = benchmark.setupState! as! SetupResult
+                let setupResult = benchmark.setupState! as! SetupResult
                 try await closure(benchmark, setupResult)
             } catch {
                 benchmark.error("Benchmark \(name) failed with \(error)")
