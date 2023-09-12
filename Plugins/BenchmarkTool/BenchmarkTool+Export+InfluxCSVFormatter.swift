@@ -144,11 +144,18 @@ extension BenchmarkTool {
                 var benchmarkResultData: [TestMetricData] = []
                 var iterations = 0
                 var warmupIterations = 0
+                var cleanedTestName = test.name
+                
+                // adds quotes around test names that contain a comma.
+                // This helps avoid parsing issues on the exported CSV file
+                if cleanedTestName.contains(",") {
+                    cleanedTestName = "\"\(cleanedTestName)\""
+                }
                 allResults.forEach { results in
 
                     benchmarkResultData.append(
                         processBenchmarkResult(test: results,
-                                               testName: test.name)
+                                               testName: cleanedTestName)
                     )
 
                     iterations = results.statistics.measurementCount
@@ -156,7 +163,7 @@ extension BenchmarkTool {
                 }
 
                 testList.append(
-                    TestData(test: test.name,
+                    TestData(test: cleanedTestName,
                              iterations: iterations,
                              warmupIterations: warmupIterations,
                              data: benchmarkResultData)
