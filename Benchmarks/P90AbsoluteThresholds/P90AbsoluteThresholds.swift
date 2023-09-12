@@ -41,9 +41,9 @@ let benchmarks = {
         var array: [Int] = []
 
         for _ in benchmark.scaledIterations {
-//            var x = malloc(1)
-//            blackHole(x)
-//            free(x)
+            var x = malloc(1)
+            blackHole(x)
+            free(x)
             array.append(contentsOf: 1 ... 1000)
         }
         blackHole(array)
