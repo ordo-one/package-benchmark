@@ -75,9 +75,9 @@ public final class Statistics: Codable {
         }
     }
 
-    internal var _cachedPercentiles: [Int] = []
-    internal var _cacheUnits: Statistics.Units = .automatic
-    internal var _cachedPercentilesHistogramCount: UInt64 = 0
+    var _cachedPercentiles: [Int] = []
+    var _cacheUnits: Statistics.Units = .automatic
+    var _cachedPercentilesHistogramCount: UInt64 = 0
 
     public func percentiles(for percentilesToCalculate: [Double] = defaultPercentilesToCalculate) -> [Int] {
         if percentilesToCalculate == Self.defaultPercentilesToCalculate {

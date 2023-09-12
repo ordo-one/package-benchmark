@@ -13,7 +13,8 @@
     @_documentation(visibility: internal)
 #endif
 
-internal struct ARCStats {
-    var retainCount: Int /// total number retains
-    var releaseCount: Int /// total number of releases
+struct ARCStats {
+    var objectAllocCount: Int = 0 /// total number allocations, implicit retain
+    var retainCount: Int = 0 /// total number retains
+    var releaseCount: Int = 0 /// total number of releases
 }

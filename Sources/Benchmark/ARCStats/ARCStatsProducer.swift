@@ -16,10 +16,15 @@ import SwiftRuntimeHooks
 final class ARCStatsProducer {
     typealias SwiftRuntimeHook = @convention(c) (UnsafeRawPointer?, UnsafeMutableRawPointer?) -> Void
 
+    static var allocCount: UnsafeAtomic<Int> = .create(0)
     static var retainCount: UnsafeAtomic<Int> = .create(0)
     static var releaseCount: UnsafeAtomic<Int> = .create(0)
 
-    func hook() {
+    static func hook() {
+        let allocObjectHook: SwiftRuntimeHook = { _, _ in
+            ARCStatsProducer.allocCount.wrappingIncrement(ordering: .relaxed)
+        }
+
         let retainHook: SwiftRuntimeHook = { _, _ in
             ARCStatsProducer.retainCount.wrappingIncrement(ordering: .relaxed)
         }
@@ -28,23 +33,27 @@ final class ARCStatsProducer {
             ARCStatsProducer.releaseCount.wrappingIncrement(ordering: .relaxed)
         }
 
+        swift_runtime_set_alloc_object_hook(allocObjectHook, nil)
         swift_runtime_set_retain_hook(retainHook, nil)
         swift_runtime_set_release_hook(releaseHook, nil)
     }
 
-    func unhook() {
+    static func unhook() {
         swift_runtime_set_release_hook(nil, nil)
         swift_runtime_set_retain_hook(nil, nil)
+        swift_runtime_set_alloc_object_hook(nil, nil)
     }
 
-    func reset() {
-        ARCStatsProducer.retainCount.store(0, ordering: .relaxed)
-        ARCStatsProducer.releaseCount.store(0, ordering: .relaxed)
+    static func reset() {
+        allocCount.store(0, ordering: .relaxed)
+        retainCount.store(0, ordering: .relaxed)
+        releaseCount.store(0, ordering: .relaxed)
     }
 
-    func makeARCStats() -> ARCStats {
-        ARCStats(retainCount: ARCStatsProducer.retainCount.load(ordering: .relaxed),
-                 releaseCount: ARCStatsProducer.releaseCount.load(ordering: .relaxed))
+    static func makeARCStats() -> ARCStats {
+        ARCStats(objectAllocCount: allocCount.load(ordering: .relaxed),
+                 retainCount: retainCount.load(ordering: .relaxed),
+                 releaseCount: releaseCount.load(ordering: .relaxed))
     }
 }
 

@@ -56,14 +56,13 @@ final class OperatingSystemAndMallocTests: XCTestCase {
 
     #if canImport(jemalloc)
         func testMallocProducerLeaks() throws {
-            let mallocStatsProducer = MallocStatsProducer()
-            let startMallocStats = mallocStatsProducer.makeMallocStats()
+            let startMallocStats = MallocStatsProducer.makeMallocStats()
 
             for outerloop in 1 ... 100 {
                 blackHole(malloc(outerloop * 1_024))
             }
 
-            let stopMallocStats = mallocStatsProducer.makeMallocStats()
+            let stopMallocStats = MallocStatsProducer.makeMallocStats()
 
             XCTAssertGreaterThanOrEqual(stopMallocStats.mallocCountTotal - startMallocStats.mallocCountTotal, 100)
             XCTAssertGreaterThanOrEqual(stopMallocStats.allocatedResidentMemory - startMallocStats.allocatedResidentMemory,
@@ -72,12 +71,10 @@ final class OperatingSystemAndMallocTests: XCTestCase {
     #endif
 
     func testARCStatsProducer() throws {
-        let statsProducer = ARCStatsProducer()
-
         let array = [3]
-        statsProducer.hook()
+        ARCStatsProducer.hook()
 
-        let startStats = statsProducer.makeARCStats()
+        let startStats = ARCStatsProducer.makeARCStats()
 
         for outerloop in 1 ... 100 {
             var arrayCopy = array
@@ -86,8 +83,9 @@ final class OperatingSystemAndMallocTests: XCTestCase {
             blackHole(arrayCopy)
         }
 
-        let stopStats = statsProducer.makeARCStats()
+        let stopStats = ARCStatsProducer.makeARCStats()
 
+        XCTAssertGreaterThanOrEqual(stopStats.objectAllocCount - startStats.objectAllocCount, 100)
         XCTAssertGreaterThanOrEqual(stopStats.retainCount - startStats.retainCount, 100)
         XCTAssertGreaterThanOrEqual(stopStats.releaseCount - startStats.releaseCount, 100)
     }
@@ -97,6 +95,8 @@ final class OperatingSystemAndMallocTests: XCTestCase {
 
         XCTAssertTrue(statsProducer.metricSupported(.readBytesPhysical))
         XCTAssertTrue(statsProducer.metricSupported(.writeBytesPhysical))
+
+        statsProducer.configureMetrics([.readBytesPhysical, .writeBytesPhysical])
 
         let startStats = statsProducer.makeOperatingSystemStats()
 
@@ -112,7 +112,7 @@ final class OperatingSystemAndMallocTests: XCTestCase {
 
         var buffer = (0 ..< stat.st_blksize).map { _ in UInt8.random(in: 0 ... UInt8.max) }
 
-        for _ in (0 ..< amplificationFactor) {
+        for _ in 0 ..< amplificationFactor {
             buffer.withUnsafeBytes { buffer in
                 XCTAssertEqual(write(fildes, buffer.baseAddress, buffer.count), buffer.count, "write() failed: \(errno)")
             }

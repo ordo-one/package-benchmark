@@ -151,11 +151,11 @@ extension BenchmarkTool {
                             let thresholds = BenchmarkTool.makeBenchmarkThresholds(path: benchmarkPath,
                                                                                    moduleName: benchmark.target,
                                                                                    benchmarkName: benchmark.name)
-                            var transformed: [BenchmarkMetric : BenchmarkThresholds] = [:]
+                            var transformed: [BenchmarkMetric: BenchmarkThresholds] = [:]
                             if let thresholds {
                                 thresholds.forEach { key, value in
                                     if let metric = BenchmarkMetric(argument: key) {
-                                        let absoluteThreshold : BenchmarkThresholds.AbsoluteThresholds = [.p90 : value]
+                                        let absoluteThreshold: BenchmarkThresholds.AbsoluteThresholds = [.p90: value]
                                         transformed[metric] = BenchmarkThresholds(absolute: absoluteThreshold)
                                     }
                                 }

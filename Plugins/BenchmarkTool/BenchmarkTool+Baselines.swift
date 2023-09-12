@@ -24,7 +24,7 @@ import SystemPackage
 #endif
 
 struct BenchmarkMachine: Codable, Equatable {
-    internal init(hostname: String, processors: Int, processorType: String, memory: Int, kernelVersion: String) {
+    init(hostname: String, processors: Int, processorType: String, memory: Int, kernelVersion: String) {
         self.hostname = hostname
         self.processors = processors
         self.processorType = processorType
@@ -46,7 +46,7 @@ struct BenchmarkMachine: Codable, Equatable {
 }
 
 struct BenchmarkIdentifier: Codable, Hashable {
-    internal init(target: String, name: String) {
+    init(target: String, name: String) {
         self.target = target
         self.name = name
     }
@@ -79,7 +79,7 @@ struct BenchmarkBaseline: Codable {
         var metrics: BenchmarkResult
     }
 
-    internal init(baselineName: String, machine: BenchmarkMachine, results: [BenchmarkIdentifier: [BenchmarkResult]]) {
+    init(baselineName: String, machine: BenchmarkMachine, results: [BenchmarkIdentifier: [BenchmarkResult]]) {
         self.baselineName = baselineName
         self.machine = machine
         self.results = results
@@ -449,13 +449,13 @@ extension BenchmarkBaseline: Equatable {
         for (lhsBenchmarkIdentifier, lhsBenchmarkResults) in results {
             for lhsBenchmarkResult in lhsBenchmarkResults {
                 let thresholds = thresholdsForBenchmarks(benchmarks,
-                                              name: lhsBenchmarkIdentifier.name,
-                                              target: lhsBenchmarkIdentifier.target,
-                                              metric: lhsBenchmarkResult.metric)
+                                                         name: lhsBenchmarkIdentifier.name,
+                                                         target: lhsBenchmarkIdentifier.target,
+                                                         metric: lhsBenchmarkResult.metric)
 
                 let deviationResults = lhsBenchmarkResult.deviationsAgainstAbsoluteThresholds(thresholds,
-                                                                                       name: lhsBenchmarkIdentifier.name,
-                                                                                       target: lhsBenchmarkIdentifier.target)
+                                                                                              name: lhsBenchmarkIdentifier.name,
+                                                                                              target: lhsBenchmarkIdentifier.target)
                 allDeviationResults.append(deviationResults)
             }
         }

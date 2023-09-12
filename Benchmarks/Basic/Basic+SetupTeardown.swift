@@ -50,14 +50,13 @@ func testSetUpTearDown() {
         //        print("Local setup hook")
     }
 
-    Benchmark("SetupTeardown5") { benchmark in
-  //              print("\(benchmark.setupState)")
+    Benchmark("SetupTeardown5") { _ in
+        //              print("\(benchmark.setupState)")
     }
 
-    Benchmark("SetupTeardown6") { benchmark, setupState in
+    Benchmark("SetupTeardown6") { _, _ in
 //        print("\(setupState)")
     } setup: {
         [1, 2, 3]
     }
-
 }

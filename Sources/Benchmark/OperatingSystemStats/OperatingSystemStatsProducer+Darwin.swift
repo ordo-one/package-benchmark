@@ -24,6 +24,7 @@
         var peakThreadsRunning: Int = 0
         var runState: RunState = .running
         var sampleRate: Int = 10_000
+        var metrics: Set<BenchmarkMetric>?
 
         enum RunState {
             case running
@@ -67,13 +68,14 @@
             }
 
             struct IOStats {
-                var bytesRead, bytesWritten: UInt64
+                var bytesRead: UInt64 = 0
+                var bytesWritten: UInt64 = 0
             }
 
             private func getIOStats() -> IOStats {
                 var rinfo = rusage_info_v6()
                 let result = withUnsafeMutablePointer(to: &rinfo) {
-                    $0.withMemoryRebound(to: Optional<rusage_info_t>.self, capacity: 1) {
+                    $0.withMemoryRebound(to: rusage_info_t?.self, capacity: 1) {
                         proc_pid_rusage(getpid(), RUSAGE_INFO_V6, $0)
                     }
                 }
@@ -135,19 +137,34 @@
             #endif
         }
 
+        func configureMetrics(_ metrics: Set<BenchmarkMetric>) {
+            self.metrics = metrics
+        }
+
         func makeOperatingSystemStats() -> OperatingSystemStats {
             #if os(macOS)
+                guard let metrics else {
+                    return .init()
+                }
+
                 let procTaskInfo = getProcInfo()
                 let userTime = Int(nsPerMachTick * Double(procTaskInfo.pti_total_user))
                 let systemTime = Int(nsPerMachTick * Double(procTaskInfo.pti_total_system))
                 let totalTime = userTime + systemTime
+                var threads = 0
+                var threadsRunning = 0
 
-                lock.lock()
-                let threads = peakThreads
-                let threadsRunning = peakThreadsRunning
-                lock.unlock()
+                if metrics.contains(.threads) || metrics.contains(.threadsRunning) {
+                    lock.lock()
+                    threads = peakThreads
+                    threadsRunning = peakThreadsRunning
+                    lock.unlock()
+                }
+                var ioStats = IOStats()
 
-                let ioStats = getIOStats()
+                if metrics.contains(.writeBytesPhysical) || metrics.contains(.writeBytesPhysical) {
+                    ioStats = getIOStats()
+                }
 
                 let stats = OperatingSystemStats(cpuUser: userTime,
                                                  cpuSystem: systemTime,

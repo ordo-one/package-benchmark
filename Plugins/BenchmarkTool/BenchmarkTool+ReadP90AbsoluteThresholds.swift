@@ -32,7 +32,7 @@ extension BenchmarkTool {
     /// - Returns: A dictionary with static benchmark thresholds per metric or nil if the file could not be found or read
     static func makeBenchmarkThresholds(path: String,
                                         moduleName: String,
-                                        benchmarkName: String) -> [String : BenchmarkThresholds.AbsoluteThreshold]? {
+                                        benchmarkName: String) -> [String: BenchmarkThresholds.AbsoluteThreshold]? {
         var path = FilePath(path)
         if path.isAbsolute {
             path.append("\(moduleName).\(benchmarkName).p90.json")
@@ -43,7 +43,7 @@ extension BenchmarkTool {
             path = cwdPath
         }
 
-        var p90Thresholds: [String : BenchmarkThresholds.AbsoluteThreshold]?
+        var p90Thresholds: [String: BenchmarkThresholds.AbsoluteThreshold]?
 
         do {
             let fileDescriptor = try FileDescriptor.open(path, .readOnly, options: [], permissions: .ownerRead)
@@ -64,7 +64,7 @@ extension BenchmarkTool {
                             readBytes.append(contentsOf: nextBytes)
                         }
 
-                        p90Thresholds = try JSONDecoder().decode([String : BenchmarkThresholds.AbsoluteThreshold].self, from: Data(readBytes))
+                        p90Thresholds = try JSONDecoder().decode([String: BenchmarkThresholds.AbsoluteThreshold].self, from: Data(readBytes))
                     } catch {
                         print("Failed to read file at \(path) [\(error)] \(Errno(rawValue: errno).description)")
                     }
