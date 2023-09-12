@@ -49,7 +49,8 @@ public extension BenchmarkMetric {
 
     /// A collection of ARC metrics
     static var arc: [BenchmarkMetric] {
-        [.retainCount,
+        [.objectAllocCount,
+         .retainCount,
          .releaseCount,
          .retainReleaseDelta]
     }
@@ -98,6 +99,7 @@ public extension BenchmarkMetric {
          .readBytesPhysical,
          .writeBytesPhysical,
          .allocatedResidentMemory,
+         .objectAllocCount,
          .retainCount,
          .releaseCount,
          .retainReleaseDelta]

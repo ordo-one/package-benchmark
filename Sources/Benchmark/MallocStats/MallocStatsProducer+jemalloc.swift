@@ -22,23 +22,37 @@ import ExtrasJSON
 //        @_documentation(visibility: internal)
 //    #endif
     final class MallocStatsProducer {
-        var threadCacheMIB: [size_t]
-        var epochMIB: [size_t]
-//    var smallNMallocMIB: [size_t]
-//    var largeNMallocMIB: [size_t]
-//    var smallNDallocMIB: [size_t]
-//    var largeNDallocMIB: [size_t]
-//    var smallAlloctedMIB: [size_t]
-//    var largeAllocatedMIB: [size_t]
-        var totalAllocatedMIB: [size_t]
-        var smallNRequestsMIB: [size_t]
-        var largeNRequestsMIB: [size_t]
-//    var smallNFillsMIB: [size_t]
-//    var largeNFillsMIB: [size_t]
+        // Basically just set up a number of cached MIB structures for
+        // more efficient queries later of malloc statistics.
+        static var threadCacheMIB = setupMIB(name: "thread.tcache.flush")
+        static var epochMIB = setupMIB(name: "epoch")
+        static var totalAllocatedMIB: [size_t] = setupMIB(name: "stats.resident")
+        static var smallNRequestsMIB: [size_t] = setupMIB(name: "stats.arenas.\(MALLCTL_ARENAS_ALL).small.nrequests")
+        static var largeNRequestsMIB: [size_t] = setupMIB(name: "stats.arenas.\(MALLCTL_ARENAS_ALL).large.nrequests")
+//    var smallNMallocMIB = setupMIB(name: "stats.arenas.\(MALLCTL_ARENAS_ALL).small.nmalloc")
+//    var largeNMallocMIB = setupMIB(name: "stats.arenas.\(MALLCTL_ARENAS_ALL).large.nmalloc")
+//    var smallNDallocMIB = setupMIB(name: "stats.arenas.\(MALLCTL_ARENAS_ALL).small.ndalloc")
+//    var largeNDallocMIB = setupMIB(name: "stats.arenas.\(MALLCTL_ARENAS_ALL).large.ndalloc")
+//    var smallAlloctedMIB = setupMIB(name: "stats.arenas.\(MALLCTL_ARENAS_ALL).small.allocated")
+//    var largeAllocatedMIB = setupMIB(name: "stats.arenas.\(MALLCTL_ARENAS_ALL).large.allocated")
+//    var smallNFillsMIB = setupMIB(name: "stats.arenas.\(MALLCTL_ARENAS_ALL).small.nfills")
+//    var largeNFillsMIB = setupMIB(name: "stats.arenas.\(MALLCTL_ARENAS_ALL).large.nfills")
+
+        static func setupMIB(name: String) -> [size_t] {
+            precondition(!name.split(separator: ".").isEmpty, "setupMIB with 0 count")
+            var mib = [size_t](repeating: 0, count: name.split(separator: ".").count)
+            var mibSize = mib.count
+            mib.withUnsafeMutableBufferPointer { pointer in
+                let result = mallctlnametomib(name, pointer.baseAddress, &mibSize)
+                if result != 0 {
+                    print("mallctlnametomib \(name) returned \(result)")
+                }
+            }
+            return mib
+        }
 
         // Update jemalloc internal statistics, this is the magic incantation to do it
-        @discardableResult
-        func updateEpoch() -> Int {
+        static func updateEpoch() {
             var allocated = 0
             var size = MemoryLayout<Int>.size
             var epoch = 0
@@ -56,43 +70,11 @@ import ExtrasJSON
             if result != 0 {
                 print("mallctlbymib epochMIB returned \(result)")
             }
-
-            return epoch
-        }
-
-        // Basically just set up a number of cached MIB structures for
-        // more efficient queries later of malloc statistics.
-        init() {
-            func setupMIB(name: String) -> [size_t] {
-                precondition(!name.split(separator: ".").isEmpty, "setupMIB with 0 count")
-                var mib = [size_t](repeating: 0, count: name.split(separator: ".").count)
-                var mibSize = mib.count
-                mib.withUnsafeMutableBufferPointer { pointer in
-                    let result = mallctlnametomib(name, pointer.baseAddress, &mibSize)
-                    if result != 0 {
-                        print("mallctlnametomib \(name) returned \(result)")
-                    }
-                }
-                return mib
-            }
-
-            epochMIB = setupMIB(name: "epoch")
-            threadCacheMIB = setupMIB(name: "thread.tcache.flush")
-            smallNRequestsMIB = setupMIB(name: "stats.arenas.\(MALLCTL_ARENAS_ALL).small.nrequests")
-            largeNRequestsMIB = setupMIB(name: "stats.arenas.\(MALLCTL_ARENAS_ALL).large.nrequests")
-            totalAllocatedMIB = setupMIB(name: "stats.resident")
-//        smallNMallocMIB = setupMIB(name: "stats.arenas.\(MALLCTL_ARENAS_ALL).small.nmalloc")
-//        largeNMallocMIB = setupMIB(name: "stats.arenas.\(MALLCTL_ARENAS_ALL).large.nmalloc")
-//        smallNDallocMIB = setupMIB(name: "stats.arenas.\(MALLCTL_ARENAS_ALL).small.ndalloc")
-//        largeNDallocMIB = setupMIB(name: "stats.arenas.\(MALLCTL_ARENAS_ALL).large.ndalloc")
-//        smallAlloctedMIB = setupMIB(name: "stats.arenas.\(MALLCTL_ARENAS_ALL).small.allocated")
-//        largeAllocatedMIB = setupMIB(name: "stats.arenas.\(MALLCTL_ARENAS_ALL).large.allocated")
-//        smallNFillsMIB = setupMIB(name: "stats.arenas.\(MALLCTL_ARENAS_ALL).small.nfills")
-//        largeNFillsMIB = setupMIB(name: "stats.arenas.\(MALLCTL_ARENAS_ALL).large.nfills")
+//            return epoch
         }
 
         // Read the actual stats using a cached MIB as the key
-        func readStats(_ mib: [Int]) -> Int {
+        static func readStats(_ mib: [Int]) -> Int {
             var allocated = 0
             var size = MemoryLayout<Int>.size
 
@@ -103,7 +85,7 @@ import ExtrasJSON
             return 0
         }
 
-        func makeMallocStats() -> MallocStats {
+        static func makeMallocStats() -> MallocStats {
             updateEpoch()
             let allocationsCountSmall = readStats(smallNRequestsMIB)
             let allocationsCountLarge = readStats(largeNRequestsMIB)

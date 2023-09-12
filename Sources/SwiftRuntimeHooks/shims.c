@@ -4,6 +4,11 @@
 #include "SwiftRuntimeHooks.h"
 
 typedef struct HeapObject_s HeapObject;
+typedef struct HeapMetadata_s HeapMetadata;
+
+extern HeapObject * (*_swift_allocObject)(HeapMetadata const *metadata,
+                                          size_t requiredSize,
+                                          size_t requiredAlignmentMask); // asm("__swift_allocObject_");
 
 extern HeapObject * (*_swift_retain)(HeapObject*);
 extern HeapObject * (*_swift_release)(HeapObject*);
@@ -19,6 +24,35 @@ struct hook_data_s {
     void * context;
 };
 
+struct hook_data_alloc_s {
+    HeapObject * (*orig)(HeapMetadata const *, size_t, size_t);
+    swift_runtime_hook_t hook;
+    void * context;
+};
+
+/*===========================================================================*/
+
+static struct hook_data_alloc_s _swift_alloc_object_hook_data = {NULL, NULL, NULL};
+
+static HeapObject * _swift_alloc_object_hook(HeapMetadata const *metadata,
+                                             size_t requiredSize,
+                                             size_t requiredAlignmentMask) {
+    HeapObject * ret = (*_swift_alloc_object_hook_data.orig)(metadata, requiredSize, requiredAlignmentMask);
+    (*_swift_alloc_object_hook_data.hook)(ret, _swift_alloc_object_hook_data.context);
+    return ret;
+}
+
+void swift_runtime_set_alloc_object_hook(swift_runtime_hook_t hook, void * context) {
+    if (hook == NULL) {
+        _swift_allocObject = _swift_alloc_object_hook_data.orig;
+        struct hook_data_alloc_s hook_data = {NULL, NULL, NULL};
+        _swift_alloc_object_hook_data = hook_data;
+    } else {
+        struct hook_data_alloc_s hook_data = {_swift_allocObject, hook, context};
+        _swift_alloc_object_hook_data = hook_data;
+        _swift_allocObject = _swift_alloc_object_hook;
+    }
+}
 /*===========================================================================*/
 
 static struct hook_data_s _swift_retain_hook_data = {NULL, NULL, NULL, NULL};

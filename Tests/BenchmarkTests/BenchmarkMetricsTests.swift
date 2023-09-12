@@ -35,6 +35,7 @@ final class BenchmarkMetricsTests: XCTestCase {
         .writeBytesLogical,
         .readBytesPhysical,
         .writeBytesPhysical,
+        .objectAllocCount,
         .retainCount,
         .releaseCount,
         .retainReleaseDelta,

@@ -58,6 +58,8 @@ public enum BenchmarkMetric: Hashable, Equatable, Codable, CustomStringConvertib
     case readBytesPhysical
     /// The number of bytes physicall written to a block device (i.e. disk) -- Linux only
     case writeBytesPhysical
+    /// Number of object allocations (implicit retain of one) (ARC)
+    case objectAllocCount
     /// Number of retains (ARC)
     case retainCount
     /// Number of releases (ARC)
@@ -126,7 +128,7 @@ public extension BenchmarkMetric {
             return true
         case .writeSyscalls, .writeBytesLogical, .writeBytesPhysical:
             return true
-        case .retainCount, .releaseCount, .retainReleaseDelta:
+        case .objectAllocCount, .retainCount, .releaseCount, .retainReleaseDelta:
             return true
         case let .custom(_, _, useScaleFactor):
             return useScaleFactor
@@ -193,12 +195,14 @@ public extension BenchmarkMetric {
             return "Bytes (read physical)"
         case .writeBytesPhysical:
             return "Bytes (write physical)"
+        case .objectAllocCount:
+            return "Object allocs"
         case .retainCount:
             return "Retains"
         case .releaseCount:
             return "Releases"
         case .retainReleaseDelta:
-            return "Retain / Release Δ"
+            return "(Alloc + Retain) - Release Δ"
         case .delta:
             return "Δ"
         case .deltaPercentage:
@@ -259,6 +263,8 @@ public extension BenchmarkMetric {
             return "readBytesPhysical"
         case .writeBytesPhysical:
             return "writeBytesPhysical"
+        case .objectAllocCount:
+            return "objectAllocCount"
         case .retainCount:
             return "retainCount"
         case .releaseCount:
@@ -327,6 +333,8 @@ public extension BenchmarkMetric {
             self = BenchmarkMetric.readBytesPhysical
         case "writeBytesPhysical":
             self = BenchmarkMetric.writeBytesPhysical
+        case "objectAllocCount":
+            self = BenchmarkMetric.objectAllocCount
         case "retainCount":
             self = BenchmarkMetric.retainCount
         case "releaseCount":

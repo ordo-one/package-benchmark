@@ -338,6 +338,7 @@ public final class Benchmark: Codable, Hashable {
     #if swift(>=5.8)
         @_documentation(visibility: internal)
     #endif
+    @inline(__always)
     public func run() {
         if let closure {
             startMeasurement()

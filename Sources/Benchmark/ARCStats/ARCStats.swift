@@ -14,6 +14,7 @@
 #endif
 
 internal struct ARCStats {
+    var objectAllocCount: Int /// total number allocations, implicit retain
     var retainCount: Int /// total number retains
     var releaseCount: Int /// total number of releases
 }
