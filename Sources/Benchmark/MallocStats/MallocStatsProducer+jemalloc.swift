@@ -154,7 +154,7 @@ import ExtrasJSON
 #else
 
     // stub if no jemalloc available
-    final class MallocStatsProducer {
+    enum MallocStatsProducer {
         static func makeMallocStats() -> MallocStats {
             MallocStats(mallocCountTotal: 0,
                         mallocCountSmall: 0,

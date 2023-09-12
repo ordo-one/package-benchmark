@@ -11,11 +11,11 @@ import Benchmark
 import Foundation
 
 #if canImport(Darwin)
-import Darwin
+    import Darwin
 #elseif canImport(Glibc)
-import Glibc
+    import Glibc
 #else
-#error("Unsupported Platform")
+    #error("Unsupported Platform")
 #endif
 
 let benchmarks = {
@@ -41,10 +41,10 @@ let benchmarks = {
         var array: [Int] = []
 
         for _ in benchmark.scaledIterations {
-            var x = malloc(1)
-            blackHole(x)
-            free(x)
-            array.append(contentsOf: 1 ... 1000)
+            var temporaryAllocation = malloc(1)
+            blackHole(temporaryAllocation)
+            free(temporaryAllocation)
+            array.append(contentsOf: 1 ... 1_000)
         }
         blackHole(array)
     }
@@ -52,8 +52,7 @@ let benchmarks = {
     func concurrentWork(tasks: Int) async {
         _ = await withTaskGroup(of: Void.self, returning: Void.self, body: { taskGroup in
             for _ in 0 ..< tasks {
-                taskGroup.addTask {
-                }
+                taskGroup.addTask {}
             }
 
             for await _ in taskGroup {}
@@ -64,5 +63,4 @@ let benchmarks = {
               configuration: .init(metrics: BenchmarkMetric.arc, maxDuration: .seconds(3))) { _ in
         await concurrentWork(tasks: 789)
     }
-
 }

@@ -24,12 +24,12 @@ import SystemPackage
 public extension FilePath {
     /// `DirectoryView` provides an iteratable sequence of the contents of a directory referenced by a `FilePath`
     struct DirectoryView {
-        internal var directoryStreamPointer: DirectoryStreamPointer = nil
-        internal var path: FilePath
+        var directoryStreamPointer: DirectoryStreamPointer = nil
+        var path: FilePath
 
         /// Initializer
         /// - Parameter path: The file system path to provide directory entries for, should reference a directory
-        internal init(path pathName: FilePath) {
+        init(path pathName: FilePath) {
             path = pathName
             path.withPlatformString {
                 directoryStreamPointer = opendir($0)

@@ -24,7 +24,7 @@
         var peakThreads: Int = 0
         var sampleRate: Int = 10_000
         var runState: RunState = .running
-        var metrics:Set<BenchmarkMetric>?
+        var metrics: Set<BenchmarkMetric>?
 
         enum RunState {
             case running
@@ -93,7 +93,7 @@
             return stats
         }
 
-        func configureMetrics(_ metrics:Set<BenchmarkMetric>) {
+        func configureMetrics(_ metrics: Set<BenchmarkMetric>) {
             self.metrics = metrics
         }
 

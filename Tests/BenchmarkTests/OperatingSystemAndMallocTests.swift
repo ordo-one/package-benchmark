@@ -97,7 +97,7 @@ final class OperatingSystemAndMallocTests: XCTestCase {
         XCTAssertTrue(statsProducer.metricSupported(.writeBytesPhysical))
 
         statsProducer.configureMetrics([.readBytesPhysical, .writeBytesPhysical])
-        
+
         let startStats = statsProducer.makeOperatingSystemStats()
 
         let amplificationFactor = 1_000
@@ -112,7 +112,7 @@ final class OperatingSystemAndMallocTests: XCTestCase {
 
         var buffer = (0 ..< stat.st_blksize).map { _ in UInt8.random(in: 0 ... UInt8.max) }
 
-        for _ in (0 ..< amplificationFactor) {
+        for _ in 0 ..< amplificationFactor {
             buffer.withUnsafeBytes { buffer in
                 XCTAssertEqual(write(fildes, buffer.baseAddress, buffer.count), buffer.count, "write() failed: \(errno)")
             }

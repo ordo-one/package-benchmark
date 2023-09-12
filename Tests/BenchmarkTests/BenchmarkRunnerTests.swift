@@ -16,12 +16,12 @@ final class BenchmarkRunnerTests: XCTestCase, BenchmarkRunnerReadWrite {
     private var writeCount: Int = 0
 
     // swiftlint:disable test_case_accessibility
-    internal func write(_: BenchmarkCommandReply) throws {
+    func write(_: BenchmarkCommandReply) throws {
         writeCount += 1
 //        print("write \(reply)")
     }
 
-    internal func read() throws -> BenchmarkCommandRequest {
+    func read() throws -> BenchmarkCommandRequest {
         //      print("read request")
         Benchmark.testSkipBenchmarkRegistrations = true
         let benchmark = Benchmark("Minimal benchmark") { _ in

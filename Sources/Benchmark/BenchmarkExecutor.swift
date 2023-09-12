@@ -12,11 +12,11 @@ import DateTime
 import Progress
 
 #if canImport(OSLog)
-import OSLog
+    import OSLog
 #endif
 
-internal final class BenchmarkExecutor {
-    internal init(quiet: Bool = false) {
+final class BenchmarkExecutor {
+    init(quiet: Bool = false) {
         self.quiet = quiet
     }
 
@@ -37,27 +37,27 @@ internal final class BenchmarkExecutor {
 
         // optionally run a few warmup iterations by default to clean out outliers due to cacheing etc.
 
-#if canImport(OSLog)
-        let logHandler = OSLog(subsystem: "one.ordo.benchmark", category: .pointsOfInterest)
-        let signPost = OSSignposter(logHandle: logHandler)
-        let signpostID = OSSignpostID(log: logHandler)
-        var warmupInterval: OSSignpostIntervalState?
+        #if canImport(OSLog)
+            let logHandler = OSLog(subsystem: "one.ordo.benchmark", category: .pointsOfInterest)
+            let signPost = OSSignposter(logHandle: logHandler)
+            let signpostID = OSSignpostID(log: logHandler)
+            var warmupInterval: OSSignpostIntervalState?
 
-        if benchmark.configuration.warmupIterations > 0 {
-            warmupInterval = signPost.beginInterval("Benchmark", id: signpostID, "\(benchmark.name) warmup")
-        }
-#endif
+            if benchmark.configuration.warmupIterations > 0 {
+                warmupInterval = signPost.beginInterval("Benchmark", id: signpostID, "\(benchmark.name) warmup")
+            }
+        #endif
 
         for iterations in 0 ..< benchmark.configuration.warmupIterations {
             benchmark.currentIteration = iterations
             benchmark.run()
         }
 
-#if canImport(OSLog)
-        if let warmupInterval {
-            signPost.endInterval("Benchmark", warmupInterval, "\(benchmark.configuration.warmupIterations)")
-        }
-#endif
+        #if canImport(OSLog)
+            if let warmupInterval {
+                signPost.endInterval("Benchmark", warmupInterval, "\(benchmark.configuration.warmupIterations)")
+            }
+        #endif
 
         // Could make an array with raw value indexing on enum for
         // performance if needed instead of dictionary
@@ -85,7 +85,7 @@ internal final class BenchmarkExecutor {
                 mallocStatsRequested = true
             }
 
-            if operatingSystemsStatsProducerNeeded(metric) && operatingSystemStatsProducer.metricSupported(metric) {
+            if operatingSystemsStatsProducerNeeded(metric), operatingSystemStatsProducer.metricSupported(metric) {
                 operatingSystemMetricsRequested.insert(metric)
                 operatingSystemStatsRequested = true
             }
@@ -286,9 +286,9 @@ internal final class BenchmarkExecutor {
             ARCStatsProducer.hook()
         }
 
-#if canImport(OSLog)
-        let benchmarkInterval = signPost.beginInterval("Benchmark", id: signpostID, "\(benchmark.name)")
-#endif
+        #if canImport(OSLog)
+            let benchmarkInterval = signPost.beginInterval("Benchmark", id: signpostID, "\(benchmark.name)")
+        #endif
 
         // Run the benchmark at a minimum the desired iterations/runtime --
 
@@ -328,9 +328,9 @@ internal final class BenchmarkExecutor {
             }
         }
 
-#if canImport(OSLog)
-        signPost.endInterval("Benchmark", benchmarkInterval, "\(iterations)")
-#endif
+        #if canImport(OSLog)
+            signPost.endInterval("Benchmark", benchmarkInterval, "\(iterations)")
+        #endif
 
         if arcStatsRequested {
             ARCStatsProducer.unhook()

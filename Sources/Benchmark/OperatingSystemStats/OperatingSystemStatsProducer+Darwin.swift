@@ -24,7 +24,7 @@
         var peakThreadsRunning: Int = 0
         var runState: RunState = .running
         var sampleRate: Int = 10_000
-        var metrics:Set<BenchmarkMetric>?
+        var metrics: Set<BenchmarkMetric>?
 
         enum RunState {
             case running
@@ -75,7 +75,7 @@
             private func getIOStats() -> IOStats {
                 var rinfo = rusage_info_v6()
                 let result = withUnsafeMutablePointer(to: &rinfo) {
-                    $0.withMemoryRebound(to: Optional<rusage_info_t>.self, capacity: 1) {
+                    $0.withMemoryRebound(to: rusage_info_t?.self, capacity: 1) {
                         proc_pid_rusage(getpid(), RUSAGE_INFO_V6, $0)
                     }
                 }
@@ -137,7 +137,7 @@
             #endif
         }
 
-        func configureMetrics(_ metrics:Set<BenchmarkMetric>) {
+        func configureMetrics(_ metrics: Set<BenchmarkMetric>) {
             self.metrics = metrics
         }
 

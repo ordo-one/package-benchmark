@@ -200,7 +200,7 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
     }
 
     // from SO to avoid Foundation/Numerics
-    internal func pow<T: BinaryInteger>(_ base: T, _ power: T) -> T {
+    func pow<T: BinaryInteger>(_ base: T, _ power: T) -> T {
         func expBySq(_ y: T, _ x: T, _ n: T) -> T {
             precondition(n >= 0)
             if n == 0 {
@@ -217,7 +217,7 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
         return expBySq(1, base, power)
     }
 
-    internal var remainingScalingFactor: BenchmarkScalingFactor {
+    var remainingScalingFactor: BenchmarkScalingFactor {
         guard statistics.timeUnits == .automatic else {
             return scalingFactor
         }
@@ -362,8 +362,8 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
         public var improvements: [ThresholdDeviation] = []
 
         public mutating func append(_ otherDeviations: Self) {
-            self.improvements.append(contentsOf: otherDeviations.improvements)
-            self.regressions.append(contentsOf: otherDeviations.regressions)
+            improvements.append(contentsOf: otherDeviations.improvements)
+            regressions.append(contentsOf: otherDeviations.regressions)
         }
     }
 
@@ -390,7 +390,7 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
             let absoluteDifference = (reverseComparison ? -1 : 1) * (lhs - rhs)
             let relativeDifference = (reverseComparison ? 1 : -1) * (rhs != 0 ? (100 - (100.0 * Double(lhs) / Double(rhs))) : 0.0)
 
-            if let threshold = thresholds.relative[percentile], !(-threshold...threshold).contains(relativeDifference) {
+            if let threshold = thresholds.relative[percentile], !(-threshold ... threshold).contains(relativeDifference) {
                 let deviation = ThresholdDeviation(name: name,
                                                    target: target,
                                                    metric: metric,
