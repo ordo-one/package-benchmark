@@ -96,6 +96,8 @@ final class OperatingSystemAndMallocTests: XCTestCase {
         XCTAssertTrue(statsProducer.metricSupported(.readBytesPhysical))
         XCTAssertTrue(statsProducer.metricSupported(.writeBytesPhysical))
 
+        statsProducer.configureMetrics([.readBytesPhysical, .writeBytesPhysical])
+        
         let startStats = statsProducer.makeOperatingSystemStats()
 
         let amplificationFactor = 1_000

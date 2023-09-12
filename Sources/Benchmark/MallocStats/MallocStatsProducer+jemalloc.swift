@@ -111,7 +111,7 @@ import ExtrasJSON
 
         // Parsed stats for convenience, this is a heavy and slow operation not suitable for
         // being called within benchmark iterations
-        func jemallocStatistics() -> Jemalloc? {
+        static func jemallocStatistics() -> Jemalloc? {
             // C style callback needs to use a class instance as a data carrier as we can't
             // capture state in a c-style closure, thus the dance with from/to Opaque.
             typealias CallbackType = @convention(c) (UnsafeMutableRawPointer?, UnsafePointer<CChar>?) -> Void
@@ -134,7 +134,7 @@ import ExtrasJSON
 
         // Full JSON with stats, this is a heavy and slow operation not suitable for
         // being called within benchmark iterations
-        func jsonStatistics() -> String {
+        static func jsonStatistics() -> String {
             // C style callback needs to use a class instance as a data carrier as we can't
             // capture state in a c-style closure, thus the dance with from/to Opaque.
             typealias CallbackType = @convention(c) (UnsafeMutableRawPointer?, UnsafePointer<CChar>?) -> Void
@@ -155,7 +155,7 @@ import ExtrasJSON
 
     // stub if no jemalloc available
     final class MallocStatsProducer {
-        func makeMallocStats() -> MallocStats {
+        static func makeMallocStats() -> MallocStats {
             MallocStats(mallocCountTotal: 0,
                         mallocCountSmall: 0,
                         mallocCountLarge: 0,
