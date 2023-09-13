@@ -45,8 +45,8 @@ let benchmarks = {
             blackHole(temporaryAllocation)
             free(temporaryAllocation)
             array.append(contentsOf: 1 ... 1_000)
+            blackHole(array)
         }
-        blackHole(array)
     }
 
     func concurrentWork(tasks: Int) async {
@@ -59,8 +59,7 @@ let benchmarks = {
         })
     }
 
-    Benchmark("Retain/release deviation",
-              configuration: .init(metrics: BenchmarkMetric.arc, maxDuration: .seconds(3))) { _ in
+    Benchmark("Retain/release deviation") { _ in
         await concurrentWork(tasks: 789)
     }
 }
