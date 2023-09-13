@@ -168,26 +168,8 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
                     benchmark.target = benchmarkToRun.target
 
                     do {
-                        var setupState = try await Benchmark.startupHook?()
-                        if let setupState {
-                            benchmark.setupState = setupState
-                        }
-
-                        setupState = try await Benchmark.setup?()
-                        if let setupState {
-                            benchmark.setupState = setupState
-                        }
-
-                        if let setup = benchmark.configuration.setup {
-                            setupState = try await setup()
-                            if let setupState {
-                                benchmark.setupState = setupState
-                            }
-                        }
-
-                        if let setup = benchmark.setup {
-                            setupState = try await setup()
-                            if let setupState {
+                        for hook in [Benchmark.startupHook, Benchmark.setup, benchmark.configuration.setup, benchmark.setup] {
+                            if let setupState = try await hook?() {
                                 benchmark.setupState = setupState
                             }
                         }
@@ -212,16 +194,9 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
                     results = benchmarkExecutor.run(benchmark)
 
                     do {
-                        if let teardown = benchmark.teardown {
-                            try await teardown()
+                        for hook in [benchmark.teardown, benchmark.configuration.teardown, Benchmark.shutdownHook, Benchmark.teardown] {
+                            try await hook?()
                         }
-
-                        if let teardown = benchmark.configuration.teardown {
-                            try await teardown()
-                        }
-
-                        try await Benchmark.shutdownHook?()
-                        try await Benchmark.teardown?()
                     } catch {
                         try channel.write(.error("Benchmark.teardown or local benchmark teardown failed: \(error)"))
                         return
