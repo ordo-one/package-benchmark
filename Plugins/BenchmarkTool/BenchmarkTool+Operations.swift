@@ -141,21 +141,21 @@ extension BenchmarkTool {
                 }
 
             case .check:
-                if checkAbsoluteThresholds {
+                if checkAbsolute {
                     guard benchmarkBaselines.count == 1 else {
-                        print("Can only do threshold violation checks for exactly 1 benchmark baseline, got: \(benchmarkBaselines.count) baselines.")
+                        print("Can only do absolute threshold violation checks for a single benchmark baseline, got: \(benchmarkBaselines.count) baselines.")
                         return
                     }
-                    if let benchmarkPath = checkAbsoluteThresholdsPath { // load statically defined threshods for .p90
+                    if let benchmarkPath = checkAbsolutePath { // load statically defined threshods for .p90
                         benchmarks.forEach { benchmark in
                             let thresholds = BenchmarkTool.makeBenchmarkThresholds(path: benchmarkPath,
                                                                                    moduleName: benchmark.target,
                                                                                    benchmarkName: benchmark.name)
-                            var transformed: [BenchmarkMetric : BenchmarkThresholds] = [:]
+                            var transformed: [BenchmarkMetric: BenchmarkThresholds] = [:]
                             if let thresholds {
                                 thresholds.forEach { key, value in
                                     if let metric = BenchmarkMetric(argument: key) {
-                                        let absoluteThreshold : BenchmarkThresholds.AbsoluteThresholds = [.p90 : value]
+                                        let absoluteThreshold: BenchmarkThresholds.AbsoluteThresholds = [.p90: value]
                                         transformed[metric] = BenchmarkThresholds(absolute: absoluteThreshold)
                                     }
                                 }
@@ -171,13 +171,21 @@ extension BenchmarkTool {
 
                     let deviationResults = currentBaseline.failsAbsoluteThresholdChecks(benchmarks: benchmarks)
 
-                    if deviationResults.isEmpty {
-                        print("Baseline '\(baselineName)' is BETTER (or equal) than the defined absolute baseline thresholds. (--check-absolute)")
+                    if deviationResults.regressions.isEmpty {
+                        if deviationResults.improvements.isEmpty {
+                            print("Baseline '\(baselineName)' is EQUAL to the defined absolute baseline thresholds. (--check-absolute)")
+                        } else {
+                            prettyPrintAbsoluteDeviation(baselineName: baselineName,
+                                                         deviationResults: deviationResults.improvements)
+
+                            failBenchmark("New baseline '\(baselineName)' is BETTER than the defined absolute baseline thresholds. (--check-absolute)",
+                                          exitCode: .thresholdImprovement)
+                        }
                     } else {
                         prettyPrintAbsoluteDeviation(baselineName: baselineName,
-                                                     deviationResults: deviationResults)
+                                                     deviationResults: deviationResults.regressions)
                         failBenchmark("New baseline '\(baselineName)' is WORSE than the defined absolute baseline thresholds. (--check-absolute)",
-                                      exitCode: .thresholdViolation)
+                                      exitCode: .thresholdRegression)
                     }
                 } else {
                     guard benchmarkBaselines.count == 2 else {
@@ -189,18 +197,26 @@ extension BenchmarkTool {
                     let checkBaseline = benchmarkBaselines[1]
                     let baselineName = baseline[0]
                     let checkBaselineName = baseline[1]
+                    let deviationResults = checkBaseline.deviationsComparedToBaseline(currentBaseline,
+                                                                                      benchmarks: benchmarks)
 
-                    let (betterOrEqual, deviationResults) = checkBaseline.betterResultsOrEqual(than: currentBaseline,
-                                                                                               benchmarks: benchmarks)
-
-                    if betterOrEqual {
-                        print("New baseline '\(checkBaselineName)' is BETTER (or equal) than the '\(baselineName)' baseline thresholds.")
+                    print("")
+                    if deviationResults.regressions.isEmpty {
+                        if deviationResults.improvements.isEmpty {
+                            print("New baseline '\(checkBaselineName)' is WITHIN the '\(baselineName)' baseline thresholds.")
+                        } else {
+                            prettyPrintDeviation(baselineName: baselineName,
+                                                 comparingBaselineName: checkBaselineName,
+                                                 deviationResults: deviationResults.improvements)
+                            failBenchmark("New baseline '\(checkBaselineName)' is BETTER than the '\(baselineName)' baseline thresholds.",
+                                          exitCode: .thresholdImprovement)
+                        }
                     } else {
                         prettyPrintDeviation(baselineName: baselineName,
                                              comparingBaselineName: checkBaselineName,
-                                             deviationResults: deviationResults)
+                                             deviationResults: deviationResults.regressions)
                         failBenchmark("New baseline '\(checkBaselineName)' is WORSE than the '\(baselineName)' baseline thresholds.",
-                                      exitCode: .thresholdViolation)
+                                      exitCode: .thresholdRegression)
                     }
                 }
             case .read:

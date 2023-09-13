@@ -229,7 +229,7 @@ extension BenchmarkTool {
                     value.forEach { currentResult in
                         var result = currentResult
                         if let base = baselineComparison.first(where: { $0.metric == result.metric }) {
-                            let (hideResults, _) = result.betterResultsOrEqual(than: base, thresholds: result.thresholds ?? BenchmarkThresholds.none)
+                            let hideResults = result.deviationsComparedWith(base, thresholds: result.thresholds ?? BenchmarkThresholds.none).regressions.isEmpty
 
                             // We hide the markdown results if they are better than baseline to cut down noise
                             if format == .markdown {
@@ -371,14 +371,14 @@ extension BenchmarkTool {
         guard quiet == false else { return }
 
         let metrics = deviationResults.map(\.metric).unique()
-        // Get a unique set of all name/target pairs that have threshold violations, sorted lexically:
+        // Get a unique set of all name/target pairs that have threshold deviations, sorted lexically:
         let namesAndTargets = deviationResults.map { NameAndTarget(name: $0.name, target: $0.target) }
             .unique().sorted { ($0.target, $0.name) < ($1.target, $1.name) }
 
         namesAndTargets.forEach { nameAndTarget in
 
             printMarkdown("```")
-            "Threshold violations for \(nameAndTarget.name):\(nameAndTarget.target)".printAsHeader(addWhiteSpace: false)
+            "Threshold deviations for \(nameAndTarget.name):\(nameAndTarget.target)".printAsHeader(addWhiteSpace: false)
             printMarkdown("```")
 
             metrics.forEach { metric in
@@ -435,14 +435,14 @@ extension BenchmarkTool {
         guard quiet == false else { return }
 
         let metrics = deviationResults.map(\.metric).unique()
-        // Get a unique set of all name/target pairs that have threshold violations, sorted lexically:
+        // Get a unique set of all name/target pairs that have threshold deviations, sorted lexically:
         let namesAndTargets = deviationResults.map { NameAndTarget(name: $0.name, target: $0.target) }
             .unique().sorted { ($0.target, $0.name) < ($1.target, $1.name) }
 
         namesAndTargets.forEach { nameAndTarget in
 
             printMarkdown("```")
-            "Absolute threshold violations for \(nameAndTarget.name):\(nameAndTarget.target)".printAsHeader(addWhiteSpace: false)
+            "Absolute threshold deviations for \(nameAndTarget.name):\(nameAndTarget.target)".printAsHeader(addWhiteSpace: false)
             printMarkdown("```")
 
             metrics.forEach { metric in

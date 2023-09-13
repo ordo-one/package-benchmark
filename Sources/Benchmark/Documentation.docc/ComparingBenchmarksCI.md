@@ -33,6 +33,8 @@ These baselines can then be checked with:
 swift package benchmark baseline check --check-absolute-path /relative/or/absolute/path/to/Thresholds
 ```
 
+The absolute check will have an exit code of 0 if the check is exactly equal, but will return with exit code 2 if there were any regressions or exit code 4 if there were only improvements.
+
 ### Example GitHub CI workflow comparing against a baseline
 
 The following GitHub workflow provides an example of comparing any pull request against the `main` branch of your repository, failing on a comparison regression.

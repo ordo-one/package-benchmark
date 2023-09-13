@@ -10,12 +10,26 @@
 import Benchmark
 import Foundation
 
+#if canImport(Darwin)
+    import Darwin
+#elseif canImport(Glibc)
+    import Glibc
+#else
+    #error("Unsupported Platform")
+#endif
+
 let benchmarks = {
-    Benchmark.defaultConfiguration = .init(metrics: [.mallocCountTotal, .syscalls],
+    var thresholds: [BenchmarkMetric: BenchmarkThresholds]
+    let relative: BenchmarkThresholds.RelativeThresholds = [.p25: 25.0, .p50: 50.0, .p75: 75.0, .p90: 100.0, .p99: 101.0, .p100: 201.0]
+    let absolute: BenchmarkThresholds.AbsoluteThresholds = [.p75: 999, .p90: 1_000, .p99: 1_001, .p100: 2_001]
+    thresholds = [.mallocCountTotal: .init(relative: relative, absolute: absolute)]
+
+    Benchmark.defaultConfiguration = .init(metrics: [.mallocCountTotal, .syscalls] + .arc,
                                            warmupIterations: 1,
                                            scalingFactor: .kilo,
                                            maxDuration: .seconds(2),
-                                           maxIterations: .kilo(100))
+                                           maxIterations: .kilo(100),
+                                           thresholds: thresholds)
 
     Benchmark("P90Date") { benchmark in
         for _ in benchmark.scaledIterations {
@@ -24,10 +38,28 @@ let benchmarks = {
     }
 
     Benchmark("P90Malloc") { benchmark in
+        var array: [Int] = []
+
         for _ in benchmark.scaledIterations {
-            var array: [Int] = []
-            array.append(contentsOf: 0 ... 1_000)
+            var temporaryAllocation = malloc(1)
+            blackHole(temporaryAllocation)
+            free(temporaryAllocation)
+            array.append(contentsOf: 1 ... 1_000)
             blackHole(array)
         }
+    }
+
+    func concurrentWork(tasks: Int) async {
+        _ = await withTaskGroup(of: Void.self, returning: Void.self, body: { taskGroup in
+            for _ in 0 ..< tasks {
+                taskGroup.addTask {}
+            }
+
+            for await _ in taskGroup {}
+        })
+    }
+
+    Benchmark("Retain/release deviation") { _ in
+        await concurrentWork(tasks: 789)
     }
 }

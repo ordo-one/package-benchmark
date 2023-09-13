@@ -11,15 +11,17 @@
 import DateTime
 import Progress
 
-internal final class BenchmarkExecutor {
-    internal init(quiet: Bool = false) {
+#if canImport(OSLog)
+    import OSLog
+#endif
+
+final class BenchmarkExecutor {
+    init(quiet: Bool = false) {
         self.quiet = quiet
     }
 
     var quiet: Bool
-    let mallocStatsProducer = MallocStatsProducer()
     let operatingSystemStatsProducer = OperatingSystemStatsProducer()
-    let arcStatsProducer = ARCStatsProducer()
 
     // swiftlint:disable cyclomatic_complexity function_body_length
     func run(_ benchmark: Benchmark) -> [BenchmarkResult] {
@@ -28,17 +30,34 @@ internal final class BenchmarkExecutor {
         var stopMallocStats = MallocStats()
         var startOperatingSystemStats = OperatingSystemStats()
         var stopOperatingSystemStats = OperatingSystemStats()
-        var startARCStats = ARCStats(retainCount: 0, releaseCount: 0)
-        var stopARCStats = ARCStats(retainCount: 0, releaseCount: 0)
+        var startARCStats = ARCStats()
+        var stopARCStats = ARCStats()
         var startTime = BenchmarkClock.now
         var stopTime = BenchmarkClock.now
 
         // optionally run a few warmup iterations by default to clean out outliers due to cacheing etc.
 
+        #if canImport(OSLog)
+            let logHandler = OSLog(subsystem: "one.ordo.benchmark", category: .pointsOfInterest)
+            let signPost = OSSignposter(logHandle: logHandler)
+            let signpostID = OSSignpostID(log: logHandler)
+            var warmupInterval: OSSignpostIntervalState?
+
+            if benchmark.configuration.warmupIterations > 0 {
+                warmupInterval = signPost.beginInterval("Benchmark", id: signpostID, "\(benchmark.name) warmup")
+            }
+        #endif
+
         for iterations in 0 ..< benchmark.configuration.warmupIterations {
             benchmark.currentIteration = iterations
             benchmark.run()
         }
+
+        #if canImport(OSLog)
+            if let warmupInterval {
+                signPost.endInterval("Benchmark", warmupInterval, "\(benchmark.configuration.warmupIterations)")
+            }
+        #endif
 
         // Could make an array with raw value indexing on enum for
         // performance if needed instead of dictionary
@@ -46,6 +65,7 @@ internal final class BenchmarkExecutor {
         var operatingSystemStatsRequested = false
         var mallocStatsRequested = false
         var arcStatsRequested = false
+        var operatingSystemMetricsRequested: Set<BenchmarkMetric> = []
 
         // Create metric statistics as needed
         benchmark.configuration.metrics.forEach { metric in
@@ -65,7 +85,8 @@ internal final class BenchmarkExecutor {
                 mallocStatsRequested = true
             }
 
-            if operatingSystemsStatsProducerNeeded(metric) {
+            if operatingSystemsStatsProducerNeeded(metric), operatingSystemStatsProducer.metricSupported(metric) {
+                operatingSystemMetricsRequested.insert(metric)
                 operatingSystemStatsRequested = true
             }
 
@@ -74,23 +95,36 @@ internal final class BenchmarkExecutor {
             }
         }
 
+        operatingSystemStatsProducer.configureMetrics(operatingSystemMetricsRequested)
+
         var iterations = 0
         let initialStartTime = BenchmarkClock.now
+
+        // 'Warmup' to remove initial mallocs from stats in p100
+        if mallocStatsRequested {
+            _ = MallocStatsProducer.makeMallocStats()
+        }
+
+        if operatingSystemStatsRequested {
+            _ = operatingSystemStatsProducer.makeOperatingSystemStats()
+        }
 
         // Hook that is called before the actual benchmark closure run, so we can capture metrics here
         // NB this code may be called twice if the user calls startMeasurement() manually and should
         // then reset to a new starting state.
+        // NB that the order is important, as we will get leaked
+        // ARC measurements if initializing it before malloc etc.
         benchmark.measurementPreSynchronization = {
-            if mallocStatsRequested {
-                startMallocStats = self.mallocStatsProducer.makeMallocStats()
-            }
-
             if operatingSystemStatsRequested {
                 startOperatingSystemStats = self.operatingSystemStatsProducer.makeOperatingSystemStats()
             }
 
+            if mallocStatsRequested {
+                startMallocStats = MallocStatsProducer.makeMallocStats()
+            }
+
             if arcStatsRequested {
-                startARCStats = self.arcStatsProducer.makeARCStats()
+                startARCStats = ARCStatsProducer.makeARCStats()
             }
 
             startTime = BenchmarkClock.now // must be last in closure
@@ -102,15 +136,15 @@ internal final class BenchmarkExecutor {
             stopTime = BenchmarkClock.now // must be first in closure
 
             if arcStatsRequested {
-                stopARCStats = self.arcStatsProducer.makeARCStats()
+                stopARCStats = ARCStatsProducer.makeARCStats()
+            }
+
+            if mallocStatsRequested {
+                stopMallocStats = MallocStatsProducer.makeMallocStats()
             }
 
             if operatingSystemStatsRequested {
                 stopOperatingSystemStats = self.operatingSystemStatsProducer.makeOperatingSystemStats()
-            }
-
-            if mallocStatsRequested {
-                stopMallocStats = self.mallocStatsProducer.makeMallocStats()
             }
 
             var delta = 0
@@ -136,13 +170,16 @@ internal final class BenchmarkExecutor {
             }
 
             if arcStatsRequested {
-                let retainDelta = stopARCStats.retainCount - startARCStats.retainCount
+                let objectAllocDelta = stopARCStats.objectAllocCount - startARCStats.objectAllocCount
+                statistics[.objectAllocCount]?.add(Int(objectAllocDelta))
+
+                let retainDelta = stopARCStats.retainCount - startARCStats.retainCount - 1 // due to some ARC traffic in the path
                 statistics[.retainCount]?.add(Int(retainDelta))
 
-                let releaseDelta = stopARCStats.releaseCount - startARCStats.releaseCount
+                let releaseDelta = stopARCStats.releaseCount - startARCStats.releaseCount - 1 // due to some ARC traffic in the path
                 statistics[.releaseCount]?.add(Int(releaseDelta))
 
-                statistics[.retainReleaseDelta]?.add(Int(abs(retainDelta - releaseDelta)))
+                statistics[.retainReleaseDelta]?.add(Int(abs(objectAllocDelta + retainDelta - releaseDelta)))
             }
 
             if mallocStatsRequested {
@@ -246,8 +283,12 @@ internal final class BenchmarkExecutor {
         var nextPercentageToUpdateProgressBar = 0
 
         if arcStatsRequested {
-            arcStatsProducer.hook()
+            ARCStatsProducer.hook()
         }
+
+        #if canImport(OSLog)
+            let benchmarkInterval = signPost.beginInterval("Benchmark", id: signpostID, "\(benchmark.name)")
+        #endif
 
         // Run the benchmark at a minimum the desired iterations/runtime --
 
@@ -287,8 +328,12 @@ internal final class BenchmarkExecutor {
             }
         }
 
+        #if canImport(OSLog)
+            signPost.endInterval("Benchmark", benchmarkInterval, "\(iterations)")
+        #endif
+
         if arcStatsRequested {
-            arcStatsProducer.unhook()
+            ARCStatsProducer.unhook()
         }
 
         if var progressBar {

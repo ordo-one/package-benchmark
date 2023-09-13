@@ -33,25 +33,25 @@
 /// `SRWLOCK` type.
 struct NIOLock {
     @usableFromInline
-    internal let _storage: _Storage
+    let _storage: _Storage
 
     #if os(Windows)
         @usableFromInline
-        internal typealias LockPrimitive = SRWLOCK
+        typealias LockPrimitive = SRWLOCK
     #else
         @usableFromInline
-        internal typealias LockPrimitive = pthread_mutex_t
+        typealias LockPrimitive = pthread_mutex_t
     #endif
 
     @usableFromInline
-    internal final class _Storage {
+    final class _Storage {
         // TODO: We should tail-allocate the pthread_t/SRWLock.
         @usableFromInline
-        internal let mutex: UnsafeMutablePointer<LockPrimitive> =
+        let mutex: UnsafeMutablePointer<LockPrimitive> =
             UnsafeMutablePointer.allocate(capacity: 1)
 
         /// Create a new lock.
-        internal init() {
+        init() {
             #if os(Windows)
                 InitializeSRWLock(mutex)
             #else
@@ -63,7 +63,7 @@ struct NIOLock {
             #endif
         }
 
-        internal func lock() {
+        func lock() {
             #if os(Windows)
                 AcquireSRWLockExclusive(mutex)
             #else
@@ -72,7 +72,7 @@ struct NIOLock {
             #endif
         }
 
-        internal func unlock() {
+        func unlock() {
             #if os(Windows)
                 ReleaseSRWLockExclusive(mutex)
             #else
@@ -81,7 +81,7 @@ struct NIOLock {
             #endif
         }
 
-        internal func withLockPrimitive<T>(_ body: (UnsafeMutablePointer<LockPrimitive>) throws -> T) rethrows -> T {
+        func withLockPrimitive<T>(_ body: (UnsafeMutablePointer<LockPrimitive>) throws -> T) rethrows -> T {
             try body(mutex)
         }
 
@@ -117,7 +117,7 @@ struct NIOLock {
         _storage.unlock()
     }
 
-    internal func withLockPrimitive<T>(_ body: (UnsafeMutablePointer<LockPrimitive>) throws -> T) rethrows -> T {
+    func withLockPrimitive<T>(_ body: (UnsafeMutablePointer<LockPrimitive>) throws -> T) rethrows -> T {
         try _storage.withLockPrimitive(body)
     }
 }

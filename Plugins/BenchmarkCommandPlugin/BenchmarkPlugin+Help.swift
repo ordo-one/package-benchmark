@@ -53,7 +53,7 @@ let help =
     --path <path>           The path where exported data is stored, default is the current directory (".").
     --quiet                 Specifies that output should be suppressed (useful for if you just want to check return code)
     --scale                 Specifies that some of the text output should be scaled using the scalingFactor (denoted by '*' in output)
-    --check-absolute-thresholds
+    --check-absolute
                           Set to true if thresholds should be checked against an absolute reference point rather than delta between baselines.
                           This is used for CI workflows when you want to validate the thresholds vs. a persisted benchmark baseline
                           rather than comparing PR vs main or vs a current run. This is useful to cut down the build matrix needed
@@ -61,7 +61,7 @@ let help =
                           a specific check against a given absolute reference.).
                           If this is enabled, zero or one baselines should be specified for the check operation.
                           By default, thresholds are checked comparing two baselines, or a baseline and a benchmark run.
-    --check-absolute-thresholds-path <check-absolute-thresholds-path>
+    --check-absolute-path <check-absolute-path>
                           The path from which p90 thresholds will be loaded for absolute threshold checks.
                           This implicitly sets --check-absolute to true as well.
     --no-progress           Specifies that benchmark progress information should not be displayed

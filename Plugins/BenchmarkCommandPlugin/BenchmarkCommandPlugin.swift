@@ -223,9 +223,9 @@ import PackagePlugin
                 print("Only a single path for thresholds can be specified, got \(checkAbsoluteThresholdsPath.count).")
                 return
             }
-            args.append(contentsOf: ["--check-absolute-thresholds"])
+            args.append(contentsOf: ["--check-absolute"])
             if let path = checkAbsoluteThresholdsPath.first {
-                args.append(contentsOf: ["--check-absolute-thresholds-path", path])
+                args.append(contentsOf: ["--check-absolute-path", path])
             }
         }
 
@@ -336,11 +336,12 @@ import PackagePlugin
                         case .genericFailure:
                             print("One or more benchmark suites crashed during runtime.")
                             throw MyError.benchmarkCrashed
-                        case .thresholdViolation:
-                            throw MyError.benchmarkThresholdDeviation
+                        case .thresholdRegression:
+                            throw MyError.benchmarkThresholdRegression
+                        case .thresholdImprovement:
+                            throw MyError.benchmarkThresholdImprovement
                         case .benchmarkJobFailed:
                             print("One benchmark job failed during runtime, continuing with remaining.")
-                            break
                         }
                     } else {
                         print("One or more benchmarks returned an unexpected return code \(status)")
@@ -357,7 +358,8 @@ import PackagePlugin
     }
 
     enum MyError: Error {
-        case benchmarkThresholdDeviation
+        case benchmarkThresholdRegression
+        case benchmarkThresholdImprovement
         case benchmarkCrashed
         case benchmarkUnexpectedReturnCode
         case invalidArgument

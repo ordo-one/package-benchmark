@@ -60,6 +60,7 @@ enum BaselineOperation: String, CaseIterable {
 enum ExitCode: Int32 {
     case success = 0
     case genericFailure = 1
-    case thresholdViolation = 2
+    case thresholdRegression = 2
     case benchmarkJobFailed = 3
+    case thresholdImprovement = 4
 }

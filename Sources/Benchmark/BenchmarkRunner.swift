@@ -70,7 +70,7 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
         If this is enabled, zero or one baselines should be specified for the check operation.
         By default, thresholds are checked comparing two baselines, or a baseline and a benchmark run.
         """)
-    var checkAbsoluteThresholds = false
+    var checkAbsolute = false
 
     @Flag(name: .shortAndLong, help: "True if we should run the benchmarks for all metrics.")
     var allMetrics = false
@@ -87,7 +87,7 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
     public static func setupBenchmarkRunner(registerBenchmarks: () -> Void) async {
         do {
             var command = Self.parseOrExit()
-            Benchmark.checkAbsoluteThresholds = command.checkAbsoluteThresholds
+            Benchmark.checkAbsoluteThresholds = command.checkAbsolute
             registerBenchmarks()
             try await command.run()
         } catch {
@@ -168,15 +168,10 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
                     benchmark.target = benchmarkToRun.target
 
                     do {
-                        try await Benchmark.startupHook?()
-                        try await Benchmark.setup?()
-
-                        if let setup = benchmark.configuration.setup {
-                            try await setup()
-                        }
-
-                        if let setup = benchmark.setup {
-                            try await setup()
+                        for hook in [Benchmark.startupHook, Benchmark.setup, benchmark.configuration.setup, benchmark.setup] {
+                            if let setupState = try await hook?() {
+                                benchmark.setupState = setupState
+                            }
                         }
                     } catch {
                         let description = """
@@ -199,16 +194,9 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
                     results = benchmarkExecutor.run(benchmark)
 
                     do {
-                        if let teardown = benchmark.teardown {
-                            try await teardown()
+                        for hook in [benchmark.teardown, benchmark.configuration.teardown, Benchmark.shutdownHook, Benchmark.teardown] {
+                            try await hook?()
                         }
-
-                        if let teardown = benchmark.configuration.teardown {
-                            try await teardown()
-                        }
-
-                        try await Benchmark.shutdownHook?()
-                        try await Benchmark.teardown?()
                     } catch {
                         try channel.write(.error("Benchmark.teardown or local benchmark teardown failed: \(error)"))
                         return
