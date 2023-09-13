@@ -22,7 +22,6 @@ public extension Benchmark {
         }
     }
 
-    
 /// Definition of an async Benchmark
     /// - Parameters:
     ///   - name: The name used for display purposes of the benchmark (also used for
