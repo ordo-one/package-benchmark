@@ -408,7 +408,7 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
                 }
             }
 
-            if let threshold = thresholds.absolute[percentile], abs(absoluteDifference) > threshold {
+            if let threshold = thresholds.absolute[percentile], !(-threshold ... threshold).contains(absoluteDifference) {
                 let deviation = ThresholdDeviation(name: name,
                                                    target: target,
                                                    metric: metric,
