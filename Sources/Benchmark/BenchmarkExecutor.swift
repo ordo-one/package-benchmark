@@ -227,7 +227,7 @@ final class BenchmarkExecutor {
 
                 delta = stopOperatingSystemStats.syscalls -
                 startOperatingSystemStats.syscalls - operatingSystemStatsOverhead.syscalls
-                statistics[.syscalls]?.add(Int(delta))
+                statistics[.syscalls]?.add(Int(max(0, delta)))
 
                 delta = stopOperatingSystemStats.contextSwitches -
                     startOperatingSystemStats.contextSwitches
@@ -241,7 +241,7 @@ final class BenchmarkExecutor {
 
                 delta = stopOperatingSystemStats.readSyscalls -
                     startOperatingSystemStats.readSyscalls - operatingSystemStatsOverhead.readSyscalls
-                statistics[.readSyscalls]?.add(Int(delta))
+                statistics[.readSyscalls]?.add(Int(max(0, delta)))
 
                 delta = stopOperatingSystemStats.writeSyscalls -
                     startOperatingSystemStats.writeSyscalls
