@@ -105,8 +105,17 @@ final class BenchmarkExecutor {
             _ = MallocStatsProducer.makeMallocStats()
         }
 
+        // Calculate typical sys call check overhead and deduct that to get 'clean' stats for the actual benchmark
+        var operatingSystemStatsOverhead = OperatingSystemStats()
         if operatingSystemStatsRequested {
-            _ = operatingSystemStatsProducer.makeOperatingSystemStats()
+            let statsOne = operatingSystemStatsProducer.makeOperatingSystemStats()
+            let statsTwo = operatingSystemStatsProducer.makeOperatingSystemStats()
+
+            operatingSystemStatsOverhead.syscalls = statsTwo.syscalls - statsOne.syscalls
+            operatingSystemStatsOverhead.readSyscalls = statsTwo.readSyscalls - statsOne.readSyscalls
+            operatingSystemStatsOverhead.readBytesLogical = statsTwo.readBytesLogical - statsOne.readBytesLogical
+            operatingSystemStatsOverhead.readBytesPhysical = statsTwo.readBytesPhysical - statsOne.readBytesPhysical
+            print("operatingSystemStatsOverhead - \(operatingSystemStatsOverhead)")
         }
 
         // Hook that is called before the actual benchmark closure run, so we can capture metrics here
@@ -217,7 +226,7 @@ final class BenchmarkExecutor {
                 statistics[.peakMemoryVirtual]?.add(Int(delta))
 
                 delta = stopOperatingSystemStats.syscalls -
-                startOperatingSystemStats.syscalls - self.operatingSystemStatsProducer.syscallsNeeded() // subtract for our own calls
+                startOperatingSystemStats.syscalls - operatingSystemStatsOverhead.syscalls
                 statistics[.syscalls]?.add(Int(delta))
 
                 delta = stopOperatingSystemStats.contextSwitches -
@@ -231,7 +240,7 @@ final class BenchmarkExecutor {
                 statistics[.threadsRunning]?.add(Int(delta))
 
                 delta = stopOperatingSystemStats.readSyscalls -
-                    startOperatingSystemStats.readSyscalls
+                    startOperatingSystemStats.readSyscalls - operatingSystemStatsOverhead.readSyscalls
                 statistics[.readSyscalls]?.add(Int(delta))
 
                 delta = stopOperatingSystemStats.writeSyscalls -
@@ -239,16 +248,16 @@ final class BenchmarkExecutor {
                 statistics[.writeSyscalls]?.add(Int(delta))
 
                 delta = stopOperatingSystemStats.readBytesLogical -
-                    startOperatingSystemStats.readBytesLogical
-                statistics[.readBytesLogical]?.add(Int(delta))
+                    startOperatingSystemStats.readBytesLogical - operatingSystemStatsOverhead.readBytesLogical
+                statistics[.readBytesLogical]?.add(Int(max(0, delta)))
 
                 delta = stopOperatingSystemStats.writeBytesLogical -
                     startOperatingSystemStats.writeBytesLogical
                 statistics[.writeBytesLogical]?.add(Int(delta))
 
                 delta = stopOperatingSystemStats.readBytesPhysical -
-                    startOperatingSystemStats.readBytesPhysical
-                statistics[.readBytesPhysical]?.add(Int(delta))
+                    startOperatingSystemStats.readBytesPhysical - operatingSystemStatsOverhead.readBytesPhysical
+                statistics[.readBytesPhysical]?.add(Int(max(0, delta)))
 
                 delta = stopOperatingSystemStats.writeBytesPhysical -
                     startOperatingSystemStats.writeBytesPhysical

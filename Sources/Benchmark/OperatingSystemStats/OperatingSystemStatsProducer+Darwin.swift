@@ -87,14 +87,6 @@
             }
         #endif
 
-        // We should add unit tests for these, also handle sampling use case for nthreads
-        func syscallsNeeded() -> Int {
-            if let metrics, metrics.contains(.writeBytesPhysical) || metrics.contains(.writeBytesPhysical) {
-                return 2
-            }
-            return 1
-        }
-
         func startSampling(_: Int = 10_000) { // sample rate in microseconds
             #if os(macOS)
                 DispatchQueue.global(qos: .userInitiated).async {

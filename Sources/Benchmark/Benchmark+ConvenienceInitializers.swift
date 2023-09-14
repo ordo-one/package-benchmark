@@ -15,10 +15,12 @@ public extension Benchmark {
         self.init(name, configuration: configuration) { benchmark in
             let setupResult = benchmark.setupState! as! SetupResult // swiftlint:disable:this force_cast
             closure(benchmark, setupResult)
-        } setup: {
-            try await setup()
         } teardown: {
             try await teardown?()
+        }
+
+        self.setup = {
+            self.setupState = try await setup()
         }
     }
 
@@ -38,10 +40,12 @@ public extension Benchmark {
         self.init(name, configuration: configuration) { benchmark in
             let setupResult = benchmark.setupState! as! SetupResult // swiftlint:disable:this force_cast
             await closure(benchmark, setupResult)
-        } setup: {
-            try await setup()
         } teardown: {
             try await teardown?()
+        }
+
+        self.setup = {
+            self.setupState = try await setup()
         }
     }
 
@@ -56,7 +60,7 @@ public extension Benchmark {
     convenience init?<SetupResult>(_ name: String,
                                    configuration: Benchmark.Configuration = Benchmark.defaultConfiguration,
                                    closure: @escaping (_ benchmark: Benchmark, SetupResult) throws -> Void,
-                                   setup: (() async throws -> SetupResult)? = nil,
+                                   setup: @escaping (() async throws -> SetupResult),
                                    teardown: BenchmarkTeardownHook? = nil) {
         self.init(name, configuration: configuration, closure: { benchmark in
             do {
@@ -65,7 +69,11 @@ public extension Benchmark {
             } catch {
                 benchmark.error("Benchmark \(name) failed with \(error)")
             }
-        }, setup: setup, teardown: teardown)
+        }, teardown: teardown)
+
+        self.setup = {
+            self.setupState = try await setup()
+        }
     }
 
     /// Definition of an async throwing Benchmark
@@ -79,7 +87,7 @@ public extension Benchmark {
     convenience init?<SetupResult>(_ name: String,
                                    configuration: Benchmark.Configuration = Benchmark.defaultConfiguration,
                                    closure: @escaping (_ benchmark: Benchmark, SetupResult) async throws -> Void,
-                                   setup: (() async throws -> SetupResult)? = nil,
+                                   setup: @escaping (() async throws -> SetupResult),
                                    teardown: BenchmarkTeardownHook? = nil) {
         self.init(name, configuration: configuration, closure: { benchmark in
             do {
@@ -88,6 +96,10 @@ public extension Benchmark {
             } catch {
                 benchmark.error("Benchmark \(name) failed with \(error)")
             }
-        }, setup: setup, teardown: teardown)
+        }, teardown: teardown)
+
+        self.setup = {
+            self.setupState = try await setup()
+        }
     }
 }

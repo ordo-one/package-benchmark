@@ -169,9 +169,7 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
 
                     do {
                         for hook in [Benchmark.startupHook, Benchmark.setup, benchmark.configuration.setup, benchmark.setup] {
-                            if let setupState = try await hook?() {
-                                benchmark.setupState = setupState
-                            }
+                            try await hook?()
                         }
                     } catch {
                         let description = """
