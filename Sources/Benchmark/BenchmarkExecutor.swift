@@ -217,7 +217,7 @@ final class BenchmarkExecutor {
                 statistics[.peakMemoryVirtual]?.add(Int(delta))
 
                 delta = stopOperatingSystemStats.syscalls -
-                    startOperatingSystemStats.syscalls
+                startOperatingSystemStats.syscalls - self.operatingSystemStatsProducer.syscallsNeeded() // subtract for our own calls
                 statistics[.syscalls]?.add(Int(delta))
 
                 delta = stopOperatingSystemStats.contextSwitches -

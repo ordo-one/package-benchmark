@@ -25,6 +25,7 @@
         var runState: RunState = .running
         var sampleRate: Int = 10_000
         var metrics: Set<BenchmarkMetric>?
+        var pid = getpid()
 
         enum RunState {
             case running
@@ -59,7 +60,7 @@
                 var procTaskInfo = proc_taskinfo()
                 let procTaskInfoSize = MemoryLayout<proc_taskinfo>.size
 
-                let result = proc_pidinfo(getpid(), PROC_PIDTASKINFO, 0, &procTaskInfo, Int32(procTaskInfoSize))
+                let result = proc_pidinfo(pid, PROC_PIDTASKINFO, 0, &procTaskInfo, Int32(procTaskInfoSize))
 
                 if result != procTaskInfoSize {
                     fatalError("proc_pidinfo returned an error \(errno)")
@@ -76,7 +77,7 @@
                 var rinfo = rusage_info_v6()
                 let result = withUnsafeMutablePointer(to: &rinfo) {
                     $0.withMemoryRebound(to: rusage_info_t?.self, capacity: 1) {
-                        proc_pid_rusage(getpid(), RUSAGE_INFO_V6, $0)
+                        proc_pid_rusage(pid, RUSAGE_INFO_V6, $0)
                     }
                 }
                 if result != 0 {
@@ -85,6 +86,14 @@
                 return .init(bytesRead: rinfo.ri_diskio_bytesread, bytesWritten: rinfo.ri_diskio_byteswritten)
             }
         #endif
+
+        // We should add unit tests for these, also handle sampling use case for nthreads
+        func syscallsNeeded() -> Int {
+            if let metrics, metrics.contains(.writeBytesPhysical) || metrics.contains(.writeBytesPhysical) {
+                return 2
+            }
+            return 1
+        }
 
         func startSampling(_: Int = 10_000) { // sample rate in microseconds
             #if os(macOS)

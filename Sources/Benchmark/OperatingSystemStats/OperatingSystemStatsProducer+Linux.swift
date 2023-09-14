@@ -118,6 +118,14 @@
                                         writeBytesPhysical: Int(ioStats.writeBytesPhysical))
         }
 
+        // We should add unit tests for these, also handle sampling use case for nthreads
+        func syscallsNeeded() -> Int {
+            if let metrics, metrics.contains(.writeBytesPhysical) || metrics.contains(.writeBytesPhysical) {
+                return 0
+            }
+            return 0
+        }
+
         func metricSupported(_ metric: BenchmarkMetric) -> Bool {
             switch metric {
             case .syscalls:
