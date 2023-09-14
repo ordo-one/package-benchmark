@@ -15,7 +15,7 @@ import Progress
     import OSLog
 #endif
 
-final class BenchmarkExecutor {
+final class BenchmarkExecutor { // swiftlint:disable:this type_body_length
     init(quiet: Bool = false) {
         self.quiet = quiet
     }
