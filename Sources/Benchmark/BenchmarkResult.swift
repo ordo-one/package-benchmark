@@ -461,7 +461,10 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
                 let absoluteDifference = (reverseComparison ? -1 : 1) * (lhs - threshold)
 
                 if absoluteDifference != 0 {
-                    let deviation = ThresholdDeviation(name: name,
+                    let normalizedDifference = normalize(absoluteDifference)
+                    let deviation: ThresholdDeviation
+                    if normalizedDifference != 0 {
+                        deviation = ThresholdDeviation(name: name,
                                                        target: target,
                                                        metric: metric,
                                                        percentile: percentile,
@@ -471,6 +474,18 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
                                                        differenceThreshold: normalize(absoluteDifference),
                                                        relative: false,
                                                        units: scalingFactor)
+                    } else {
+                        deviation = ThresholdDeviation(name: name,
+                                                       target: target,
+                                                       metric: metric,
+                                                       percentile: percentile,
+                                                       baseValue: lhs,
+                                                       comparisonValue: threshold,
+                                                       difference: absoluteDifference,
+                                                       differenceThreshold: absoluteDifference,
+                                                       relative: false,
+                                                       units: .count)
+                    }
                     if absoluteDifference < 0 {
                         thresholdResults.improvements.append(deviation)
                     } else {
