@@ -115,7 +115,6 @@ final class BenchmarkExecutor { // swiftlint:disable:this type_body_length
             operatingSystemStatsOverhead.readSyscalls = statsTwo.readSyscalls - statsOne.readSyscalls
             operatingSystemStatsOverhead.readBytesLogical = statsTwo.readBytesLogical - statsOne.readBytesLogical
             operatingSystemStatsOverhead.readBytesPhysical = statsTwo.readBytesPhysical - statsOne.readBytesPhysical
-            print("operatingSystemStatsOverhead - \(operatingSystemStatsOverhead)")
         }
 
         // Hook that is called before the actual benchmark closure run, so we can capture metrics here
@@ -226,7 +225,7 @@ final class BenchmarkExecutor { // swiftlint:disable:this type_body_length
                 statistics[.peakMemoryVirtual]?.add(Int(delta))
 
                 delta = stopOperatingSystemStats.syscalls -
-                startOperatingSystemStats.syscalls - operatingSystemStatsOverhead.syscalls
+                    startOperatingSystemStats.syscalls - operatingSystemStatsOverhead.syscalls
                 statistics[.syscalls]?.add(Int(max(0, delta)))
 
                 delta = stopOperatingSystemStats.contextSwitches -
