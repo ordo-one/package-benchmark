@@ -40,7 +40,7 @@ public final class Benchmark: Codable, Hashable {
     public typealias BenchmarkCustomMetricMeasurement = (BenchmarkMetric, Int) -> Void
 
     /// Alias for closures used to hook into setup / teardown
-    public typealias BenchmarkSetupHook = () async throws -> Any?
+    public typealias BenchmarkSetupHook = () async throws -> Void
     public typealias BenchmarkTeardownHook = () async throws -> Void
 
     #if swift(>=5.8)
