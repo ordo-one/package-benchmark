@@ -54,11 +54,11 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: "lts/*"
+          node-version: '18'
 
       - name: Install semantic-release
         run: |
-          npm install semantic-release conventional-changelog-conventionalcommits@6.1.0 -D
+          npm install semantic-release conventional-changelog-conventionalcommits -D
           npm list
       - name: Release
         env:
