@@ -106,6 +106,16 @@ This implicitly sets --check-absolute to true as well.
 -h, --help              Show help information.
 ```
 
+## Running benchmarks in Xcode and using Instruments for profiling benchmarks
+
+There is unfortunately a bug in Xcode that makes it impossible to use jemalloc, so to be able to use Xcode and Instruments to run benchmarks, you must use the following workaround:
+
+Quit Xcode completely and then open the package you want to build/profile with:
+```bash
+open --env BENCHMARK_DISABLE_JEMALLOC=1 Package.swift
+```
+This will disable the jemalloc dependency and you can simply build for profiling and use Instruments as normal - including signpost information for the benchmark run.
+
 ## Troubleshooting problems
 If you have a benchmark that crashes, it's possible to run that specific benchmark in the debugger easily.
 
