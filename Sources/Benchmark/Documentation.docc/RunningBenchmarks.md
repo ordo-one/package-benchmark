@@ -106,6 +106,17 @@ This implicitly sets --check-absolute to true as well.
 -h, --help              Show help information.
 ```
 
+## Running benchmarks in Xcode and using Instruments for profiling benchmarks
+
+Profiling benchmarks or building the benchmarks in release mode in Xcode with jemalloc is currently not supported (as Xcode currently doesn't support interposition of the malloc library) and requires disabling jemalloc. 
+
+Make sure Xcode is closed and then open it from the CLI with the `BENCHMARK_DISABLE_JEMALLOC` environment variable set e.g.:
+```bash
+open --env BENCHMARK_DISABLE_JEMALLOC=true Package.swift
+```
+
+This will disable the jemalloc dependency and you can simply build in Xcode for profiling and use Instruments as normal - including signpost information for the benchmark run.
+
 ## Troubleshooting problems
 If you have a benchmark that crashes, it's possible to run that specific benchmark in the debugger easily.
 
