@@ -18,6 +18,9 @@ jobs:
       run: |
         sudo apt-get install -y libjemalloc-dev llvm-15
 
+    - name: Start consul
+      uses: ./.github/actions/consul-start
+
     - name: Run tests
       continue-on-error: true
       run: |

@@ -29,7 +29,12 @@ jobs:
         echo "/opt/homebrew/bin:/usr/local/bin" >> $GITHUB_PATH
         echo BENCHMARK_DISABLE_JEMALLOC=true >> $GITHUB_ENV
         brew install jemalloc
+
     - uses: actions/checkout@v3
+
+    - name: Start consul
+      uses: ./.github/actions/consul-start
+
     - name: Swift version
       run: swift --version
     - name: Build
