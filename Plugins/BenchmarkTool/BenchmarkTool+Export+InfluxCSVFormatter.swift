@@ -54,7 +54,7 @@ class InfluxCSVFormatter {
         let memory = machine.memory
 
         if header {
-            let dataTypeHeader = "#datatype tag,tag,tag,tag,tag,tag,tag,tag,double,double,long,long,dateTime\n"
+            let dataTypeHeader = "#datatype tag,tag,tag,tag,tag,tag,tag,tag,tag,double,double,long,long,dateTime\n"
             finalFileFormat.append(dataTypeHeader)
             let headers = "measurement,hostName,processoryType,processors,memory,kernelVersion,metric,unit,test,value,test_average,iterations,warmup_iterations,time\n"
             finalFileFormat.append(headers)
