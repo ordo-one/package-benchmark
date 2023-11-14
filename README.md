@@ -165,6 +165,3 @@ For those wanting to save benchmark data over time, it's recommended to export d
 
 PR:s for additional standardized formats are welcome, as the export formats are the intended stable interface for saving such data.
 
-### CI build note
-The badges above shows that macOS builds are failing on the CI [as GitHub still haven't provided runners for macOS 13 Ventura](https://github.com/actions/runner-images/issues/6426), it works in practice.
-
