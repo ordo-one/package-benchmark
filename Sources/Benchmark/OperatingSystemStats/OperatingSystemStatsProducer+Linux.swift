@@ -156,6 +156,8 @@
         }
 
         func startSampling(_: Int = 10_000) { // sample rate in microseconds
+            let sampleSemaphore = DispatchSemaphore(value: 0)
+
             DispatchQueue.global(qos: .userInitiated).async {
                 self.lock.lock()
 
@@ -193,6 +195,8 @@
 
                     self.lock.unlock()
 
+                    sampleSemaphore.signal()
+
                     if quit == .done {
                         return
                     }
@@ -200,8 +204,8 @@
                     usleep(UInt32.random(in: UInt32(Double(rate) * 0.9) ... UInt32(Double(rate) * 1.1)))
                 }
             }
-            // We'll sleep just a little bit to let the sampler thread get going so we try to avoid 0 samples
-            usleep(1_000)
+            // We'll need to wait for a single sample from the so we don't get 0 samples
+            sampleSemaphore.wait()
         }
 
         func stopSampling() {
