@@ -101,7 +101,7 @@ final class BenchmarkExecutor { // swiftlint:disable:this type_body_length
         let initialStartTime = BenchmarkClock.now
 
         // 'Warmup' to remove initial mallocs from stats in p100, also used as base for some metrics
-        let _ = MallocStatsProducer.makeMallocStats() // baselineMallocStats
+        _ = MallocStatsProducer.makeMallocStats() // baselineMallocStats
 
         // Calculate typical sys call check overhead and deduct that to get 'clean' stats for the actual benchmark
         var operatingSystemStatsOverhead = OperatingSystemStats()
