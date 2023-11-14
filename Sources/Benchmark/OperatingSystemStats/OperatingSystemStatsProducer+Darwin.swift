@@ -22,6 +22,8 @@
         let semaphore = DispatchSemaphore(value: 0)
         var peakThreads: Int = 0
         var peakThreadsRunning: Int = 0
+        var peakMemoryResident: Int = 0
+        var peakMemoryVirtual: Int = 0
         var runState: RunState = .running
         var sampleRate: Int = 10_000
         var metrics: Set<BenchmarkMetric>?
@@ -89,11 +91,16 @@
 
         func startSampling(_: Int = 10_000) { // sample rate in microseconds
             #if os(macOS)
+                let sampleSemaphore = DispatchSemaphore(value: 0)
+
                 DispatchQueue.global(qos: .userInitiated).async {
                     self.lock.lock()
                     let rate = self.sampleRate
                     self.peakThreads = 0
                     self.peakThreadsRunning = 0
+                    self.peakMemoryResident = 0
+                    self.peakMemoryVirtual = 0
+
                     self.runState = .running
                     self.lock.unlock()
 
@@ -109,6 +116,14 @@
                             self.peakThreadsRunning = Int(procTaskInfo.pti_numrunning)
                         }
 
+                        if procTaskInfo.pti_resident_size > self.peakMemoryResident {
+                            self.peakMemoryResident = Int(procTaskInfo.pti_resident_size)
+                        }
+
+                        if procTaskInfo.pti_virtual_size > self.peakMemoryVirtual {
+                            self.peakMemoryVirtual = Int(procTaskInfo.pti_virtual_size)
+                        }
+
                         if self.runState == .shuttingDown {
                             self.runState = .done
                             self.semaphore.signal()
@@ -117,6 +132,8 @@
                         let quit = self.runState
                         self.lock.unlock()
 
+                        sampleSemaphore.signal()
+
                         if quit == .done {
                             return
                         }
@@ -124,8 +141,9 @@
                         usleep(UInt32.random(in: UInt32(Double(rate) * 0.9) ... UInt32(Double(rate) * 1.1)))
                     }
                 }
-                // We'll sleep just a little bit to let the sampler thread get going so we don't get 0 samples
-                usleep(1_000)
+
+                // We'll need to wait for a single sample from the so we don't get 0 samples
+                sampleSemaphore.wait()
             #endif
         }
 
@@ -154,13 +172,21 @@
                 let totalTime = userTime + systemTime
                 var threads = 0
                 var threadsRunning = 0
+                var peakResident = 0
+                var peakVirtual = 0
 
-                if metrics.contains(.threads) || metrics.contains(.threadsRunning) {
+                if metrics.contains(.threads) ||
+                    metrics.contains(.threadsRunning) ||
+                    metrics.contains(.peakMemoryResident) ||
+                    metrics.contains(.peakMemoryVirtual) {
                     lock.lock()
                     threads = peakThreads
                     threadsRunning = peakThreadsRunning
+                    peakResident = peakMemoryResident
+                    peakVirtual = peakMemoryVirtual
                     lock.unlock()
                 }
+
                 var ioStats = IOStats()
 
                 if metrics.contains(.writeBytesPhysical) || metrics.contains(.writeBytesPhysical) {
@@ -170,8 +196,8 @@
                 let stats = OperatingSystemStats(cpuUser: userTime,
                                                  cpuSystem: systemTime,
                                                  cpuTotal: totalTime,
-                                                 peakMemoryResident: Int(procTaskInfo.pti_resident_size),
-                                                 peakMemoryVirtual: Int(procTaskInfo.pti_virtual_size),
+                                                 peakMemoryResident: peakResident,
+                                                 peakMemoryVirtual: peakVirtual,
                                                  syscalls: Int(procTaskInfo.pti_syscalls_unix) +
                                                      Int(procTaskInfo.pti_syscalls_mach),
                                                  contextSwitches: Int(procTaskInfo.pti_csw),

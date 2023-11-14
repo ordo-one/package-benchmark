@@ -22,6 +22,9 @@
         let lock = NIOLock()
         let semaphore = DispatchSemaphore(value: 0)
         var peakThreads: Int = 0
+        var peakThreadsRunning: Int = 0
+        var peakMemoryResident: Int = 0
+        var peakMemoryVirtual: Int = 0
         var sampleRate: Int = 10_000
         var runState: RunState = .running
         var metrics: Set<BenchmarkMetric>?
@@ -98,18 +101,39 @@
         }
 
         func makeOperatingSystemStats() -> OperatingSystemStats {
+            guard let metrics else {
+                return .init()
+            }
+
             let ioStats = readIOStats()
             let processStats = readProcessStats()
+
+            var threads = 0
+            var threadsRunning = 0
+            var peakResident = 0
+            var peakVirtual = 0
+
+            if metrics.contains(.threads) ||
+                metrics.contains(.threadsRunning) ||
+                metrics.contains(.peakMemoryResident) ||
+                metrics.contains(.peakMemoryVirtual) {
+                lock.lock()
+                threads = peakThreads
+                threadsRunning = peakThreadsRunning
+                peakResident = peakMemoryResident
+                peakVirtual = peakMemoryVirtual
+                lock.unlock()
+            }
 
             return OperatingSystemStats(cpuUser: Int(processStats.cpuUser),
                                         cpuSystem: Int(processStats.cpuSystem),
                                         cpuTotal: Int(processStats.cpuTotal),
-                                        peakMemoryResident: Int(processStats.peakMemoryResident),
-                                        peakMemoryVirtual: Int(processStats.peakMemoryVirtual),
+                                        peakMemoryResident: peakResident,
+                                        peakMemoryVirtual: peakVirtual,
                                         syscalls: 0,
                                         contextSwitches: 0,
-                                        threads: Int(processStats.threads),
-                                        threadsRunning: 0, // we can go dig in /proc/self/task/ later if want this
+                                        threads: threads,
+                                        threadsRunning: threadsRunning, // we can go dig in /proc/self/task/ later if want this
                                         readSyscalls: Int(ioStats.readSyscalls),
                                         writeSyscalls: Int(ioStats.writeSyscalls),
                                         readBytesLogical: Int(ioStats.readBytesLogical),
@@ -132,11 +156,15 @@
         }
 
         func startSampling(_: Int = 10_000) { // sample rate in microseconds
+            let sampleSemaphore = DispatchSemaphore(value: 0)
+
             DispatchQueue.global(qos: .userInitiated).async {
                 self.lock.lock()
 
                 let rate = self.sampleRate
                 self.peakThreads = 0
+                self.peakMemoryResident = 0
+                self.peakMemoryVirtual = 0
                 self.runState = .running
 
                 self.lock.unlock()
@@ -150,6 +178,14 @@
                         self.peakThreads = processStats.threads
                     }
 
+                    if processStats.peakMemoryResident > self.peakMemoryResident {
+                        self.peakMemoryResident = processStats.peakMemoryResident
+                    }
+
+                    if processStats.peakMemoryVirtual > self.peakMemoryVirtual {
+                        self.peakMemoryVirtual = processStats.peakMemoryVirtual
+                    }
+
                     if self.runState == .shuttingDown {
                         self.runState = .done
                         self.semaphore.signal()
@@ -159,6 +195,8 @@
 
                     self.lock.unlock()
 
+                    sampleSemaphore.signal()
+
                     if quit == .done {
                         return
                     }
@@ -166,8 +204,8 @@
                     usleep(UInt32.random(in: UInt32(Double(rate) * 0.9) ... UInt32(Double(rate) * 1.1)))
                 }
             }
-            // We'll sleep just a little bit to let the sampler thread get going so we try to avoid 0 samples
-            usleep(1_000)
+            // We'll need to wait for a single sample from the so we don't get 0 samples
+            sampleSemaphore.wait()
         }
 
         func stopSampling() {

@@ -100,10 +100,8 @@ final class BenchmarkExecutor { // swiftlint:disable:this type_body_length
         var iterations = 0
         let initialStartTime = BenchmarkClock.now
 
-        // 'Warmup' to remove initial mallocs from stats in p100
-        if mallocStatsRequested {
-            _ = MallocStatsProducer.makeMallocStats()
-        }
+        // 'Warmup' to remove initial mallocs from stats in p100, also used as base for some metrics
+        _ = MallocStatsProducer.makeMallocStats() // baselineMallocStats
 
         // Calculate typical sys call check overhead and deduct that to get 'clean' stats for the actual benchmark
         var operatingSystemStatsOverhead = OperatingSystemStats()
@@ -200,10 +198,10 @@ final class BenchmarkExecutor { // swiftlint:disable:this type_body_length
                 delta = stopMallocStats.mallocCountLarge - startMallocStats.mallocCountLarge
                 statistics[.mallocCountLarge]?.add(Int(delta))
 
-                delta = stopMallocStats.allocatedResidentMemory -
-                    startMallocStats.allocatedResidentMemory
+                delta = stopMallocStats.allocatedResidentMemory - startMallocStats.allocatedResidentMemory
                 statistics[.memoryLeaked]?.add(Int(delta))
 
+//                delta = stopMallocStats.allocatedResidentMemory - baselineMallocStats.allocatedResidentMemory // baselineMallocStats!
                 statistics[.allocatedResidentMemory]?.add(Int(stopMallocStats.allocatedResidentMemory))
             }
 
@@ -269,7 +267,9 @@ final class BenchmarkExecutor { // swiftlint:disable:this type_body_length
         }
 
         if benchmark.configuration.metrics.contains(.threads) ||
-            benchmark.configuration.metrics.contains(.threadsRunning) {
+            benchmark.configuration.metrics.contains(.threadsRunning) ||
+            benchmark.configuration.metrics.contains(.peakMemoryResident) ||
+            benchmark.configuration.metrics.contains(.peakMemoryVirtual) {
             operatingSystemStatsProducer.startSampling(5_000) // ~5 ms
         }
 
