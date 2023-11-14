@@ -22,6 +22,9 @@
         let lock = NIOLock()
         let semaphore = DispatchSemaphore(value: 0)
         var peakThreads: Int = 0
+        var peakThreadsRunning: Int = 0
+        var peakMemoryResident: Int = 0
+        var peakMemoryVirtual: Int = 0
         var sampleRate: Int = 10_000
         var runState: RunState = .running
         var metrics: Set<BenchmarkMetric>?
@@ -98,18 +101,39 @@
         }
 
         func makeOperatingSystemStats() -> OperatingSystemStats {
+            guard let metrics else {
+                return .init()
+            }
+
             let ioStats = readIOStats()
             let processStats = readProcessStats()
+
+            var threads = 0
+            var threadsRunning = 0
+            var peakResident = 0
+            var peakVirtual = 0
+
+            if metrics.contains(.threads) ||
+                metrics.contains(.threadsRunning) ||
+                metrics.contains(.peakMemoryResident) ||
+                metrics.contains(.peakMemoryVirtual) {
+                lock.lock()
+                threads = peakThreads
+                threadsRunning = peakThreadsRunning
+                peakResident = peakMemoryResident
+                peakVirtual = peakMemoryVirtual
+                lock.unlock()
+            }
 
             return OperatingSystemStats(cpuUser: Int(processStats.cpuUser),
                                         cpuSystem: Int(processStats.cpuSystem),
                                         cpuTotal: Int(processStats.cpuTotal),
-                                        peakMemoryResident: Int(processStats.peakMemoryResident),
-                                        peakMemoryVirtual: Int(processStats.peakMemoryVirtual),
+                                        peakMemoryResident: peakResident,
+                                        peakMemoryVirtual: peakVirtual,
                                         syscalls: 0,
                                         contextSwitches: 0,
-                                        threads: Int(processStats.threads),
-                                        threadsRunning: 0, // we can go dig in /proc/self/task/ later if want this
+                                        threads: threads,
+                                        threadsRunning: threadsRunning, // we can go dig in /proc/self/task/ later if want this
                                         readSyscalls: Int(ioStats.readSyscalls),
                                         writeSyscalls: Int(ioStats.writeSyscalls),
                                         readBytesLogical: Int(ioStats.readBytesLogical),
@@ -137,6 +161,8 @@
 
                 let rate = self.sampleRate
                 self.peakThreads = 0
+                self.peakMemoryResident = 0
+                self.peakMemoryVirtual = 0
                 self.runState = .running
 
                 self.lock.unlock()
@@ -148,6 +174,14 @@
 
                     if processStats.threads > self.peakThreads {
                         self.peakThreads = processStats.threads
+                    }
+
+                    if processStats.peakMemoryResident > self.peakMemoryResident {
+                        self.peakMemoryResident = processStats.peakMemoryResident
+                    }
+
+                    if processStats.peakMemoryVirtual > self.peakMemoryVirtual {
+                        self.peakMemoryVirtual = processStats.peakMemoryVirtual
                     }
 
                     if self.runState == .shuttingDown {

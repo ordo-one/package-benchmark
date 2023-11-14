@@ -269,7 +269,9 @@ final class BenchmarkExecutor { // swiftlint:disable:this type_body_length
         }
 
         if benchmark.configuration.metrics.contains(.threads) ||
-            benchmark.configuration.metrics.contains(.threadsRunning) {
+            benchmark.configuration.metrics.contains(.threadsRunning) ||
+            benchmark.configuration.metrics.contains(.peakMemoryResident) ||
+            benchmark.configuration.metrics.contains(.peakMemoryVirtual) {
             operatingSystemStatsProducer.startSampling(5_000) // ~5 ms
         }
 
