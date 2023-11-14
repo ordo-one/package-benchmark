@@ -33,7 +33,7 @@ import ExtrasJSON
 //    var largeNMallocMIB = setupMIB(name: "stats.arenas.\(MALLCTL_ARENAS_ALL).large.nmalloc")
 //    var smallNDallocMIB = setupMIB(name: "stats.arenas.\(MALLCTL_ARENAS_ALL).small.ndalloc")
 //    var largeNDallocMIB = setupMIB(name: "stats.arenas.\(MALLCTL_ARENAS_ALL).large.ndalloc")
-//    var smallAlloctedMIB = setupMIB(name: "stats.arenas.\(MALLCTL_ARENAS_ALL).small.allocated")
+//    var smallAllocatedMIB = setupMIB(name: "stats.arenas.\(MALLCTL_ARENAS_ALL).small.allocated")
 //    var largeAllocatedMIB = setupMIB(name: "stats.arenas.\(MALLCTL_ARENAS_ALL).large.allocated")
 //    var smallNFillsMIB = setupMIB(name: "stats.arenas.\(MALLCTL_ARENAS_ALL).small.nfills")
 //    var largeNFillsMIB = setupMIB(name: "stats.arenas.\(MALLCTL_ARENAS_ALL).large.nfills")
@@ -53,8 +53,6 @@ import ExtrasJSON
 
         // Update jemalloc internal statistics, this is the magic incantation to do it
         static func updateEpoch() {
-            var allocated = 0
-            var size = MemoryLayout<Int>.size
             var epoch = 0
             let epochSize = MemoryLayout<Int>.size
             var result: Int32 = 0
@@ -66,11 +64,10 @@ import ExtrasJSON
             }
 
             // Then update epoch
-            result = mallctlbymib(epochMIB, epochMIB.count, &allocated, &size, &epoch, epochSize)
+            result = mallctlbymib(epochMIB, epochMIB.count, nil, nil, &epoch, epochSize)
             if result != 0 {
                 print("mallctlbymib epochMIB returned \(result)")
             }
-//            return epoch
         }
 
         // Read the actual stats using a cached MIB as the key

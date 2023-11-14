@@ -172,7 +172,7 @@ public extension BenchmarkMetric {
         case .mallocCountTotal:
             return "Malloc (total)"
         case .allocatedResidentMemory:
-            return "Memory (allocated)"
+            return "Memory (allocated resident)"
         case .memoryLeaked:
             return "Malloc / free Δ"
         case .syscalls:
