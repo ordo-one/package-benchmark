@@ -201,8 +201,8 @@ final class BenchmarkExecutor { // swiftlint:disable:this type_body_length
                 delta = stopMallocStats.allocatedResidentMemory - startMallocStats.allocatedResidentMemory
                 statistics[.memoryLeaked]?.add(Int(delta))
 
-                delta = stopMallocStats.allocatedResidentMemory - baselineMallocStats.allocatedResidentMemory // baselineMallocStats!
-                statistics[.allocatedResidentMemory]?.add(Int(delta))
+//                delta = stopMallocStats.allocatedResidentMemory - baselineMallocStats.allocatedResidentMemory // baselineMallocStats!
+                statistics[.allocatedResidentMemory]?.add(Int(stopMallocStats.allocatedResidentMemory))
             }
 
             if operatingSystemStatsRequested {
