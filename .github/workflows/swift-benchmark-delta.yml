@@ -32,6 +32,9 @@ jobs:
         run: |
           sudo apt-get install -y libjemalloc-dev
 
+      - name: Start consul
+        uses: ./.github/actions/consul-start
+
       - name: Git URL token override and misc
         run: |
           #git config --global url."https://ordo-ci:${{ secrets.CI_MACHINE_PAT }}@github.com".insteadOf "https://github.com"
