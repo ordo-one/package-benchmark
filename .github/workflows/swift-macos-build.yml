@@ -19,7 +19,7 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-    - uses: fwal/setup-swift@v1.24.0
+    - uses: fwal/setup-swift@v1
       with:
         swift-version: ${{ matrix.swift }}
 
