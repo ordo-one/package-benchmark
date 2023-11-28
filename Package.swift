@@ -21,7 +21,7 @@ let package = Package(
         ),
     ],
     dependencies: [
-        .package(url: "https://github.com/apple/swift-system", .upToNextMajor(from: "1.2.0")),
+        .package(url: "https://github.com/apple/swift-system", .upToNextMajor(from: "1.1.0")),
         .package(url: "https://github.com/apple/swift-argument-parser", .upToNextMajor(from: "1.1.0")),
         .package(url: "https://github.com/swift-extras/swift-extras-json", .upToNextMajor(from: "0.6.0")),
 //        .package(url: "https://github.com/SwiftPackageIndex/SPIManifest", from: "0.12.0"),
