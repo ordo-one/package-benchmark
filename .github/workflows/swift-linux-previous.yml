@@ -1,0 +1,47 @@
+name: Swift Linux build older versions
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main, next ]
+
+jobs:
+  build-linux-previous:
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        swift: ["5.7", "5.8"]
+
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+    - uses: fwal/setup-swift@v1
+      with:
+        swift-version: ${{ matrix.swift }}
+
+    - uses: actions/checkout@v3    
+
+    - name: Start consul
+      uses: ./.github/actions/consul-start
+
+    - name: Ubuntu deps
+      if: ${{ runner.os == 'Linux' }}
+      run: |
+        sudo apt-get install -y libjemalloc-dev
+
+    - name: Swift version
+      run: swift --version
+
+    - name: Build
+      run: swift build
+
+    - name: Run tests
+      run: |
+        if [ -d Tests ]; then
+          swift test --parallel
+        fi
