@@ -14,8 +14,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        swift: ["5.7", "5.8", "5.9"]
-
+        swift: [ "5.9" ]
 
     runs-on: ${{ matrix.os }}
 
