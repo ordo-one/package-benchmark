@@ -147,12 +147,14 @@ extension BenchmarkTool {
                         return
                     }
                     if let benchmarkPath = checkAbsolutePath { // load statically defined threshods for .p90
+                        var thresholdsFound = false
                         benchmarks.forEach { benchmark in
                             let thresholds = BenchmarkTool.makeBenchmarkThresholds(path: benchmarkPath,
                                                                                    moduleName: benchmark.target,
                                                                                    benchmarkName: benchmark.name)
                             var transformed: [BenchmarkMetric: BenchmarkThresholds] = [:]
                             if let thresholds {
+                                thresholdsFound = true
                                 thresholds.forEach { key, value in
                                     if let metric = BenchmarkMetric(argument: key) {
                                         let absoluteThreshold: BenchmarkThresholds.AbsoluteThresholds = [.p90: value]
@@ -163,6 +165,11 @@ extension BenchmarkTool {
                                     benchmark.configuration.thresholds = transformed
                                 }
                             }
+                        }
+                        if !thresholdsFound  {
+                            print("")
+                            failBenchmark("Could not find any matching absolute thresholds at path [\(benchmarkPath)], failing threshold check.",
+                                          exitCode: .thresholdRegression)
                         }
                     }
                     print("")
