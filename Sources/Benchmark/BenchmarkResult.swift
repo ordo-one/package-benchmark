@@ -266,6 +266,9 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
     }
 
     public var unitDescriptionPretty: String {
+        if metric == .throughput {
+            return "(\(scaledScalingFactor.description))"
+        }
         if metric.countable {
             let statisticsUnit = Statistics.Units(timeUnits)
             if statisticsUnit == .count {

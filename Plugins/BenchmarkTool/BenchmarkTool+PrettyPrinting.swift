@@ -99,7 +99,7 @@ extension BenchmarkTool {
 
             var adjustmentFunction: (Int) -> Int
 
-            if self.scale, result.metrics.metric.useScalingFactor {
+            if self.scale == false, result.metrics.metric.useScalingFactor {
                 description = useGroupingDescription ? "\(result.description) \(result.metrics.scaledUnitDescriptionPretty)"
                     : "\(result.metrics.metric.description) \(result.metrics.scaledUnitDescriptionPretty)"
                 adjustmentFunction = result.metrics.scale
@@ -240,7 +240,13 @@ extension BenchmarkTool {
                                 }
                             }
 
-                            let title = "\(result.metric.description) \(result.unitDescriptionPretty)"
+                            var title: String
+                            if self.scale == false, base.metric.useScalingFactor {
+                                title = "\(result.metric.description) \(result.scaledUnitDescriptionPretty)"
+                            } else {
+                                title = "\(result.metric.description) \(result.unitDescriptionPretty)"
+                            }
+
                             let width = 40
                             let table = TextTable<ScaledResults> {
                                 [Column(title: title, value: "\($0.description)", width: width, align: .center),
@@ -267,7 +273,7 @@ extension BenchmarkTool {
                             var adjustmentFunction: (Int) -> Int
                             let samples = result.statistics.measurementCount - base.statistics.measurementCount
 
-                            if self.scale, base.metric.useScalingFactor {
+                            if self.scale == false, base.metric.useScalingFactor {
                                 adjustmentFunction = base.scale
                             } else {
                                 adjustmentFunction = base.normalize
@@ -285,7 +291,7 @@ extension BenchmarkTool {
                                                                percentiles: basePercentiles,
                                                                samples: base.statistics.measurementCount))
 
-                            if self.scale, result.metric.useScalingFactor {
+                            if self.scale == false, result.metric.useScalingFactor {
                                 adjustmentFunction = result.scale
                             } else {
                                 adjustmentFunction = result.normalize

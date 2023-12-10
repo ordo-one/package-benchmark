@@ -122,7 +122,7 @@ public extension BenchmarkMetric {
             return true
         case .mallocCountLarge, .mallocCountSmall, .mallocCountTotal, .memoryLeaked:
             return true
-        case .syscalls, .throughput:
+        case .syscalls:
             return true
         case .readSyscalls, .readBytesLogical, .readBytesPhysical:
             return true
