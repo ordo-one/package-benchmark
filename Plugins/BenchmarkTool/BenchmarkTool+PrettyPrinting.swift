@@ -145,7 +145,7 @@ extension BenchmarkTool {
             metrics.forEach { metric in
                 width = max(width, metric.description.count)
             }
-            width = min(maxDescriptionWidth, width + " (M)".count)
+            width = min(maxDescriptionWidth, width + " (ms)".count)
 
             baseline.targets.forEach { target in
                 let separator = String(repeating: "=", count: "\(target)".count)
@@ -173,7 +173,7 @@ extension BenchmarkTool {
             baseline.benchmarkIdentifiers.forEach { identifier in
                 width = max(width, "\(identifier.target):\(identifier.name)".count)
             }
-            width = min(maxDescriptionWidth, width + " (M)".count)
+            width = min(maxDescriptionWidth, width + " (ms)".count)
 
             baseline.benchmarkMetrics.forEach { metric in
 
