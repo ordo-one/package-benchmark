@@ -52,7 +52,7 @@ let help =
                           "retainReleaseDelta", "custom"]
     --path <path>           The path where exported data is stored, default is the current directory (".").
     --quiet                 Specifies that output should be suppressed (useful for if you just want to check return code)
-    --scale                 Specifies that some of the text output should be scaled using the scalingFactor (denoted by '*' in output)
+    --scale                 Show the metrics without scaling for the inner loop (scalingFactor will not be applied to output)
     --check-absolute
                           Set to true if thresholds should be checked against an absolute reference point rather than delta between baselines.
                           This is used for CI workflows when you want to validate the thresholds vs. a persisted benchmark baseline

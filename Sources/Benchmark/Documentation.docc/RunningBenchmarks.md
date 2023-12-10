@@ -36,7 +36,7 @@ swift package benchmark <command verb> [<options>]
 
 - term `--path <path>`: The path where exported data is stored, default is the current directory ("."). 
 - term `--quiet`: Specifies that output should be suppressed (useful for if you just want to check return code)
-- term `--scale`: Specifies that some of the text output should be scaled using the scalingFactor (denoted by '*' in output)
+- term `--scale`: Show the metrics without scaling for the inner loop (scalingFactor will not be applied to output)
 - term `--metric`: Specifies that the benchmark run should use a specific metric instead of the ones defined by the benchmarks
 - term `--no-progress`: Specifies that benchmark progress information should not be displayed
 - term `--check-absolute`: Set to true if thresholds should be checked against an absolute reference point rather than delta between baselines.
@@ -89,7 +89,7 @@ Benchmark targets matching the regexp filter that should be skipped
 "retainReleaseDelta", "custom"]
 --path <path>           The path where exported data is stored, default is the current directory ("."). 
 --quiet                 Specifies that output should be suppressed (useful for if you just want to check return code)
---scale                 Specifies that some of the text output should be scaled using the scalingFactor (denoted by '*' in output)
+--scale                 Show the metrics without scaling for the inner loop (scalingFactor will not be applied to output)
 --check-absolute
 Set to true if thresholds should be checked against an absolute reference point rather than delta between baselines.
 This is used for CI workflows when you want to validate the thresholds vs. a persisted benchmark baseline
