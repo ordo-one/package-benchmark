@@ -266,6 +266,10 @@ final class BenchmarkExecutor { // swiftlint:disable:this type_body_length
             statistics[metric]?.add(value)
         }
 
+        if arcStatsRequested {
+            ARCStatsProducer.hook()
+        }
+
         if benchmark.configuration.metrics.contains(.threads) ||
             benchmark.configuration.metrics.contains(.threadsRunning) ||
             benchmark.configuration.metrics.contains(.peakMemoryResident) ||
@@ -289,10 +293,6 @@ final class BenchmarkExecutor { // swiftlint:disable:this type_body_length
         }
 
         var nextPercentageToUpdateProgressBar = 0
-
-        if arcStatsRequested {
-            ARCStatsProducer.hook()
-        }
 
         #if canImport(OSLog)
             let benchmarkInterval = signPost.beginInterval("Benchmark", id: signpostID, "\(benchmark.name)")
@@ -340,10 +340,6 @@ final class BenchmarkExecutor { // swiftlint:disable:this type_body_length
             signPost.endInterval("Benchmark", benchmarkInterval, "\(iterations)")
         #endif
 
-        if arcStatsRequested {
-            ARCStatsProducer.unhook()
-        }
-
         if var progressBar {
             progressBar.setValue(100)
         }
@@ -351,6 +347,10 @@ final class BenchmarkExecutor { // swiftlint:disable:this type_body_length
         if benchmark.configuration.metrics.contains(.threads) ||
             benchmark.configuration.metrics.contains(.threadsRunning) {
             operatingSystemStatsProducer.stopSampling()
+        }
+
+        if arcStatsRequested {
+            ARCStatsProducer.unhook()
         }
 
         // construct metric result array
