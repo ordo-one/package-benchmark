@@ -39,6 +39,7 @@ public extension BenchmarkMetric {
     /// A collection of memory benchmarks.
     static var memory: [BenchmarkMetric] {
         [.peakMemoryResident,
+         .peakMemoryResidentDelta,
          .peakMemoryVirtual,
          .mallocCountSmall,
          .mallocCountLarge,
@@ -83,6 +84,7 @@ public extension BenchmarkMetric {
          .wallClock,
          .throughput,
          .peakMemoryResident,
+         .peakMemoryResidentDelta,
          .peakMemoryVirtual,
          .mallocCountSmall,
          .mallocCountLarge,

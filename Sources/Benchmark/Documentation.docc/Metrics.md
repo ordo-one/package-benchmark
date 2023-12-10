@@ -16,6 +16,7 @@ Currently supported metrics are:
 - term `wallClock`: Wall clock time for running the test
 - term `throughput`: The throughput in operations / second
 - term `peakMemoryResident`: The resident memory usage - sampled during runtime
+- term `peakMemoryResidentDelta`: The resident memory usage - sampled during runtime (excluding start of benchmark baseline) 
 - term `peakMemoryVirtual`:  The virtual memory usage - sampled during runtime
 - term `mallocCountSmall`: The number of small malloc calls according to jemalloc
 - term `mallocCountLarge`: The number of large malloc calls according to jemalloc

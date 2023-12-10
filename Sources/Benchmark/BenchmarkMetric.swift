@@ -25,6 +25,8 @@ public enum BenchmarkMetric: Hashable, Equatable, Codable, CustomStringConvertib
     case throughput
     /// Measure resident memory usage - sampled during runtime
     case peakMemoryResident
+    /// Measure resident memory usage - sampled during runtime (subtracting start of benchmark baseline resident amount)
+    case peakMemoryResidentDelta
     /// Measure virtual memory usage - sampled during runtime
     case peakMemoryVirtual
     /// Number of small malloc calls
@@ -163,6 +165,8 @@ public extension BenchmarkMetric {
             return "Throughput (# / s)"
         case .peakMemoryResident:
             return "Memory (resident peak)"
+        case .peakMemoryResidentDelta:
+            return "Memory Δ (resident peak)"
         case .peakMemoryVirtual:
             return "Memory (virtual peak)"
         case .mallocCountSmall:
@@ -231,6 +235,8 @@ public extension BenchmarkMetric {
             return "throughput"
         case .peakMemoryResident:
             return "peakMemoryResident"
+        case .peakMemoryResidentDelta:
+            return "peakMemoryResidentDelta"
         case .peakMemoryVirtual:
             return "peakMemoryVirtual"
         case .mallocCountSmall:
@@ -301,6 +307,8 @@ public extension BenchmarkMetric {
             self = BenchmarkMetric.throughput
         case "peakMemoryResident":
             self = BenchmarkMetric.peakMemoryResident
+        case "peakMemoryResidentDelta":
+            self = BenchmarkMetric.peakMemoryResidentDelta
         case "peakMemoryVirtual":
             self = BenchmarkMetric.peakMemoryVirtual
         case "mallocCountSmall":

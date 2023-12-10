@@ -182,6 +182,7 @@
                 if metrics.contains(.threads) ||
                     metrics.contains(.threadsRunning) ||
                     metrics.contains(.peakMemoryResident) ||
+                    metrics.contains(.peakMemoryResidentDelta) ||
                     metrics.contains(.peakMemoryVirtual) {
                     lock.lock()
                     threads = peakThreads

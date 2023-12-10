@@ -39,6 +39,8 @@ extension BenchmarkExecutor {
             return true
         case .peakMemoryResident:
             return true
+        case .peakMemoryResidentDelta:
+            return true
         case .peakMemoryVirtual:
             return true
         case .syscalls:

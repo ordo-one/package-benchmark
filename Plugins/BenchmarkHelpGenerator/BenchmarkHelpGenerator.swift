@@ -20,6 +20,7 @@ let availableMetrics = [
     "wallClock",
     "throughput",
     "peakMemoryResident",
+    "peakMemoryResidentDelta",
     "peakMemoryVirtual",
     "mallocCountSmall",
     "mallocCountLarge",

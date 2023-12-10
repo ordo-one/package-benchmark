@@ -100,11 +100,12 @@ final class BenchmarkExecutor { // swiftlint:disable:this type_body_length
         var iterations = 0
         let initialStartTime = BenchmarkClock.now
 
-        // 'Warmup' to remove initial mallocs from stats in p100, also used as base for some metrics
+        // 'Warmup' to remove initial mallocs from stats in p100
         _ = MallocStatsProducer.makeMallocStats() // baselineMallocStats
 
         // Calculate typical sys call check overhead and deduct that to get 'clean' stats for the actual benchmark
         var operatingSystemStatsOverhead = OperatingSystemStats()
+        var baselinepeakMemoryResidentDelta = 0
         if operatingSystemStatsRequested {
             let statsOne = operatingSystemStatsProducer.makeOperatingSystemStats()
             let statsTwo = operatingSystemStatsProducer.makeOperatingSystemStats()
@@ -219,6 +220,9 @@ final class BenchmarkExecutor { // swiftlint:disable:this type_body_length
                 delta = stopOperatingSystemStats.peakMemoryResident
                 statistics[.peakMemoryResident]?.add(Int(delta))
 
+                delta = stopOperatingSystemStats.peakMemoryResident - baselinepeakMemoryResidentDelta
+                statistics[.peakMemoryResidentDelta]?.add(Int(delta))
+
                 delta = stopOperatingSystemStats.peakMemoryVirtual
                 statistics[.peakMemoryVirtual]?.add(Int(delta))
 
@@ -273,8 +277,10 @@ final class BenchmarkExecutor { // swiftlint:disable:this type_body_length
         if benchmark.configuration.metrics.contains(.threads) ||
             benchmark.configuration.metrics.contains(.threadsRunning) ||
             benchmark.configuration.metrics.contains(.peakMemoryResident) ||
+            benchmark.configuration.metrics.contains(.peakMemoryResidentDelta) ||
             benchmark.configuration.metrics.contains(.peakMemoryVirtual) {
             operatingSystemStatsProducer.startSampling(5_000) // ~5 ms
+            baselinepeakMemoryResidentDelta = operatingSystemStatsProducer.peakMemoryResident
         }
 
         var progressBar: ProgressBar?
