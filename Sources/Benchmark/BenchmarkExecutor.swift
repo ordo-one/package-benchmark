@@ -280,7 +280,10 @@ final class BenchmarkExecutor { // swiftlint:disable:this type_body_length
             benchmark.configuration.metrics.contains(.peakMemoryResidentDelta) ||
             benchmark.configuration.metrics.contains(.peakMemoryVirtual) {
             operatingSystemStatsProducer.startSampling(5_000) // ~5 ms
-            baselinepeakMemoryResidentDelta = operatingSystemStatsProducer.peakMemoryResident
+
+            if benchmark.configuration.metrics.contains(.peakMemoryResidentDelta) {
+                baselinepeakMemoryResidentDelta = operatingSystemStatsProducer.makeOperatingSystemStats().peakMemoryResident
+            }
         }
 
         var progressBar: ProgressBar?
