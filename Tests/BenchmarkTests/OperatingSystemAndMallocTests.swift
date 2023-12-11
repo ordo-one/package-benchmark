@@ -85,6 +85,8 @@ final class OperatingSystemAndMallocTests: XCTestCase {
 
         let stopStats = ARCStatsProducer.makeARCStats()
 
+        ARCStatsProducer.unhook()
+
         XCTAssertGreaterThanOrEqual(stopStats.objectAllocCount - startStats.objectAllocCount, 100)
         XCTAssertGreaterThanOrEqual(stopStats.releaseCount - startStats.releaseCount, 100)
     }
