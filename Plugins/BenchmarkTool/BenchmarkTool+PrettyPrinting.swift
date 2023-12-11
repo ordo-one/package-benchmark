@@ -92,14 +92,15 @@ extension BenchmarkTool {
 
         var scaledResults: [ScaledResults] = []
         results.forEach { result in
-            let description: String
-            let metrics = result.metrics
-            let percentiles = metrics.statistics.percentiles()
             var resultPercentiles = ScaledResults.Percentiles()
 
-            var adjustmentFunction: (Int) -> Int
+            let metrics = result.metrics
+            let percentiles = metrics.statistics.percentiles()
+            let shouldScale = self.scale == false && result.metrics.metric.useScalingFactor
+            let adjustmentFunction: (Int) -> Int
+            let description: String
 
-            if self.scale == false, result.metrics.metric.useScalingFactor {
+            if shouldScale {
                 description = useGroupingDescription ? "\(result.description) \(result.metrics.scaledUnitDescriptionPretty)"
                     : "\(result.metrics.metric.description) \(result.metrics.scaledUnitDescriptionPretty)"
                 adjustmentFunction = result.metrics.scale
@@ -240,12 +241,11 @@ extension BenchmarkTool {
                                 }
                             }
 
-                            var title: String
-                            if self.scale == false, base.metric.useScalingFactor {
-                                title = "\(result.metric.description) \(result.scaledUnitDescriptionPretty)"
-                            } else {
-                                title = "\(result.metric.description) \(result.unitDescriptionPretty)"
-                            }
+                            let displayBaseScaled = self.scale == false && base.metric.useScalingFactor
+                            let displayResultScaled = self.scale == false && result.metric.useScalingFactor
+                            let title = displayBaseScaled ?
+                                "\(result.metric.description) \(result.scaledUnitDescriptionPretty)" :
+                                "\(result.metric.description) \(result.unitDescriptionPretty)"
 
                             let width = 40
                             let table = TextTable<ScaledResults> {
@@ -273,7 +273,7 @@ extension BenchmarkTool {
                             var adjustmentFunction: (Int) -> Int
                             let samples = result.statistics.measurementCount - base.statistics.measurementCount
 
-                            if self.scale == false, base.metric.useScalingFactor {
+                            if displayBaseScaled {
                                 adjustmentFunction = base.scale
                             } else {
                                 adjustmentFunction = base.normalize
@@ -291,7 +291,7 @@ extension BenchmarkTool {
                                                                percentiles: basePercentiles,
                                                                samples: base.statistics.measurementCount))
 
-                            if self.scale == false, result.metric.useScalingFactor {
+                            if displayResultScaled {
                                 adjustmentFunction = result.scale
                             } else {
                                 adjustmentFunction = result.normalize

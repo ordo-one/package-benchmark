@@ -105,7 +105,7 @@ final class BenchmarkExecutor { // swiftlint:disable:this type_body_length
 
         // Calculate typical sys call check overhead and deduct that to get 'clean' stats for the actual benchmark
         var operatingSystemStatsOverhead = OperatingSystemStats()
-        var baselinepeakMemoryResidentDelta = 0
+        var baselinePeakMemoryResidentDelta = 0
         if operatingSystemStatsRequested {
             let statsOne = operatingSystemStatsProducer.makeOperatingSystemStats()
             let statsTwo = operatingSystemStatsProducer.makeOperatingSystemStats()
@@ -220,7 +220,7 @@ final class BenchmarkExecutor { // swiftlint:disable:this type_body_length
                 delta = stopOperatingSystemStats.peakMemoryResident
                 statistics[.peakMemoryResident]?.add(Int(delta))
 
-                delta = stopOperatingSystemStats.peakMemoryResident - baselinepeakMemoryResidentDelta
+                delta = stopOperatingSystemStats.peakMemoryResident - baselinePeakMemoryResidentDelta
                 statistics[.peakMemoryResidentDelta]?.add(Int(delta))
 
                 delta = stopOperatingSystemStats.peakMemoryVirtual
@@ -282,7 +282,7 @@ final class BenchmarkExecutor { // swiftlint:disable:this type_body_length
             operatingSystemStatsProducer.startSampling(5_000) // ~5 ms
 
             if benchmark.configuration.metrics.contains(.peakMemoryResidentDelta) {
-                baselinepeakMemoryResidentDelta = operatingSystemStatsProducer.makeOperatingSystemStats().peakMemoryResident
+                baselinePeakMemoryResidentDelta = operatingSystemStatsProducer.makeOperatingSystemStats().peakMemoryResident
             }
         }
 

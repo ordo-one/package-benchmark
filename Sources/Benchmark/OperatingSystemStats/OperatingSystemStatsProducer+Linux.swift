@@ -197,8 +197,6 @@
 
                     self.lock.unlock()
 
-                    sampleSemaphore.signal()
-
                     if firstEventSampled == false { // allow calling thread to continue when we have captured a sample
                         firstEventSampled = true
                         sampleSemaphore.signal()
