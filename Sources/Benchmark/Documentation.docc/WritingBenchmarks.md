@@ -134,7 +134,7 @@ public extension Benchmark {
 
 For fast running (micro-)benchmarks, it is highly recommended to run measurements with an inner loop to ensure that the measurement overhead is small compared to the thing that is under measurement.
 
-To make this easy, Benchmark provides a ``Benchmark/Configuration-swift.struct/scalingFactor`` in ``Benchmark/Configuration-swift.struct`` which gives a convenience iterator range and by default will show scaled output on the command line (can be disabled by using the `--scale` flag, such that only inner loop results are displayed). The metrics that are scaled by the inner loop scaling factor are denoted by `*` in the output.
+To make this easy, Benchmark provides a ``Benchmark/Configuration-swift.struct/scalingFactor`` in ``Benchmark/Configuration-swift.struct`` which gives a convenience iterator range and by default will show scaled output on the command line (can be disabled by using the `--scale` flag, such that outer loop results are displayed). The metrics that are scaled by the inner loop scaling factor are denoted by `*` in the output.
 
 An example of using `scalingFactor` to run 1M inner loops:
 
