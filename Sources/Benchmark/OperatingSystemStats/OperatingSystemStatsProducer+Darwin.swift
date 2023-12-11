@@ -102,6 +102,7 @@
                     self.peakMemoryVirtual = 0
 
                     self.runState = .running
+                    var firstEventSampled = false
                     self.lock.unlock()
 
                     while true {
@@ -132,7 +133,10 @@
                         let quit = self.runState
                         self.lock.unlock()
 
-                        sampleSemaphore.signal()
+                        if firstEventSampled == false { // allow calling thread to continue when we have captured a sample
+                            firstEventSampled = true
+                            sampleSemaphore.signal()
+                        }
 
                         if quit == .done {
                             return
@@ -178,6 +182,7 @@
                 if metrics.contains(.threads) ||
                     metrics.contains(.threadsRunning) ||
                     metrics.contains(.peakMemoryResident) ||
+                    metrics.contains(.peakMemoryResidentDelta) ||
                     metrics.contains(.peakMemoryVirtual) {
                     lock.lock()
                     threads = peakThreads

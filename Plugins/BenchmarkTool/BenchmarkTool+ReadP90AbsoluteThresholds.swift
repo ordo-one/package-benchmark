@@ -43,7 +43,7 @@ extension BenchmarkTool {
             path = cwdPath
         }
 
-        var p90Thresholds: [String: BenchmarkThresholds.AbsoluteThreshold]?
+        var p90Thresholds: [String: BenchmarkThresholds.AbsoluteThreshold]? = nil
 
         do {
             let fileDescriptor = try FileDescriptor.open(path, .readOnly, options: [], permissions: .ownerRead)

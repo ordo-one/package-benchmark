@@ -34,6 +34,7 @@
 ### Memory Metrics
 
 - ``BenchmarkMetric/peakMemoryResident``
+- ``BenchmarkMetric/peakMemoryResidentDelta``
 - ``BenchmarkMetric/peakMemoryVirtual``
 - ``BenchmarkMetric/mallocCountSmall``
 - ``BenchmarkMetric/mallocCountLarge``

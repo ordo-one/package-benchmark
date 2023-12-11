@@ -40,6 +40,7 @@ let benchmarks = {
     enum CustomMetrics {
         static var one: BenchmarkMetric { .custom("CustomMetricOne") }
         static var two: BenchmarkMetric { .custom("CustomMetricTwo", polarity: .prefersLarger, useScalingFactor: true) }
+        static var three: BenchmarkMetric { .custom("CustomMetricThree", polarity: .prefersLarger, useScalingFactor: false) }
     }
 
     Benchmark("Basic",
@@ -52,12 +53,33 @@ let benchmarks = {
     Benchmark("Noop2", configuration: .init(metrics: [.wallClock] + .arc)) { _ in
     }
 
-    Benchmark("Scaled metrics",
+    Benchmark("Scaled metrics One",
+              configuration: .init(metrics: .all + [CustomMetrics.two, CustomMetrics.one],
+                                   scalingFactor: .one)) { benchmark in
+        for _ in benchmark.scaledIterations {
+            blackHole(Int.random(in: 1 ... 1_000))
+        }
+        benchmark.measurement(CustomMetrics.two, Int.random(in: 1 ... 1_000_000))
+        benchmark.measurement(CustomMetrics.one, Int.random(in: 1 ... 1_000))
+    }
+
+    Benchmark("Scaled metrics K",
               configuration: .init(metrics: .all + [CustomMetrics.two, CustomMetrics.one],
                                    scalingFactor: .kilo)) { benchmark in
         for _ in benchmark.scaledIterations {
+            blackHole(Int.random(in: 1 ... 1_000))
+        }
+        benchmark.measurement(CustomMetrics.two, Int.random(in: 1 ... 1_000_000))
+        benchmark.measurement(CustomMetrics.one, Int.random(in: 1 ... 1_000))
+    }
+
+    Benchmark("Scaled metrics M",
+              configuration: .init(metrics: .all + [CustomMetrics.two, CustomMetrics.one, CustomMetrics.three],
+                                   scalingFactor: .mega)) { benchmark in
+        for _ in benchmark.scaledIterations {
             blackHole(Int.random(in: benchmark.scaledIterations))
         }
+        benchmark.measurement(CustomMetrics.three, Int.random(in: 1 ... 1_000_000_000))
         benchmark.measurement(CustomMetrics.two, Int.random(in: 1 ... 1_000_000))
         benchmark.measurement(CustomMetrics.one, Int.random(in: 1 ... 1_000))
     }

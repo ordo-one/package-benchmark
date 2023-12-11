@@ -100,11 +100,12 @@ final class BenchmarkExecutor { // swiftlint:disable:this type_body_length
         var iterations = 0
         let initialStartTime = BenchmarkClock.now
 
-        // 'Warmup' to remove initial mallocs from stats in p100, also used as base for some metrics
+        // 'Warmup' to remove initial mallocs from stats in p100
         _ = MallocStatsProducer.makeMallocStats() // baselineMallocStats
 
         // Calculate typical sys call check overhead and deduct that to get 'clean' stats for the actual benchmark
         var operatingSystemStatsOverhead = OperatingSystemStats()
+        var baselinePeakMemoryResidentDelta = 0
         if operatingSystemStatsRequested {
             let statsOne = operatingSystemStatsProducer.makeOperatingSystemStats()
             let statsTwo = operatingSystemStatsProducer.makeOperatingSystemStats()
@@ -219,6 +220,9 @@ final class BenchmarkExecutor { // swiftlint:disable:this type_body_length
                 delta = stopOperatingSystemStats.peakMemoryResident
                 statistics[.peakMemoryResident]?.add(Int(delta))
 
+                delta = stopOperatingSystemStats.peakMemoryResident - baselinePeakMemoryResidentDelta
+                statistics[.peakMemoryResidentDelta]?.add(Int(delta))
+
                 delta = stopOperatingSystemStats.peakMemoryVirtual
                 statistics[.peakMemoryVirtual]?.add(Int(delta))
 
@@ -266,11 +270,20 @@ final class BenchmarkExecutor { // swiftlint:disable:this type_body_length
             statistics[metric]?.add(value)
         }
 
+        if arcStatsRequested {
+            ARCStatsProducer.hook()
+        }
+
         if benchmark.configuration.metrics.contains(.threads) ||
             benchmark.configuration.metrics.contains(.threadsRunning) ||
             benchmark.configuration.metrics.contains(.peakMemoryResident) ||
+            benchmark.configuration.metrics.contains(.peakMemoryResidentDelta) ||
             benchmark.configuration.metrics.contains(.peakMemoryVirtual) {
             operatingSystemStatsProducer.startSampling(5_000) // ~5 ms
+
+            if benchmark.configuration.metrics.contains(.peakMemoryResidentDelta) {
+                baselinePeakMemoryResidentDelta = operatingSystemStatsProducer.makeOperatingSystemStats().peakMemoryResident
+            }
         }
 
         var progressBar: ProgressBar?
@@ -289,10 +302,6 @@ final class BenchmarkExecutor { // swiftlint:disable:this type_body_length
         }
 
         var nextPercentageToUpdateProgressBar = 0
-
-        if arcStatsRequested {
-            ARCStatsProducer.hook()
-        }
 
         #if canImport(OSLog)
             let benchmarkInterval = signPost.beginInterval("Benchmark", id: signpostID, "\(benchmark.name)")
@@ -340,10 +349,6 @@ final class BenchmarkExecutor { // swiftlint:disable:this type_body_length
             signPost.endInterval("Benchmark", benchmarkInterval, "\(iterations)")
         #endif
 
-        if arcStatsRequested {
-            ARCStatsProducer.unhook()
-        }
-
         if var progressBar {
             progressBar.setValue(100)
         }
@@ -351,6 +356,10 @@ final class BenchmarkExecutor { // swiftlint:disable:this type_body_length
         if benchmark.configuration.metrics.contains(.threads) ||
             benchmark.configuration.metrics.contains(.threadsRunning) {
             operatingSystemStatsProducer.stopSampling()
+        }
+
+        if arcStatsRequested {
+            ARCStatsProducer.unhook()
         }
 
         // construct metric result array
