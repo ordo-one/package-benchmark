@@ -33,7 +33,7 @@ extension BenchmarkTool {
             return 0
         }
         var roundedDiff = 100.0 - (100.0 * Double(comparison) / Double(base))
-        roundedDiff.round(.toNearestOrAwayFromZero)
+        roundedDiff.round(.toNearestOrEven)
         let diff = Int(roundedDiff)
 
         if reversePolarity {
@@ -146,7 +146,7 @@ extension BenchmarkTool {
             metrics.forEach { metric in
                 width = max(width, metric.description.count)
             }
-            width = min(maxDescriptionWidth, width + " (ms)".count)
+            width = min(maxDescriptionWidth, width + " (ms) *".count)
 
             baseline.targets.forEach { target in
                 let separator = String(repeating: "=", count: "\(target)".count)
@@ -174,7 +174,7 @@ extension BenchmarkTool {
             baseline.benchmarkIdentifiers.forEach { identifier in
                 width = max(width, "\(identifier.target):\(identifier.name)".count)
             }
-            width = min(maxDescriptionWidth, width + " (ms)".count)
+            width = min(maxDescriptionWidth, width + " (ms) *".count)
 
             baseline.benchmarkMetrics.forEach { metric in
 

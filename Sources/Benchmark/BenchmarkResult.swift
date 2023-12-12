@@ -242,16 +242,23 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
         if metric == .throughput {
             return normalize(value)
         }
-        return normalize(value) / remainingScalingFactor.rawValue
+
+        var roundedValue = ((Double(normalize(value)) * 1000.0) / Double(remainingScalingFactor.rawValue)) / 1000.0
+        roundedValue.round(.toNearestOrEven)
+        return Int(roundedValue)
     }
 
     // Scale a value to the appropriate unit (from ns/count -> )
     public func normalize(_ value: Int) -> Int {
-        value / timeUnits.divisor
+        var roundedValue = ((Double(value) * 1000.0) / Double(timeUnits.divisor)) / 1000.0
+        roundedValue.round(.toNearestOrEven)
+        return Int(roundedValue)
     }
 
     public func normalizeCompare(_ value: Int) -> Int {
-        value / timeUnits.rawValue
+        var roundedValue = ((Double(value) * 1000.0) / Double(timeUnits.rawValue)) / 1000.0
+        roundedValue.round(.toNearestOrEven)
+        return Int(roundedValue)
     }
 
     public var unitDescription: String {
