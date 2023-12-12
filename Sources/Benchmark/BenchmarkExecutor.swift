@@ -349,6 +349,10 @@ struct BenchmarkExecutor { // swiftlint:disable:this type_body_length
             }
         }
 
+        if arcStatsRequested {
+            ARCStatsProducer.unhook()
+        }
+
         #if canImport(OSLog)
             signPost.endInterval("Benchmark", benchmarkInterval, "\(iterations)")
         #endif
@@ -360,10 +364,6 @@ struct BenchmarkExecutor { // swiftlint:disable:this type_body_length
         if benchmark.configuration.metrics.contains(.threads) ||
             benchmark.configuration.metrics.contains(.threadsRunning) {
             operatingSystemStatsProducer.stopSampling()
-        }
-
-        if arcStatsRequested {
-            ARCStatsProducer.unhook()
         }
 
         // construct metric result array
