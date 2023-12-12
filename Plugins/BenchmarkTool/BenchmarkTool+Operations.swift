@@ -166,7 +166,7 @@ extension BenchmarkTool {
                                 }
                             }
                         }
-                        if !thresholdsFound  {
+                        if !thresholdsFound {
                             print("")
                             failBenchmark("Could not find any matching absolute thresholds at path [\(benchmarkPath)], failing threshold check.",
                                           exitCode: .thresholdRegression)

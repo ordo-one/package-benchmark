@@ -8,6 +8,8 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 //
 
+// swiftlint:disable file_length
+
 /// Metrics supported by benchmark.
 ///
 /// Some metrics are only available on macOS or Linux, but you can specify all the metrics without worrying about platform availability.
@@ -214,6 +216,143 @@ public extension BenchmarkMetric {
         case let .custom(name, _, _):
             return name
         }
+    }
+
+    // Used by the Benchmark Executor for efficient indexing into results
+    #if swift(>=5.8)
+        @_documentation(visibility: internal)
+    #endif
+    var index: Int {
+        switch self {
+        case .cpuUser:
+            return 1
+        case .cpuSystem:
+            return 2
+        case .cpuTotal:
+            return 3
+        case .wallClock:
+            return 4
+        case .throughput:
+            return 5
+        case .peakMemoryResident:
+            return 6
+        case .peakMemoryResidentDelta:
+            return 7
+        case .peakMemoryVirtual:
+            return 8
+        case .mallocCountSmall:
+            return 9
+        case .mallocCountLarge:
+            return 10
+        case .mallocCountTotal:
+            return 11
+        case .allocatedResidentMemory:
+            return 12
+        case .memoryLeaked:
+            return 13
+        case .syscalls:
+            return 14
+        case .contextSwitches:
+            return 15
+        case .threads:
+            return 16
+        case .threadsRunning:
+            return 17
+        case .readSyscalls:
+            return 18
+        case .writeSyscalls:
+            return 19
+        case .readBytesLogical:
+            return 20
+        case .writeBytesLogical:
+            return 21
+        case .readBytesPhysical:
+            return 22
+        case .writeBytesPhysical:
+            return 23
+        case .objectAllocCount:
+            return 24
+        case .retainCount:
+            return 25
+        case .releaseCount:
+            return 26
+        case .retainReleaseDelta:
+            return 27
+        default:
+            return 0 // custom payloads must be stored in dictionary
+        }
+    }
+
+    #if swift(>=5.8)
+        @_documentation(visibility: internal)
+    #endif
+    static var maxIndex: Int { 27 } //
+
+    // Used by the Benchmark Executor for efficient indexing into results
+    #if swift(>=5.8)
+        @_documentation(visibility: internal)
+    #endif
+    // swiftlint:disable:next cyclomatic_complexity function_body_length
+    func metricFor(index: Int) -> BenchmarkMetric {
+        switch index {
+        case 1:
+            return .cpuUser
+        case 2:
+            return .cpuSystem
+        case 3:
+            return .cpuTotal
+        case 4:
+            return .wallClock
+        case 5:
+            return .throughput
+        case 6:
+            return .peakMemoryResident
+        case 7:
+            return .peakMemoryResidentDelta
+        case 8:
+            return .peakMemoryVirtual
+        case 9:
+            return .mallocCountSmall
+        case 10:
+            return .mallocCountLarge
+        case 11:
+            return .mallocCountTotal
+        case 12:
+            return .allocatedResidentMemory
+        case 13:
+            return .memoryLeaked
+        case 14:
+            return .syscalls
+        case 15:
+            return .contextSwitches
+        case 16:
+            return .threads
+        case 17:
+            return .threadsRunning
+        case 18:
+            return .readSyscalls
+        case 19:
+            return .writeSyscalls
+        case 20:
+            return .readBytesLogical
+        case 21:
+            return .writeBytesLogical
+        case 22:
+            return .readBytesPhysical
+        case 23:
+            return .writeBytesPhysical
+        case 24:
+            return .objectAllocCount
+        case 25:
+            return .retainCount
+        case 26:
+            return .releaseCount
+        case 27:
+            return .retainReleaseDelta
+        default:
+            break
+        }
+        return .custom("Invalid metric provided", polarity: .prefersLarger, useScalingFactor: false)
     }
 }
 

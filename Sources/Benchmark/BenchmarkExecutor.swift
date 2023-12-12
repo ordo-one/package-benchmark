@@ -15,7 +15,9 @@ import Progress
     import OSLog
 #endif
 
-final class BenchmarkExecutor { // swiftlint:disable:this type_body_length
+// swiftlint:disable file_length
+
+struct BenchmarkExecutor { // swiftlint:disable:this type_body_length
     init(quiet: Bool = false) {
         self.quiet = quiet
     }
@@ -59,9 +61,8 @@ final class BenchmarkExecutor { // swiftlint:disable:this type_body_length
             }
         #endif
 
-        // Could make an array with raw value indexing on enum for
-        // performance if needed instead of dictionary
-        var statistics: [BenchmarkMetric: Statistics] = [:]
+        var statistics: [Statistics] = .init(repeating: Statistics(), count: BenchmarkMetric.maxIndex + 1)
+        var customStatistics: [BenchmarkMetric: Statistics] = [:]
         var operatingSystemStatsRequested = false
         var mallocStatsRequested = false
         var arcStatsRequested = false
@@ -71,13 +72,13 @@ final class BenchmarkExecutor { // swiftlint:disable:this type_body_length
         benchmark.configuration.metrics.forEach { metric in
             switch metric {
             case .custom:
-                statistics[metric] = Statistics(prefersLarger: metric.polarity == .prefersLarger)
+                customStatistics[metric] = Statistics(prefersLarger: metric.polarity == .prefersLarger)
             case .wallClock, .cpuUser, .cpuTotal, .cpuSystem:
                 let units = Statistics.Units(benchmark.configuration.timeUnits)
-                statistics[metric] = Statistics(units: units)
+                statistics[metric.index] = Statistics(units: units)
             default:
                 if operatingSystemStatsProducer.metricSupported(metric) == true {
-                    statistics[metric] = Statistics(prefersLarger: metric.polarity == .prefersLarger)
+                    statistics[metric.index] = Statistics(prefersLarger: metric.polarity == .prefersLarger)
                 }
             }
 
@@ -123,7 +124,7 @@ final class BenchmarkExecutor { // swiftlint:disable:this type_body_length
         // ARC measurements if initializing it before malloc etc.
         benchmark.measurementPreSynchronization = {
             if operatingSystemStatsRequested {
-                startOperatingSystemStats = self.operatingSystemStatsProducer.makeOperatingSystemStats()
+                startOperatingSystemStats = operatingSystemStatsProducer.makeOperatingSystemStats()
             }
 
             if mallocStatsRequested {
@@ -151,7 +152,7 @@ final class BenchmarkExecutor { // swiftlint:disable:this type_body_length
             }
 
             if operatingSystemStatsRequested {
-                stopOperatingSystemStats = self.operatingSystemStatsProducer.makeOperatingSystemStats()
+                stopOperatingSystemStats = operatingSystemStatsProducer.makeOperatingSystemStats()
             }
 
             var delta = 0
@@ -159,115 +160,118 @@ final class BenchmarkExecutor { // swiftlint:disable:this type_body_length
 
             wallClockDuration = initialStartTime.duration(to: stopTime)
 
-            if runningTime > .zero { // macOS sometimes gives us identical timestamps so let's skip those.
-                statistics[.wallClock]?.add(Int(runningTime.nanoseconds()))
+            statistics.withUnsafeMutableBufferPointer { statistics in
+                if runningTime > .zero { // macOS sometimes gives us identical timestamps so let's skip those.
+                    let nanoSeconds = runningTime.nanoseconds()
+                    statistics[BenchmarkMetric.wallClock.index].add(Int(nanoSeconds))
 
-                var roundedThroughput =
-                    Double(1_000_000_000)
-                        / Double(runningTime.nanoseconds())
-                roundedThroughput.round(.toNearestOrAwayFromZero)
+                    // We should eventually move the computation of the throughput to the
+                    // post processing instead
+                    var roundedThroughput = Double(1_000_000_000) / Double(nanoSeconds)
+                    roundedThroughput.round(.toNearestOrEven)
 
-                let throughput = Int(roundedThroughput)
+                    let throughput = Int(roundedThroughput)
 
-                if throughput > 0 {
-                    statistics[.throughput]?.add(throughput)
+                    if throughput > 0 {
+                        statistics[BenchmarkMetric.throughput.index].add(throughput)
+                    }
+                } else {
+                    //  fatalError("Zero running time \(self.startTime), \(self.stopTime), \(runningTime)")
                 }
-            } else {
-                //  fatalError("Zero running time \(self.startTime), \(self.stopTime), \(runningTime)")
-            }
 
-            if arcStatsRequested {
-                let objectAllocDelta = stopARCStats.objectAllocCount - startARCStats.objectAllocCount
-                statistics[.objectAllocCount]?.add(Int(objectAllocDelta))
+                if arcStatsRequested {
+                    let objectAllocDelta = stopARCStats.objectAllocCount - startARCStats.objectAllocCount
+                    statistics[BenchmarkMetric.objectAllocCount.index].add(Int(objectAllocDelta))
 
-                let retainDelta = stopARCStats.retainCount - startARCStats.retainCount - 1 // due to some ARC traffic in the path
-                statistics[.retainCount]?.add(Int(retainDelta))
+                    let retainDelta = stopARCStats.retainCount - startARCStats.retainCount - 1 // due to some ARC traffic in the path
+                    statistics[BenchmarkMetric.retainCount.index].add(Int(retainDelta))
 
-                let releaseDelta = stopARCStats.releaseCount - startARCStats.releaseCount - 1 // due to some ARC traffic in the path
-                statistics[.releaseCount]?.add(Int(releaseDelta))
+                    let releaseDelta = stopARCStats.releaseCount - startARCStats.releaseCount - 1 // due to some ARC traffic in the path
+                    statistics[BenchmarkMetric.releaseCount.index].add(Int(releaseDelta))
 
-                statistics[.retainReleaseDelta]?.add(Int(abs(objectAllocDelta + retainDelta - releaseDelta)))
-            }
+                    statistics[BenchmarkMetric.retainReleaseDelta.index].add(Int(abs(objectAllocDelta + retainDelta - releaseDelta)))
+                }
 
-            if mallocStatsRequested {
-                delta = stopMallocStats.mallocCountTotal - startMallocStats.mallocCountTotal
-                statistics[.mallocCountTotal]?.add(Int(delta))
+                if mallocStatsRequested {
+                    delta = stopMallocStats.mallocCountTotal - startMallocStats.mallocCountTotal
+                    statistics[BenchmarkMetric.mallocCountTotal.index].add(Int(delta))
 
-                delta = stopMallocStats.mallocCountSmall - startMallocStats.mallocCountSmall
-                statistics[.mallocCountSmall]?.add(Int(delta))
+                    delta = stopMallocStats.mallocCountSmall - startMallocStats.mallocCountSmall
+                    statistics[BenchmarkMetric.mallocCountSmall.index].add(Int(delta))
 
-                delta = stopMallocStats.mallocCountLarge - startMallocStats.mallocCountLarge
-                statistics[.mallocCountLarge]?.add(Int(delta))
+                    delta = stopMallocStats.mallocCountLarge - startMallocStats.mallocCountLarge
+                    statistics[BenchmarkMetric.mallocCountLarge.index].add(Int(delta))
 
-                delta = stopMallocStats.allocatedResidentMemory - startMallocStats.allocatedResidentMemory
-                statistics[.memoryLeaked]?.add(Int(delta))
+                    delta = stopMallocStats.allocatedResidentMemory - startMallocStats.allocatedResidentMemory
+                    statistics[BenchmarkMetric.memoryLeaked.index].add(Int(delta))
 
-//                delta = stopMallocStats.allocatedResidentMemory - baselineMallocStats.allocatedResidentMemory // baselineMallocStats!
-                statistics[.allocatedResidentMemory]?.add(Int(stopMallocStats.allocatedResidentMemory))
-            }
+                    //                delta = stopMallocStats.allocatedResidentMemory - baselineMallocStats.allocatedResidentMemory // baselineMallocStats!
+                    statistics[BenchmarkMetric.allocatedResidentMemory.index].add(Int(stopMallocStats.allocatedResidentMemory))
+                }
 
-            if operatingSystemStatsRequested {
-                delta = stopOperatingSystemStats.cpuUser - startOperatingSystemStats.cpuUser
-                statistics[.cpuUser]?.add(Int(delta))
+                if operatingSystemStatsRequested {
+                    delta = stopOperatingSystemStats.cpuUser - startOperatingSystemStats.cpuUser
+                    statistics[BenchmarkMetric.cpuUser.index].add(Int(delta))
 
-                delta = stopOperatingSystemStats.cpuSystem - startOperatingSystemStats.cpuSystem
-                statistics[.cpuSystem]?.add(Int(delta))
+                    delta = stopOperatingSystemStats.cpuSystem - startOperatingSystemStats.cpuSystem
+                    statistics[BenchmarkMetric.cpuSystem.index].add(Int(delta))
 
-                delta = stopOperatingSystemStats.cpuTotal -
-                    startOperatingSystemStats.cpuTotal
-                statistics[.cpuTotal]?.add(Int(delta))
+                    delta = stopOperatingSystemStats.cpuTotal -
+                        startOperatingSystemStats.cpuTotal
+                    statistics[BenchmarkMetric.cpuTotal.index].add(Int(delta))
 
-                delta = stopOperatingSystemStats.peakMemoryResident
-                statistics[.peakMemoryResident]?.add(Int(delta))
+                    delta = stopOperatingSystemStats.peakMemoryResident
+                    statistics[BenchmarkMetric.peakMemoryResident.index].add(Int(delta))
 
-                delta = stopOperatingSystemStats.peakMemoryResident - baselinePeakMemoryResidentDelta
-                statistics[.peakMemoryResidentDelta]?.add(Int(delta))
+                    delta = stopOperatingSystemStats.peakMemoryResident - baselinePeakMemoryResidentDelta
+                    statistics[BenchmarkMetric.peakMemoryResidentDelta.index].add(Int(delta))
 
-                delta = stopOperatingSystemStats.peakMemoryVirtual
-                statistics[.peakMemoryVirtual]?.add(Int(delta))
+                    delta = stopOperatingSystemStats.peakMemoryVirtual
+                    statistics[BenchmarkMetric.peakMemoryVirtual.index].add(Int(delta))
 
-                delta = stopOperatingSystemStats.syscalls -
-                    startOperatingSystemStats.syscalls - operatingSystemStatsOverhead.syscalls
-                statistics[.syscalls]?.add(Int(max(0, delta)))
+                    delta = stopOperatingSystemStats.syscalls -
+                        startOperatingSystemStats.syscalls - operatingSystemStatsOverhead.syscalls
+                    statistics[BenchmarkMetric.syscalls.index].add(Int(max(0, delta)))
 
-                delta = stopOperatingSystemStats.contextSwitches -
-                    startOperatingSystemStats.contextSwitches
-                statistics[.contextSwitches]?.add(Int(delta))
+                    delta = stopOperatingSystemStats.contextSwitches -
+                        startOperatingSystemStats.contextSwitches
+                    statistics[BenchmarkMetric.contextSwitches.index].add(Int(delta))
 
-                delta = stopOperatingSystemStats.threads
-                statistics[.threads]?.add(Int(delta))
+                    delta = stopOperatingSystemStats.threads
+                    statistics[BenchmarkMetric.threads.index].add(Int(delta))
 
-                delta = stopOperatingSystemStats.threadsRunning
-                statistics[.threadsRunning]?.add(Int(delta))
+                    delta = stopOperatingSystemStats.threadsRunning
+                    statistics[BenchmarkMetric.threadsRunning.index].add(Int(delta))
 
-                delta = stopOperatingSystemStats.readSyscalls -
-                    startOperatingSystemStats.readSyscalls - operatingSystemStatsOverhead.readSyscalls
-                statistics[.readSyscalls]?.add(Int(max(0, delta)))
+                    delta = stopOperatingSystemStats.readSyscalls -
+                        startOperatingSystemStats.readSyscalls - operatingSystemStatsOverhead.readSyscalls
+                    statistics[BenchmarkMetric.readSyscalls.index].add(Int(max(0, delta)))
 
-                delta = stopOperatingSystemStats.writeSyscalls -
-                    startOperatingSystemStats.writeSyscalls
-                statistics[.writeSyscalls]?.add(Int(delta))
+                    delta = stopOperatingSystemStats.writeSyscalls -
+                        startOperatingSystemStats.writeSyscalls
+                    statistics[BenchmarkMetric.writeSyscalls.index].add(Int(delta))
 
-                delta = stopOperatingSystemStats.readBytesLogical -
-                    startOperatingSystemStats.readBytesLogical - operatingSystemStatsOverhead.readBytesLogical
-                statistics[.readBytesLogical]?.add(Int(max(0, delta)))
+                    delta = stopOperatingSystemStats.readBytesLogical -
+                        startOperatingSystemStats.readBytesLogical - operatingSystemStatsOverhead.readBytesLogical
+                    statistics[BenchmarkMetric.readBytesLogical.index].add(Int(max(0, delta)))
 
-                delta = stopOperatingSystemStats.writeBytesLogical -
-                    startOperatingSystemStats.writeBytesLogical
-                statistics[.writeBytesLogical]?.add(Int(delta))
+                    delta = stopOperatingSystemStats.writeBytesLogical -
+                        startOperatingSystemStats.writeBytesLogical
+                    statistics[BenchmarkMetric.writeBytesLogical.index].add(Int(delta))
 
-                delta = stopOperatingSystemStats.readBytesPhysical -
-                    startOperatingSystemStats.readBytesPhysical - operatingSystemStatsOverhead.readBytesPhysical
-                statistics[.readBytesPhysical]?.add(Int(max(0, delta)))
+                    delta = stopOperatingSystemStats.readBytesPhysical -
+                        startOperatingSystemStats.readBytesPhysical - operatingSystemStatsOverhead.readBytesPhysical
+                    statistics[BenchmarkMetric.readBytesPhysical.index].add(Int(max(0, delta)))
 
-                delta = stopOperatingSystemStats.writeBytesPhysical -
-                    startOperatingSystemStats.writeBytesPhysical
-                statistics[.writeBytesPhysical]?.add(Int(delta))
+                    delta = stopOperatingSystemStats.writeBytesPhysical -
+                        startOperatingSystemStats.writeBytesPhysical
+                    statistics[BenchmarkMetric.writeBytesPhysical.index].add(Int(delta))
+                }
             }
         }
 
         benchmark.customMetricMeasurement = { metric, value in
-            statistics[metric]?.add(value)
+            customStatistics[metric]?.add(value)
         }
 
         if arcStatsRequested {
@@ -328,21 +332,27 @@ final class BenchmarkExecutor { // swiftlint:disable:this type_body_length
 
             iterations += 1
 
-            if var progressBar {
-                let iterationsPercentage = 100.0 * Double(iterations) /
-                    Double(benchmark.configuration.maxIterations)
+            if iterations < 1_000 || iterations.isMultiple(of: 500) { // only update for low iteration count benchmarks, else 1/500
+                if var progressBar {
+                    let iterationsPercentage = 100.0 * Double(iterations) /
+                        Double(benchmark.configuration.maxIterations)
 
-                let timePercentage = 100.0 * (wallClockDuration /
-                    benchmark.configuration.maxDuration)
+                    let timePercentage = 100.0 * (wallClockDuration /
+                        benchmark.configuration.maxDuration)
 
-                let maxPercentage = max(iterationsPercentage, timePercentage)
+                    let maxPercentage = max(iterationsPercentage, timePercentage)
 
-                // Small optimization to not update every single percentage point
-                if Int(maxPercentage) > nextPercentageToUpdateProgressBar {
-                    progressBar.setValue(Int(maxPercentage))
-                    nextPercentageToUpdateProgressBar = Int(maxPercentage) + Int.random(in: 3 ... 9)
+                    // Small optimization to not update every single percentage point
+                    if Int(maxPercentage) > nextPercentageToUpdateProgressBar {
+                        progressBar.setValue(Int(maxPercentage))
+                        nextPercentageToUpdateProgressBar = Int(maxPercentage) + Int.random(in: 3 ... 9)
+                    }
                 }
             }
+        }
+
+        if arcStatsRequested {
+            ARCStatsProducer.unhook()
         }
 
         #if canImport(OSLog)
@@ -358,21 +368,36 @@ final class BenchmarkExecutor { // swiftlint:disable:this type_body_length
             operatingSystemStatsProducer.stopSampling()
         }
 
-        if arcStatsRequested {
-            ARCStatsProducer.unhook()
-        }
-
         // construct metric result array
         var results: [BenchmarkResult] = []
-        statistics.forEach { key, value in
-            if value.measurementCount > 0 {
-                let result = BenchmarkResult(metric: key,
-                                             timeUnits: BenchmarkTimeUnits(value.timeUnits),
-                                             scalingFactor: benchmark.configuration.scalingFactor,
-                                             warmupIterations: benchmark.configuration.warmupIterations,
-                                             thresholds: benchmark.configuration.thresholds?[key],
-                                             statistics: value)
-                results.append(result)
+
+        benchmark.configuration.metrics.forEach { metric in
+            switch metric {
+            case .custom:
+                if let value = customStatistics[metric] {
+                    if value.measurementCount > 0 {
+                        let result = BenchmarkResult(metric: metric,
+                                                     timeUnits: BenchmarkTimeUnits(value.timeUnits),
+                                                     scalingFactor: benchmark.configuration.scalingFactor,
+                                                     warmupIterations: benchmark.configuration.warmupIterations,
+                                                     thresholds: benchmark.configuration.thresholds?[metric],
+                                                     statistics: value)
+                        results.append(result)
+                    }
+                }
+            default:
+                if operatingSystemsStatsProducerNeeded(metric) == false || operatingSystemStatsProducer.metricSupported(metric) {
+                    let value = statistics[metric.index]
+                    if value.measurementCount > 0 {
+                        let result = BenchmarkResult(metric: metric,
+                                                     timeUnits: BenchmarkTimeUnits(value.timeUnits),
+                                                     scalingFactor: benchmark.configuration.scalingFactor,
+                                                     warmupIterations: benchmark.configuration.warmupIterations,
+                                                     thresholds: benchmark.configuration.thresholds?[metric],
+                                                     statistics: value)
+                        results.append(result)
+                    }
+                }
             }
         }
 

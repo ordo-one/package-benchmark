@@ -10,6 +10,17 @@
 
 // Convenience sets of metrics
 public extension BenchmarkMetric {
+    /// A small collection of metrics used for microbenchmarks only interested in CPU
+    ///
+    /// The defaults include ``wallClock`` and  ``throughput``.
+    ///
+    /// There is also an convenience extension on Array defined such that you can write just `.microbenchmark` rather than `BenchmarkMetric.microbenchmark`
+    ///
+    static var microbenchmark: [BenchmarkMetric] {
+        [.wallClock,
+         .throughput]
+    }
+
     /// The default collection of metrics used for a benchmark.
     ///
     /// The defaults include ``wallClock``, ``cpuTotal``, ``mallocCountTotal``, ``throughput``, and ``peakMemoryResident``.
@@ -110,6 +121,13 @@ public extension BenchmarkMetric {
 
 // Nicer convenience extension for Array so one can write `.extended` instead of `BenchmarkMetric.extended`
 public extension [BenchmarkMetric] {
+    /// A sutiable set of metrics for microbenchmarks that are CPU-oriented only.
+    ///
+    /// The defaults include ``wallClock`` and ``throughput``
+    static var microbenchmark: [BenchmarkMetric] {
+        BenchmarkMetric.microbenchmark
+    }
+
     /// The default collection of metrics used for a benchmark.
     ///
     /// The defaults include ``wallClock``, ``cpuTotal``, ``mallocCountTotal``, ``throughput``, and ``peakMemoryResident``.

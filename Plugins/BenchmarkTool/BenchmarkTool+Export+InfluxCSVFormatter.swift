@@ -145,7 +145,7 @@ extension BenchmarkTool {
                 var iterations = 0
                 var warmupIterations = 0
                 var cleanedTestName = test.name
-                
+
                 // adds quotes around test names that contain a comma.
                 // This helps avoid parsing issues on the exported CSV file
                 if cleanedTestName.contains(",") {
