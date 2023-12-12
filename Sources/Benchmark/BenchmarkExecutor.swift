@@ -15,6 +15,8 @@ import Progress
     import OSLog
 #endif
 
+// swiftlint:disable file_length
+
 struct BenchmarkExecutor { // swiftlint:disable:this type_body_length
     init(quiet: Bool = false) {
         self.quiet = quiet
@@ -122,7 +124,7 @@ struct BenchmarkExecutor { // swiftlint:disable:this type_body_length
         // ARC measurements if initializing it before malloc etc.
         benchmark.measurementPreSynchronization = {
             if operatingSystemStatsRequested {
-                startOperatingSystemStats = self.operatingSystemStatsProducer.makeOperatingSystemStats()
+                startOperatingSystemStats = operatingSystemStatsProducer.makeOperatingSystemStats()
             }
 
             if mallocStatsRequested {
@@ -150,7 +152,7 @@ struct BenchmarkExecutor { // swiftlint:disable:this type_body_length
             }
 
             if operatingSystemStatsRequested {
-                stopOperatingSystemStats = self.operatingSystemStatsProducer.makeOperatingSystemStats()
+                stopOperatingSystemStats = operatingSystemStatsProducer.makeOperatingSystemStats()
             }
 
             var delta = 0
@@ -215,7 +217,7 @@ struct BenchmarkExecutor { // swiftlint:disable:this type_body_length
                     statistics[BenchmarkMetric.cpuSystem.index].add(Int(delta))
 
                     delta = stopOperatingSystemStats.cpuTotal -
-                    startOperatingSystemStats.cpuTotal
+                        startOperatingSystemStats.cpuTotal
                     statistics[BenchmarkMetric.cpuTotal.index].add(Int(delta))
 
                     delta = stopOperatingSystemStats.peakMemoryResident
@@ -228,11 +230,11 @@ struct BenchmarkExecutor { // swiftlint:disable:this type_body_length
                     statistics[BenchmarkMetric.peakMemoryVirtual.index].add(Int(delta))
 
                     delta = stopOperatingSystemStats.syscalls -
-                    startOperatingSystemStats.syscalls - operatingSystemStatsOverhead.syscalls
+                        startOperatingSystemStats.syscalls - operatingSystemStatsOverhead.syscalls
                     statistics[BenchmarkMetric.syscalls.index].add(Int(max(0, delta)))
 
                     delta = stopOperatingSystemStats.contextSwitches -
-                    startOperatingSystemStats.contextSwitches
+                        startOperatingSystemStats.contextSwitches
                     statistics[BenchmarkMetric.contextSwitches.index].add(Int(delta))
 
                     delta = stopOperatingSystemStats.threads
@@ -242,27 +244,27 @@ struct BenchmarkExecutor { // swiftlint:disable:this type_body_length
                     statistics[BenchmarkMetric.threadsRunning.index].add(Int(delta))
 
                     delta = stopOperatingSystemStats.readSyscalls -
-                    startOperatingSystemStats.readSyscalls - operatingSystemStatsOverhead.readSyscalls
+                        startOperatingSystemStats.readSyscalls - operatingSystemStatsOverhead.readSyscalls
                     statistics[BenchmarkMetric.readSyscalls.index].add(Int(max(0, delta)))
 
                     delta = stopOperatingSystemStats.writeSyscalls -
-                    startOperatingSystemStats.writeSyscalls
+                        startOperatingSystemStats.writeSyscalls
                     statistics[BenchmarkMetric.writeSyscalls.index].add(Int(delta))
 
                     delta = stopOperatingSystemStats.readBytesLogical -
-                    startOperatingSystemStats.readBytesLogical - operatingSystemStatsOverhead.readBytesLogical
+                        startOperatingSystemStats.readBytesLogical - operatingSystemStatsOverhead.readBytesLogical
                     statistics[BenchmarkMetric.readBytesLogical.index].add(Int(max(0, delta)))
 
                     delta = stopOperatingSystemStats.writeBytesLogical -
-                    startOperatingSystemStats.writeBytesLogical
+                        startOperatingSystemStats.writeBytesLogical
                     statistics[BenchmarkMetric.writeBytesLogical.index].add(Int(delta))
 
                     delta = stopOperatingSystemStats.readBytesPhysical -
-                    startOperatingSystemStats.readBytesPhysical - operatingSystemStatsOverhead.readBytesPhysical
+                        startOperatingSystemStats.readBytesPhysical - operatingSystemStatsOverhead.readBytesPhysical
                     statistics[BenchmarkMetric.readBytesPhysical.index].add(Int(max(0, delta)))
 
                     delta = stopOperatingSystemStats.writeBytesPhysical -
-                    startOperatingSystemStats.writeBytesPhysical
+                        startOperatingSystemStats.writeBytesPhysical
                     statistics[BenchmarkMetric.writeBytesPhysical.index].add(Int(delta))
                 }
             }
@@ -330,13 +332,13 @@ struct BenchmarkExecutor { // swiftlint:disable:this type_body_length
 
             iterations += 1
 
-            if iterations < 1_000 || (iterations % 500 == 0) { // only update diligently for low iteration count benchmarks, otherwise 1/500
+            if iterations < 1_000 || iterations.isMultiple(of: 500) { // only update for low iteration count benchmarks, else 1/500
                 if var progressBar {
                     let iterationsPercentage = 100.0 * Double(iterations) /
-                    Double(benchmark.configuration.maxIterations)
+                        Double(benchmark.configuration.maxIterations)
 
                     let timePercentage = 100.0 * (wallClockDuration /
-                                                  benchmark.configuration.maxDuration)
+                        benchmark.configuration.maxDuration)
 
                     let maxPercentage = max(iterationsPercentage, timePercentage)
 

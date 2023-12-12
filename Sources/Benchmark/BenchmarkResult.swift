@@ -243,20 +243,20 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
             return normalize(value)
         }
 
-        var roundedValue = ((Double(normalize(value)) * 1000.0) / Double(remainingScalingFactor.rawValue)) / 1000.0
+        var roundedValue = ((Double(normalize(value)) * 1_000.0) / Double(remainingScalingFactor.rawValue)) / 1_000.0
         roundedValue.round(.toNearestOrEven)
         return Int(roundedValue)
     }
 
     // Scale a value to the appropriate unit (from ns/count -> )
     public func normalize(_ value: Int) -> Int {
-        var roundedValue = ((Double(value) * 1000.0) / Double(timeUnits.divisor)) / 1000.0
+        var roundedValue = ((Double(value) * 1_000.0) / Double(timeUnits.divisor)) / 1_000.0
         roundedValue.round(.toNearestOrEven)
         return Int(roundedValue)
     }
 
     public func normalizeCompare(_ value: Int) -> Int {
-        var roundedValue = ((Double(value) * 1000.0) / Double(timeUnits.rawValue)) / 1000.0
+        var roundedValue = ((Double(value) * 1_000.0) / Double(timeUnits.rawValue)) / 1_000.0
         roundedValue.round(.toNearestOrEven)
         return Int(roundedValue)
     }

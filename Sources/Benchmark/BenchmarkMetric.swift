@@ -8,6 +8,8 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 //
 
+// swiftlint:disable file_length
+
 /// Metrics supported by benchmark.
 ///
 /// Some metrics are only available on macOS or Linux, but you can specify all the metrics without worrying about platform availability.
@@ -217,9 +219,9 @@ public extension BenchmarkMetric {
     }
 
     // Used by the Benchmark Executor for efficient indexing into results
-#if swift(>=5.8)
-    @_documentation(visibility: internal)
-#endif
+    #if swift(>=5.8)
+        @_documentation(visibility: internal)
+    #endif
     var index: Int {
         switch self {
         case .cpuUser:
@@ -280,15 +282,17 @@ public extension BenchmarkMetric {
             return 0 // custom payloads must be stored in dictionary
         }
     }
-#if swift(>=5.8)
-    @_documentation(visibility: internal)
-#endif
+
+    #if swift(>=5.8)
+        @_documentation(visibility: internal)
+    #endif
     static var maxIndex: Int { 27 } //
 
     // Used by the Benchmark Executor for efficient indexing into results
-#if swift(>=5.8)
-    @_documentation(visibility: internal)
-#endif
+    #if swift(>=5.8)
+        @_documentation(visibility: internal)
+    #endif
+    // swiftlint:disable:next cyclomatic_complexity function_body_length
     func metricFor(index: Int) -> BenchmarkMetric {
         switch index {
         case 1:
