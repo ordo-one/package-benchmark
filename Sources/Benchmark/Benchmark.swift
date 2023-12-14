@@ -360,8 +360,8 @@ public extension Benchmark {
         /// Specifies a number of warmup iterations should be performed before the measurement to
         /// reduce outliers due to e.g. cache population
         public var warmupIterations: Int
-        /// Specifies the number of logical subiterations being done, supporting scaling of metricsi accordingly.
-        /// E.g. `.kilo`will scale results with 1000. Any subiteration done in the benchmark should use
+        /// Specifies the number of logical subiterations being done, supporting scaling of metrics accordingly.
+        /// E.g. `.kilo` will scale results with 1000. Any subiteration done in the benchmark should use
         /// `for _ in benchmark.scaledIterations` for the number of iterations.
         public var scalingFactor: BenchmarkScalingFactor
         /// The maximum wall clock runtime for the benchmark, currenty defaults to `.seconds(1)` if not set
