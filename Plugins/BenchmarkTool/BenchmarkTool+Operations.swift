@@ -98,8 +98,7 @@ extension BenchmarkTool {
 
             switch baselineOperation {
             case .delete:
-                benchmarkExecutablePaths.forEach { path in
-                    let target = FilePath(path).lastComponent!.description
+                targets.forEach { target in
                     baseline.forEach {
                         removeBaselinesNamed(target: target, baselineName: $0)
                     }
@@ -142,10 +141,14 @@ extension BenchmarkTool {
 
             case .check:
                 if checkAbsolute {
-                    guard benchmarkBaselines.count == 1 else {
+                    guard benchmarkBaselines.count == 1,
+                            let currentBaseline = benchmarkBaselines.first,
+                            let baselineName = baseline.first else {
                         print("Can only do absolute threshold violation checks for a single benchmark baseline, got: \(benchmarkBaselines.count) baselines.")
                         return
                     }
+                    NEXT HERE
+print("benchmarks \(benchmarks)")
                     if let benchmarkPath = checkAbsolutePath { // load statically defined threshods for .p90
                         var thresholdsFound = false
                         benchmarks.forEach { benchmark in
@@ -173,8 +176,6 @@ extension BenchmarkTool {
                         }
                     }
                     print("")
-                    let currentBaseline = benchmarkBaselines[0]
-                    let baselineName = baseline[0]
 
                     let deviationResults = currentBaseline.failsAbsoluteThresholdChecks(benchmarks: benchmarks)
 

@@ -115,6 +115,14 @@ The following example shows an benchmark suite named `My-Benchmark` with the req
 ),
 ```
 
+### Run benchmark plugin in release mode
+If you find that the runtime for e.g. baseline processing is long, it's recommended to try running the benchmark
+plugin in release mode configuration, e.g.
+
+```
+swift package -c release benchmark baseline read myBaseLine
+```
+
 ### Dedicated GitHub runner instances
 
 For reproducible and good comparable results, it is *highly* recommended to set up a private GitHub runner that is completely dedicated for performance benchmark runs, as the standard GitHub CI runners are deployed on a shared infrastructure the deviations between runs can be significant and difficult to assess.
