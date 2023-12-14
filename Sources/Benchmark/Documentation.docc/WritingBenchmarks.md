@@ -346,7 +346,7 @@ import Benchmark
 let benchmarks = {
 
 Benchmark("Minimal benchmark") { benchmark, setupState in
-    print("Array of ints: \(setupState")
+    print("Array of ints: \(setupState)")
   } setup: {
     [1, 2, 3]
   } 
@@ -363,7 +363,7 @@ func sharedSetupState() -> [Int] {
 
 let benchmarks = {
   Benchmark("Minimal benchmark") { benchmark, setupState in
-      print("Array of ints: \(setupState")
+      print("Array of ints: \(setupState)")
     } setup: {
       sharedSetupState()
     }
