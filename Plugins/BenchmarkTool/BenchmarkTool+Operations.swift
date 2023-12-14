@@ -150,7 +150,7 @@ extension BenchmarkTool {
 
                     if benchmarks.isEmpty { // if we read from baseline and didn't run them, we put in some fake entries for the compare
                         currentBaseline.results.keys.forEach { baselineKey in
-                            if var benchmark: Benchmark = .init(baselineKey.name, closure:{_ in}) {
+                            if let benchmark: Benchmark = .init(baselineKey.name, closure:{_ in}) {
                                 benchmark.target = baselineKey.target
                                 benchmarks.append(benchmark)
                             }
