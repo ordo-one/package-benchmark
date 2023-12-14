@@ -184,9 +184,7 @@ struct BenchmarkTool: AsyncParsableCommand {
             if let baseline = try readBaseline(baselineName) {
                 benchmarkBaselines.append(baseline)
             } else {
-                if quiet == false {
-                    print("Warning: Failed to load specified baseline '\(baselineName)'.")
-                }
+                failBenchmark("Failed to load specified baseline '\(baselineName)'.", exitCode: .baselineNotFound)
             }
         }
     }

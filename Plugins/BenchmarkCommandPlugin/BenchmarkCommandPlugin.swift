@@ -345,6 +345,8 @@ import PackagePlugin
                         switch waitStatus {
                         case .success:
                             break
+                        case .baselineNotFound:
+                            throw MyError.baselineNotFound
                         case .genericFailure:
                             print("One or more benchmark suites crashed during runtime.")
                             throw MyError.benchmarkCrashed
@@ -374,6 +376,7 @@ import PackagePlugin
         case benchmarkThresholdImprovement
         case benchmarkCrashed
         case benchmarkUnexpectedReturnCode
+        case baselineNotFound
         case invalidArgument
     }
 }

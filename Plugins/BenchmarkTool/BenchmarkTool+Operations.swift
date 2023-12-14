@@ -136,7 +136,7 @@ extension BenchmarkTool {
                         print("Updated baseline '\(baselineName)'")
                     }
                 } else {
-                    fatalError("Could not get first baselinename")
+                    failBenchmark("Could not get first baselinename.", exitCode: .baselineNotFound)
                 }
 
             case .check:
@@ -147,9 +147,25 @@ extension BenchmarkTool {
                         print("Can only do absolute threshold violation checks for a single benchmark baseline, got: \(benchmarkBaselines.count) baselines.")
                         return
                     }
-                    
-print("benchmarks \(benchmarks)")
-                    if let benchmarkPath = checkAbsolutePath { // load statically defined threshods for .p90
+
+                    if benchmarks.isEmpty { // if we read from baseline and didn't run them, we put in some fake entries for the compare
+                        currentBaseline.results.keys.forEach { baselineKey in
+                            if var benchmark: Benchmark = .init(baselineKey.name, closure:{_ in}) {
+                                benchmark.target = baselineKey.target
+                                benchmarks.append(benchmark)
+                            }
+                        }
+                    }
+
+                    benchmarks = benchmarks.filter {
+                        do {
+                            return try shouldIncludeBenchmark($0.name)
+                        } catch {
+                            return false
+                        }
+                    }
+
+                    if let benchmarkPath = checkAbsolutePath { // load statically defined thresholds for .p90
                         var thresholdsFound = false
                         benchmarks.forEach { benchmark in
                             let thresholds = BenchmarkTool.makeBenchmarkThresholds(path: benchmarkPath,
@@ -170,7 +186,10 @@ print("benchmarks \(benchmarks)")
                             }
                         }
                         if !thresholdsFound {
-                            print("")
+                            if benchmarks.count == 0 {
+                                failBenchmark("No benchmarks matching filter selection, failing threshold check.",
+                                              exitCode: .thresholdRegression)
+                            }
                             failBenchmark("Could not find any matching absolute thresholds at path [\(benchmarkPath)], failing threshold check.",
                                           exitCode: .thresholdRegression)
                         }
