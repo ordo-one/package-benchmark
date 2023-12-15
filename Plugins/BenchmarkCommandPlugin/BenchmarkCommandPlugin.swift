@@ -127,37 +127,7 @@ import PackagePlugin
         }
 
         let swiftSourceModuleTargets: [SwiftSourceModuleTarget]
-
-        // don't build any targets if we're creating a benchmark, otherwise specified targets
-        if commandToPerform == .`init` {
-            swiftSourceModuleTargets = []
-        } else {
-            if specifiedTargets.isEmpty {
-                swiftSourceModuleTargets = context.package.targets(ofType: SwiftSourceModuleTarget.self)
-            } else {
-                swiftSourceModuleTargets = specifiedTargets
-            }
-        }
-
-        let filteredTargets = swiftSourceModuleTargets
-            .filter { $0.kind == .executable }
-            .filter { benchmark in
-                let path = benchmark.directory.removingLastComponent()
-                return path.lastComponent == "Benchmarks" ? true : false
-            }
-            .filter { benchmark in
-                swiftSourceModuleTargets.first(where: { $0.name == benchmark.name }) != nil ? true : false
-            }
-            .filter { benchmark in
-                skipTargets.first(where: { $0.name == benchmark.name }) == nil ? true : false
-            }
-
-        // Build the targets
-        if outputFormat == .text {
-            if quietRunning == 0 {
-                print("Building benchmark targets in release mode for benchmark run...")
-            }
-        }
+        var shouldBuildTargets = true // We don't rebuild the targets when we dont need to execute them, e.g. baseline read/compare
 
         let benchmarkTool = try context.tool(named: "BenchmarkTool")
 
@@ -166,39 +136,6 @@ import PackagePlugin
                               "--baseline-storage-path", context.package.directory.string,
                               "--format", outputFormat.rawValue,
                               "--grouping", grouping]
-
-        try filteredTargets.forEach { target in
-            if outputFormat == .text {
-                if quietRunning == 0 {
-                    print("Building \(target.name)")
-                }
-            }
-
-            let buildResult = try packageManager.build(
-                .product(target.name), // .all(includingTests: false),
-                parameters: .init(configuration: .release)
-            )
-
-            guard buildResult.succeeded else {
-                print(buildResult.logText)
-                print("Benchmark failed to run due to build error.")
-                return
-            }
-
-            // Filter out all executable products which are Benchmarks we should run
-            let benchmarks = buildResult.builtArtifacts
-                .filter { benchmark in
-                    filteredTargets.first(where: { $0.name == benchmark.path.lastComponent }) != nil ? true : false
-                }
-
-            if benchmarks.isEmpty {
-                throw ArgumentParsingError.noMatchingTargetsForRegex
-            }
-
-            benchmarks.forEach { benchmark in
-                args.append(contentsOf: ["--benchmark-executable-paths", benchmark.path.string])
-            }
-        }
 
         metricsToUse.forEach { metric in
             args.append(contentsOf: ["--metrics", metric.description])
@@ -286,19 +223,94 @@ import PackagePlugin
                         print("Must specify exactly zero or one baseline for check against absolute thresholds, got: \(positionalArguments)")
                         throw MyError.invalidArgument
                     }
+                    if positionalArguments.count == validRange.upperBound { // dont check if we just read baselines
+                        shouldBuildTargets = false
+                    }
                 } else {
                     let validRange = 1 ... 2
                     guard validRange.contains(positionalArguments.count) else {
                         print("Must specify exactly one or two baselines for comparisons or threshold violation checks, got: \(positionalArguments)")
                         throw MyError.invalidArgument
                     }
+                    if positionalArguments.count == validRange.upperBound { // dont check if we just read baselines
+                        shouldBuildTargets = false
+                    }
                 }
-            default:
-                break
+            case .read, .list, .delete:
+                shouldBuildTargets = false
             }
 
             positionalArguments.forEach { baseline in
                 args.append(contentsOf: ["--baseline", baseline])
+            }
+        }
+
+        // don't build any targets if we don't need to run it for the operation, otherwise specified targets
+        if commandToPerform == .`init` {
+            swiftSourceModuleTargets = []
+        } else {
+            if specifiedTargets.isEmpty {
+                swiftSourceModuleTargets = context.package.targets(ofType: SwiftSourceModuleTarget.self)
+            } else {
+                swiftSourceModuleTargets = specifiedTargets
+            }
+        }
+
+        let filteredTargets = swiftSourceModuleTargets
+            .filter { $0.kind == .executable }
+            .filter { benchmark in
+                let path = benchmark.directory.removingLastComponent()
+                return path.lastComponent == "Benchmarks" ? true : false
+            }
+            .filter { benchmark in
+                swiftSourceModuleTargets.first(where: { $0.name == benchmark.name }) != nil ? true : false
+            }
+            .filter { benchmark in
+                skipTargets.first(where: { $0.name == benchmark.name }) == nil ? true : false
+            }
+
+        // Build the targets
+        if outputFormat == .text {
+            if quietRunning == 0 && shouldBuildTargets {
+                print("Building benchmark targets in release mode for benchmark run...")
+            }
+        }
+
+        // Build targets in release mode
+        try filteredTargets.forEach { target in
+            args.append(contentsOf: ["--targets", target.name])
+
+            if shouldBuildTargets {
+                if outputFormat == .text {
+                    if quietRunning == 0 {
+                        print("Building \(target.name)")
+                    }
+                }
+
+                let buildResult = try packageManager.build(
+                    .product(target.name), // .all(includingTests: false),
+                    parameters: .init(configuration: .release)
+                )
+
+                guard buildResult.succeeded else {
+                    print(buildResult.logText)
+                    print("Benchmark failed to run due to build error.")
+                    return
+                }
+
+                // Filter out all executable products which are Benchmarks we should run
+                let benchmarks = buildResult.builtArtifacts
+                    .filter { benchmark in
+                        filteredTargets.first(where: { $0.name == benchmark.path.lastComponent }) != nil ? true : false
+                    }
+
+                if benchmarks.isEmpty {
+                    throw ArgumentParsingError.noMatchingTargetsForRegex
+                }
+
+                benchmarks.forEach { benchmark in
+                    args.append(contentsOf: ["--benchmark-executable-paths", benchmark.path.string])
+                }
             }
         }
 
@@ -333,6 +345,8 @@ import PackagePlugin
                         switch waitStatus {
                         case .success:
                             break
+                        case .baselineNotFound:
+                            throw MyError.baselineNotFound
                         case .genericFailure:
                             print("One or more benchmark suites crashed during runtime.")
                             throw MyError.benchmarkCrashed
@@ -362,6 +376,7 @@ import PackagePlugin
         case benchmarkThresholdImprovement
         case benchmarkCrashed
         case benchmarkUnexpectedReturnCode
+        case baselineNotFound
         case invalidArgument
     }
 }

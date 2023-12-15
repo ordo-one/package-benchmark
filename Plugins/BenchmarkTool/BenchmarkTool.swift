@@ -40,7 +40,10 @@ typealias BenchmarkResults = [BenchmarkIdentifier: [BenchmarkResult]]
 @main
 struct BenchmarkTool: AsyncParsableCommand {
     @Option(name: .long, help: "The paths to the benchmarks to run")
-    var benchmarkExecutablePaths: [String]
+    var benchmarkExecutablePaths: [String] = []
+
+    @Option(name: .long, help: "The targets")
+    var targets: [String]
 
     @Option(name: .long, help: "The command to perform")
     var command: BenchmarkOperation
@@ -102,10 +105,6 @@ struct BenchmarkTool: AsyncParsableCommand {
 
     @Option(name: .long, help: "Benchmarks matching the regexp filter that should be skipped")
     var skip: [String] = []
-
-    var targets: [String] {
-        benchmarkExecutablePaths.map { FilePath($0).lastComponent!.description }
-    }
 
     var inputFD: CInt = 0
     var outputFD: CInt = 0
@@ -185,9 +184,7 @@ struct BenchmarkTool: AsyncParsableCommand {
             if let baseline = try readBaseline(baselineName) {
                 benchmarkBaselines.append(baseline)
             } else {
-                if quiet == false {
-                    print("Warning: Failed to load specified baseline '\(baselineName)'.")
-                }
+                failBenchmark("Failed to load specified baseline '\(baselineName)'.", exitCode: .baselineNotFound)
             }
         }
     }
@@ -232,9 +229,18 @@ struct BenchmarkTool: AsyncParsableCommand {
             return
         }
 
-        if let operation = baselineOperation, [.compare, .check].contains(operation), benchmarkBaselines.count > 1 {
-            try postProcessBenchmarkResults()
-            return
+        if let operation = baselineOperation, [.compare, .check].contains(operation) {
+            if checkAbsolute {
+                if benchmarkBaselines.count > 0 {
+                    try postProcessBenchmarkResults()
+                    return
+                }
+            } else {
+                if benchmarkBaselines.count > 1 {
+                    try postProcessBenchmarkResults()
+                    return
+                }
+            }
         }
 
         guard command != .query else {

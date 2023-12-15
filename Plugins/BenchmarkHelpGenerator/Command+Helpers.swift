@@ -63,4 +63,5 @@ enum ExitCode: Int32 {
     case thresholdRegression = 2
     case benchmarkJobFailed = 3
     case thresholdImprovement = 4
+    case baselineNotFound = 5
 }
