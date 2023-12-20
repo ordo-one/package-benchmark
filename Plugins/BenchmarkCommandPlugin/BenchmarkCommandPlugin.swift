@@ -356,6 +356,8 @@ import PackagePlugin
                             throw MyError.benchmarkThresholdImprovement
                         case .benchmarkJobFailed:
                             print("One benchmark job failed during runtime, continuing with remaining.")
+                        case .noPermissions:
+                            throw MyError.noPermissions
                         }
                     } else {
                         print("One or more benchmarks returned an unexpected return code \(status)")
@@ -379,5 +381,6 @@ import PackagePlugin
         case baselineNotFound
         case invalidArgument
         case buildFailed
+        case noPermissions
     }
 }

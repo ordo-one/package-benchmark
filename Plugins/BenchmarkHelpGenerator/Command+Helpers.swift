@@ -64,4 +64,5 @@ enum ExitCode: Int32 {
     case benchmarkJobFailed = 3
     case thresholdImprovement = 4
     case baselineNotFound = 5
+    case noPermissions = 6
 }
