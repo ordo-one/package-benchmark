@@ -73,7 +73,7 @@ import PackagePlugin
             print("")
             print("Please visit https://github.com/ordo-one/package-benchmark for more in-depth documentation")
             print("")
-            return
+            throw MyError.invalidArgument
         }
 
         if pathSpecified.count > 0 {
@@ -88,7 +88,7 @@ import PackagePlugin
                 outputFormat = format
             } else {
                 print("Unknown output format '\(outputFormats.first!)'")
-                return
+                throw MyError.invalidArgument
             }
             if outputFormats.count > 1 {
                 print("Only a single output format may be specified, will use the first one specified '\(outputFormat)'")
@@ -100,7 +100,7 @@ import PackagePlugin
                 grouping = group.rawValue
             } else {
                 print("Unknown grouping '\(groupingToUse.first!)', valid groupings are 'metric' and 'benchmark'")
-                return
+                throw MyError.invalidArgument
             }
             if groupingToUse.count > 1 {
                 print("Only a single grouping may be specified, will use the first one specified '\(grouping)'")
@@ -113,14 +113,14 @@ import PackagePlugin
             guard positionalArguments.count == 1 else {
                 print("Must specify exactly one benchmark target name to create, e.g.:")
                 print("swift package --allow-writing-to-package-directory benchmark init MyBenchmarkName")
-                return
+                throw MyError.invalidArgument
             }
             targetName = positionalArguments.removeFirst()
             do {
                 let targets = try context.package.targets(named: [targetName])
                 if targets.isEmpty == false {
                     print("Can't create benchmark executable target named \(targetName), a target with that name already exists.")
-                    return
+                    throw MyError.invalidArgument
                 }
             } catch { // We will throw if we can use the target name (it's unused!)
             }
@@ -158,7 +158,7 @@ import PackagePlugin
         if checkAbsoluteThresholds > 0 {
             if checkAbsoluteThresholdsPath.count > 1 {
                 print("Only a single path for thresholds can be specified, got \(checkAbsoluteThresholdsPath.count).")
-                return
+                throw MyError.invalidArgument
             }
             args.append(contentsOf: ["--check-absolute"])
             if let path = checkAbsoluteThresholdsPath.first {
@@ -189,7 +189,7 @@ import PackagePlugin
 
         if commandToPerform == .run, positionalArguments.count > 0 {
             print("Can't specify baselines for normal run operation, superfluous arguments [\(positionalArguments)]")
-            return
+            throw MyError.invalidArgument
         }
 
         if commandToPerform == .baseline {
@@ -202,7 +202,7 @@ import PackagePlugin
                 print("")
                 print("Please visit https://github.com/ordo-one/package-benchmark for more in-depth documentation")
                 print("")
-                return
+                throw MyError.invalidArgument
             }
 
             args.append(contentsOf: ["--baseline-operation", baselineOperation.rawValue])
@@ -212,7 +212,7 @@ import PackagePlugin
             case .update:
                 guard positionalArguments.count == 1 else {
                     print("A single baseline must be specified for update operations, got: \(positionalArguments)")
-                    return
+                    throw MyError.invalidArgument
                 }
             case .compare:
                 fallthrough
@@ -295,7 +295,7 @@ import PackagePlugin
                 guard buildResult.succeeded else {
                     print(buildResult.logText)
                     print("Benchmark failed to run due to build error.")
-                    return
+                    throw MyError.buildFailed
                 }
 
                 // Filter out all executable products which are Benchmarks we should run
@@ -378,5 +378,6 @@ import PackagePlugin
         case benchmarkUnexpectedReturnCode
         case baselineNotFound
         case invalidArgument
+        case buildFailed
     }
 }
