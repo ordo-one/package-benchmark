@@ -317,6 +317,9 @@ extension BenchmarkTool {
                 print("")
                 print("swift package --allow-writing-to-package-directory benchmark baseline update")
                 print("")
+                if let operation = baselineOperation, [.compare, .check, .update].contains(operation) {
+                    exitBenchmark(exitCode: .noPermissions)
+                }
             } else {
                 print("Failed to open file \(outputPath), errno = [\(errno)]")
             }
