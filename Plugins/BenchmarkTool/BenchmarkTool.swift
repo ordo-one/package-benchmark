@@ -125,6 +125,9 @@ struct BenchmarkTool: AsyncParsableCommand {
         // check what failed and react accordingly
         switch exitCode {
         case .benchmarkJobFailed:
+            if baselineOperation == .check { // We need to fail with exit code for the baseline checks such that CI fails properly
+                exitBenchmark(exitCode: .thresholdRegression)
+            }
             if let failedBenchmark {
                 failedBenchmarkList.append(failedBenchmark)
             }
@@ -143,9 +146,12 @@ struct BenchmarkTool: AsyncParsableCommand {
 
     func printChildRunError(error: Int32, benchmarkExecutablePath: String) {
         print("Failed to run '\(command)' for \(benchmarkExecutablePath), error code [\(error)]")
-        print("Likely your benchmark crahed, try running the tool in the debugger, e.g.")
+        print("Likely your benchmark crashed, try running the tool in the debugger, e.g.")
         print("lldb \(benchmarkExecutablePath)")
         print("Or check Console.app for a backtrace if on macOS.")
+        if baselineOperation == .check { // We need to fail with exit code for the baseline checks such that CI fails properly
+            exitBenchmark(exitCode: .thresholdRegression)
+        }
     }
 
     func shouldIncludeBenchmark(_ name: String) throws -> Bool {
