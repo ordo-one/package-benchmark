@@ -129,9 +129,11 @@ import PackagePlugin
         let swiftSourceModuleTargets: [SwiftSourceModuleTarget]
         var shouldBuildTargets = true // We don't rebuild the targets when we dont need to execute them, e.g. baseline read/compare
 
-        let benchmarkTool = try context.tool(named: "BenchmarkTool")
+        let packageBenchmarkIdentifier = "package-benchmark"
+        let benchmarkToolName = "BenchmarkTool"
+        let benchmarkTool: PackagePlugin.Path // = try context.tool(named: benchmarkToolName)
 
-        var args: [String] = [benchmarkTool.path.lastComponent.description,
+        var args: [String] = [benchmarkToolName,
                               "--command", commandToPerform.rawValue,
                               "--baseline-storage-path", context.package.directory.string,
                               "--format", outputFormat.rawValue,
@@ -256,6 +258,49 @@ import PackagePlugin
             }
         }
 
+        let benchmarkToolModuleTargets: [SwiftSourceModuleTarget]
+        if context.package.id == packageBenchmarkIdentifier {
+            benchmarkToolModuleTargets = context.package.targets(ofType: SwiftSourceModuleTarget.self)
+        } else {
+            if let benchmarkPackage = context.package.dependencies.first (where: { $0.package.id == packageBenchmarkIdentifier}) {
+                benchmarkToolModuleTargets = benchmarkPackage.package.targets(ofType: SwiftSourceModuleTarget.self)
+            } else {
+                print("Benchmark failed to find the package-benchmark module.")
+                throw MyError.buildFailed
+            }
+        }
+
+        // Build the BenchmarkTool manually in release mode to work around https://github.com/apple/swift-package-manager/issues/7210
+        if let benchmarkToolModule = benchmarkToolModuleTargets.first(where: { $0.kind == .executable && $0.name == benchmarkToolName}) {
+            if outputFormat == .text {
+                if quietRunning == 0 {
+                    print("Building \(benchmarkToolModule.name) in release mode...")
+                }
+            }
+
+            let buildResult = try packageManager.build(
+                .product(benchmarkToolModule.name),
+                parameters: .init(configuration: .release)
+            )
+
+            guard buildResult.succeeded else {
+                print(buildResult.logText)
+                print("Benchmark failed to build the BenchmarkTool in release mode.")
+                throw MyError.buildFailed
+            }
+
+            let tool = buildResult.builtArtifacts.first(where: {$0.kind == .executable && $0.path.lastComponent == benchmarkToolName })
+
+            guard let tool else {
+                throw MyError.buildFailed
+            }
+
+            benchmarkTool = tool.path
+        } else {
+            print("Benchmark failed to find the BenchmarkTool target.")
+            throw MyError.buildFailed
+        }
+
         let filteredTargets = swiftSourceModuleTargets
             .filter { $0.kind == .executable }
             .filter { benchmark in
@@ -315,18 +360,17 @@ import PackagePlugin
         }
 
         try withCStrings(args) { cArgs in
-            let newPath = benchmarkTool.path
-            // This doesn't work for external dependents
-            // https://forums.swift.org/t/swiftpm-always-rebuilds-command-plugins-in-release-configuration/63225
-//            let toolname = benchmarkTool.path.lastComponent
-//            let newPath = benchmarkTool.path.removingLastComponent().removingLastComponent()
-//                .appending(subpath: "release").appending(subpath: toolname)
+            // Work around for https://github.com/apple/swift-package-manager/issues/7210
+            // Background: https://forums.swift.org/t/swiftpm-always-rebuilds-command-plugins-in-release-configuration/63225
+            let toolname = benchmarkTool.lastComponent
+            let newPath = benchmarkTool.removingLastComponent().removingLastComponent()
+                .appending(subpath: "release").appending(subpath: toolname)
 
             if debug > 0 {
-                print("To debug, start BenchmarkTool in LLDB using:")
+                print("To debug, start \(benchmarkToolName) in LLDB using:")
                 print("lldb \(newPath.string)")
                 print("")
-                print("Then launch BenchmarkTool with:")
+                print("Then launch \(benchmarkToolName) with:")
                 print("run \(args.dropFirst().joined(separator: " "))")
                 print("")
                 return
