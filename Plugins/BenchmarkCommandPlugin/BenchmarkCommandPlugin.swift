@@ -129,6 +129,7 @@ import PackagePlugin
         let swiftSourceModuleTargets: [SwiftSourceModuleTarget]
         var shouldBuildTargets = true // We don't rebuild the targets when we dont need to execute them, e.g. baseline read/compare
 
+        let packageBenchmarkIdentifier = "package-benchmark"
         let benchmarkToolName = "BenchmarkTool"
         let benchmarkTool: PackagePlugin.Path // = try context.tool(named: benchmarkToolName)
 
@@ -257,11 +258,23 @@ import PackagePlugin
             }
         }
 
+        var benchmarkToolModuleTargets: [SwiftSourceModuleTarget] = []
+        if context.package.id == packageBenchmarkIdentifier {
+            benchmarkToolModuleTargets = context.package.targets(ofType: SwiftSourceModuleTarget.self)
+        } else {
+            if let benchmarkPackage = context.package.dependencies.first (where: { $0.package.id == packageBenchmarkIdentifier}) {
+                benchmarkToolModuleTargets = benchmarkPackage.package.targets(ofType: SwiftSourceModuleTarget.self)
+            } else {
+                print("Benchmark failed to find the package-benchmark module.")
+                throw MyError.buildFailed
+            }
+        }
+
         // Build the BenchmarkTool manually in release mode to work around https://github.com/apple/swift-package-manager/issues/7210
-        if let benchmarkToolModule = swiftSourceModuleTargets.first(where: { $0.kind == .executable && $0.name == benchmarkToolName}) {
+        if let benchmarkToolModule = benchmarkToolModuleTargets.first(where: { $0.kind == .executable && $0.name == benchmarkToolName}) {
             if outputFormat == .text {
                 if quietRunning == 0 {
-                    print("Building \(benchmarkToolModule.name)")
+                    print("Building \(benchmarkToolModule.name) in release mode...")
                 }
             }
 
