@@ -258,7 +258,7 @@ import PackagePlugin
             }
         }
 
-        var benchmarkToolModuleTargets: [SwiftSourceModuleTarget] = []
+        let benchmarkToolModuleTargets: [SwiftSourceModuleTarget]
         if context.package.id == packageBenchmarkIdentifier {
             benchmarkToolModuleTargets = context.package.targets(ofType: SwiftSourceModuleTarget.self)
         } else {
@@ -367,10 +367,10 @@ import PackagePlugin
                 .appending(subpath: "release").appending(subpath: toolname)
 
             if debug > 0 {
-                print("To debug, start BenchmarkTool in LLDB using:")
+                print("To debug, start \(benchmarkToolName) in LLDB using:")
                 print("lldb \(newPath.string)")
                 print("")
-                print("Then launch BenchmarkTool with:")
+                print("Then launch \(benchmarkToolName) with:")
                 print("run \(args.dropFirst().joined(separator: " "))")
                 print("")
                 return
