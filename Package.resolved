@@ -1,9 +1,9 @@
 {
   "pins" : [
     {
-      "identity" : "package-histogram",
+      "identity" : "hdrhistogram-swift",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/ordo-one/package-histogram",
+      "location" : "https://github.com/HdrHistogram/hdrhistogram-swift",
       "state" : {
         "revision" : "a69fa24d7b70421870cafa86340ece900489e17e",
         "version" : "0.1.2"
