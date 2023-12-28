@@ -12,7 +12,7 @@ let package = Package(
     dependencies: [
         .package(path: "../"),
         .package(url: "https://github.com/ordo-one/package-datetime", .upToNextMajor(from: "1.0.1")),
-        .package(url: "https://github.com/HdrHistogram/hdrhistogram-swift", .upToNextMajor(from: "0.1.0")),
+        .package(url: "https://github.com/HdrHistogram/hdrhistogram-swift", .upToNextMajor(from: "0.1.0"))
     ],
     targets: []
 )
@@ -29,7 +29,7 @@ package.targets += [
         ],
         path: "Benchmarks/DateTime",
         plugins: [
-            .plugin(name: "BenchmarkPlugin", package: "package-benchmark"),
+            .plugin(name: "BenchmarkPlugin", package: "package-benchmark")
         ]
     )
 ]
@@ -39,13 +39,13 @@ package.targets += [
     .executableTarget(
         name: "Basic",
         dependencies: [
-            .product(name: "Benchmark", package: "package-benchmark"),
+            .product(name: "Benchmark", package: "package-benchmark")
         ],
         path: "Benchmarks/Basic",
         plugins: [
-            .plugin(name: "BenchmarkPlugin", package: "package-benchmark"),
+            .plugin(name: "BenchmarkPlugin", package: "package-benchmark")
         ]
-    ),
+    )
 ]
 
 // Benchmark of the Histogram package
@@ -58,9 +58,9 @@ package.targets += [
         ],
         path: "Benchmarks/Histogram",
         plugins: [
-            .plugin(name: "BenchmarkPlugin", package: "package-benchmark"),
+            .plugin(name: "BenchmarkPlugin", package: "package-benchmark")
         ]
-    ),
+    )
 ]
 
 // Benchmark testing loading of p90 absolute thresholds
@@ -68,11 +68,11 @@ package.targets += [
     .executableTarget(
         name: "P90AbsoluteThresholdsBenchmark",
         dependencies: [
-            .product(name: "Benchmark", package: "package-benchmark"),
+            .product(name: "Benchmark", package: "package-benchmark")
         ],
         path: "Benchmarks/P90AbsoluteThresholds",
         plugins: [
-            .plugin(name: "BenchmarkPlugin", package: "package-benchmark"),
+            .plugin(name: "BenchmarkPlugin", package: "package-benchmark")
         ]
-    ),
+    )
 ]

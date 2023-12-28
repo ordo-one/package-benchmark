@@ -18,14 +18,14 @@ let package = Package(
         .library(
             name: "Benchmark",
             targets: ["Benchmark"]
-        ),
+        )
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-system", .upToNextMajor(from: "1.1.0")),
         .package(url: "https://github.com/apple/swift-argument-parser", .upToNextMajor(from: "1.1.0")),
         .package(url: "https://github.com/ordo-one/TextTable", .upToNextMajor(from: "0.0.1")),
         .package(url: "https://github.com/HdrHistogram/hdrhistogram-swift", .upToNextMajor(from: "0.1.0")),
-        .package(url: "https://github.com/apple/swift-atomics", .upToNextMajor(from: "1.0.0")),
+        .package(url: "https://github.com/apple/swift-atomics", .upToNextMajor(from: "1.0.0"))
         //        .package(url: "https://github.com/SwiftPackageIndex/SPIManifest", from: "0.12.0"),
     ],
     targets: [
@@ -73,7 +73,7 @@ let package = Package(
             name: "BenchmarkBoilerplateGenerator",
             dependencies: [
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
-                .product(name: "SystemPackage", package: "swift-system"),
+                .product(name: "SystemPackage", package: "swift-system")
             ],
             path: "Plugins/BenchmarkBoilerplateGenerator"
         ),
@@ -82,7 +82,7 @@ let package = Package(
         .executableTarget(
             name: "BenchmarkHelpGenerator",
             dependencies: [
-                .product(name: "ArgumentParser", package: "swift-argument-parser"),
+                .product(name: "ArgumentParser", package: "swift-argument-parser")
             ],
             path: "Plugins/BenchmarkHelpGenerator"
         ),

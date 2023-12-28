@@ -11,7 +11,7 @@ import Benchmark
 import Histogram
 
 let benchmarks = {
-    let metrics:[BenchmarkMetric] = [
+    let metrics: [BenchmarkMetric] = [
         .wallClock,
         .throughput,
         .peakMemoryResident,

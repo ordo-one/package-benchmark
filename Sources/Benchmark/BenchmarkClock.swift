@@ -9,7 +9,7 @@
 // An implementation of a clock suitable for benchmarking using clock_gettime_nsec_np() on macOS
 // which is ~2-3 x less overhead.
 
-// swiftlint:disable line_length identifier_name
+// swiftlint:disable identifier_name
 
 // Largely adopted by Swift's ContinuousClock
 // https://github.com/apple/swift/blob/48987de3d3ab228eed4867949795c188759df234/stdlib/public/Concurrency/ContinuousClock.swift#L49
@@ -27,9 +27,9 @@ public struct BenchmarkClock {
     public struct Instant: Codable, Sendable {
         internal var _value: Swift.Duration
 
-        internal init(_value: Swift.Duration) {
-            self._value = _value
-        }
+//        internal init(_value: Swift.Duration) {
+//            self._value = _value
+//        }
     }
 
     public init() {}
@@ -182,3 +182,4 @@ public extension Duration {
         (components.seconds * 1_000_000_000) + (components.attoseconds / 1_000_000_000)
     }
 }
+// swiftlint:enable identifier_name
