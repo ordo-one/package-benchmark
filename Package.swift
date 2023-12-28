@@ -26,8 +26,7 @@ let package = Package(
         .package(url: "https://github.com/swift-extras/swift-extras-json", .upToNextMajor(from: "0.6.0")),
 //        .package(url: "https://github.com/SwiftPackageIndex/SPIManifest", from: "0.12.0"),
         .package(url: "https://github.com/ordo-one/TextTable", .upToNextMajor(from: "0.0.1")),
-        .package(url: "https://github.com/ordo-one/package-datetime", .upToNextMajor(from: "1.0.1")),
-        .package(url: "https://github.com/ordo-one/package-histogram", .upToNextMajor(from: "0.0.1")),
+        .package(url: "https://github.com/HdrHistogram/hdrhistogram-swift", .upToNextMajor(from: "0.1.0")),
         .package(url: "https://github.com/ordo-one/Progress.swift", .upToNextMajor(from: "1.0.0")),
         .package(url: "https://github.com/apple/swift-docc-plugin", .upToNextMajor(from: "1.1.0")),
         .package(url: "https://github.com/apple/swift-atomics", .upToNextMajor(from: "1.0.0")),
@@ -136,11 +135,10 @@ let macOSSPIBuild: Bool // Disables jemalloc for macOS SPI builds as the infrast
 
 // Shared dependencies
 var dependencies: [PackageDescription.Target.Dependency] = [
-    .product(name: "Histogram", package: "package-histogram"),
+    .product(name: "Histogram", package: "hdrhistogram-swift"),
     .product(name: "ArgumentParser", package: "swift-argument-parser"),
     .product(name: "ExtrasJSON", package: "swift-extras-json"),
     .product(name: "SystemPackage", package: "swift-system"),
-    .product(name: "DateTime", package: "package-datetime"),
     .product(name: "Progress", package: "Progress.swift"),
     .byNameItem(name: "CDarwinOperatingSystemStats", condition: .when(platforms: [.macOS, .iOS])),
     .byNameItem(name: "CLinuxOperatingSystemStats", condition: .when(platforms: [.linux])),
@@ -195,7 +193,7 @@ package.targets += [
         name: "HistogramBenchmark",
         dependencies: [
             "Benchmark",
-            .product(name: "Histogram", package: "package-histogram"),
+            .product(name: "Histogram", package: "hdrhistogram-swift")
         ],
         path: "Benchmarks/Histogram",
         plugins: [
