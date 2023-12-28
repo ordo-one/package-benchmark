@@ -8,8 +8,6 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 //
 
-import Progress
-
 #if canImport(OSLog)
     import OSLog
 #endif

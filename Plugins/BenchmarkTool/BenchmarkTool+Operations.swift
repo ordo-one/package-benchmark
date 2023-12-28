@@ -18,7 +18,7 @@
 #endif
 
 import Benchmark
-import ExtrasJSON
+import Foundation
 import SystemPackage
 import TextTable
 
