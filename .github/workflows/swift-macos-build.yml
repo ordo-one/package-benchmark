@@ -30,7 +30,7 @@ jobs:
         echo BENCHMARK_DISABLE_JEMALLOC=true >> $GITHUB_ENV
         brew install jemalloc
 
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Start consul
       uses: ./.github/actions/consul-start
