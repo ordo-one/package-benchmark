@@ -20,6 +20,7 @@ jobs:
 
     steps:
     - uses: fwal/setup-swift@v1
+      if: ${{ false }}
       with:
         swift-version: ${{ matrix.swift }}
 

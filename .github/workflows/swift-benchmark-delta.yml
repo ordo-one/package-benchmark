@@ -40,11 +40,12 @@ jobs:
           #git config --global url."https://ordo-ci:${{ secrets.CI_MACHINE_PAT }}@github.com".insteadOf "https://github.com"
           #/usr/bin/ordo-performance
           [ -d Benchmarks ] && echo "hasBenchmark=1" >> $GITHUB_ENV
+          [ -f Benchmarks/Package.swift  ] && echo "BENCHMARK_PACKAGE_PATH=--package-path Benchmarks" >> $GITHUB_ENV
           echo "/opt/homebrew/bin:/usr/local/bin" >> $GITHUB_PATH
       - name: Run benchmarks for PR branch
         if: ${{ env.hasBenchmark == '1' }}
         run: |
-          swift package --allow-writing-to-directory .benchmarkBaselines/ benchmark baseline update pull_request --no-progress --quiet
+          swift package ${BENCHMARK_PACKAGE_PATH} --allow-writing-to-directory .benchmarkBaselines/ benchmark baseline update pull_request --no-progress --quiet
       - name: Switch to branch 'main'
         if: ${{ env.hasBenchmark == '1' }}
         run: |
@@ -53,14 +54,14 @@ jobs:
       - name: Run benchmarks for branch 'main'
         if: ${{ env.hasBenchmark == '1' }}
         run: |
-          swift package --allow-writing-to-directory .benchmarkBaselines/ benchmark baseline update main --no-progress --quiet
+          swift package ${BENCHMARK_PACKAGE_PATH} --allow-writing-to-directory .benchmarkBaselines/ benchmark baseline update main --no-progress --quiet
       - name: Compare PR and main
         if: ${{ env.hasBenchmark == '1' }}
         id: benchmark
         run: |
           echo $(date) >> $GITHUB_STEP_SUMMARY
           echo "exitStatus=1" >> $GITHUB_ENV
-          swift package benchmark baseline check main pull_request --format markdown >> $GITHUB_STEP_SUMMARY
+          swift package ${BENCHMARK_PACKAGE_PATH} benchmark baseline check main pull_request --format markdown >> $GITHUB_STEP_SUMMARY
           echo "exitStatus=0" >> $GITHUB_ENV
         continue-on-error: true
       - if: ${{ env.exitStatus == '0' }}

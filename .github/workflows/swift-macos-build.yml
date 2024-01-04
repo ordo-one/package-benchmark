@@ -13,13 +13,16 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-13]
+        os: [macos-13-xlarge]
         swift: [ "5.9" ]
 
     runs-on: ${{ matrix.os }}
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_15.1.0.app/Contents/Developer
 
     steps:
     - uses: fwal/setup-swift@v1
+      if: ${{ false }}
       with:
         swift-version: ${{ matrix.swift }}
 
