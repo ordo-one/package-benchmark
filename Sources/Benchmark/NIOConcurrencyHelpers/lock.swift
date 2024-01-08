@@ -12,6 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
+// Thanks to SwiftNIO for the lock wrapper, just adopted to not be public and reexported.
+
 #if canImport(Darwin)
 import Darwin
 #elseif os(Windows)
@@ -32,7 +34,7 @@ import Musl
 /// one used by NIO. On Windows, the lock is based on the substantially similar
 /// `SRWLOCK` type.
 @available(*, deprecated, renamed: "NIOLock")
-public final class Lock {
+final class Lock {
 #if os(Windows)
     fileprivate let mutex: UnsafeMutablePointer<SRWLOCK> =
     UnsafeMutablePointer.allocate(capacity: 1)
@@ -42,7 +44,7 @@ public final class Lock {
 #endif
 
     /// Create a new lock.
-    public init() {
+    init() {
 #if os(Windows)
         InitializeSRWLock(self.mutex)
 #else
@@ -71,7 +73,7 @@ public final class Lock {
     ///
     /// Whenever possible, consider using `withLock` instead of this method and
     /// `unlock`, to simplify lock handling.
-    public func lock() {
+    func lock() {
 #if os(Windows)
         AcquireSRWLockExclusive(self.mutex)
 #else
@@ -84,7 +86,7 @@ public final class Lock {
     ///
     /// Whenever possible, consider using `withLock` instead of this method and
     /// `lock`, to simplify lock handling.
-    public func unlock() {
+    func unlock() {
 #if os(Windows)
         ReleaseSRWLockExclusive(self.mutex)
 #else
@@ -102,7 +104,7 @@ public final class Lock {
     /// - Parameter body: The block to execute while holding the lock.
     /// - Returns: The value returned by the block.
     @inlinable
-    public func withLock<T>(_ body: () throws -> T) rethrows -> T {
+    func withLock<T>(_ body: () throws -> T) rethrows -> T {
         self.lock()
         defer {
             self.unlock()
@@ -112,7 +114,7 @@ public final class Lock {
 
     // specialise Void return (for performance)
     @inlinable
-    public func withLockVoid(_ body: () throws -> Void) rethrows -> Void {
+    func withLockVoid(_ body: () throws -> Void) rethrows -> Void {
         try self.withLock(body)
     }
 }
@@ -121,7 +123,7 @@ public final class Lock {
 ///
 /// This class provides a convenience addition to `Lock`: it provides the ability to wait
 /// until the state variable is set to a specific value to acquire the lock.
-public final class ConditionLock<T: Equatable> {
+final class ConditionLock<T: Equatable> {
     private var _value: T
     private let mutex: NIOLock
 #if os(Windows)
@@ -135,7 +137,7 @@ public final class ConditionLock<T: Equatable> {
     /// Create the lock, and initialize the state variable to `value`.
     ///
     /// - Parameter value: The initial value to give the state variable.
-    public init(value: T) {
+    init(value: T) {
         self._value = value
         self.mutex = NIOLock()
 #if os(Windows)
@@ -157,12 +159,12 @@ public final class ConditionLock<T: Equatable> {
     }
 
     /// Acquire the lock, regardless of the value of the state variable.
-    public func lock() {
+    func lock() {
         self.mutex.lock()
     }
 
     /// Release the lock, regardless of the value of the state variable.
-    public func unlock() {
+    func unlock() {
         self.mutex.unlock()
     }
 
@@ -171,7 +173,7 @@ public final class ConditionLock<T: Equatable> {
     /// Obtaining the value of the state variable requires acquiring the lock.
     /// This means that it is not safe to access this property while holding the
     /// lock: it is only safe to use it when not holding it.
-    public var value: T {
+    var value: T {
         self.lock()
         defer {
             self.unlock()
@@ -183,7 +185,7 @@ public final class ConditionLock<T: Equatable> {
     ///
     /// - Parameter wantedValue: The value to wait for the state variable
     ///     to have before acquiring the lock.
-    public func lock(whenValue wantedValue: T) {
+    func lock(whenValue wantedValue: T) {
         self.lock()
         while true {
             if self._value == wantedValue {
@@ -209,7 +211,7 @@ public final class ConditionLock<T: Equatable> {
     /// - Parameter timeoutSeconds: The number of seconds to wait to acquire
     ///     the lock before giving up.
     /// - Returns: `true` if the lock was acquired, `false` if the wait timed out.
-    public func lock(whenValue wantedValue: T, timeoutSeconds: Double) -> Bool {
+    func lock(whenValue wantedValue: T, timeoutSeconds: Double) -> Bool {
         precondition(timeoutSeconds >= 0)
 
 #if os(Windows)
@@ -272,7 +274,7 @@ public final class ConditionLock<T: Equatable> {
     ///
     /// - Parameter newValue: The value to give to the state variable when we
     ///     release the lock.
-    public func unlock(withValue newValue: T) {
+    func unlock(withValue newValue: T) {
         self._value = newValue
         self.unlock()
 #if os(Windows)
