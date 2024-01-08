@@ -11,21 +11,20 @@
 // JSON serialization of benchmark request/reply command sent to controlled process
 
 import Benchmark
-import ExtrasJSON
+import Foundation
 import SystemPackage
 
 extension BenchmarkTool {
     func write(_ reply: BenchmarkCommandRequest) throws {
-        let bytesArray = try XJSONEncoder().encode(reply)
+        let bytesArray = try JSONEncoder().encode(reply)
         let count: Int = bytesArray.count
         let output = FileDescriptor(rawValue: outputFD)
 
         try withUnsafeBytes(of: count) { (intPtr: UnsafeRawBufferPointer) in
             _ = try output.write(intPtr)
         }
-
-        try bytesArray.withUnsafeBufferPointer {
-            let written = try output.write(UnsafeRawBufferPointer($0))
+        try bytesArray.withUnsafeBytes { (bytes: UnsafeRawBufferPointer) in
+            let written = try output.write(bytes)
             if written != count {
                 fatalError("written != count \(written) ---- \(count)")
             }
@@ -52,7 +51,7 @@ extension BenchmarkTool {
             readBytes.append(contentsOf: nextBytes)
         }
 
-        let request = try XJSONDecoder().decode(BenchmarkCommandReply.self, from: readBytes)
+        let request = try JSONDecoder().decode(BenchmarkCommandReply.self, from: Data(readBytes))
 
         return request
     }

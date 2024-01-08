@@ -10,7 +10,7 @@
 
 // swiftlint disable: file_length type_body_length
 import ArgumentParser
-import ExtrasJSON
+import Foundation
 import SystemPackage
 
 // For test dependency injection
@@ -24,7 +24,7 @@ extension BenchmarkRunner {
         guard outputFD != nil else {
             return
         }
-        let bytesArray = try XJSONEncoder().encode(reply)
+        let bytesArray = try JSONEncoder().encode(reply)
         let count: Int = bytesArray.count
         let output = FileDescriptor(rawValue: outputFD!)
 
@@ -34,8 +34,8 @@ extension BenchmarkRunner {
         }
 
         // JSON serialization
-        try bytesArray.withUnsafeBufferPointer {
-            let written = try output.write(UnsafeRawBufferPointer($0))
+        try bytesArray.withUnsafeBytes { (bytes: UnsafeRawBufferPointer) in
+            let written = try output.write(bytes)
             if count != written {
                 fatalError("count != written \(count) ---- \(written)")
             }
@@ -64,7 +64,7 @@ extension BenchmarkRunner {
             readBytes.append(contentsOf: nextBytes)
         }
 
-        let request = try XJSONDecoder().decode(BenchmarkCommandRequest.self, from: readBytes)
+        let request = try JSONDecoder().decode(BenchmarkCommandRequest.self, from: Data(readBytes))
 
         return request
     }

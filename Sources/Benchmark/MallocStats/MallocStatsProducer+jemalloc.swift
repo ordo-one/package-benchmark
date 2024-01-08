@@ -8,7 +8,7 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 //
 
-import ExtrasJSON
+import Foundation
 
 #if canImport(jemalloc)
     import jemalloc
@@ -122,7 +122,7 @@ import ExtrasJSON
             malloc_stats_print(callback, UnsafeMutableRawPointer(Unmanaged.passUnretained(carrier.self).toOpaque()), "J")
 
             do {
-                let mallocStats = try XJSONDecoder().decode(Pokedex.self, from: carrier.data)
+                let mallocStats = try JSONDecoder().decode(Pokedex.self, from: Data(carrier.data))
                 return mallocStats.jemalloc
             } catch {}
 

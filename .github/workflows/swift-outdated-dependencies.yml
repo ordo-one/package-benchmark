@@ -10,10 +10,10 @@ jobs:
     runs-on: [ubuntu-latest]
     timeout-minutes: 60
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Check Swift package dependencies
       id: spm-dep-check
-      uses: MarcoEidinger/swift-package-dependencies-check@2.3.4
+      uses: MarcoEidinger/swift-package-dependencies-check@2.5.0
       with:
          isMutating: true
          failWhenOutdated: false

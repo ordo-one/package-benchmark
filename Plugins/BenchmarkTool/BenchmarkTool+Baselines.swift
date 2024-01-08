@@ -11,7 +11,6 @@
 // Reading / writing of benchmark baselines
 
 import Benchmark
-import ExtrasJSON
 import Foundation
 import SystemPackage
 
@@ -297,10 +296,10 @@ extension BenchmarkTool {
             do {
                 try fd.closeAfter {
                     do {
-                        let bytesArray = try XJSONEncoder().encode(baseline)
+                        let bytesArray = try JSONEncoder().encode(baseline)
 
-                        try bytesArray.withUnsafeBufferPointer {
-                            _ = try fd.write(UnsafeRawBufferPointer($0))
+                        try bytesArray.withUnsafeBytes { (bytes: UnsafeRawBufferPointer) in
+                            _ = try fd.write(bytes)
                         }
                     } catch {
                         print("Failed to write to file \(outputPath)")
@@ -368,7 +367,7 @@ extension BenchmarkTool {
                             readBytes.append(contentsOf: nextBytes)
                         }
 
-                        baseline = try XJSONDecoder().decode(BenchmarkBaseline.self, from: readBytes)
+                        baseline = try JSONDecoder().decode(BenchmarkBaseline.self, from: Data(readBytes))
 
                     } catch {
                         print("Failed to open file for reading \(path) [\(error)]")

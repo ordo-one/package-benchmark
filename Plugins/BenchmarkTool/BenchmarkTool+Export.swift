@@ -9,8 +9,6 @@
 //
 
 import Benchmark
-import DateTime
-import ExtrasJSON
 import Foundation
 import SystemPackage
 
@@ -191,14 +189,18 @@ extension BenchmarkTool {
             }
         case .histogramEncoded:
             try baseline.results.forEach { key, results in
-                let encoder = XJSONEncoder()
+                let encoder = JSONEncoder()
 
                 try results.forEach { values in
                     let histogram = values.statistics.histogram
                     let jsonData = try encoder.encode(histogram)
                     let description = values.metric.rawDescription
-                    try write(exportData: jsonData,
-                              fileName: cleanupStringForShellSafety("\(baselineName).\(key.target).\(key.name).\(description).histogram.json"))
+                    if let encodedData = String(data: jsonData, encoding: .utf8) {
+                        try write(exportData: encodedData,
+                                  fileName: cleanupStringForShellSafety("\(baselineName).\(key.target).\(key.name).\(description).histogram.json"))
+                    } else {
+                        fatalError("Failed to encode histogram data \(jsonData.debugDescription)")
+                    }
                 }
             }
         case .histogramPercentiles:

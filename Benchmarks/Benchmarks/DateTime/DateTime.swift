@@ -25,7 +25,7 @@ let benchmarks = {
 
     Benchmark("BenchmarkClock-now") { benchmark in
         for _ in benchmark.scaledIterations {
-            blackHole(BenchmarkClock.now)
+            blackHole(DateTime.BenchmarkClock.now)
         }
     }
 

@@ -11,7 +11,7 @@ jobs:
     runs-on: [ubuntu-22.04]
     timeout-minutes: 60
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Ubuntu deps
       if: ${{ runner.os == 'Linux' }}
@@ -39,7 +39,7 @@ jobs:
          fi
 
     - name: Upload codecov
-      uses: codecov/codecov-action@v2
+      uses: codecov/codecov-action@v3
       with: 
         token: ${{ secrets.CODECOV_REPO_TOKEN }} 
         files: info.lcov

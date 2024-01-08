@@ -29,7 +29,7 @@ jobs:
       run: |
         sudo apt-get install -y libjemalloc-dev
 
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Start consul
       uses: ./.github/actions/consul-start
