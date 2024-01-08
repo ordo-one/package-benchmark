@@ -57,10 +57,10 @@ extension BenchmarkClock: Clock {
 #elseif os(Linux)
         var resolution = timespec()
 
-        let result = clock_getres(CLOCK_REALTIME, &resolution)
+        let result = clock_getres(CLOCK_MONOTONIC, &resolution)
 
         guard result == 0 else {
-            fatalError("Failed to get realtime clock resolution in clock_getres(), errno = \(errno)")
+            fatalError("Failed to get clock resolution in clock_getres(), errno = \(errno)")
         }
 
         let seconds = Int64(resolution.tv_sec)
@@ -83,7 +83,7 @@ extension BenchmarkClock: Clock {
                                                        attosecondsComponent: Int64(attoseconds)))
 #elseif os(Linux)
         var timespec = timespec()
-        let result = clock_gettime(CLOCK_REALTIME, &timespec)
+        let result = clock_gettime(CLOCK_MONOTONIC, &timespec)
 
         guard result == 0 else {
             fatalError("Failed to get current time in clock_gettime(), errno = \(errno)")

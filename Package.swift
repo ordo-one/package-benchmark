@@ -26,7 +26,6 @@ let package = Package(
         .package(url: "https://github.com/ordo-one/TextTable", .upToNextMajor(from: "0.0.1")),
         .package(url: "https://github.com/HdrHistogram/hdrhistogram-swift", .upToNextMajor(from: "0.1.0")),
         .package(url: "https://github.com/apple/swift-atomics", .upToNextMajor(from: "1.0.0"))
-        //        .package(url: "https://github.com/SwiftPackageIndex/SPIManifest", from: "0.12.0"),
     ],
     targets: [
         // Plugins used by users of the package
