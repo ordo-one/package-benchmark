@@ -12,7 +12,7 @@
 // jq -s add delta-*.json > delta.json
 
 import Benchmark
-import ExtrasJSON
+import Foundation
 import Numerics
 
 extension JMHPrimaryMetric {
@@ -102,7 +102,7 @@ extension BenchmarkTool {
             }
         }
 
-        let bytesArray = try XJSONEncoder().encode(jmhElements)
+        let bytesArray = try JSONEncoder().encode(jmhElements)
         resultString = String(bytes: bytesArray, encoding: .utf8)!
 
         return resultString

@@ -360,15 +360,9 @@ import PackagePlugin
         }
 
         try withCStrings(args) { cArgs in
-            // Work around for https://github.com/apple/swift-package-manager/issues/7210
-            // Background: https://forums.swift.org/t/swiftpm-always-rebuilds-command-plugins-in-release-configuration/63225
-            let toolname = benchmarkTool.lastComponent
-            let newPath = benchmarkTool.removingLastComponent().removingLastComponent()
-                .appending(subpath: "release").appending(subpath: toolname)
-
             if debug > 0 {
                 print("To debug, start \(benchmarkToolName) in LLDB using:")
-                print("lldb \(newPath.string)")
+                print("lldb \(benchmarkTool.string)")
                 print("")
                 print("Then launch \(benchmarkToolName) with:")
                 print("run \(args.dropFirst().joined(separator: " "))")
@@ -377,7 +371,7 @@ import PackagePlugin
             }
 
             var pid: pid_t = 0
-            var status = posix_spawn(&pid, newPath.string, nil, nil, cArgs, environ)
+            var status = posix_spawn(&pid, benchmarkTool.string, nil, nil, cArgs, environ)
 
             if status == 0 {
                 if waitpid(pid, &status, 0) != -1 {
