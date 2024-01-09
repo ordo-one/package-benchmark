@@ -43,7 +43,7 @@ struct BenchmarkTool: AsyncParsableCommand {
     var benchmarkExecutablePaths: [String] = []
 
     @Option(name: .long, help: "The targets")
-    var targets: [String]
+    var targets: [String] = []
 
     @Option(name: .long, help: "The command to perform")
     var command: BenchmarkOperation
