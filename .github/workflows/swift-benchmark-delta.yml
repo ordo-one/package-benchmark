@@ -7,45 +7,41 @@ on:
   
 jobs:
   benchmark-delta:
-
+    timeout-minutes: 30
     runs-on: ${{ matrix.os }}
-    continue-on-error: true
 
     strategy:
       matrix:
-        #os: [[Linux, benchmark-swift-latest, self-hosted]]
         os: [ubuntu-latest]
 
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
       - name: Homebrew Mac
         if: ${{ runner.os == 'Macos' }}
         run: |
           echo "/opt/homebrew/bin:/usr/local/bin" >> $GITHUB_PATH
           brew install jemalloc
-
       - name: Ubuntu deps
         if: ${{ runner.os == 'Linux' }}
         run: |
           sudo apt-get install -y libjemalloc-dev
-
       - name: Start consul
         uses: ./.github/actions/consul-start
-
       - name: Git URL token override and misc
         run: |
           #git config --global url."https://ordo-ci:${{ secrets.CI_MACHINE_PAT }}@github.com".insteadOf "https://github.com"
           #/usr/bin/ordo-performance
           [ -d Benchmarks ] && echo "hasBenchmark=1" >> $GITHUB_ENV
           [ -f Benchmarks/Package.swift  ] && echo "BENCHMARK_PACKAGE_PATH=--package-path Benchmarks" >> $GITHUB_ENV
+          echo "BENCHMARK_RUN_URL=https://github.com/ordo-one/${{ github.event.repository.name }}/actions/runs/${{ github.run_id }}" >> $GITHUB_ENV
           echo "/opt/homebrew/bin:/usr/local/bin" >> $GITHUB_PATH
       - name: Run benchmarks for PR branch
         if: ${{ env.hasBenchmark == '1' }}
         run: |
-          swift package ${BENCHMARK_PACKAGE_PATH} --allow-writing-to-directory .benchmarkBaselines/ benchmark baseline update pull_request --no-progress --quiet
+          echo "exitStatus=1" >> $GITHUB_ENV
+          swift package ${BENCHMARK_PACKAGE_PATH}  --disable-sandbox benchmark baseline update pull_request --no-progress
       - name: Switch to branch 'main'
         if: ${{ env.hasBenchmark == '1' }}
         run: |
@@ -54,39 +50,52 @@ jobs:
       - name: Run benchmarks for branch 'main'
         if: ${{ env.hasBenchmark == '1' }}
         run: |
-          swift package ${BENCHMARK_PACKAGE_PATH} --allow-writing-to-directory .benchmarkBaselines/ benchmark baseline update main --no-progress --quiet
+          swift package ${BENCHMARK_PACKAGE_PATH} --disable-sandbox benchmark baseline update main --no-progress
       - name: Compare PR and main
         if: ${{ env.hasBenchmark == '1' }}
         id: benchmark
+        continue-on-error: true
         run: |
           echo $(date) >> $GITHUB_STEP_SUMMARY
-          echo "exitStatus=1" >> $GITHUB_ENV
           swift package ${BENCHMARK_PACKAGE_PATH} benchmark baseline check main pull_request --format markdown >> $GITHUB_STEP_SUMMARY
-          echo "exitStatus=0" >> $GITHUB_ENV
-        continue-on-error: true
+          echo "exitStatus=$?" >> $GITHUB_ENV
       - if: ${{ env.exitStatus == '0' }}
-        name: Pull request comment text success
-        id: prtestsuccess
+        name: Pull request comment text same
         run: |
-          echo 'PRTEST<<EOF' >> $GITHUB_ENV
-          echo "[Pull request benchmark comparison [${{ matrix.os }}] with 'main' run at $(date -Iseconds)](https://github.com/ordo-one/${{ github.event.repository.name }}/actions/runs/${{ github.run_id }})" >> $GITHUB_ENV
-          echo 'EOF' >> $GITHUB_ENV
+          {
+            echo "_Pull request is the same as baseline_"
+            echo "[Pull request benchmark comparison [${{ matrix.os }}] with 'main' run at $(date -Iseconds)]($BENCHMARK_RUN_URL)"
+          } > benchmark_comment
       - if: ${{ env.exitStatus == '1' }}
         name: Pull request comment text failure
-        id: prtestfailure
         run: |
-          echo 'PRTEST<<EOF' >> $GITHUB_ENV
-          echo "[Pull request benchmark comparison [${{ matrix.os }}] with 'main' run at $(date -Iseconds)](https://github.com/ordo-one/${{ github.event.repository.name }}/actions/runs/${{ github.run_id }})" >> $GITHUB_ENV
-          echo "_Pull request had performance regressions_" >> $GITHUB_ENV
-          echo 'EOF' >> $GITHUB_ENV
+          {
+            echo "_Pull request had an unknown failure_"
+            echo "[Pull request benchmark comparison [${{ matrix.os }}] with 'main' run at $(date -Iseconds)]($BENCHMARK_RUN_URL)"
+          } > benchmark_comment
+      - if: ${{ env.exitStatus == '2' }}
+        name: Pull request comment text regression
+        run: |
+          {
+            echo "_Pull request had a regression_"
+            echo "[Pull request benchmark comparison [${{ matrix.os }}] with 'main' run at $(date -Iseconds)]($BENCHMARK_RUN_URL)"
+          } > benchmark_comment
+      - if: ${{ env.exitStatus == '4' }}
+        name: Pull request comment text improvement
+        run: |
+          {
+            echo "_Pull request had a performance improvement_"
+            echo "[Pull request benchmark comparison [${{ matrix.os }}] with 'main' run at $(date -Iseconds)]($BENCHMARK_RUN_URL)"
+          } > benchmark_comment
       - name: Comment PR
         if: ${{ env.hasBenchmark == '1' }}
         uses: thollander/actions-comment-pull-request@v2
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          message: ${{ env.PRTEST }}
-          comment_includes: "Pull request benchmark comparison [${{ matrix.os }}] with"
+          filePath: benchmark_comment
+          comment_tag: 'Pull request benchmark comparison [${{ matrix.os }}] with'
       - name: Exit with correct status
+        if: ${{ success() || failure() }}
         run: |
           #/usr/bin/ordo-performance powersave
           exit ${{ env.exitStatus }}

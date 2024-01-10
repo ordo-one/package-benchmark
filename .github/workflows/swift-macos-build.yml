@@ -13,7 +13,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-13-xlarge]
+        os: [macos-13]
         swift: [ "5.9" ]
 
     runs-on: ${{ matrix.os }}
