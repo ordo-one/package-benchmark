@@ -165,27 +165,18 @@ extension BenchmarkTool {
                         }
                     }
 
+                    var p90Thresholds: [BenchmarkIdentifier : [BenchmarkMetric: BenchmarkThresholds.AbsoluteThreshold]] = [:]
+
                     if let benchmarkPath = checkAbsolutePath { // load statically defined thresholds for .p90
-                        var thresholdsFound = false
                         benchmarks.forEach { benchmark in
-                            let thresholds = BenchmarkTool.makeBenchmarkThresholds(path: benchmarkPath,
-                                                                                   moduleName: benchmark.target,
-                                                                                   benchmarkName: benchmark.name)
-                            var transformed: [BenchmarkMetric: BenchmarkThresholds] = [:]
-                            if let thresholds {
-                                thresholdsFound = true
-                                thresholds.forEach { key, value in
-                                    if let metric = BenchmarkMetric(argument: key) {
-                                        let absoluteThreshold: BenchmarkThresholds.AbsoluteThresholds = [.p90: value]
-                                        transformed[metric] = BenchmarkThresholds(absolute: absoluteThreshold)
-                                    }
-                                }
-                                if transformed.isEmpty == false {
-                                    benchmark.configuration.thresholds = transformed
-                                }
+                            if let thresholds = BenchmarkTool.makeBenchmarkThresholds(
+                                path: benchmarkPath,
+                                benchmarkIdentifier: benchmark.benchmarkIdentifier) {
+                                p90Thresholds[benchmark.benchmarkIdentifier] = thresholds
                             }
                         }
-                        if !thresholdsFound {
+
+                        if p90Thresholds.isEmpty {
                             if benchmarks.count == 0 {
                                 failBenchmark("No benchmarks matching filter selection, failing threshold check.",
                                               exitCode: .thresholdRegression)
@@ -196,21 +187,24 @@ extension BenchmarkTool {
                     }
                     print("")
 
-                    let deviationResults = currentBaseline.failsAbsoluteThresholdChecks(benchmarks: benchmarks)
+                    let deviationResults = currentBaseline.failsAbsoluteThresholdChecks(benchmarks: benchmarks,
+                                                                                        p90Thresholds: p90Thresholds)
 
                     if deviationResults.regressions.isEmpty {
                         if deviationResults.improvements.isEmpty {
                             print("Baseline '\(baselineName)' is EQUAL to the defined absolute baseline thresholds. (--check-absolute)")
                         } else {
-                            prettyPrintAbsoluteDeviation(baselineName: baselineName,
-                                                         deviationResults: deviationResults.improvements)
+                            prettyPrintDeviation(baselineName: "p90 threshold",
+                                                 comparingBaselineName: baselineName,
+                                                 deviationResults: deviationResults.improvements)
 
                             failBenchmark("New baseline '\(baselineName)' is BETTER than the defined absolute baseline thresholds. (--check-absolute)",
                                           exitCode: .thresholdImprovement)
                         }
                     } else {
-                        prettyPrintAbsoluteDeviation(baselineName: baselineName,
-                                                     deviationResults: deviationResults.regressions)
+                        prettyPrintDeviation(baselineName: "p90 threshold",
+                                             comparingBaselineName: baselineName,
+                                             deviationResults: deviationResults.regressions)
                         failBenchmark("New baseline '\(baselineName)' is WORSE than the defined absolute baseline thresholds. (--check-absolute)",
                                       exitCode: .thresholdRegression)
                     }

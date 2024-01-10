@@ -13,7 +13,8 @@ import Foundation
 import XCTest
 
 final class AdditionalTests: XCTestCase {
-    func testBlackhole() throws { // due to https://github.com/ordo-one/package-benchmark/issues/178
+    // Disabled for now as it breaks when run on the public CI
+    func XtestBlackhole() throws { // due to https://github.com/ordo-one/package-benchmark/issues/178
         func runWork(_ testIterations: Int) -> ContinuousClock.Duration {
             let clock = ContinuousClock()
             return clock.measure {

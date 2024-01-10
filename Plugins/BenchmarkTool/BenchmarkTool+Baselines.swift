@@ -63,6 +63,12 @@ struct BenchmarkIdentifier: Codable, Hashable {
     }
 }
 
+extension Benchmark {
+    var benchmarkIdentifier: BenchmarkIdentifier {
+        .init(target: self.target, name: self.name)
+    }
+}
+
 public extension Sequence where Iterator.Element: Hashable {
     func unique() -> [Iterator.Element] {
         var seen: Set<Iterator.Element> = []
@@ -386,19 +392,25 @@ extension BenchmarkTool {
 }
 
 extension BenchmarkBaseline {
-    func thresholdsForBenchmarks(_ benchmarks: [Benchmark], name: String, target: String, metric: BenchmarkMetric) -> BenchmarkThresholds {
+    func thresholdsForBenchmarks(
+        _ benchmarks: [Benchmark],
+        name: String,
+        target: String,
+        metric: BenchmarkMetric,
+        defaultThresholds: BenchmarkThresholds = BenchmarkThresholds.default
+    ) -> BenchmarkThresholds {
         let benchmark = benchmarks.filter { $0.name == name && $0.target == target }.first
 
         guard let benchmark else {
-            return BenchmarkThresholds.default
+            return defaultThresholds
         }
 
         guard let thresholds = benchmark.configuration.thresholds else {
-            return BenchmarkThresholds.default
+            return defaultThresholds
         }
 
         guard let threshold = thresholds[metric] else {
-            return BenchmarkThresholds.default
+            return defaultThresholds
         }
 
         return threshold
@@ -445,7 +457,9 @@ extension BenchmarkBaseline: Equatable {
         return allDeviationResults
     }
 
-    public func failsAbsoluteThresholdChecks(benchmarks: [Benchmark]) -> BenchmarkResult.ThresholdDeviations {
+    public func failsAbsoluteThresholdChecks(benchmarks: [Benchmark],
+                                             p90Thresholds: [BenchmarkIdentifier : 
+                                                                [BenchmarkMetric: BenchmarkThresholds.AbsoluteThreshold]]) -> BenchmarkResult.ThresholdDeviations {
         var allDeviationResults = BenchmarkResult.ThresholdDeviations()
 
         for (lhsBenchmarkIdentifier, lhsBenchmarkResults) in results {
@@ -453,14 +467,25 @@ extension BenchmarkBaseline: Equatable {
                 let thresholds = thresholdsForBenchmarks(benchmarks,
                                                          name: lhsBenchmarkIdentifier.name,
                                                          target: lhsBenchmarkIdentifier.target,
-                                                         metric: lhsBenchmarkResult.metric)
+                                                         metric: lhsBenchmarkResult.metric,
+                                                         defaultThresholds: BenchmarkThresholds.strict)
 
-                let deviationResults = lhsBenchmarkResult.deviationsAgainstAbsoluteThresholds(thresholds,
-                                                                                              name: lhsBenchmarkIdentifier.name,
-                                                                                              target: lhsBenchmarkIdentifier.target)
-                allDeviationResults.append(deviationResults)
+                if let p90Thresholds = p90Thresholds[lhsBenchmarkIdentifier] {
+                    if let p90Thresholds = p90Thresholds[lhsBenchmarkResult.metric] {
+                        let deviationResults = lhsBenchmarkResult.deviationsAgainstAbsoluteThresholds(thresholds: thresholds,
+                                                                                                      p90Threshold: p90Thresholds,
+                                                                                                      name: lhsBenchmarkIdentifier.name,
+                                                                                                      target: lhsBenchmarkIdentifier.target)
+                        print("\(deviationResults)")
+                        allDeviationResults.append(deviationResults)
+                    }
+                } else {
+                    // TODO: FIXME
+                    fatalError("Couldn't find p90 threshold")
+                }
             }
         }
+        print("allDeviationResults \(allDeviationResults)")
 
         return allDeviationResults
     }

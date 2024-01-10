@@ -30,20 +30,22 @@ extension BenchmarkTool {
     ///   `String("\(#fileID)".prefix(while: { $0 != "/" }))`
     ///   - benchmarkName: The name of the benchmark
     /// - Returns: A dictionary with static benchmark thresholds per metric or nil if the file could not be found or read
-    static func makeBenchmarkThresholds(path: String,
-                                        moduleName: String,
-                                        benchmarkName: String) -> [String: BenchmarkThresholds.AbsoluteThreshold]? {
+    static func makeBenchmarkThresholds(
+        path: String,
+        benchmarkIdentifier: BenchmarkIdentifier
+    ) -> [BenchmarkMetric : BenchmarkThresholds.AbsoluteThreshold]? {
         var path = FilePath(path)
         if path.isAbsolute {
-            path.append("\(moduleName).\(benchmarkName).p90.json")
+            path.append("\(benchmarkIdentifier.target).\(benchmarkIdentifier.name).p90.json")
         } else {
             var cwdPath = FilePath(FileManager.default.currentDirectoryPath)
             cwdPath.append(path.components)
-            cwdPath.append("\(moduleName).\(benchmarkName).p90.json")
+            cwdPath.append("\(benchmarkIdentifier.target).\(benchmarkIdentifier.name).p90.json")
             path = cwdPath
         }
 
-        var p90Thresholds: [String: BenchmarkThresholds.AbsoluteThreshold]?
+        var p90Thresholds: [BenchmarkMetric: BenchmarkThresholds.AbsoluteThreshold] = [:]
+        var p90ThresholdsRaw: [String: BenchmarkThresholds.AbsoluteThreshold]?
 
         do {
             let fileDescriptor = try FileDescriptor.open(path, .readOnly, options: [], permissions: .ownerRead)
@@ -64,7 +66,18 @@ extension BenchmarkTool {
                             readBytes.append(contentsOf: nextBytes)
                         }
 
-                        p90Thresholds = try JSONDecoder().decode([String: BenchmarkThresholds.AbsoluteThreshold].self, from: Data(readBytes))
+                        p90ThresholdsRaw = try JSONDecoder().decode(
+                            [String: BenchmarkThresholds.AbsoluteThreshold].self,
+                            from: Data(readBytes)
+                        )
+
+                        if let p90ThresholdsRaw {
+                            p90ThresholdsRaw.forEach { metric, threshold in
+                                if let metric = BenchmarkMetric(argument: metric) {
+                                    p90Thresholds[metric] = threshold
+                                }
+                            }
+                        }
                     } catch {
                         print("Failed to read file at \(path) [\(error)] \(Errno(rawValue: errno).description)")
                     }
@@ -77,6 +90,6 @@ extension BenchmarkTool {
                 print("Failed to open file \(path), errno = [\(errno)] \(Errno(rawValue: errno).description)")
             }
         }
-        return p90Thresholds
+        return p90Thresholds.count == 0 ? nil : p90Thresholds
     }
 }
