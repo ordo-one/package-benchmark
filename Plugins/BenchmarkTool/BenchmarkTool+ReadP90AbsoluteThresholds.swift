@@ -90,6 +90,6 @@ extension BenchmarkTool {
                 print("Failed to open file \(path), errno = [\(errno)] \(Errno(rawValue: errno).description)")
             }
         }
-        return p90Thresholds.count == 0 ? nil : p90Thresholds
+        return p90Thresholds.isEmpty ? nil : p90Thresholds
     }
 }
