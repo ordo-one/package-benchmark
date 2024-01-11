@@ -429,7 +429,6 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
         }
     }
 
-    // swiftlint:disable function_body_length
     public func deviationsComparedWith(_ rhs: Self,
                                        thresholds: BenchmarkThresholds = .default,
                                        name: String = "unknown name",
@@ -534,4 +533,4 @@ public extension BenchmarkTimeUnits {
     }
 }
 
-// swiftlint:enable file_length identifier_name function_parameter_count function_body_length type_body_length
+// swiftlint:enable file_length identifier_name function_parameter_count type_body_length
