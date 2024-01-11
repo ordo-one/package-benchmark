@@ -476,16 +476,11 @@ extension BenchmarkBaseline: Equatable {
                                                                                                       p90Threshold: p90Thresholds,
                                                                                                       name: lhsBenchmarkIdentifier.name,
                                                                                                       target: lhsBenchmarkIdentifier.target)
-                        print("\(deviationResults)")
                         allDeviationResults.append(deviationResults)
                     }
-                } else {
-                    // TODO: FIXME
-                    fatalError("Couldn't find p90 threshold")
                 }
             }
         }
-        print("allDeviationResults \(allDeviationResults)")
 
         return allDeviationResults
     }

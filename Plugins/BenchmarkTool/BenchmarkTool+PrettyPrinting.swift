@@ -373,7 +373,8 @@ extension BenchmarkTool {
 
     func prettyPrintDeviation(baselineName: String,
                               comparingBaselineName: String,
-                              deviationResults: [BenchmarkResult.ThresholdDeviation]) {
+                              deviationResults: [BenchmarkResult.ThresholdDeviation],
+                              deviationTitle: String = "Threshold deviations") {
         guard quiet == false else { return }
 
         let metrics = deviationResults.map(\.metric).unique()
@@ -384,7 +385,7 @@ extension BenchmarkTool {
         namesAndTargets.forEach { nameAndTarget in
 
             printMarkdown("```")
-            "Threshold deviations for \(nameAndTarget.name):\(nameAndTarget.target)".printAsHeader(addWhiteSpace: false)
+            "\(deviationTitle) for \(nameAndTarget.name):\(nameAndTarget.target)".printAsHeader(addWhiteSpace: false)
             printMarkdown("```")
 
             metrics.forEach { metric in

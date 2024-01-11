@@ -190,23 +190,28 @@ extension BenchmarkTool {
                     let deviationResults = currentBaseline.failsAbsoluteThresholdChecks(benchmarks: benchmarks,
                                                                                         p90Thresholds: p90Thresholds)
 
-                    if deviationResults.regressions.isEmpty {
-                        if deviationResults.improvements.isEmpty {
-                            print("Baseline '\(baselineName)' is EQUAL to the defined absolute baseline thresholds. (--check-absolute)")
-                        } else {
+                    if deviationResults.regressions.isEmpty && deviationResults.improvements.isEmpty {
+                        print("Baseline '\(baselineName)' is EQUAL to the defined absolute baseline thresholds. (--check-absolute)")
+                    } else {
+                        if !deviationResults.regressions.isEmpty {
                             prettyPrintDeviation(baselineName: "p90 threshold",
                                                  comparingBaselineName: baselineName,
-                                                 deviationResults: deviationResults.improvements)
-
+                                                 deviationResults: deviationResults.regressions,
+                                                 deviationTitle: "Deviations worse than threshold")
+                        }
+                        if !deviationResults.improvements.isEmpty {
+                            prettyPrintDeviation(baselineName: "p90 threshold",
+                                                 comparingBaselineName: baselineName,
+                                                 deviationResults: deviationResults.improvements,
+                                                 deviationTitle: "Deviations better than threshold")
+                        }
+                        if !deviationResults.regressions.isEmpty {
+                            failBenchmark("New baseline '\(baselineName)' is WORSE than the defined absolute baseline thresholds. (--check-absolute)",
+                                          exitCode: .thresholdRegression)
+                        } else {
                             failBenchmark("New baseline '\(baselineName)' is BETTER than the defined absolute baseline thresholds. (--check-absolute)",
                                           exitCode: .thresholdImprovement)
                         }
-                    } else {
-                        prettyPrintDeviation(baselineName: "p90 threshold",
-                                             comparingBaselineName: baselineName,
-                                             deviationResults: deviationResults.regressions)
-                        failBenchmark("New baseline '\(baselineName)' is WORSE than the defined absolute baseline thresholds. (--check-absolute)",
-                                      exitCode: .thresholdRegression)
                     }
                 } else {
                     guard benchmarkBaselines.count == 2 else {

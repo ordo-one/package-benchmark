@@ -398,7 +398,7 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
                                                percentile: percentile,
                                                baseValue: normalize(lhs),
                                                comparisonValue: normalize(rhs),
-                                               difference: Int(Statistics.roundToDecimalplaces(abs(relativeDifference), 1)),
+                                               difference: Int(Statistics.roundToDecimalplaces(relativeDifference, 1)),
                                                differenceThreshold: Int(threshold),
                                                relative: true,
                                                units: scalingFactor)
@@ -440,56 +440,6 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
             fatalError("Tried to compare two different metrics \(lhs.metric) - \(rhs.metric)")
         }
 
-        // swiftlint:disable function_parameter_count
-//        func appendResultsFor(_ metric: BenchmarkMetric,
-//                              _ lhs: Int,
-//                              _ rhs: Int,
-//                              _ percentile: Self.Percentile,
-//                              _ thresholds: BenchmarkThresholds,
-//                              _ scalingFactor: Statistics.Units,
-//                              _ thresholdResults: inout ThresholdDeviations) {
-//            let reverseComparison = metric.polarity == .prefersLarger
-//            let absoluteDifference = (reverseComparison ? -1 : 1) * (lhs - rhs)
-//            let relativeDifference = (reverseComparison ? 1 : -1) * (rhs != 0 ? (100 - (100.0 * Double(lhs) / Double(rhs))) : 0.0)
-//
-//            if let threshold = thresholds.relative[percentile], !(-threshold ... threshold).contains(relativeDifference) {
-//                let deviation = ThresholdDeviation(name: name,
-//                                                   target: target,
-//                                                   metric: metric,
-//                                                   percentile: percentile,
-//                                                   baseValue: normalize(lhs),
-//                                                   comparisonValue: normalize(rhs),
-//                                                   difference: Int(Statistics.roundToDecimalplaces(abs(relativeDifference), 1)),
-//                                                   differenceThreshold: Int(threshold),
-//                                                   relative: true,
-//                                                   units: scalingFactor)
-//                if relativeDifference > threshold {
-//                    thresholdResults.regressions.append(deviation)
-//                } else if relativeDifference < -threshold {
-//                    thresholdResults.improvements.append(deviation)
-//                }
-//            }
-//
-//            if let threshold = thresholds.absolute[percentile], !(-threshold ... threshold).contains(absoluteDifference) {
-//                let deviation = ThresholdDeviation(name: name,
-//                                                   target: target,
-//                                                   metric: metric,
-//                                                   percentile: percentile,
-//                                                   baseValue: normalize(lhs),
-//                                                   comparisonValue: normalize(rhs),
-//                                                   difference: normalize(absoluteDifference),
-//                                                   differenceThreshold: normalize(threshold),
-//                                                   relative: false,
-//                                                   units: scalingFactor)
-//
-//                if absoluteDifference > threshold {
-//                    thresholdResults.regressions.append(deviation)
-//                } else if absoluteDifference < -threshold {
-//                    thresholdResults.improvements.append(deviation)
-//                }
-//            }
-//        }
-
         var thresholdResults = ThresholdDeviations()
         let lhsPercentiles = lhs.statistics.percentiles()
         let rhsPercentiles = rhs.statistics.percentiles()
@@ -509,57 +459,11 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
         return thresholdResults
     }
 
-    // Absolute checks for --check-absolute
+    // Absolute checks for --check-absolute, just check p90
     public func deviationsAgainstAbsoluteThresholds(thresholds: BenchmarkThresholds,
                                                     p90Threshold: BenchmarkThresholds.AbsoluteThreshold,
                                                     name: String = "test",
                                                     target: String = "test") -> ThresholdDeviations {
-//        func appendResultsFor(_ metric: BenchmarkMetric,
-//                              _ lhs: Int,
-//                              _ percentile: Self.Percentile,
-//                              _ thresholds: BenchmarkThresholds,
-//                              _ scalingFactor: Statistics.Units,
-//                              _ thresholdResults: inout ThresholdDeviations) {
-//            let reverseComparison = metric.polarity == .prefersLarger
-//
-//            if let threshold = thresholds.absolute[percentile] {
-//                let absoluteDifference = (reverseComparison ? -1 : 1) * (lhs - threshold)
-//
-//                if absoluteDifference != 0 {
-//                    let normalizedDifference = normalize(absoluteDifference)
-//                    let deviation: ThresholdDeviation
-//                    if normalizedDifference != 0 {
-//                        deviation = ThresholdDeviation(name: name,
-//                                                       target: target,
-//                                                       metric: metric,
-//                                                       percentile: percentile,
-//                                                       baseValue: normalize(lhs),
-//                                                       comparisonValue: normalize(threshold),
-//                                                       difference: normalize(absoluteDifference),
-//                                                       differenceThreshold: normalize(absoluteDifference),
-//                                                       relative: false,
-//                                                       units: scalingFactor)
-//                    } else {
-//                        deviation = ThresholdDeviation(name: name,
-//                                                       target: target,
-//                                                       metric: metric,
-//                                                       percentile: percentile,
-//                                                       baseValue: lhs,
-//                                                       comparisonValue: threshold,
-//                                                       difference: absoluteDifference,
-//                                                       differenceThreshold: absoluteDifference,
-//                                                       relative: false,
-//                                                       units: .count)
-//                    }
-//                    if absoluteDifference < 0 {
-//                        thresholdResults.improvements.append(deviation)
-//                    } else {
-//                        thresholdResults.regressions.append(deviation)
-//                    }
-//                }
-//            }
-//        }
-
         var thresholdResults = ThresholdDeviations()
         let percentiles = statistics.percentiles()
 
@@ -573,8 +477,6 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
                                   name,
                                   target)
 
-        print("\(metric), \(percentiles[Statistics.defaultPercentilesToCalculateP90Index]), \(p90Threshold)")
-        print("\(thresholdResults)")
         return thresholdResults
     }
 }
