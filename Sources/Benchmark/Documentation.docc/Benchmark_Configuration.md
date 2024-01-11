@@ -4,7 +4,7 @@
 
 ### Creating Configurations
 
-- ``Benchmark/Configuration-swift.struct/init(metrics:timeUnits:warmupIterations:scalingFactor:maxDuration:maxIterations:skip:thresholds:)``
+- ``Benchmark/Configuration-swift.struct/init(metrics:timeUnits:warmupIterations:scalingFactor:maxDuration:maxIterations:skip:thresholds:setup:teardown:)``
 
 ### Inspecting Configurations
 

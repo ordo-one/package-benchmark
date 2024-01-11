@@ -28,10 +28,16 @@
 
 // MARK: - ProgressBarDisplayer
 
+#if swift(>=5.8)
+@_documentation(visibility: internal)
+#endif
 public protocol ProgressBarPrinter {
     mutating func display(_ progressBar: ProgressBar)
 }
 
+#if swift(>=5.8)
+@_documentation(visibility: internal)
+#endif
 struct ProgressBarTerminalPrinter: ProgressBarPrinter {
     var lastPrintedTime = 0.0
 
@@ -53,6 +59,9 @@ struct ProgressBarTerminalPrinter: ProgressBarPrinter {
 
 // MARK: - ProgressBar
 
+#if swift(>=5.8)
+@_documentation(visibility: internal)
+#endif
 public struct ProgressBar {
     private(set) public var index = 0
     public let startTime = getTimeOfDay()
@@ -95,6 +104,9 @@ public struct ProgressBar {
 
 // MARK: - GeneratorType
 
+#if swift(>=5.8)
+@_documentation(visibility: internal)
+#endif
 public struct ProgressGenerator<G: IteratorProtocol>: IteratorProtocol {
     var source: G
     var progressBar: ProgressBar
@@ -113,6 +125,9 @@ public struct ProgressGenerator<G: IteratorProtocol>: IteratorProtocol {
 
 // MARK: - SequenceType
 
+#if swift(>=5.8)
+@_documentation(visibility: internal)
+#endif
 public struct Progress<G: Sequence>: Sequence {
     let generator: G
     let configuration: [ProgressElementType]?

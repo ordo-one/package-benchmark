@@ -32,12 +32,18 @@ import Glibc
 import Darwin.C
 #endif
 
+#if swift(>=5.8)
+@_documentation(visibility: internal)
+#endif
 func getTimeOfDay() -> Double {
     var tv = timeval()
     gettimeofday(&tv, nil)
     return Double(tv.tv_sec) + Double(tv.tv_usec) / 1000000
 }
 
+#if swift(>=5.8)
+@_documentation(visibility: internal)
+#endif
 extension Double {
     func format(_ decimalPartLength: Int, minimumIntegerPartLength: Int = 0) -> String {
         let value = String(self)
@@ -68,6 +74,9 @@ extension Double {
     }
 }
 
+#if swift(>=5.8)
+@_documentation(visibility: internal)
+#endif
 extension String {
     func substringWithRange(_ start: Int, end: Int) -> String {
         var end = end

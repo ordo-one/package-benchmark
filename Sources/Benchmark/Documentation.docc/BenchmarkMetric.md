@@ -5,6 +5,7 @@
 ### Metric Collections
 
 - ``BenchmarkMetric/default``
+- ``BenchmarkMetric/microbenchmark``
 - ``BenchmarkMetric/system``
 - ``BenchmarkMetric/extended``
 - ``BenchmarkMetric/memory``
