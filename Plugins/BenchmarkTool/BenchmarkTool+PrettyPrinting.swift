@@ -373,7 +373,8 @@ extension BenchmarkTool {
 
     func prettyPrintDeviation(baselineName: String,
                               comparingBaselineName: String,
-                              deviationResults: [BenchmarkResult.ThresholdDeviation]) {
+                              deviationResults: [BenchmarkResult.ThresholdDeviation],
+                              deviationTitle: String = "Threshold deviations") {
         guard quiet == false else { return }
 
         let metrics = deviationResults.map(\.metric).unique()
@@ -384,7 +385,7 @@ extension BenchmarkTool {
         namesAndTargets.forEach { nameAndTarget in
 
             printMarkdown("```")
-            "Threshold deviations for \(nameAndTarget.name):\(nameAndTarget.target)".printAsHeader(addWhiteSpace: false)
+            "\(deviationTitle) for \(nameAndTarget.name):\(nameAndTarget.target)".printAsHeader(addWhiteSpace: false)
             printMarkdown("```")
 
             metrics.forEach { metric in
@@ -430,49 +431,6 @@ extension BenchmarkTool {
 
                     printMarkdown("```")
                     relativeTable.print(relativeResults, style: Style.fancy)
-                    printMarkdown("```")
-                }
-            }
-        }
-    }
-
-    func prettyPrintAbsoluteDeviation(baselineName: String,
-                                      deviationResults: [BenchmarkResult.ThresholdDeviation]) {
-        guard quiet == false else { return }
-
-        let metrics = deviationResults.map(\.metric).unique()
-        // Get a unique set of all name/target pairs that have threshold deviations, sorted lexically:
-        let namesAndTargets = deviationResults.map { NameAndTarget(name: $0.name, target: $0.target) }
-            .unique().sorted { ($0.target, $0.name) < ($1.target, $1.name) }
-
-        namesAndTargets.forEach { nameAndTarget in
-
-            printMarkdown("```")
-            "Absolute threshold deviations for \(nameAndTarget.name):\(nameAndTarget.target)".printAsHeader(addWhiteSpace: false)
-            printMarkdown("```")
-
-            metrics.forEach { metric in
-
-                let absoluteResults = deviationResults.filter { $0.name == nameAndTarget.name &&
-                    $0.target == nameAndTarget.target &&
-                    $0.metric == metric &&
-                    $0.relative == false
-                }
-                let width = 40
-                let percentileWidth = 15
-
-                // The baseValue is the new baseline that we're using as the comparison base, so...
-                if absoluteResults.isEmpty == false {
-                    let absoluteTable = TextTable<BenchmarkResult.ThresholdDeviation> {
-                        [Column(title: "\(metric.description) (\(metric.countable ? $0.units.description : $0.units.timeDescription), Δ)",
-                                value: $0.percentile, width: width, align: .left),
-                         Column(title: "Threshold", value: $0.comparisonValue, width: percentileWidth, align: .right),
-                         Column(title: "\(baselineName)", value: $0.baseValue, width: percentileWidth, align: .right),
-                         Column(title: "Threshold Abs", value: $0.differenceThreshold, width: percentileWidth, align: .right)]
-                    }
-
-                    printMarkdown("```")
-                    absoluteTable.print(absoluteResults, style: Style.fancy)
                     printMarkdown("```")
                 }
             }

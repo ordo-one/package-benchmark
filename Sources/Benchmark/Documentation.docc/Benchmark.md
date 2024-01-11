@@ -6,10 +6,14 @@
 
 ### Creating Benchmarks
 
-- ``Benchmark/Benchmark/init(_:configuration:closure:)-5ra7m``
-- ``Benchmark/Benchmark/init(_:configuration:closure:)-7wcl8``
-- ``Benchmark/Benchmark/init(_:configuration:closure:)-699lk``
-- ``Benchmark/Benchmark/init(_:configuration:closure:)-48cka``
+- ``Benchmark/Benchmark/init(_:configuration:closure:setup:teardown:)-5zf4s``
+- ``Benchmark/Benchmark/init(_:configuration:closure:setup:teardown:)-6a2yn``
+- ``Benchmark/Benchmark/init(_:configuration:closure:setup:teardown:)-8kbjd``
+- ``Benchmark/Benchmark/init(_:configuration:closure:setup:teardown:)-51nii``
+- ``Benchmark/Benchmark/init(_:configuration:closure:setup:teardown:)-66qcz``
+- ``Benchmark/Benchmark/init(_:configuration:closure:setup:teardown:)-959vi``
+- ``Benchmark/Benchmark/init(_:configuration:closure:setup:teardown:)-pgtq``
+- ``Benchmark/Benchmark/init(_:configuration:closure:setup:teardown:)-qn2n``
 
 ### Configuring Benchmarks
 

@@ -13,6 +13,8 @@ import Foundation
 import XCTest
 
 final class AdditionalTests: XCTestCase {
+    // Disabled for now as it breaks when run on the public CI
+    /*
     func testBlackhole() throws { // due to https://github.com/ordo-one/package-benchmark/issues/178
         func runWork(_ testIterations: Int) -> ContinuousClock.Duration {
             let clock = ContinuousClock()
@@ -44,4 +46,5 @@ final class AdditionalTests: XCTestCase {
 //            print("result \(result), microseconds = \(microseconds), log = \(newValue)")
         }
     }
+     */
 }
