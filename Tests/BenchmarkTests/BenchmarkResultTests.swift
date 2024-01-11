@@ -300,6 +300,10 @@ final class BenchmarkResultTests: XCTestCase {
 
         let absoluteThresholdsTwo = BenchmarkThresholds(absolute: absoluteTwo)
 
+        let absoluteP90: BenchmarkThresholds.AbsoluteThresholds = [.p90: 3]
+
+        let absoluteThresholdsP90 = BenchmarkThresholds(absolute: absoluteP90)
+
         let firstResult = BenchmarkResult(metric: .cpuUser,
                                           timeUnits: .nanoseconds,
                                           scalingFactor: .one,
@@ -336,14 +340,17 @@ final class BenchmarkResultTests: XCTestCase {
                                                         thresholds: absoluteThresholds)
         XCTAssert(deviations.regressions.isEmpty)
 
-//        Benchmark.checkAbsoluteThresholds = true
-//        deviations = thirdResult.deviationsAgainstAbsoluteThresholds(thresholds: absoluteThresholdsTwo)
-//        XCTAssert(deviations.regressions.count > 4)
-//
-//        Benchmark.checkAbsoluteThresholds = true
-//        deviations = fourthResult.deviationsAgainstAbsoluteThresholds(thresholds: absoluteThresholdsTwo)
-//        XCTAssertEqual(deviations.regressions.count, 4)
-//        XCTAssertEqual(deviations.improvements.count, 1)
+        Benchmark.checkAbsoluteThresholds = true
+        deviations = thirdResult.deviationsAgainstAbsoluteThresholds(thresholds: absoluteThresholdsP90, p90Threshold: 1_497)
+        XCTAssertFalse(deviations.regressions.isEmpty)
+
+        Benchmark.checkAbsoluteThresholds = true
+        deviations = thirdResult.deviationsAgainstAbsoluteThresholds(thresholds: absoluteThresholdsP90, p90Threshold: 1_505)
+        XCTAssertFalse(deviations.improvements.isEmpty)
+
+        Benchmark.checkAbsoluteThresholds = true
+        deviations = thirdResult.deviationsAgainstAbsoluteThresholds(thresholds: absoluteThresholdsP90, p90Threshold: 1_501)
+        XCTAssertTrue(deviations.improvements.isEmpty && deviations.regressions.isEmpty)
     }
 
     func testBenchmarkResultDescriptions() throws {
