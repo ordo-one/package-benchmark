@@ -102,4 +102,14 @@ let benchmarks = {
             blackHole(stats.percentiles())
         }
     }
+
+    let parameterization = (0...5).map { 1 << $0 } // 1, 2, 4, ...
+
+    parameterization.forEach { count in
+        Benchmark("ParameterizedWith\(count)") { benchmark in
+            for _ in 0 ..< count {
+                blackHole(Int.random(in: benchmark.scaledIterations))
+            }
+        }
+    }
 }

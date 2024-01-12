@@ -194,6 +194,22 @@ Similar defaults can be set for all benchmark settings using the class variable 
 Benchmark.defaultConfiguration = .init(...)
 ```
 
+### Running mutliple similar Benchmarks with Parameterizations
+ 
+```swift
+let benchmarks = {
+  let parameterization = (0...5).map { 1 << $0 } // 1, 2, 4, ...
+
+  parameterization.forEach { count in
+    Benchmark("ParameterizedWith\(count)") { benchmark in
+      for _ in 0 ..< count {
+        blackHole(Int.random(in: benchmark.scaledIterations))
+      }
+    }
+  }
+}
+```
+
 ### Custom thresholds
 
 ```swift
