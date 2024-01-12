@@ -298,8 +298,6 @@ final class BenchmarkResultTests: XCTestCase {
                                                                    .p90: 1_500,
                                                                    .p99: 1_500]
 
-        let absoluteThresholdsTwo = BenchmarkThresholds(absolute: absoluteTwo)
-
         let absoluteP90: BenchmarkThresholds.AbsoluteThresholds = [.p90: 3]
 
         let absoluteThresholdsP90 = BenchmarkThresholds(absolute: absoluteP90)
@@ -324,13 +322,6 @@ final class BenchmarkResultTests: XCTestCase {
                                           warmupIterations: 0,
                                           thresholds: .default,
                                           statistics: thirdStatistics)
-
-        let fourthResult = BenchmarkResult(metric: .cpuUser,
-                                           timeUnits: .nanoseconds,
-                                           scalingFactor: .one,
-                                           warmupIterations: 0,
-                                           thresholds: .default,
-                                           statistics: fourthStatistics)
 
         var deviations = secondResult.deviationsComparedWith(firstResult,
                                                              thresholds: absoluteThresholds)

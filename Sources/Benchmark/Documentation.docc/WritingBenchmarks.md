@@ -198,9 +198,9 @@ Benchmark.defaultConfiguration = .init(...)
  
 ```swift
 let benchmarks = {
-  let paramterization = (0...5).map { 1 << $0 } // 1, 2, 4, ...
+  let parameterization = (0...5).map { 1 << $0 } // 1, 2, 4, ...
 
-  paramterization.forEach { count in
+  parameterization.forEach { count in
     Benchmark("ParameterizedWith\(count)") { benchmark in
       for _ in 0 ..< count {
         blackHole(Int.random(in: benchmark.scaledIterations))
