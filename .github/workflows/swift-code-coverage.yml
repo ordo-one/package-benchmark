@@ -39,7 +39,7 @@ jobs:
          fi
 
     - name: Upload codecov
-      uses: codecov/codecov-action@v3
+      uses: codecov/codecov-action@v4
       with: 
         token: ${{ secrets.CODECOV_REPO_TOKEN }} 
         files: info.lcov
