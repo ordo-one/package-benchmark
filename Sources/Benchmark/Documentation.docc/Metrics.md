@@ -45,6 +45,6 @@ For comparison (`swift package benchmark baseline compare` or `swift package ben
 
 In addition to comparing the delta between e.g. a `PR` and `main`, there's also an option to compare against an absolute threshold which is useful for more complex projects that may want to reduce the size of the build matrix required to validate all thresholds. 
 
-Absolute thresholds are usually setup with e.g. `.mega(10` or `.milliseconds(600)`.
+Absolute thresholds are usually setup with e.g. `.mega(10)` or `.milliseconds(600)`.
 
 See <doc:WritingBenchmarks> or look at the sample code to see how custom thresholds can be set up.
