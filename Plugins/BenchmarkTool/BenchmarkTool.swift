@@ -37,6 +37,8 @@ extension BenchmarkMetric: ExpressibleByArgument {}
 
 typealias BenchmarkResults = [BenchmarkIdentifier: [BenchmarkResult]]
 
+fileprivate var failedBenchmarkRuns = 0
+
 @main
 struct BenchmarkTool: AsyncParsableCommand {
     @Option(name: .long, help: "The paths to the benchmarks to run")
@@ -146,6 +148,7 @@ struct BenchmarkTool: AsyncParsableCommand {
     }
 
     func printChildRunError(error: Int32, benchmarkExecutablePath: String) {
+        failedBenchmarkRuns += 1
         print("Failed to run '\(command)' for \(benchmarkExecutablePath), error code [\(error)]")
         print("Likely your benchmark crashed, try running the tool in the debugger, e.g.")
         print("lldb \(benchmarkExecutablePath)")
@@ -285,6 +288,10 @@ struct BenchmarkTool: AsyncParsableCommand {
                                                     results: benchmarkResults))
 
         try postProcessBenchmarkResults()
+
+        if failedBenchmarkRuns > 0 {
+            exitBenchmark(exitCode: .benchmarkJobFailed)
+        }
     }
 
     func withCStrings(_ strings: [String], scoped: ([UnsafeMutablePointer<CChar>?]) throws -> Void) rethrows {

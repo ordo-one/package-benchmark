@@ -359,6 +359,8 @@ import PackagePlugin
             }
         }
 
+        var failedBenchmarkCount = 0
+
         try withCStrings(args) { cArgs in
             if debug > 0 {
                 print("To debug, start \(benchmarkToolName) in LLDB using:")
@@ -393,7 +395,7 @@ import PackagePlugin
                         case .thresholdImprovement:
                             throw MyError.benchmarkThresholdImprovement
                         case .benchmarkJobFailed:
-                            print("One benchmark job failed during runtime, continuing with remaining.")
+                            failedBenchmarkCount += 1
                         case .noPermissions:
                             throw MyError.noPermissions
                         }
@@ -409,16 +411,22 @@ import PackagePlugin
                 print("Failed to run BenchmarkTool, posix_spawn() returned [\(status)]")
             }
         }
+
+        if failedBenchmarkCount > 0 {
+            print("\(failedBenchmarkCount) benchmark job(s) failed during runtime.")
+            throw MyError.benchmarkCrashed
+        }
     }
 
-    enum MyError: Error {
-        case benchmarkThresholdRegression
-        case benchmarkThresholdImprovement
-        case benchmarkCrashed
-        case benchmarkUnexpectedReturnCode
-        case baselineNotFound
-        case invalidArgument
-        case buildFailed
-        case noPermissions
+    enum MyError: Int32, Error {
+        case successs = 0
+        case benchmarkUnexpectedReturnCode = 1
+        case benchmarkThresholdRegression = 2
+        case benchmarkCrashed = 3
+        case benchmarkThresholdImprovement = 4
+        case baselineNotFound = 5
+        case noPermissions = 6
+        case invalidArgument = 101
+        case buildFailed = 102
     }
 }
