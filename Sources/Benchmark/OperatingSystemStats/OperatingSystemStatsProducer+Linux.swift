@@ -55,6 +55,8 @@
                         do {
                             let fileData = try [UInt8](unsafeUninitializedCapacity: 1_024) { buf, count in
                                 count = try fileDescriptor.read(into: UnsafeMutableRawBufferPointer(buf))
+                                // Add nul byte to end of read data.
+                                buf.initializeElement(at: min(count, 1_023), to: 0)
                             }
 
                             fileData.withUnsafeBufferPointer {
