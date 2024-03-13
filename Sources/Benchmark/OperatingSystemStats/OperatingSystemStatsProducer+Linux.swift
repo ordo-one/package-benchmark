@@ -47,16 +47,18 @@
         // We should cache the open file(s) and just read from file offset 0 to reduce overhead
         func read(path: FilePath) -> String {
             var string = ""
-
+            let maxReadBuffer = 8192
+            
             do {
                 let fileDescriptor = try FileDescriptor.open(path, .readOnly, options: [], permissions: .ownerRead)
                 do {
                     try fileDescriptor.closeAfter {
                         do {
-                            let fileData = try [UInt8](unsafeUninitializedCapacity: 1_024) { buf, count in
+                            let fileData = try [UInt8](unsafeUninitializedCapacity: maxReadBuffer) { buf, count in
                                 count = try fileDescriptor.read(into: UnsafeMutableRawBufferPointer(buf))
-                                // Add nul byte to end of read data.
-                                buf.initializeElement(at: min(count, 1_023), to: 0)
+                                // Add null byte to end of read data as it's used as the cString initializer below.
+                                buf.initializeElement(at: min(count, maxReadBuffer - 1), to: 0)
+                                precondition(count < maxReadBuffer, "\(#function) read unexpectedly filled the buffer completely")
                             }
 
                             fileData.withUnsafeBufferPointer {
