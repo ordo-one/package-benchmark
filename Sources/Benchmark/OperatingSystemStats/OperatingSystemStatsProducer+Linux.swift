@@ -47,8 +47,8 @@
         // We should cache the open file(s) and just read from file offset 0 to reduce overhead
         func read(path: FilePath) -> String {
             var string = ""
-            let maxReadBuffer = 8192
-            
+            let maxReadBuffer = 8_192
+
             do {
                 let fileDescriptor = try FileDescriptor.open(path, .readOnly, options: [], permissions: .ownerRead)
                 do {
