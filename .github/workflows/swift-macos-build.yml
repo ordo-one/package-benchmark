@@ -14,14 +14,14 @@ jobs:
       fail-fast: false
       matrix:
         os: [macos-14]
-        swift: [ "5.9" ]
+        swift: [ "5.10" ]
 
     runs-on: ${{ matrix.os }}
     env:
-      DEVELOPER_DIR: /Applications/Xcode_15.2.0.app/Contents/Developer
+      DEVELOPER_DIR: /Applications/Xcode_15.3.app/Contents/Developer
 
     steps:
-    - uses: fwal/setup-swift@v1
+    - uses: swift-actions/setup-swift@v2
       if: ${{ false }}
       with:
         swift-version: ${{ matrix.swift }}
