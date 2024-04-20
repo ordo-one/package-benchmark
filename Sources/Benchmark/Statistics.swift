@@ -82,7 +82,7 @@ public final class Statistics: Codable {
                 self = .giga
             case 13.0 ..< 16.0:
                 self = .tera
-            case 13.6...:
+            case 16.0...:
                 self = .peta
             default:
                 self = .kilo
