@@ -144,7 +144,8 @@
                                         readBytesLogical: Int(ioStats.readBytesLogical),
                                         writeBytesLogical: Int(ioStats.writeBytesLogical),
                                         readBytesPhysical: Int(ioStats.readBytesPhysical),
-                                        writeBytesPhysical: Int(ioStats.writeBytesPhysical))
+                                        writeBytesPhysical: Int(ioStats.writeBytesPhysical),
+                                        instructions: 0)
         }
 
         func metricSupported(_ metric: BenchmarkMetric) -> Bool {
@@ -154,6 +155,8 @@
             case .contextSwitches:
                 return false
             case .threadsRunning:
+                return false
+            case .instructions:
                 return false
             default:
                 return true

@@ -63,6 +63,8 @@ extension BenchmarkExecutor {
             return true
         case .writeBytesPhysical:
             return true
+        case .instructions:
+            return true
         default:
             return false
         }

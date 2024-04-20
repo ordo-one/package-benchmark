@@ -84,10 +84,12 @@ OPTIONS:
 --skip-target <skip-target>
 Benchmark targets matching the regexp filter that should be skipped
 --format <format>       The output format to use, one of: ["text", "markdown", "influx", "jmh", "histogramEncoded", "histogram", "histogramSamples", "histogramPercentiles", "metricP90AbsoluteThresholds"], default is 'text'
---metric <metric>       Specifies that the benchmark run should use one or more specific metrics instead of the ones defined by the benchmarks, valid values are: ["cpuUser", "cpuSystem", "cpuTotal", "wallClock", "throughput", "peakMemoryResident",
-"peakMemoryResidentDelta", "peakMemoryVirtual", "mallocCountSmall", "mallocCountLarge", "mallocCountTotal", "allocatedResidentMemory", "memoryLeaked", "syscalls", "contextSwitches", "threads", "threadsRunning", "readSyscalls",
-"writeSyscalls", "readBytesLogical", "writeBytesLogical", "readBytesPhysical", "writeBytesPhysical", "retainCount", "releaseCount", "retainReleaseDelta", "custom"]
---path <path>           The path where exported data is stored, default is the current directory ("."). 
+--metric <metric>       Specifies that the benchmark run should use one or more specific metrics instead of the ones defined by the benchmarks, valid values are:
+["cpuUser", "cpuSystem", "cpuTotal", "wallClock", "throughput", "peakMemoryResident", "peakMemoryResidentDelta", "peakMemoryVirtual",
+"mallocCountSmall", "mallocCountLarge", "mallocCountTotal", "allocatedResidentMemory", "memoryLeaked", "syscalls", "contextSwitches",
+"threads", "threadsRunning", "readSyscalls", "writeSyscalls", "readBytesLogical", "writeBytesLogical", "readBytesPhysical",
+"writeBytesPhysical", "instructions", "retainCount", "releaseCount", "retainReleaseDelta", "custom"]
+--path <path>           The path where exported data is stored, default is the current directory (".").
 --quiet                 Specifies that output should be suppressed (useful for if you just want to check return code)
 --scale                 Specifies that some of the text output should be scaled using the scalingFactor (denoted by '*' in output)
 --check-absolute        Set to true if thresholds should be checked against an absolute reference point rather than delta between baselines.

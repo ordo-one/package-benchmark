@@ -32,6 +32,7 @@ public extension BenchmarkMetric {
          .cpuTotal,
          .mallocCountTotal,
          .throughput,
+         .instructions,
          .peakMemoryResident]
     }
 
@@ -44,7 +45,8 @@ public extension BenchmarkMetric {
          .throughput,
          .peakMemoryResident,
          .memoryLeaked,
-         .syscalls]
+         .syscalls,
+         .instructions]
     }
 
     /// A collection of memory benchmarks.
@@ -111,6 +113,7 @@ public extension BenchmarkMetric {
          .writeBytesLogical,
          .readBytesPhysical,
          .writeBytesPhysical,
+         .instructions,
          .allocatedResidentMemory,
          .objectAllocCount,
          .retainCount,

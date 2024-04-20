@@ -51,6 +51,7 @@ final class OperatingSystemAndMallocTests: XCTestCase {
         blackHole(operatingSystemStatsProducer.metricSupported(.writeSyscalls))
         blackHole(operatingSystemStatsProducer.metricSupported(.writeBytesLogical))
         blackHole(operatingSystemStatsProducer.metricSupported(.writeBytesPhysical))
+        blackHole(operatingSystemStatsProducer.metricSupported(.instructions))
         blackHole(operatingSystemStatsProducer.metricSupported(.throughput))
     }
 
@@ -96,8 +97,9 @@ final class OperatingSystemAndMallocTests: XCTestCase {
 
         XCTAssertTrue(statsProducer.metricSupported(.readBytesPhysical))
         XCTAssertTrue(statsProducer.metricSupported(.writeBytesPhysical))
+        XCTAssertTrue(statsProducer.metricSupported(.writeSyscalls))
 
-        statsProducer.configureMetrics([.readBytesPhysical, .writeBytesPhysical])
+        statsProducer.configureMetrics([.readBytesPhysical, .writeBytesPhysical, .writeSyscalls])
 
         let startStats = statsProducer.makeOperatingSystemStats()
 
@@ -140,7 +142,9 @@ final class OperatingSystemAndMallocTests: XCTestCase {
         let stopStats = statsProducer.makeOperatingSystemStats()
 
         let writes = stopStats.writeBytesPhysical - startStats.writeBytesPhysical
+        let writeCalls = stopStats.writeSyscalls - startStats.writeSyscalls
 
+        XCTAssertTrue(writeCalls > 100)
         XCTAssertEqual(writes, buffer.count * 3)
     }
 }

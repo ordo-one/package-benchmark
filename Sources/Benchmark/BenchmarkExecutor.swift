@@ -263,6 +263,10 @@ struct BenchmarkExecutor { // swiftlint:disable:this type_body_length
                     delta = stopOperatingSystemStats.writeBytesPhysical -
                         startOperatingSystemStats.writeBytesPhysical
                     statistics[BenchmarkMetric.writeBytesPhysical.index].add(Int(delta))
+
+                    delta = stopOperatingSystemStats.instructions -
+                    startOperatingSystemStats.instructions
+                    statistics[BenchmarkMetric.instructions.index].add(Int(delta))
                 }
             }
         }

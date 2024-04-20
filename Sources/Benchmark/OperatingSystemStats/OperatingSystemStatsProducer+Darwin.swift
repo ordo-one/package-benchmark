@@ -75,17 +75,20 @@
                 var bytesWritten: UInt64 = 0
             }
 
-            private func getIOStats() -> IOStats {
-                var rinfo = rusage_info_v6()
-                let result = withUnsafeMutablePointer(to: &rinfo) {
+            private func getRusage() -> rusage_info_current {
+                var usage = rusage_info_current()
+
+                let result = withUnsafeMutablePointer(to: &usage) {
                     $0.withMemoryRebound(to: rusage_info_t?.self, capacity: 1) {
-                        proc_pid_rusage(pid, RUSAGE_INFO_V6, $0)
+                        proc_pid_rusage(pid, RUSAGE_INFO_CURRENT, $0)
                     }
                 }
+
                 if result != 0 {
-                    fatalError("proc_pid_rusage returned an error \(errno)")
+                    print("proc_pid_rusage returned an error \(errno)")
                 }
-                return .init(bytesRead: rinfo.ri_diskio_bytesread, bytesWritten: rinfo.ri_diskio_byteswritten)
+
+                return usage
             }
         #endif
 
@@ -192,10 +195,13 @@
                     lock.unlock()
                 }
 
-                var ioStats = IOStats()
+                var usage = rusage_info_current()
 
-                if metrics.contains(.writeBytesPhysical) || metrics.contains(.writeBytesPhysical) {
-                    ioStats = getIOStats()
+                if metrics.contains(.writeBytesPhysical) || 
+                    metrics.contains(.writeBytesPhysical) ||
+                    metrics.contains(.writeSyscalls) ||
+                    metrics.contains(.instructions) {
+                    usage = getRusage()
                 }
 
                 let stats = OperatingSystemStats(cpuUser: userTime,
@@ -209,11 +215,12 @@
                                                  threads: threads,
                                                  threadsRunning: threadsRunning,
                                                  readSyscalls: 0,
-                                                 writeSyscalls: 0,
+                                                 writeSyscalls: Int(usage.ri_logical_writes),
                                                  readBytesLogical: 0,
                                                  writeBytesLogical: 0,
-                                                 readBytesPhysical: Int(ioStats.bytesRead),
-                                                 writeBytesPhysical: Int(ioStats.bytesWritten))
+                                                 readBytesPhysical: Int(usage.ri_diskio_bytesread),
+                                                 writeBytesPhysical: Int(usage.ri_diskio_byteswritten),
+                                                 instructions: Int(usage.ri_instructions))
 
                 return stats
             #else
@@ -226,11 +233,9 @@
                 switch metric {
                 case .readSyscalls:
                     return false
-                case .writeSyscalls:
+                case .writeBytesLogical:
                     return false
                 case .readBytesLogical:
-                    return false
-                case .writeBytesLogical:
                     return false
                 default:
                     return true

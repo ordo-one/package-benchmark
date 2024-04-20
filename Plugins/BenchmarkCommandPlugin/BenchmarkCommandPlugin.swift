@@ -67,13 +67,14 @@ import PackagePlugin
             if commandString != "help" {
                 print("")
                 print("Unknown command '\(commandString)'.")
+                throw MyError.invalidArgument
             }
             print("")
             print(help)
             print("")
             print("Please visit https://github.com/ordo-one/package-benchmark for more in-depth documentation")
             print("")
-            throw MyError.invalidArgument
+            exit(0)
         }
 
         if pathSpecified.count > 0 {

@@ -62,6 +62,8 @@ public enum BenchmarkMetric: Hashable, Equatable, Codable, CustomStringConvertib
     case readBytesPhysical
     /// The number of bytes physicall written to a block device (i.e. disk) -- Linux only
     case writeBytesPhysical
+    /// The number instructions executed
+    case instructions
     /// Number of object allocations (implicit retain of one) (ARC)
     case objectAllocCount
     /// Number of retains (ARC)
@@ -132,6 +134,8 @@ public extension BenchmarkMetric {
             return true
         case .writeSyscalls, .writeBytesLogical, .writeBytesPhysical:
             return true
+        case .instructions:
+            return true
         case .objectAllocCount, .retainCount, .releaseCount, .retainReleaseDelta:
             return true
         case let .custom(_, _, useScaleFactor):
@@ -201,6 +205,8 @@ public extension BenchmarkMetric {
             return "Bytes (read physical)"
         case .writeBytesPhysical:
             return "Bytes (write physical)"
+        case .instructions:
+            return "Instructions"
         case .objectAllocCount:
             return "Object allocs"
         case .retainCount:
@@ -278,6 +284,8 @@ public extension BenchmarkMetric {
             return 26
         case .retainReleaseDelta:
             return 27
+        case .instructions:
+            return 28
         default:
             return 0 // custom payloads must be stored in dictionary
         }
@@ -286,7 +294,7 @@ public extension BenchmarkMetric {
     #if swift(>=5.8)
         @_documentation(visibility: internal)
     #endif
-    static var maxIndex: Int { 27 } //
+    static var maxIndex: Int { 28} //
 
     // Used by the Benchmark Executor for efficient indexing into results
     #if swift(>=5.8)
@@ -349,6 +357,8 @@ public extension BenchmarkMetric {
             return .releaseCount
         case 27:
             return .retainReleaseDelta
+        case 28:
+            return .instructions
         default:
             break
         }
@@ -408,6 +418,8 @@ public extension BenchmarkMetric {
             return "readBytesPhysical"
         case .writeBytesPhysical:
             return "writeBytesPhysical"
+        case .instructions:
+            return "instructions"
         case .objectAllocCount:
             return "objectAllocCount"
         case .retainCount:
@@ -480,6 +492,8 @@ public extension BenchmarkMetric {
             self = BenchmarkMetric.readBytesPhysical
         case "writeBytesPhysical":
             self = BenchmarkMetric.writeBytesPhysical
+        case "instructions":
+            self = BenchmarkMetric.instructions
         case "objectAllocCount":
             self = BenchmarkMetric.objectAllocCount
         case "retainCount":

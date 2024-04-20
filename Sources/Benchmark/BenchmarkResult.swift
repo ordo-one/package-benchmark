@@ -26,13 +26,32 @@ public extension BenchmarkResult {
 }
 
 /// Time units for cpu/wall clock time
-public enum BenchmarkTimeUnits: Int, Codable, CustomStringConvertible {
-    case nanoseconds = 1_000_000_000
-    case microseconds = 1_000_000
-    case milliseconds = 1_000
-    case seconds = 1
+public enum BenchmarkTimeUnits: Codable, CustomStringConvertible {
+    case nanoseconds
+    case microseconds
+    case milliseconds
+    case seconds
+    case kiloSeconds
+    case megaSeconds
     case automatic // will pick time unit above automatically
-
+    public var factor: Int {
+        switch self {
+        case .nanoseconds:
+            return 1_000_000_000
+        case .microseconds:
+            return 1_000_000
+        case .milliseconds:
+            return 1_000
+        case .seconds:
+            return 1
+        case .kiloSeconds:
+            return 2 // Yeah, not right but we need to refactor to get rid of this, works for now
+        case .megaSeconds:
+            return 3
+        case .automatic:
+            fatalError("Should never extract scalingFactor for .automatic")
+        }
+    }
     /// Divisor of raw data to the desired time unit representation
     public var divisor: Int {
         switch self {
@@ -44,6 +63,10 @@ public enum BenchmarkTimeUnits: Int, Codable, CustomStringConvertible {
             return 1_000_000
         case .seconds:
             return 1_000_000_000
+        case .kiloSeconds:
+            return 1_000_000_000_000
+        case .megaSeconds:
+            return 1_000_000_000_000_000
         case .automatic:
             fatalError("Should never extract scalingFactor for .automatic")
         }
@@ -59,6 +82,10 @@ public enum BenchmarkTimeUnits: Int, Codable, CustomStringConvertible {
             return "ms"
         case .seconds:
             return "s"
+        case .kiloSeconds:
+            return "ks"
+        case .megaSeconds:
+            return "Ms"
         case .automatic:
             return "#"
         }
@@ -114,6 +141,10 @@ public extension BenchmarkScalingFactor {
             self = .mega
         case .seconds:
             self = .giga
+        case .kiloSeconds:
+            self = .tera
+        case .megaSeconds:
+            self = .peta
         }
     }
 }
@@ -224,8 +255,8 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
         guard timeUnits != scaledTimeUnits else {
             return scalingFactor
         }
-        let timeUnitsMagnitude = Int(Double.log10(Double(timeUnits.rawValue)))
-        let scaledTimeUnitsMagnitude = Int(Double.log10(Double(scaledTimeUnits.rawValue)))
+        let timeUnitsMagnitude = Int(Double.log10(Double(timeUnits.factor)))
+        let scaledTimeUnitsMagnitude = Int(Double.log10(Double(scaledTimeUnits.factor)))
         let scalingFactorMagnitude = Int(Double.log10(Double(scalingFactor.rawValue)))
         let magnitudeDelta = scalingFactorMagnitude - (scaledTimeUnitsMagnitude - timeUnitsMagnitude)
 
@@ -256,7 +287,7 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
     }
 
     public func normalizeCompare(_ value: Int) -> Int {
-        var roundedValue = ((Double(value) * 1_000.0) / Double(timeUnits.rawValue)) / 1_000.0
+        var roundedValue = ((Double(value) * 1_000.0) / Double(timeUnits.factor)) / 1_000.0
         roundedValue.round(.toNearestOrEven)
         return Int(roundedValue)
     }
@@ -491,6 +522,10 @@ public extension Statistics.Units {
             self = .mega
         case .seconds:
             self = .giga
+        case .kiloSeconds:
+            self = .tera
+        case .megaSeconds:
+            self = .peta
         case .automatic:
             self = .automatic
         }
@@ -508,6 +543,10 @@ public extension Statistics.Units {
             self = .mega
         case .seconds:
             self = .giga
+        case .kiloSeconds:
+            self = .tera
+        case .megaSeconds:
+            self = .peta
         case .automatic:
             self = .automatic
         case .none:
@@ -527,6 +566,10 @@ public extension BenchmarkTimeUnits {
             self = .milliseconds
         case .giga:
             self = .seconds
+        case .tera:
+            self = .kiloSeconds
+        case .peta:
+            self = .megaSeconds
         case .automatic:
             self = .automatic
         }

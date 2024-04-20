@@ -8,6 +8,15 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 
 import Benchmark
+import Foundation
+
+#if canImport(Darwin)
+import Darwin
+#elseif canImport(Glibc)
+import Glibc
+#else
+#error("Unsupported Platform")
+#endif
 
 // quiet swiftlint for now
 extension BenchmarkRunner {}
@@ -111,5 +120,41 @@ let benchmarks = {
                 blackHole(Int.random(in: benchmark.scaledIterations))
             }
         }
+    }
+
+    @Sendable func defaultCounter() -> Int { 10 }
+    @Sendable func dummyCounter(_ count: Int) {
+        for x in 0 ..< count {
+            blackHole(x)
+        }
+    }
+
+    func concurrentWork(tasks: Int = 4, mallocs: Int = 0) async {
+        _ = await withTaskGroup(of: Void.self, returning: Void.self, body: { taskGroup in
+
+            for _ in 0 ..< tasks {
+                taskGroup.addTask {
+                    dummyCounter(defaultCounter() * 1_000)
+                    for _ in 0 ..< mallocs {
+                        let x = malloc(1024 * 1024)
+                        blackHole(x)
+                        free(x)
+                    }
+                    if let fileHandle = FileHandle(forWritingAtPath: "/dev/null") {
+                        let data = "Data to discard".data(using: .utf8)!
+                        fileHandle.write(data)
+                        fileHandle.closeFile()
+                    }
+                }
+            }
+
+            for await _ in taskGroup {}
+        })
+    }
+
+    Benchmark("InstructionCount", configuration: .init(metrics: [.instructions],
+                                                       warmupIterations: 0,
+                                                       scalingFactor: .kilo)) { _ in
+        await concurrentWork(tasks: 15, mallocs: 1000)
     }
 }

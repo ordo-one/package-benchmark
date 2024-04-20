@@ -27,6 +27,8 @@ public final class Statistics: Codable {
         case kilo = 1_000 // microseconds
         case mega = 1_000_000 // milliseconds
         case giga = 1_000_000_000 // seconds
+        case tera = 1_000_000_000_000 // 1K seconds
+        case peta = 1_000_000_000_000_000 // 1M seconds
         case automatic = 0 // will pick time unit above automatically
 
         public var description: String {
@@ -39,6 +41,10 @@ public final class Statistics: Codable {
                 return "M"
             case .giga:
                 return "G"
+            case .tera:
+                return "T"
+            case .peta:
+                return "P"
             case .automatic:
                 return "#"
             }
@@ -54,6 +60,10 @@ public final class Statistics: Codable {
                 return "ms"
             case .giga:
                 return "s"
+            case .tera:
+                return "ks"
+            case .peta:
+                return "Ms"
             case .automatic:
                 return "#"
             }
@@ -68,8 +78,12 @@ public final class Statistics: Codable {
                 self = .kilo
             case 7.0 ..< 10.0:
                 self = .mega
-            case 10.0...:
+            case 10.0 ..< 13.0:
                 self = .giga
+            case 13.0 ..< 16.0:
+                self = .tera
+            case 13.6...:
+                self = .peta
             default:
                 self = .kilo
             }
