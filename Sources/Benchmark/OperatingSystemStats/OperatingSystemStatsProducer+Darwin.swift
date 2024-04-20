@@ -167,7 +167,7 @@
             self.metrics = metrics
         }
 
-        func makeOperatingSystemStats() -> OperatingSystemStats {
+        func makeOperatingSystemStats() -> OperatingSystemStats { // swiftlint:disable:this function_body_length
             #if os(macOS)
                 guard let metrics else {
                     return .init()
@@ -197,7 +197,7 @@
 
                 var usage = rusage_info_current()
 
-                if metrics.contains(.writeBytesPhysical) || 
+                if metrics.contains(.writeBytesPhysical) ||
                     metrics.contains(.writeBytesPhysical) ||
                     metrics.contains(.writeSyscalls) ||
                     metrics.contains(.instructions) {
