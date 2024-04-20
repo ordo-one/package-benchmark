@@ -122,23 +122,25 @@ let benchmarks = {
         }
     }
 
-    @Sendable func defaultCounter() -> Int { 10 }
-    @Sendable func dummyCounter(_ count: Int) {
-        for x in 0 ..< count {
-            blackHole(x)
+    @Sendable
+    func defaultCounter() -> Int { 10 }
+
+    @Sendable
+    func dummyCounter(_ count: Int) {
+        for index in 0 ..< count {
+            blackHole(index)
         }
     }
 
     func concurrentWork(tasks: Int = 4, mallocs: Int = 0) async {
         _ = await withTaskGroup(of: Void.self, returning: Void.self, body: { taskGroup in
-
             for _ in 0 ..< tasks {
                 taskGroup.addTask {
                     dummyCounter(defaultCounter() * 1_000)
                     for _ in 0 ..< mallocs {
-                        let x = malloc(1024 * 1024)
-                        blackHole(x)
-                        free(x)
+                        let something = malloc(1_024 * 1_024)
+                        blackHole(something)
+                        free(something)
                     }
                     if let fileHandle = FileHandle(forWritingAtPath: "/dev/null") {
                         let data = "Data to discard".data(using: .utf8)!
@@ -155,6 +157,6 @@ let benchmarks = {
     Benchmark("InstructionCount", configuration: .init(metrics: [.instructions],
                                                        warmupIterations: 0,
                                                        scalingFactor: .kilo)) { _ in
-        await concurrentWork(tasks: 15, mallocs: 1000)
+        await concurrentWork(tasks: 15, mallocs: 1_000)
     }
 }
