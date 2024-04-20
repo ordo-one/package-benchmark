@@ -304,6 +304,23 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
             "(\(scaledTimeUnits.description)) *" : "(\(timeUnits.description)) *"
     }
 
+    // WIP
+    public func percentiles(for percentilesToCalculate: [Double] = Statistics.defaultPercentilesToCalculate,
+                            scaledTo: BenchmarkTimeUnits) -> [Int] {
+        var scaledPercentiles = statistics.percentiles(for: percentilesToCalculate)
+        let scale:Double = Double(self.timeUnits.divisor) / Double(scaledTo.divisor)
+
+        scaledPercentiles = scaledPercentiles.map {
+            if metric == .throughput {
+                return normalize($0)
+            }
+            var roundedValue = Double($0) / scale 
+            roundedValue.round(.toNearestOrEven)
+            return Int(roundedValue)
+        }
+        return scaledPercentiles
+    }
+
     public static func == (lhs: Self, rhs: Self) -> Bool {
         guard lhs.metric == rhs.metric else {
             return false

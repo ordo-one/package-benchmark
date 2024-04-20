@@ -244,8 +244,8 @@ extension BenchmarkTool {
                             let displayBaseScaled = self.scale == false && base.metric.useScalingFactor
                             let displayResultScaled = self.scale == false && result.metric.useScalingFactor
                             let title = displayBaseScaled ?
-                                "\(result.metric.description) \(result.scaledUnitDescriptionPretty)" :
-                                "\(result.metric.description) \(result.unitDescriptionPretty)"
+                                "\(result.metric.description) \(base.scaledUnitDescriptionPretty)" :
+                                "\(result.metric.description) \(base.unitDescriptionPretty)"
 
                             let width = 40
                             let table = TextTable<ScaledResults> {
@@ -261,13 +261,19 @@ extension BenchmarkTool {
                             }
 
                             // Rescale result to base if needed
-                            result.timeUnits = base.timeUnits
-
+//                            result.timeUnits = base.timeUnits // this is not a correct adjustent, FIXME
+                            if base.timeUnits != result.timeUnits {
+                                print("base divisor \(base.timeUnits.divisor)")
+                                print("result divisor \(result.timeUnits.divisor)")
+                            }
                             var scaledResults: [ScaledResults] = []
-
-                            let percentiles = result.statistics.percentiles()
+//print("displayBaseScaled \(displayBaseScaled), displayResultScaled \(displayResultScaled)")
+//print("base \(base)")
+//print("currentResult \(currentResult)")
                             let percentilesBase = base.statistics.percentiles()
-
+                            let percentiles = result.percentiles(scaledTo: base.timeUnits)
+//print("percentiles: \(percentiles)")
+//print("percentilesBase: \(percentilesBase)")
                             var resultPercentiles = ScaledResults.Percentiles()
                             var basePercentiles = ScaledResults.Percentiles()
                             var adjustmentFunction: (Int) -> Int
@@ -279,6 +285,8 @@ extension BenchmarkTool {
                                 adjustmentFunction = base.normalize
                             }
 
+//                            print("basePercentiles.p0 = adjustmentFunction(percentilesBase[0])")
+//                            print("\(basePercentiles.p0) = \(adjustmentFunction(percentilesBase[0])) \(percentilesBase[0])")
                             basePercentiles.p0 = adjustmentFunction(percentilesBase[0])
                             basePercentiles.p25 = adjustmentFunction(percentilesBase[1])
                             basePercentiles.p50 = adjustmentFunction(percentilesBase[2])
@@ -296,7 +304,8 @@ extension BenchmarkTool {
                             } else {
                                 adjustmentFunction = result.normalize
                             }
-
+//print("resultPercentiles.p0 = adjustmentFunction(percentiles[0])")
+//print("\(resultPercentiles.p0) = \(adjustmentFunction(percentiles[0])) \(percentiles[0])")
                             resultPercentiles.p0 = adjustmentFunction(percentiles[0])
                             resultPercentiles.p25 = adjustmentFunction(percentiles[1])
                             resultPercentiles.p50 = adjustmentFunction(percentiles[2])
@@ -308,6 +317,8 @@ extension BenchmarkTool {
                             scaledResults.append(ScaledResults(description: comparisonBaselineName,
                                                                percentiles: resultPercentiles,
                                                                samples: result.statistics.measurementCount))
+//                            print("resultPercentiles: \(resultPercentiles)")
+//                            print("basePercentiles: \(basePercentiles)")
 
                             var deltaPercentiles = ScaledResults.Percentiles()
 
