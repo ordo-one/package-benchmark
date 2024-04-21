@@ -33,4 +33,13 @@ struct processStats {
 
 void CLinuxProcessStats(const char *s, struct processStats *processStats);
 
+struct performanceCounters {
+    long long instructions;
+} performanceCounters;
+
+int CLinuxPerformanceCountersInit(); // returns the perf events fd that must be passed to the reset of the functions
+void CLinuxPerformanceCountersDeinit(int fd); // stop monitoring and close the fd
+void CLinuxPerformanceCountersStart(int fd); // reset counters and start measuring 
+void CLinuxPerformanceCountersStop(int fd, struct performanceCounters *performanceCounters); // stop measuring and return counters
+
 #endif /* CLinuxOperatingSystemStats_h */

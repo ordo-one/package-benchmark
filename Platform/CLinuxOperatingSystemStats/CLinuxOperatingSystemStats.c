@@ -10,6 +10,48 @@
 
 #include <stdio.h>
 #include "CLinuxOperatingSystemStats.h"
+#include <linux/perf_event.h>    /* Definition of PERF_* constants */
+#include <linux/hw_breakpoint.h> /* Definition of HW_* constants */
+#include <sys/syscall.h>         /* Definition of SYS_* constants */
+#include <unistd.h>
+#include <string.h> // memset
+#include <sys/ioctl.h>
+
+int CLinuxPerformanceCountersInit() {
+    int fd;
+    struct perf_event_attr  pe;
+
+    memset(&pe, 0, sizeof(pe));
+    pe.type = PERF_TYPE_HARDWARE;
+    pe.size = sizeof(pe);
+    pe.config = PERF_COUNT_HW_INSTRUCTIONS;
+    pe.disabled = 1;
+    pe.exclude_kernel = 1;
+    pe.exclude_hv = 1;
+
+    fd = syscall(SYS_perf_event_open, &pe, 0, -1, 0, 0);
+    if (fd == -1) {
+        fprintf(stderr, "Error opening leader %llx\n", pe.config);
+    }
+
+    return fd;
+}
+
+void CLinuxPerformanceCountersDeinit(int fd) {
+    ioctl(fd, PERF_EVENT_IOC_DISABLE, 0);
+    close(fd);
+}
+
+void CLinuxPerformanceCountersStart(int fd) {
+    ioctl(fd, PERF_EVENT_IOC_RESET, 0);
+    ioctl(fd, PERF_EVENT_IOC_ENABLE, 0);
+}
+
+void CLinuxPerformanceCountersStop(int fd, struct performanceCounters *performanceCounters) {
+    ioctl(fd, PERF_EVENT_IOC_DISABLE, 0);
+    read(fd, &performanceCounters->instructions, sizeof(performanceCounters->instructions));
+    return;
+}
 
 void CLinuxIOStats(const char *s, struct ioStats *ioStats) {
     sscanf(s, "rchar: %lld\nwchar: %lld\nsyscr: %lld\nsyscw: %lld\nread_bytes: %lld\nwrite_bytes: %lld\n%*s",

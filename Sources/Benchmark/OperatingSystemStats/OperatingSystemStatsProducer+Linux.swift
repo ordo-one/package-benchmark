@@ -28,6 +28,7 @@
         var sampleRate: Int = 10_000
         var runState: RunState = .running
         var metrics: Set<BenchmarkMetric>?
+        var performanceEventsFD: Int = -1
 
         enum RunState {
             case running
@@ -156,8 +157,6 @@
                 return false
             case .threadsRunning:
                 return false
-            case .instructions:
-                return false
             default:
                 return true
             }
@@ -165,7 +164,14 @@
 
         func startSampling(_: Int = 10_000) { // sample rate in microseconds
             let sampleSemaphore = DispatchSemaphore(value: 0)
+            guard let metrics else {
+                print("Metrics not configured, internal inconcistency.")
+                return
+            }
 
+            if metrics.contains(.instructions) {
+                performanceEventsFD = CLinuxPerformanceCountersInit()
+            }
             DispatchQueue.global(qos: .userInitiated).async {
                 self.lock.lock()
 
@@ -228,5 +234,4 @@
             semaphore.wait()
         }
     }
-
 #endif
