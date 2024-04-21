@@ -112,6 +112,8 @@ struct BenchmarkExecutor { // swiftlint:disable:this type_body_length
             operatingSystemStatsOverhead.readSyscalls = statsTwo.readSyscalls - statsOne.readSyscalls
             operatingSystemStatsOverhead.readBytesLogical = statsTwo.readBytesLogical - statsOne.readBytesLogical
             operatingSystemStatsOverhead.readBytesPhysical = statsTwo.readBytesPhysical - statsOne.readBytesPhysical
+
+            // Add same for instruction count here TODO
         }
 
         // Hook that is called before the actual benchmark closure run, so we can capture metrics here
@@ -132,13 +134,21 @@ struct BenchmarkExecutor { // swiftlint:disable:this type_body_length
                 startARCStats = ARCStatsProducer.makeARCStats()
             }
 
-            startTime = BenchmarkClock.now // must be last in closure
+            startTime = BenchmarkClock.now // must be as close to last in closure as possible
+
+            if operatingSystemStatsRequested {
+                operatingSystemStatsProducer.resetSystemPerformanceCounters() // for perf counters on linux
+            }
         }
 
         // And corresponding hook for then the benchmark has finished and capture finishing metrics here
         // This closure will only be called once for a given run though.
         benchmark.measurementPostSynchronization = {
-            stopTime = BenchmarkClock.now // must be first in closure
+            if operatingSystemStatsRequested {
+                operatingSystemStatsProducer.recordPerformanceCounters() // for perf counters on linux
+            }
+
+            stopTime = BenchmarkClock.now // must be as close to first in closure as possible (perf events only before)
 
             if arcStatsRequested {
                 stopARCStats = ARCStatsProducer.makeARCStats()
@@ -264,8 +274,7 @@ struct BenchmarkExecutor { // swiftlint:disable:this type_body_length
                         startOperatingSystemStats.writeBytesPhysical
                     statistics[BenchmarkMetric.writeBytesPhysical.index].add(Int(delta))
 
-                    delta = stopOperatingSystemStats.instructions -
-                    startOperatingSystemStats.instructions
+                    delta = stopOperatingSystemStats.instructions
                     statistics[BenchmarkMetric.instructions.index].add(Int(delta))
                 }
             }
@@ -283,7 +292,8 @@ struct BenchmarkExecutor { // swiftlint:disable:this type_body_length
             benchmark.configuration.metrics.contains(.threadsRunning) ||
             benchmark.configuration.metrics.contains(.peakMemoryResident) ||
             benchmark.configuration.metrics.contains(.peakMemoryResidentDelta) ||
-            benchmark.configuration.metrics.contains(.peakMemoryVirtual) {
+            benchmark.configuration.metrics.contains(.peakMemoryVirtual) || 
+            benchmark.configuration.metrics.contains(.instructions) {
             operatingSystemStatsProducer.startSampling(5_000) // ~5 ms
 
             if benchmark.configuration.metrics.contains(.peakMemoryResidentDelta) {
@@ -365,7 +375,11 @@ struct BenchmarkExecutor { // swiftlint:disable:this type_body_length
         }
 
         if benchmark.configuration.metrics.contains(.threads) ||
-            benchmark.configuration.metrics.contains(.threadsRunning) {
+            benchmark.configuration.metrics.contains(.threadsRunning) ||
+            benchmark.configuration.metrics.contains(.peakMemoryResident) ||
+            benchmark.configuration.metrics.contains(.peakMemoryResidentDelta) ||
+            benchmark.configuration.metrics.contains(.peakMemoryVirtual) || 
+            benchmark.configuration.metrics.contains(.instructions) {
             operatingSystemStatsProducer.stopSampling()
         }
 

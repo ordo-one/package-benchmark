@@ -16,6 +16,7 @@
 #include <unistd.h>
 #include <string.h> // memset
 #include <sys/ioctl.h>
+#include <errno.h>
 
 int CLinuxPerformanceCountersInit() {
     int fd;
@@ -29,9 +30,11 @@ int CLinuxPerformanceCountersInit() {
     pe.exclude_kernel = 1;
     pe.exclude_hv = 1;
 
-    fd = syscall(SYS_perf_event_open, &pe, 0, -1, 0, 0);
+    fd = syscall(SYS_perf_event_open, &pe, 0, -1, -1, 0);
     if (fd == -1) {
+        perror("Error in perf_event_open syscall");
         fprintf(stderr, "Error opening leader %llx\n", pe.config);
+        fprintf(stderr, "Detailed errno: %s\n", strerror(errno));
     }
 
     return fd;
@@ -43,8 +46,8 @@ void CLinuxPerformanceCountersDeinit(int fd) {
 }
 
 void CLinuxPerformanceCountersStart(int fd) {
-    ioctl(fd, PERF_EVENT_IOC_RESET, 0);
     ioctl(fd, PERF_EVENT_IOC_ENABLE, 0);
+    ioctl(fd, PERF_EVENT_IOC_RESET, 0);
 }
 
 void CLinuxPerformanceCountersStop(int fd, struct performanceCounters *performanceCounters) {

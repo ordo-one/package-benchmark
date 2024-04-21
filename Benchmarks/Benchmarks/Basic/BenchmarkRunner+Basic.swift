@@ -53,13 +53,13 @@ let benchmarks = {
     }
 
     Benchmark("Basic",
-              configuration: .init(metrics: [.wallClock, .throughput])) { _ in
+              configuration: .init(metrics: [.wallClock, .throughput, .instructions])) { _ in
     }
 
-    Benchmark("Noop", configuration: .init(metrics: [.wallClock, .mallocCountTotal])) { _ in
+    Benchmark("Noop", configuration: .init(metrics: [.wallClock, .mallocCountTotal, .instructions])) { _ in
     }
 
-    Benchmark("Noop2", configuration: .init(metrics: [.wallClock] + .arc)) { _ in
+    Benchmark("Noop2", configuration: .init(metrics: [.wallClock, .instructions] + .arc)) { _ in
     }
 
     Benchmark("Scaled metrics One",

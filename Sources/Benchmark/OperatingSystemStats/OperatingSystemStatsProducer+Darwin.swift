@@ -92,6 +92,12 @@
             }
         #endif
 
+        func resetSystemPerformanceCounters() {
+        }
+
+        func recordPerformanceCounters() {
+        }
+
         func startSampling(_: Int = 10_000) { // sample rate in microseconds
             #if os(macOS)
                 let sampleSemaphore = DispatchSemaphore(value: 0)

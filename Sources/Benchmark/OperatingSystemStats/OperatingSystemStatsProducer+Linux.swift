@@ -28,7 +28,8 @@
         var sampleRate: Int = 10_000
         var runState: RunState = .running
         var metrics: Set<BenchmarkMetric>?
-        var performanceEventsFD: Int = -1
+        var performanceEventsFD: Int32 = -1
+        var performanceCounters: performanceCounters = .init()
 
         enum RunState {
             case running
@@ -105,6 +106,23 @@
             self.metrics = metrics
         }
 
+        func resetSystemPerformanceCounters() {
+            self.performanceCounters = .init()
+            self.lock.withLock {
+                if performanceEventsFD > 0 {
+                    CLinuxPerformanceCountersStart(performanceEventsFD)
+                }
+            }
+        }
+
+        func recordPerformanceCounters() {
+            self.lock.withLock {
+                if performanceEventsFD > 0 {
+                    CLinuxPerformanceCountersStop(performanceEventsFD, &performanceCounters)
+                }
+            }
+        }
+
         func makeOperatingSystemStats() -> OperatingSystemStats {
             guard let metrics else {
                 return .init()
@@ -146,7 +164,7 @@
                                         writeBytesLogical: Int(ioStats.writeBytesLogical),
                                         readBytesPhysical: Int(ioStats.readBytesPhysical),
                                         writeBytesPhysical: Int(ioStats.writeBytesPhysical),
-                                        instructions: 0)
+                                        instructions: Int(performanceCounters.instructions))
         }
 
         func metricSupported(_ metric: BenchmarkMetric) -> Bool {
@@ -164,14 +182,13 @@
 
         func startSampling(_: Int = 10_000) { // sample rate in microseconds
             let sampleSemaphore = DispatchSemaphore(value: 0)
-            guard let metrics else {
-                print("Metrics not configured, internal inconcistency.")
-                return
+
+            if let metrics, metrics.contains(.instructions) {
+                self.lock.withLock {
+                    performanceEventsFD = CLinuxPerformanceCountersInit()
+                }
             }
 
-            if metrics.contains(.instructions) {
-                performanceEventsFD = CLinuxPerformanceCountersInit()
-            }
             DispatchQueue.global(qos: .userInitiated).async {
                 self.lock.lock()
 
@@ -229,6 +246,9 @@
         func stopSampling() {
             lock.lock()
             runState = .shuttingDown
+            if performanceEventsFD > 0 {
+                CLinuxPerformanceCountersDeinit(performanceEventsFD)
+            }
             lock.unlock()
 
             semaphore.wait()
