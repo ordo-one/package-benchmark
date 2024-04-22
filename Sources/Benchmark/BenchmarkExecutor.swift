@@ -274,7 +274,8 @@ struct BenchmarkExecutor { // swiftlint:disable:this type_body_length
                         startOperatingSystemStats.writeBytesPhysical
                     statistics[BenchmarkMetric.writeBytesPhysical.index].add(Int(delta))
 
-                    delta = stopOperatingSystemStats.instructions
+                    delta = stopOperatingSystemStats.instructions -
+                        startOperatingSystemStats.instructions
                     statistics[BenchmarkMetric.instructions.index].add(Int(delta))
                 }
             }
@@ -378,8 +379,7 @@ struct BenchmarkExecutor { // swiftlint:disable:this type_body_length
             benchmark.configuration.metrics.contains(.threadsRunning) ||
             benchmark.configuration.metrics.contains(.peakMemoryResident) ||
             benchmark.configuration.metrics.contains(.peakMemoryResidentDelta) ||
-            benchmark.configuration.metrics.contains(.peakMemoryVirtual) || 
-            benchmark.configuration.metrics.contains(.instructions) {
+            benchmark.configuration.metrics.contains(.peakMemoryVirtual) {
             operatingSystemStatsProducer.stopSampling()
         }
 

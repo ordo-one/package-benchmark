@@ -110,7 +110,7 @@
             self.performanceCounters = .init()
             self.lock.withLock {
                 if performanceEventsFD > 0 {
-                    CLinuxPerformanceCountersStart(performanceEventsFD)
+//                    CLinuxPerformanceCountersStart(performanceEventsFD)
                 }
             }
         }

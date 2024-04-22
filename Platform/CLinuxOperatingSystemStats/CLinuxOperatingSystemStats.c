@@ -19,7 +19,7 @@
 #include <errno.h>
 
 int CLinuxPerformanceCountersInit() {
-    int fd;
+    int fd, errorCode;
     struct perf_event_attr  pe;
 
     memset(&pe, 0, sizeof(pe));
@@ -31,10 +31,9 @@ int CLinuxPerformanceCountersInit() {
     pe.exclude_hv = 1;
 
     fd = syscall(SYS_perf_event_open, &pe, 0, -1, -1, 0);
+    errorCode = errno
     if (fd == -1) {
-        perror("Error in perf_event_open syscall");
-        fprintf(stderr, "Error opening leader %llx\n", pe.config);
-        fprintf(stderr, "Detailed errno: %s\n", strerror(errno));
+        fprintf(stderr, "Error in perf_event_open syscall, failed with [%d], error: %s\n", errorCode, strerror(errorCode));
     }
 
     return fd;
@@ -46,13 +45,14 @@ void CLinuxPerformanceCountersDeinit(int fd) {
 }
 
 void CLinuxPerformanceCountersStart(int fd) {
-    ioctl(fd, PERF_EVENT_IOC_ENABLE, 0);
-    ioctl(fd, PERF_EVENT_IOC_RESET, 0);
+//    ioctl(fd, PERF_EVENT_IOC_ENABLE, 0);
+//    ioctl(fd, PERF_EVENT_IOC_RESET, 0);
 }
 
 void CLinuxPerformanceCountersStop(int fd, struct performanceCounters *performanceCounters) {
-    ioctl(fd, PERF_EVENT_IOC_DISABLE, 0);
+//    ioctl(fd, PERF_EVENT_IOC_DISABLE, 0);
     read(fd, &performanceCounters->instructions, sizeof(performanceCounters->instructions));
+    ioctl(fd, PERF_EVENT_IOC_RESET, 0);
     return;
 }
 
