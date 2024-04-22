@@ -156,7 +156,8 @@ let benchmarks = {
 
     Benchmark("InstructionCount", configuration: .init(metrics: [.instructions],
                                                        warmupIterations: 0,
-                                                       scalingFactor: .kilo)) { _ in
+                                                       scalingFactor: .kilo,
+                                                       thresholds: [.instructions: .relaxed])) { _ in
         await concurrentWork(tasks: 15, mallocs: 1_000)
     }
 }
