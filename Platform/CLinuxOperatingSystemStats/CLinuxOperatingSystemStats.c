@@ -31,7 +31,7 @@ int CLinuxPerformanceCountersInit() {
     pe.exclude_hv = 1;
 
     fd = syscall(SYS_perf_event_open, &pe, 0, -1, -1, 0);
-    errorCode = errno
+    errorCode = errno;
     if (fd == -1) {
         fprintf(stderr, "Error in perf_event_open syscall, failed with [%d], error: %s\n", errorCode, strerror(errorCode));
     }
