@@ -34,7 +34,7 @@ struct processStats {
 void CLinuxProcessStats(const char *s, struct processStats *processStats);
 
 struct performanceCounters {
-    long long instructions;
+    unsigned long long instructions;
 } performanceCounters;
 
 int CLinuxPerformanceCountersInit(); // returns the perf events fd that must be passed to the reset of the functions

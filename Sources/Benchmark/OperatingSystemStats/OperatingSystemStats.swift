@@ -44,6 +44,6 @@ struct OperatingSystemStats {
 
 struct PerformanceCounters {
     /// The number instructions executed
-    var instructions: Int = 0
+    var instructions: UInt64 = 0
 }
 

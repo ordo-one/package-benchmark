@@ -283,9 +283,9 @@ struct BenchmarkExecutor { // swiftlint:disable:this type_body_length
                 }
 
                 if performanceCountersRequested {
-                    delta = stopPerformanceCounters.instructions -
-                    startPerformanceCounters.instructions
-                    statistics[BenchmarkMetric.instructions.index].add(Int(delta))
+                    delta = Int(stopPerformanceCounters.instructions -
+                    startPerformanceCounters.instructions)
+                    statistics[BenchmarkMetric.instructions.index].add(delta)
                 }
             }
         }

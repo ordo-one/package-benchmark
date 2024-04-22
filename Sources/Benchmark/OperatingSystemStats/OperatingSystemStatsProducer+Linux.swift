@@ -244,7 +244,7 @@
                 CLinuxPerformanceCountersCurrent(performanceEventsFD, &performanceCounters)
             }
 
-            return .init(instructions: Int(performanceCounters.instructions))
+            return .init(instructions: performanceCounters.instructions)
         }
     }
 #endif
