@@ -10,6 +10,17 @@
 // swiftlint:disable cyclomatic_complexity
 
 extension BenchmarkExecutor {
+    func performanceCountersNeeded(_ metric: BenchmarkMetric) -> Bool {
+        switch metric {
+        case .instructions:
+            return true
+        default:
+            return false
+        }
+    }
+}
+
+extension BenchmarkExecutor {
     func mallocStatsProducerNeeded(_ metric: BenchmarkMetric) -> Bool {
         switch metric {
         case .mallocCountLarge:

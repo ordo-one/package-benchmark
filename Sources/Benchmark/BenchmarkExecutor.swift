@@ -29,6 +29,8 @@ struct BenchmarkExecutor { // swiftlint:disable:this type_body_length
         var stopMallocStats = MallocStats()
         var startOperatingSystemStats = OperatingSystemStats()
         var stopOperatingSystemStats = OperatingSystemStats()
+        var startPerformanceCounters = PerformanceCounters()
+        var stopPerformanceCounters = PerformanceCounters()
         var startARCStats = ARCStats()
         var stopARCStats = ARCStats()
         var startTime = BenchmarkClock.now
@@ -60,6 +62,7 @@ struct BenchmarkExecutor { // swiftlint:disable:this type_body_length
 
         var statistics: [Statistics] = .init(repeating: Statistics(), count: BenchmarkMetric.maxIndex + 1)
         var customStatistics: [BenchmarkMetric: Statistics] = [:]
+        var performanceCountersRequested = false
         var operatingSystemStatsRequested = false
         var mallocStatsRequested = false
         var arcStatsRequested = false
@@ -90,6 +93,10 @@ struct BenchmarkExecutor { // swiftlint:disable:this type_body_length
 
             if arcStatsProducerNeeded(metric) {
                 arcStatsRequested = true
+            }
+
+            if performanceCountersNeeded(metric) {
+                performanceCountersRequested = true
             }
         }
 
@@ -136,16 +143,16 @@ struct BenchmarkExecutor { // swiftlint:disable:this type_body_length
 
             startTime = BenchmarkClock.now // must be as close to last in closure as possible
 
-            if operatingSystemStatsRequested {
-                operatingSystemStatsProducer.resetSystemPerformanceCounters() // for perf counters on linux
+            if performanceCountersRequested {
+                startPerformanceCounters = operatingSystemStatsProducer.makePerformanceCounters()
             }
         }
 
         // And corresponding hook for then the benchmark has finished and capture finishing metrics here
         // This closure will only be called once for a given run though.
         benchmark.measurementPostSynchronization = {
-            if operatingSystemStatsRequested {
-                operatingSystemStatsProducer.recordPerformanceCounters() // for perf counters on linux
+            if performanceCountersRequested {
+                stopPerformanceCounters = operatingSystemStatsProducer.makePerformanceCounters()
             }
 
             stopTime = BenchmarkClock.now // must be as close to first in closure as possible (perf events only before)
@@ -273,9 +280,11 @@ struct BenchmarkExecutor { // swiftlint:disable:this type_body_length
                     delta = stopOperatingSystemStats.writeBytesPhysical -
                         startOperatingSystemStats.writeBytesPhysical
                     statistics[BenchmarkMetric.writeBytesPhysical.index].add(Int(delta))
+                }
 
-                    delta = stopOperatingSystemStats.instructions -
-                        startOperatingSystemStats.instructions
+                if performanceCountersRequested {
+                    delta = stopPerformanceCounters.instructions -
+                    startPerformanceCounters.instructions
                     statistics[BenchmarkMetric.instructions.index].add(Int(delta))
                 }
             }
@@ -293,13 +302,16 @@ struct BenchmarkExecutor { // swiftlint:disable:this type_body_length
             benchmark.configuration.metrics.contains(.threadsRunning) ||
             benchmark.configuration.metrics.contains(.peakMemoryResident) ||
             benchmark.configuration.metrics.contains(.peakMemoryResidentDelta) ||
-            benchmark.configuration.metrics.contains(.peakMemoryVirtual) || 
-            benchmark.configuration.metrics.contains(.instructions) {
+            benchmark.configuration.metrics.contains(.peakMemoryVirtual) {
             operatingSystemStatsProducer.startSampling(5_000) // ~5 ms
 
             if benchmark.configuration.metrics.contains(.peakMemoryResidentDelta) {
                 baselinePeakMemoryResidentDelta = operatingSystemStatsProducer.makeOperatingSystemStats().peakMemoryResident
             }
+        }
+
+        if performanceCountersRequested {
+            operatingSystemStatsProducer.startPerformanceCounters()
         }
 
         var progressBar: ProgressBar?
@@ -373,6 +385,10 @@ struct BenchmarkExecutor { // swiftlint:disable:this type_body_length
 
         if var progressBar {
             progressBar.setValue(100)
+        }
+
+        if performanceCountersRequested {
+            operatingSystemStatsProducer.stopPerformanceCounters()
         }
 
         if benchmark.configuration.metrics.contains(.threads) ||

@@ -40,6 +40,10 @@ struct OperatingSystemStats {
     var readBytesPhysical: Int = 0
     /// The number of bytes physicall written to a block device (i.e. disk) -- Linux only
     var writeBytesPhysical: Int = 0
+}
+
+struct PerformanceCounters {
     /// The number instructions executed
     var instructions: Int = 0
 }
+

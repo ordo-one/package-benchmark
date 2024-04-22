@@ -92,12 +92,6 @@
             }
         #endif
 
-        func resetSystemPerformanceCounters() {
-        }
-
-        func recordPerformanceCounters() {
-        }
-
         func startSampling(_: Int = 10_000) { // sample rate in microseconds
             #if os(macOS)
                 let sampleSemaphore = DispatchSemaphore(value: 0)
@@ -225,8 +219,7 @@
                                                  readBytesLogical: 0,
                                                  writeBytesLogical: 0,
                                                  readBytesPhysical: Int(usage.ri_diskio_bytesread),
-                                                 writeBytesPhysical: Int(usage.ri_diskio_byteswritten),
-                                                 instructions: Int(usage.ri_instructions))
+                                                 writeBytesPhysical: Int(usage.ri_diskio_byteswritten))
 
                 return stats
             #else
@@ -250,6 +243,23 @@
                 // No metrics supported due to lack of libproc.h
                 return false
             #endif
+        }
+
+        // The performance counters are just called by the benchmark runner thread only and don't need locking
+        var performanceCounters = rusage_info_current()
+
+        func startPerformanceCounters() {
+        }
+
+        func stopPerformanceCounters() {
+        }
+
+        func resetPerformanceCounters() {
+        }
+
+        func makePerformanceCounters() -> PerformanceCounters {
+            performanceCounters = getRusage()
+            return .init(instructions: Int(performanceCounters.ri_instructions))
         }
     }
 
