@@ -254,9 +254,6 @@
         func stopPerformanceCounters() {
         }
 
-        func resetPerformanceCounters() {
-        }
-
         func makePerformanceCounters() -> PerformanceCounters {
             performanceCounters = getRusage()
             return .init(instructions: Int(performanceCounters.ri_instructions))

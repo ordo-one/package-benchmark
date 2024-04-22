@@ -34,6 +34,9 @@ int CLinuxPerformanceCountersInit() {
     errorCode = errno;
     if (fd == -1) {
         fprintf(stderr, "Error in perf_event_open syscall, failed with [%d], error: %s\n", errorCode, strerror(errorCode));
+    } else {
+        ioctl(fd, PERF_EVENT_IOC_ENABLE, 0);
+        ioctl(fd, PERF_EVENT_IOC_RESET, 0);
     }
 
     return fd;
@@ -44,15 +47,8 @@ void CLinuxPerformanceCountersDeinit(int fd) {
     close(fd);
 }
 
-void CLinuxPerformanceCountersStart(int fd) {
-//    ioctl(fd, PERF_EVENT_IOC_ENABLE, 0);
-//    ioctl(fd, PERF_EVENT_IOC_RESET, 0);
-}
-
-void CLinuxPerformanceCountersStop(int fd, struct performanceCounters *performanceCounters) {
-//    ioctl(fd, PERF_EVENT_IOC_DISABLE, 0);
+void CLinuxPerformanceCountersCurrent(int fd, struct performanceCounters *performanceCounters) {
     read(fd, &performanceCounters->instructions, sizeof(performanceCounters->instructions));
-    ioctl(fd, PERF_EVENT_IOC_RESET, 0);
     return;
 }
 

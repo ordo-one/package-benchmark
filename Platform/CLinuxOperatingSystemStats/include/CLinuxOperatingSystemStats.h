@@ -39,7 +39,6 @@ struct performanceCounters {
 
 int CLinuxPerformanceCountersInit(); // returns the perf events fd that must be passed to the reset of the functions
 void CLinuxPerformanceCountersDeinit(int fd); // stop monitoring and close the fd
-void CLinuxPerformanceCountersStart(int fd); // reset counters and start measuring 
-void CLinuxPerformanceCountersStop(int fd, struct performanceCounters *performanceCounters); // stop measuring and return counters
+void CLinuxPerformanceCountersCurrent(int fd, struct performanceCounters *performanceCounters); // return current counters
 
 #endif /* CLinuxOperatingSystemStats_h */

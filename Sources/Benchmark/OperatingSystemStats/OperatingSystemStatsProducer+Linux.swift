@@ -239,33 +239,12 @@
             }
         }
 
-        func resetPerformanceCounters() { // NOP
-        }
-
         func makePerformanceCounters() -> PerformanceCounters {
             if performanceEventsFD > 0 {
-                CLinuxPerformanceCountersStop(performanceEventsFD, &performanceCounters)
+                CLinuxPerformanceCountersCurrent(performanceEventsFD, &performanceCounters)
             }
 
-            .init(instructions: Int(performanceCounters.ri_instructions))
+            return .init(instructions: Int(performanceCounters.instructions))
         }
-
-
-//        func resetSystemPerformanceCounters() {
-//            self.performanceCounters = .init()
-//            self.lock.withLock {
-//                if performanceEventsFD > 0 {
-//                    //                    CLinuxPerformanceCountersStart(performanceEventsFD)
-//                }
-//            }
-//        }
-//
-//        func recordPerformanceCounters() {
-//            self.lock.withLock {
-//                if performanceEventsFD > 0 {
-//                    CLinuxPerformanceCountersStop(performanceEventsFD, &performanceCounters)
-//                }
-//            }
-//        }
     }
 #endif
