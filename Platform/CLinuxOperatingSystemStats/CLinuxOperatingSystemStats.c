@@ -45,14 +45,13 @@ void CLinuxPerformanceCountersDeinit(int fd) {
 }
 
 void CLinuxPerformanceCountersStart(int fd) {
-//    ioctl(fd, PERF_EVENT_IOC_ENABLE, 0);
-//    ioctl(fd, PERF_EVENT_IOC_RESET, 0);
+    ioctl(fd, PERF_EVENT_IOC_ENABLE, 0);
+    ioctl(fd, PERF_EVENT_IOC_RESET, 0);
 }
 
 void CLinuxPerformanceCountersStop(int fd, struct performanceCounters *performanceCounters) {
-//    ioctl(fd, PERF_EVENT_IOC_DISABLE, 0);
+    ioctl(fd, PERF_EVENT_IOC_DISABLE, 0);
     read(fd, &performanceCounters->instructions, sizeof(performanceCounters->instructions));
-    ioctl(fd, PERF_EVENT_IOC_RESET, 0);
     return;
 }
 
