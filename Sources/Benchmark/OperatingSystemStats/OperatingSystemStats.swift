@@ -46,4 +46,3 @@ struct PerformanceCounters {
     /// The number instructions executed
     var instructions: UInt64 = 0
 }
-

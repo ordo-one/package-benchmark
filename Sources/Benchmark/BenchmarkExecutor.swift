@@ -119,8 +119,6 @@ struct BenchmarkExecutor { // swiftlint:disable:this type_body_length
             operatingSystemStatsOverhead.readSyscalls = statsTwo.readSyscalls - statsOne.readSyscalls
             operatingSystemStatsOverhead.readBytesLogical = statsTwo.readBytesLogical - statsOne.readBytesLogical
             operatingSystemStatsOverhead.readBytesPhysical = statsTwo.readBytesPhysical - statsOne.readBytesPhysical
-
-            // Add same for instruction count here TODO
         }
 
         // Hook that is called before the actual benchmark closure run, so we can capture metrics here

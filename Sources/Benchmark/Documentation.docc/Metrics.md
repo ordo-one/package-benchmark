@@ -33,7 +33,7 @@ Currently supported metrics are:
 - term `writeBytesLogical`: The number bytes written to storage (but may be cached) -- Linux only
 - term `readBytesPhysical`: The number of bytes physically read from a block device (i.e. disk) -- Linux only
 - term `writeBytesPhysical`: The number of bytes physicall written to a block device (i.e. disk) -- Linux only
-- term `instructions`: The number of instructions executed -- Currently macOS only
+- term `instructions`: The number of instructions executed -- on Linux only single CPU currently, for macOS for all CPU:s
 - term `retainCount`: The number of retain calls (ARC)
 - term `releaseCount`: The number of release calls (ARC)
 - term `retainReleaseDelta`: abs(retainCount - releaseCount) - if this is non-zero, it would typically mean the benchmark has a retain cycle (use Memory Graph Debugger to troubleshoot)
