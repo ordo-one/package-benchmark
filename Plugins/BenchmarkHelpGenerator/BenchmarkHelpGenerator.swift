@@ -37,6 +37,7 @@ let availableMetrics = [
     "writeBytesLogical",
     "readBytesPhysical",
     "writeBytesPhysical",
+    "instructions",
     "retainCount",
     "releaseCount",
     "retainReleaseDelta",

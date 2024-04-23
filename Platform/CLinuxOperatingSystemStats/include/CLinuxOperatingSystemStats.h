@@ -33,4 +33,13 @@ struct processStats {
 
 void CLinuxProcessStats(const char *s, struct processStats *processStats);
 
+struct performanceCounters {
+    unsigned long long instructions;
+} performanceCounters;
+
+void CLinuxPerformanceCountersCurrent(struct performanceCounters *performanceCounters); // return current counters
+void CLinuxPerformanceCountersEnable();
+void CLinuxPerformanceCountersDisable();
+void CLinuxPerformanceCountersReset();
+
 #endif /* CLinuxOperatingSystemStats_h */

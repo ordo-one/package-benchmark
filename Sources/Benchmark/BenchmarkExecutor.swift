@@ -29,6 +29,8 @@ struct BenchmarkExecutor { // swiftlint:disable:this type_body_length
         var stopMallocStats = MallocStats()
         var startOperatingSystemStats = OperatingSystemStats()
         var stopOperatingSystemStats = OperatingSystemStats()
+        var startPerformanceCounters = PerformanceCounters()
+        var stopPerformanceCounters = PerformanceCounters()
         var startARCStats = ARCStats()
         var stopARCStats = ARCStats()
         var startTime = BenchmarkClock.now
@@ -60,6 +62,7 @@ struct BenchmarkExecutor { // swiftlint:disable:this type_body_length
 
         var statistics: [Statistics] = .init(repeating: Statistics(), count: BenchmarkMetric.maxIndex + 1)
         var customStatistics: [BenchmarkMetric: Statistics] = [:]
+        var performanceCountersRequested = false
         var operatingSystemStatsRequested = false
         var mallocStatsRequested = false
         var arcStatsRequested = false
@@ -91,6 +94,10 @@ struct BenchmarkExecutor { // swiftlint:disable:this type_body_length
             if arcStatsProducerNeeded(metric) {
                 arcStatsRequested = true
             }
+
+            if performanceCountersNeeded(metric) {
+                performanceCountersRequested = true
+            }
         }
 
         operatingSystemStatsProducer.configureMetrics(operatingSystemMetricsRequested)
@@ -114,6 +121,21 @@ struct BenchmarkExecutor { // swiftlint:disable:this type_body_length
             operatingSystemStatsOverhead.readBytesPhysical = statsTwo.readBytesPhysical - statsOne.readBytesPhysical
         }
 
+        var timingOverheadInInstructions: UInt64 = 0
+        if performanceCountersRequested {
+            let numberOfMeasurements: UInt64 = 5
+            operatingSystemStatsProducer.enablePerformanceCounters()
+            for _ in 0..<numberOfMeasurements {
+                blackHole(BenchmarkClock.now)
+                let statsOne = operatingSystemStatsProducer.makePerformanceCounters()
+                blackHole(BenchmarkClock.now) // must be as close to last in closure as possible
+                let statsTwo = operatingSystemStatsProducer.makePerformanceCounters()
+                timingOverheadInInstructions += max((statsTwo.instructions - statsOne.instructions), 0)
+            }
+            timingOverheadInInstructions /= numberOfMeasurements
+            operatingSystemStatsProducer.disablePerformanceCounters()
+        }
+
         // Hook that is called before the actual benchmark closure run, so we can capture metrics here
         // NB this code may be called twice if the user calls startMeasurement() manually and should
         // then reset to a new starting state.
@@ -132,13 +154,22 @@ struct BenchmarkExecutor { // swiftlint:disable:this type_body_length
                 startARCStats = ARCStatsProducer.makeARCStats()
             }
 
-            startTime = BenchmarkClock.now // must be last in closure
+            if performanceCountersRequested {
+                operatingSystemStatsProducer.resetPerformanceCounters()
+                startPerformanceCounters = operatingSystemStatsProducer.makePerformanceCounters()
+            }
+
+            startTime = BenchmarkClock.now // must be as close to last in closure as possible
         }
 
         // And corresponding hook for then the benchmark has finished and capture finishing metrics here
         // This closure will only be called once for a given run though.
         benchmark.measurementPostSynchronization = {
-            stopTime = BenchmarkClock.now // must be first in closure
+            if performanceCountersRequested {
+                stopPerformanceCounters = operatingSystemStatsProducer.makePerformanceCounters()
+            }
+
+            stopTime = BenchmarkClock.now // must be as close to first in closure as possible (perf events only before)
 
             if arcStatsRequested {
                 stopARCStats = ARCStatsProducer.makeARCStats()
@@ -264,6 +295,18 @@ struct BenchmarkExecutor { // swiftlint:disable:this type_body_length
                         startOperatingSystemStats.writeBytesPhysical
                     statistics[BenchmarkMetric.writeBytesPhysical.index].add(Int(delta))
                 }
+
+                if performanceCountersRequested {
+                    delta = Int(stopPerformanceCounters.instructions -
+                        startPerformanceCounters.instructions)
+                    // remove overhead of startTime = BenchmarkClock.now, later we should measure dummy void benchmark
+                    if delta > timingOverheadInInstructions {
+                        delta -= Int(timingOverheadInInstructions)
+                    }
+                    if delta > 0 {
+                        statistics[BenchmarkMetric.instructions.index].add(Int(delta))
+                    }
+                }
             }
         }
 
@@ -308,8 +351,11 @@ struct BenchmarkExecutor { // swiftlint:disable:this type_body_length
             let benchmarkInterval = signPost.beginInterval("Benchmark", id: signpostID, "\(benchmark.name)")
         #endif
 
-        // Run the benchmark at a minimum the desired iterations/runtime --
+        if performanceCountersRequested {
+            operatingSystemStatsProducer.enablePerformanceCounters()
+        }
 
+        // Run the benchmark at a minimum the desired iterations/runtime --
         while iterations <= benchmark.configuration.maxIterations ||
             wallClockDuration <= benchmark.configuration.maxDuration {
             // and at a maximum the same...
@@ -348,6 +394,10 @@ struct BenchmarkExecutor { // swiftlint:disable:this type_body_length
             }
         }
 
+        if performanceCountersRequested {
+            operatingSystemStatsProducer.disablePerformanceCounters()
+        }
+
         if arcStatsRequested {
             ARCStatsProducer.unhook()
         }
@@ -361,7 +411,10 @@ struct BenchmarkExecutor { // swiftlint:disable:this type_body_length
         }
 
         if benchmark.configuration.metrics.contains(.threads) ||
-            benchmark.configuration.metrics.contains(.threadsRunning) {
+            benchmark.configuration.metrics.contains(.threadsRunning) ||
+            benchmark.configuration.metrics.contains(.peakMemoryResident) ||
+            benchmark.configuration.metrics.contains(.peakMemoryResidentDelta) ||
+            benchmark.configuration.metrics.contains(.peakMemoryVirtual) {
             operatingSystemStatsProducer.stopSampling()
         }
 

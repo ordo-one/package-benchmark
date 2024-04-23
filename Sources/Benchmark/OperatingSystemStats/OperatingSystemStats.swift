@@ -30,7 +30,7 @@ struct OperatingSystemStats {
     var threadsRunning: Int = 0
     /// The number of I/O read syscalls performed e.g. read(2) / pread(2) -- Linux only
     var readSyscalls: Int = 0
-    /// The number of I/O write syscalls performed e.g. write(2) / pwrite(2) -- Linux only
+    /// The number of I/O write syscalls performed e.g. write(2) / pwrite(2), on macOS the logical writes return by rusage
     var writeSyscalls: Int = 0
     /// The number of bytes read from storage (but may be satisfied by pagecache!) -- Linux only
     var readBytesLogical: Int = 0
@@ -40,4 +40,9 @@ struct OperatingSystemStats {
     var readBytesPhysical: Int = 0
     /// The number of bytes physicall written to a block device (i.e. disk) -- Linux only
     var writeBytesPhysical: Int = 0
+}
+
+struct PerformanceCounters {
+    /// The number instructions executed
+    var instructions: UInt64 = 0
 }

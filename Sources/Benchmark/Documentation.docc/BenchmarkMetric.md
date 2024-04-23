@@ -31,6 +31,7 @@
 - ``BenchmarkMetric/peakMemoryResident``
 - ``BenchmarkMetric/memoryLeaked``
 - ``BenchmarkMetric/allocatedResidentMemory``
+- ``BenchmarkMetric/instructions``
 
 ### Memory Metrics
 

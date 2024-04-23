@@ -21,7 +21,8 @@ let benchmarks = {
         .mallocCountTotal,
         .allocatedResidentMemory,
         .threads,
-        .threadsRunning
+        .threadsRunning,
+        .instructions
     ]
     Benchmark.defaultConfiguration = .init(metrics: metrics,
                                            scalingFactor: .mega,

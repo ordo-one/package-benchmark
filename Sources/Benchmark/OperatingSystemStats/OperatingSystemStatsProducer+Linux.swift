@@ -224,6 +224,23 @@
 
             semaphore.wait()
         }
-    }
 
+        func enablePerformanceCounters() {
+            CLinuxPerformanceCountersEnable()
+        }
+
+        func disablePerformanceCounters() {
+            CLinuxPerformanceCountersDisable()
+        }
+
+        func resetPerformanceCounters() {
+            CLinuxPerformanceCountersReset()
+        }
+
+        func makePerformanceCounters() -> PerformanceCounters {
+            var performanceCounters: performanceCounters = .init()
+            CLinuxPerformanceCountersCurrent(&performanceCounters)
+            return .init(instructions: performanceCounters.instructions)
+        }
+    }
 #endif
