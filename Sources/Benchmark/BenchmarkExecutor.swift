@@ -126,6 +126,7 @@ struct BenchmarkExecutor { // swiftlint:disable:this type_body_length
             let numberOfMeasurements: UInt64 = 5
             operatingSystemStatsProducer.enablePerformanceCounters()
             for _ in 0..<numberOfMeasurements {
+                blackHole(BenchmarkClock.now)
                 let statsOne = operatingSystemStatsProducer.makePerformanceCounters()
                 blackHole(BenchmarkClock.now) // must be as close to last in closure as possible
                 let statsTwo = operatingSystemStatsProducer.makePerformanceCounters()
