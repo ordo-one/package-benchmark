@@ -123,13 +123,16 @@ struct BenchmarkExecutor { // swiftlint:disable:this type_body_length
 
         var timingOverheadInInstructions: UInt64 = 0
         if performanceCountersRequested {
+            let numberOfMeasurements: UInt64 = 5
             operatingSystemStatsProducer.enablePerformanceCounters()
-            let statsOne = operatingSystemStatsProducer.makePerformanceCounters()
-            blackHole(BenchmarkClock.now) // must be as close to last in closure as possible
-            blackHole(operatingSystemStatsProducer.makePerformanceCounters())
-            let statsTwo = operatingSystemStatsProducer.makePerformanceCounters()
+            for _ in 0..<numberOfMeasurements {
+                let statsOne = operatingSystemStatsProducer.makePerformanceCounters()
+                blackHole(BenchmarkClock.now) // must be as close to last in closure as possible
+                let statsTwo = operatingSystemStatsProducer.makePerformanceCounters()
+                timingOverheadInInstructions += max((statsTwo.instructions - statsOne.instructions) , 0)
+            }
+            timingOverheadInInstructions /= numberOfMeasurements
             operatingSystemStatsProducer.disablePerformanceCounters()
-            timingOverheadInInstructions = max((statsTwo.instructions - statsOne.instructions) , 0)
         }
 
         // Hook that is called before the actual benchmark closure run, so we can capture metrics here
@@ -294,7 +297,11 @@ struct BenchmarkExecutor { // swiftlint:disable:this type_body_length
 
                 if performanceCountersRequested {
                     delta = Int(stopPerformanceCounters.instructions -
-                        startPerformanceCounters.instructions - timingOverheadInInstructions) // remove overhead of startTime = BenchmarkClock.now, later we should measure dummy void benchmark
+                        startPerformanceCounters.instructions)
+                    // remove overhead of startTime = BenchmarkClock.now, later we should measure dummy void benchmark
+                    if delta > timingOverheadInInstructions {
+                        delta -= Int(timingOverheadInInstructions)
+                    }
                     if delta > 0 {
                         statistics[BenchmarkMetric.instructions.index].add(Int(delta))
                     }
