@@ -225,25 +225,21 @@
             semaphore.wait()
         }
 
-        // The performance counters are just called by the benchmark runner thread only and don't need locking
-        var performanceCounters: performanceCounters = .init()
-        var performanceEventsFD: Int32 = -1
-
-        func startPerformanceCounters() {
-            performanceEventsFD = CLinuxPerformanceCountersInit()
+        func enablePerformanceCounters() {
+            CLinuxPerformanceCountersEnable()
         }
 
-        func stopPerformanceCounters() {
-            if performanceEventsFD > 0 {
-                CLinuxPerformanceCountersDeinit(performanceEventsFD)
-            }
+        func disablePerformanceCounters() {
+            CLinuxPerformanceCountersDisable()
+        }
+
+        func resetPerformanceCounters() {
+            CLinuxPerformanceCountersReset()
         }
 
         func makePerformanceCounters() -> PerformanceCounters {
-            if performanceEventsFD > 0 {
-                CLinuxPerformanceCountersCurrent(performanceEventsFD, &performanceCounters)
-            }
-
+            var performanceCounters: performanceCounters = .init()
+            CLinuxPerformanceCountersCurrent(&performanceCounters)
             return .init(instructions: performanceCounters.instructions)
         }
     }

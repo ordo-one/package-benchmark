@@ -121,6 +121,17 @@ struct BenchmarkExecutor { // swiftlint:disable:this type_body_length
             operatingSystemStatsOverhead.readBytesPhysical = statsTwo.readBytesPhysical - statsOne.readBytesPhysical
         }
 
+        var timingOverheadInInstructions: UInt64 = 0
+        if performanceCountersRequested {
+            operatingSystemStatsProducer.enablePerformanceCounters()
+            let statsOne = operatingSystemStatsProducer.makePerformanceCounters()
+            blackHole(BenchmarkClock.now) // must be as close to last in closure as possible
+            blackHole(operatingSystemStatsProducer.makePerformanceCounters())
+            let statsTwo = operatingSystemStatsProducer.makePerformanceCounters()
+            operatingSystemStatsProducer.disablePerformanceCounters()
+            timingOverheadInInstructions = max((statsTwo.instructions - statsOne.instructions) , 0)
+        }
+
         // Hook that is called before the actual benchmark closure run, so we can capture metrics here
         // NB this code may be called twice if the user calls startMeasurement() manually and should
         // then reset to a new starting state.
@@ -139,11 +150,12 @@ struct BenchmarkExecutor { // swiftlint:disable:this type_body_length
                 startARCStats = ARCStatsProducer.makeARCStats()
             }
 
-            startTime = BenchmarkClock.now // must be as close to last in closure as possible
-
             if performanceCountersRequested {
+                operatingSystemStatsProducer.resetPerformanceCounters()
                 startPerformanceCounters = operatingSystemStatsProducer.makePerformanceCounters()
             }
+
+            startTime = BenchmarkClock.now // must be as close to last in closure as possible
         }
 
         // And corresponding hook for then the benchmark has finished and capture finishing metrics here
@@ -282,8 +294,10 @@ struct BenchmarkExecutor { // swiftlint:disable:this type_body_length
 
                 if performanceCountersRequested {
                     delta = Int(stopPerformanceCounters.instructions -
-                    startPerformanceCounters.instructions)
-                    statistics[BenchmarkMetric.instructions.index].add(delta)
+                        startPerformanceCounters.instructions - timingOverheadInInstructions) // remove overhead of startTime = BenchmarkClock.now, later we should measure dummy void benchmark
+                    if delta > 0 {
+                        statistics[BenchmarkMetric.instructions.index].add(Int(delta))
+                    }
                 }
             }
         }
@@ -308,10 +322,6 @@ struct BenchmarkExecutor { // swiftlint:disable:this type_body_length
             }
         }
 
-        if performanceCountersRequested {
-            operatingSystemStatsProducer.startPerformanceCounters()
-        }
-
         var progressBar: ProgressBar?
 
         if quiet == false {
@@ -333,8 +343,11 @@ struct BenchmarkExecutor { // swiftlint:disable:this type_body_length
             let benchmarkInterval = signPost.beginInterval("Benchmark", id: signpostID, "\(benchmark.name)")
         #endif
 
-        // Run the benchmark at a minimum the desired iterations/runtime --
+        if performanceCountersRequested {
+            operatingSystemStatsProducer.enablePerformanceCounters()
+        }
 
+        // Run the benchmark at a minimum the desired iterations/runtime --
         while iterations <= benchmark.configuration.maxIterations ||
             wallClockDuration <= benchmark.configuration.maxDuration {
             // and at a maximum the same...
@@ -373,6 +386,10 @@ struct BenchmarkExecutor { // swiftlint:disable:this type_body_length
             }
         }
 
+        if performanceCountersRequested {
+            operatingSystemStatsProducer.disablePerformanceCounters()
+        }
+
         if arcStatsRequested {
             ARCStatsProducer.unhook()
         }
@@ -383,10 +400,6 @@ struct BenchmarkExecutor { // swiftlint:disable:this type_body_length
 
         if var progressBar {
             progressBar.setValue(100)
-        }
-
-        if performanceCountersRequested {
-            operatingSystemStatsProducer.stopPerformanceCounters()
         }
 
         if benchmark.configuration.metrics.contains(.threads) ||

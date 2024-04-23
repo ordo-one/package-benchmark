@@ -12,15 +12,88 @@
 #include "CLinuxOperatingSystemStats.h"
 #include <linux/perf_event.h>    /* Definition of PERF_* constants */
 #include <linux/hw_breakpoint.h> /* Definition of HW_* constants */
+#include <stdlib.h>
 #include <sys/syscall.h>         /* Definition of SYS_* constants */
 #include <unistd.h>
 #include <string.h> // memset
 #include <sys/ioctl.h>
 #include <errno.h>
 
-int CLinuxPerformanceCountersInit() {
-    int fd, errorCode;
+static void CLinuxPerformanceCountersInit();
+static void CLinuxPerformanceCountersDeinit();
+
+// We need to run constructors/destructors to be able to enable performance counters
+// before the GCD thread pool is initizlied, as Linux doesn't have the capability
+// to measure pre-existing thread under PMU for some reason. The perf interface
+// need each CPU to be tracked idependently and can only track the calling thread
+// and it's descendants (if set up properly), so we need to do this as early as possible.
+
+__attribute__((constructor))
+void startPerformanceCounters(void) {
+    CLinuxPerformanceCountersInit();
+}
+
+__attribute__((destructor))
+void myDestructor(void) {
+    CLinuxPerformanceCountersDeinit();
+}
+
+struct performance_counters_context {
+    int cpuCount;
+	int *cpus;
+	int *fds;
+} performance_counters_context;
+
+struct performance_counters_context performanceCountersContext = {0, NULL, NULL};
+
+// Utility function to read CPU IDs from /proc/cpuinfo, thanks to ChatGPT...
+int get_cpu_identifiers(int *cpu_array, int max_cpus) {
+    FILE *file = fopen("/proc/cpuinfo", "r");
+    char line[256];
+    int cpu_count = 0;
+
+    if (!file) {
+        perror("Failed to open /proc/cpuinfo");
+        return -1;
+    }
+
+    while (fgets(line, sizeof(line), file)) {
+        if (strncmp(line, "processor", 9) == 0) {
+            int cpu_id;
+            if (sscanf(line, "processor : %d", &cpu_id) == 1) {
+                if (cpu_count < max_cpus) {
+                    cpu_array[cpu_count++] = cpu_id;
+                } else {
+                    fprintf(stderr, "Maximum CPU count reached (%d)\n", max_cpus);
+                    break;
+                }
+            }
+        }
+    }
+    fclose(file);
+    return cpu_count;
+}
+
+static void CLinuxPerformanceCountersInit() {
+    int cpu, errorCode, readCPUCount, i;
     struct perf_event_attr  pe;
+
+    performanceCountersContext.cpuCount = (int)sysconf(_SC_NPROCESSORS_ONLN);
+    performanceCountersContext.cpus = (int *)calloc(sizeof(int), performanceCountersContext.cpuCount);
+    performanceCountersContext.fds = (int *)calloc(sizeof(int), performanceCountersContext.cpuCount);
+
+     if (!performanceCountersContext.cpus || !performanceCountersContext.fds) {
+        performanceCountersContext.cpuCount = 0;
+        perror("Failed to allocate memory for CPUs or FDs");
+        return;
+    }
+
+    readCPUCount = get_cpu_identifiers(performanceCountersContext.cpus, performanceCountersContext.cpuCount);
+    if (performanceCountersContext.cpuCount != readCPUCount) {
+        performanceCountersContext.cpuCount = 0;
+        fprintf(stderr, "CLinuxPerformanceCountersInit, internal error in cpuCount %d != readCPUCount %d\n", performanceCountersContext.cpuCount, readCPUCount);
+        return;
+    }
 
     memset(&pe, 0, sizeof(pe));
     pe.type = PERF_TYPE_HARDWARE;
@@ -29,26 +102,74 @@ int CLinuxPerformanceCountersInit() {
     pe.disabled = 1;
     pe.exclude_kernel = 1;
     pe.exclude_hv = 1;
+    pe.inherit = 1;
+    pe.inherit_thread = 1;
+    pe.inherit_stat = 1;
+    pe.pinned = 1;
 
-    fd = syscall(SYS_perf_event_open, &pe, 0, -1, -1, 0);
-    errorCode = errno;
-    if (fd == -1) {
-        fprintf(stderr, "Error in perf_event_open syscall, failed with [%d], error: %s\n", errorCode, strerror(errorCode));
-    } else {
-        ioctl(fd, PERF_EVENT_IOC_ENABLE, 0);
-        ioctl(fd, PERF_EVENT_IOC_RESET, 0);
+    for (cpu = 0; cpu < performanceCountersContext.cpuCount; cpu++) {
+        performanceCountersContext.fds[cpu] = syscall(SYS_perf_event_open, &pe, 0, performanceCountersContext.cpus[cpu], -1, 0);
+        errorCode = errno;
+        if (performanceCountersContext.fds[cpu] == -1) {
+            performanceCountersContext.cpuCount = 0;
+            fprintf(stderr, "Can't enable performance counters for instructions metric, error in perf_event_open syscall, failed with [%d], error: %s\n", errorCode, strerror(errorCode));
+            return;
+        } 
     }
-
-    return fd;
+    return;
 }
 
-void CLinuxPerformanceCountersDeinit(int fd) {
-    ioctl(fd, PERF_EVENT_IOC_DISABLE, 0);
-    close(fd);
+static void CLinuxPerformanceCountersDeinit() {
+    int cpu;
+    for (cpu = 0; cpu < performanceCountersContext.cpuCount; cpu ++) {
+        close(performanceCountersContext.fds[cpu]);
+    }
 }
 
-void CLinuxPerformanceCountersCurrent(int fd, struct performanceCounters *performanceCounters) {
-    read(fd, &performanceCounters->instructions, sizeof(performanceCounters->instructions));
+void CLinuxPerformanceCountersEnable() {
+    int cpu;
+    for (cpu = 0; cpu < performanceCountersContext.cpuCount; cpu ++) {
+        ioctl(performanceCountersContext.fds[cpu], PERF_EVENT_IOC_ENABLE, 0);
+        ioctl(performanceCountersContext.fds[cpu], PERF_EVENT_IOC_RESET, 0);
+    }
+}
+
+void CLinuxPerformanceCountersDisable() {
+    int cpu;
+    for (cpu = 0; cpu < performanceCountersContext.cpuCount; cpu ++) {
+        ioctl(performanceCountersContext.fds[cpu], PERF_EVENT_IOC_DISABLE, 0);
+    }
+}
+
+void CLinuxPerformanceCountersReset() {
+    int cpu;
+    for (cpu = 0; cpu < performanceCountersContext.cpuCount; cpu ++) {
+        ioctl(performanceCountersContext.fds[cpu], PERF_EVENT_IOC_RESET, 0);
+    }
+}
+
+void CLinuxPerformanceCountersCurrent(struct performanceCounters *performanceCounters) {
+    int cpu;
+    unsigned long long readCounter = 0;
+    ssize_t bytesRead;
+
+    // Loop through each CPU to read the counter values
+    for (cpu = 0; cpu < performanceCountersContext.cpuCount; cpu++) {
+        bytesRead = read(performanceCountersContext.fds[cpu], &readCounter, sizeof(readCounter));
+        
+        if (bytesRead == 0) { // Pinned error state, should reenable the counters for this cpu
+            ioctl(performanceCountersContext.fds[cpu], PERF_EVENT_IOC_ENABLE, 0);
+            ioctl(performanceCountersContext.fds[cpu], PERF_EVENT_IOC_RESET, 0);
+            continue;
+        } else if (bytesRead == -1) {
+            continue;  // Continue with the next CPU in case of error
+        } else if (bytesRead != sizeof(readCounter)) {
+            continue;  // Continue with the next CPU in case of incomplete data
+        }
+
+        performanceCounters->instructions += readCounter;
+    }
+  
     return;
 }
 

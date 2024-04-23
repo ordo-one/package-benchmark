@@ -245,17 +245,17 @@
             #endif
         }
 
-        // The performance counters are just called by the benchmark runner thread only and don't need locking
-        var performanceCounters = rusage_info_current()
-
-        func startPerformanceCounters() {
+        func enablePerformanceCounters() {
         }
 
-        func stopPerformanceCounters() {
+        func disablePerformanceCounters() {
+        }
+
+        func resetPerformanceCounters() {
         }
 
         func makePerformanceCounters() -> PerformanceCounters {
-            performanceCounters = getRusage()
+            let performanceCounters = getRusage()
             return .init(instructions: performanceCounters.ri_instructions)
         }
     }
