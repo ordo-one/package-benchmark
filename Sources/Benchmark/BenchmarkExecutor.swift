@@ -130,7 +130,7 @@ struct BenchmarkExecutor { // swiftlint:disable:this type_body_length
                 let statsOne = operatingSystemStatsProducer.makePerformanceCounters()
                 blackHole(BenchmarkClock.now) // must be as close to last in closure as possible
                 let statsTwo = operatingSystemStatsProducer.makePerformanceCounters()
-                timingOverheadInInstructions += max((statsTwo.instructions - statsOne.instructions) , 0)
+                timingOverheadInInstructions += max((statsTwo.instructions - statsOne.instructions), 0)
             }
             timingOverheadInInstructions /= numberOfMeasurements
             operatingSystemStatsProducer.disablePerformanceCounters()
