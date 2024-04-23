@@ -112,7 +112,7 @@ static void CLinuxPerformanceCountersInit() {
         errorCode = errno;
         if (performanceCountersContext.fds[cpu] == -1) {
             performanceCountersContext.cpuCount = 0;
-            fprintf(stderr, "Can't enable performance counters for instructions metric, error in perf_event_open syscall, failed with [%d], error: %s\n", errorCode, strerror(errorCode));
+//            fprintf(stderr, "Can't enable performance counters for instructions metric, error in perf_event_open syscall, failed with [%d], error: %s\n", errorCode, strerror(errorCode));
             return;
         } 
     }
