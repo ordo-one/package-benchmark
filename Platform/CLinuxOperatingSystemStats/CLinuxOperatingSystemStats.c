@@ -103,7 +103,7 @@ static void CLinuxPerformanceCountersInit() {
     pe.exclude_kernel = 1;
     pe.exclude_hv = 1;
     pe.inherit = 1;
-    pe.inherit_thread = 1;
+//    pe.inherit_thread = 1; // Disabled for now as Linux 5.13 is not in widespread use yet
     pe.inherit_stat = 1;
     pe.pinned = 1;
 
