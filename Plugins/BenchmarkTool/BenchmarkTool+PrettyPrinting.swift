@@ -15,6 +15,15 @@ import TextTable
 private let percentileWidth = 7
 private let maxDescriptionWidth = 100
 
+extension OutputFormat {
+    var tableStyle: TextTableStyle.Type {
+        if case .markdown = self {
+            return Style.pipe
+        }
+        return Style.fancy
+    }
+}
+
 extension BenchmarkTool {
     private func printMarkdown(_ markdown: String, terminator: String = "\n") {
         if format == .markdown {
@@ -128,7 +137,7 @@ extension BenchmarkTool {
         printMarkdown("")
 
         printMarkdown("```")
-        table.print(scaledResults, style: Style.fancy)
+        table.print(scaledResults, style: format.tableStyle)
         printMarkdown("```")
     }
 
@@ -354,7 +363,7 @@ extension BenchmarkTool {
                                                                samples: samples))
 
                             printMarkdown("```")
-                            table.print(scaledResults, style: Style.fancy)
+                            table.print(scaledResults, style: format.tableStyle)
                             printMarkdown("```")
 
                             if format == .markdown {
@@ -415,7 +424,7 @@ extension BenchmarkTool {
                     }
 
                     printMarkdown("```")
-                    absoluteTable.print(absoluteResults, style: Style.fancy)
+                    absoluteTable.print(absoluteResults, style: format.tableStyle)
                     printMarkdown("```")
                 }
 
@@ -430,7 +439,7 @@ extension BenchmarkTool {
                     }
 
                     printMarkdown("```")
-                    relativeTable.print(relativeResults, style: Style.fancy)
+                    relativeTable.print(relativeResults, style: format.tableStyle)
                     printMarkdown("```")
                 }
             }
