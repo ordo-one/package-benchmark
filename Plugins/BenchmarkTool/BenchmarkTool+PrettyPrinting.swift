@@ -432,9 +432,7 @@ extension BenchmarkTool {
                          Column(title: "Threshold %", value: $0.differenceThreshold, width: percentileWidth, align: .right)]
                     }
 
-                    printMarkdown("```")
                     relativeTable.print(relativeResults, style: format.tableStyle)
-                    printMarkdown("```")
                 }
             }
         }
