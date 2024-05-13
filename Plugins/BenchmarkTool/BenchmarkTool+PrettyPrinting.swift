@@ -136,9 +136,7 @@ extension BenchmarkTool {
         print("\(key)")
         printMarkdown("")
 
-        printMarkdown("```")
         table.print(scaledResults, style: format.tableStyle)
-        printMarkdown("```")
     }
 
     func prettyPrint(_ baseline: BenchmarkBaseline,
@@ -362,9 +360,7 @@ extension BenchmarkTool {
                                                                percentiles: percentageDeltaPercentiles,
                                                                samples: samples))
 
-                            printMarkdown("```")
                             table.print(scaledResults, style: format.tableStyle)
-                            printMarkdown("```")
 
                             if format == .markdown {
                                 if hideResults {
@@ -423,9 +419,7 @@ extension BenchmarkTool {
                          Column(title: "Threshold Δ", value: $0.differenceThreshold, width: percentileWidth, align: .right)]
                     }
 
-                    printMarkdown("```")
                     absoluteTable.print(absoluteResults, style: format.tableStyle)
-                    printMarkdown("```")
                 }
 
                 if relativeResults.isEmpty == false {
