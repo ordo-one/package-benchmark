@@ -142,16 +142,16 @@ struct BenchmarkExecutor { // swiftlint:disable:this type_body_length
         // NB that the order is important, as we will get leaked
         // ARC measurements if initializing it before malloc etc.
         benchmark.measurementPreSynchronization = {
-            if operatingSystemStatsRequested {
-                startOperatingSystemStats = operatingSystemStatsProducer.makeOperatingSystemStats()
-            }
-
             if mallocStatsRequested {
                 startMallocStats = MallocStatsProducer.makeMallocStats()
             }
 
             if arcStatsRequested {
                 startARCStats = ARCStatsProducer.makeARCStats()
+            }
+
+            if operatingSystemStatsRequested {
+                startOperatingSystemStats = operatingSystemStatsProducer.makeOperatingSystemStats()
             }
 
             if performanceCountersRequested {
@@ -171,16 +171,16 @@ struct BenchmarkExecutor { // swiftlint:disable:this type_body_length
 
             stopTime = BenchmarkClock.now // must be as close to first in closure as possible (perf events only before)
 
+            if operatingSystemStatsRequested {
+                stopOperatingSystemStats = operatingSystemStatsProducer.makeOperatingSystemStats()
+            }
+
             if arcStatsRequested {
                 stopARCStats = ARCStatsProducer.makeARCStats()
             }
 
             if mallocStatsRequested {
                 stopMallocStats = MallocStatsProducer.makeMallocStats()
-            }
-
-            if operatingSystemStatsRequested {
-                stopOperatingSystemStats = operatingSystemStatsProducer.makeOperatingSystemStats()
             }
 
             var delta = 0
