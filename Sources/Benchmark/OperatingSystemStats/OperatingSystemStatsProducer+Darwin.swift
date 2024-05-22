@@ -8,7 +8,7 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 //
 
-#if os(macOS) || os(iOS) || os(watchOS) || os(tvOS)
+#if os(macOS) || os(iOS) || os(watchOS) || os(tvOS) || os(visionOS)
 
     import CDarwinOperatingSystemStats
     import Darwin
@@ -56,7 +56,7 @@
             nsPerSchedulerTick = 1_000_000_000 / schedulerTicksPerSecond
         }
 
-        #if os(macOS)
+        #if os(macOS) || os(iOS) || os(watchOS) || os(tvOS) || os(visionOS)
             fileprivate
             func getProcInfo() -> proc_taskinfo {
                 var procTaskInfo = proc_taskinfo()
@@ -93,7 +93,7 @@
         #endif
 
         func startSampling(_: Int = 10_000) { // sample rate in microseconds
-            #if os(macOS)
+            #if os(macOS) || os(iOS) || os(watchOS) || os(tvOS) || os(visionOS)
                 let sampleSemaphore = DispatchSemaphore(value: 0)
 
                 DispatchQueue.global(qos: .userInitiated).async {
@@ -155,7 +155,7 @@
         }
 
         func stopSampling() {
-            #if os(macOS)
+            #if os(macOS) || os(iOS) || os(watchOS) || os(tvOS) || os(visionOS)
                 lock.withLock {
                     runState = .shuttingDown
                 }
@@ -168,7 +168,7 @@
         }
 
         func makeOperatingSystemStats() -> OperatingSystemStats { // swiftlint:disable:this function_body_length
-            #if os(macOS)
+            #if os(macOS) || os(iOS) || os(watchOS) || os(tvOS) || os(visionOS)
                 guard let metrics else {
                     return .init()
                 }
@@ -228,7 +228,7 @@
         }
 
         func metricSupported(_ metric: BenchmarkMetric) -> Bool {
-            #if os(macOS)
+            #if os(macOS) || os(iOS) || os(watchOS) || os(tvOS) || os(visionOS)
                 switch metric {
                 case .readSyscalls:
                     return false
