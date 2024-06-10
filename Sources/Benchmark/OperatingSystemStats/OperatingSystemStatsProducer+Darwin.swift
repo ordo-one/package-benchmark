@@ -56,7 +56,7 @@
             nsPerSchedulerTick = 1_000_000_000 / schedulerTicksPerSecond
         }
 
-        #if os(macOS) || os(iOS) || os(watchOS) || os(tvOS) || os(visionOS)
+        #if os(macOS)
             fileprivate
             func getProcInfo() -> proc_taskinfo {
                 var procTaskInfo = proc_taskinfo()
@@ -93,7 +93,7 @@
         #endif
 
         func startSampling(_: Int = 10_000) { // sample rate in microseconds
-            #if os(macOS) || os(iOS) || os(watchOS) || os(tvOS) || os(visionOS)
+            #if os(macOS)
                 let sampleSemaphore = DispatchSemaphore(value: 0)
 
                 DispatchQueue.global(qos: .userInitiated).async {
@@ -155,7 +155,7 @@
         }
 
         func stopSampling() {
-            #if os(macOS) || os(iOS) || os(watchOS) || os(tvOS) || os(visionOS)
+            #if os(macOS)
                 lock.withLock {
                     runState = .shuttingDown
                 }
@@ -168,7 +168,7 @@
         }
 
         func makeOperatingSystemStats() -> OperatingSystemStats { // swiftlint:disable:this function_body_length
-            #if os(macOS) || os(iOS) || os(watchOS) || os(tvOS) || os(visionOS)
+            #if os(macOS)
                 guard let metrics else {
                     return .init()
                 }
@@ -255,8 +255,12 @@
         }
 
         func makePerformanceCounters() -> PerformanceCounters {
+            #if os(macOS)
             let performanceCounters = getRusage()
             return .init(instructions: performanceCounters.ri_instructions)
+            #else
+            return .init()
+            #endif
         }
     }
 
