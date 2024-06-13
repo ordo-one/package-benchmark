@@ -144,7 +144,7 @@ if macOSSPIBuild == false { // jemalloc always disable for macOSSPIBuild
         print("Jemalloc disabled through environment variable.")
     } else {
         package.dependencies += [.package(url: "https://github.com/ordo-one/package-jemalloc", .upToNextMajor(from: "1.0.0"))]
-        dependencies += [.product(name: "jemalloc", package: "package-jemalloc")]
+        dependencies += [.product(name: "jemalloc", package: "package-jemalloc", condition: .when(platforms: [.macOS, .linux]))]
     }
 }
 
