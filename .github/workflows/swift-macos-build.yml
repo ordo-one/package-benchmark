@@ -39,7 +39,9 @@ jobs:
       uses: ./.github/actions/consul-start
 
     - name: GH auth
-      run: echo "machine api.github.com login ${HOMEBREW_GITHUB_API_TOKEN} password x-oauth-basic" > $HOME/.netrc
+      run: |
+        echo "machine api.github.com login ${{ secrets.GITHUB_TOKEN }} password x-oauth-basic" > $HOME/.netrc
+        cat ~/.netrc
     - name: Swift version
       run: swift --version
     - name: Build
