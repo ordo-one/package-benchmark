@@ -115,7 +115,7 @@ let package = Package(
 
 let macOSSPIBuild: Bool // Disables jemalloc for macOS SPI builds as the infrastructure doesn't have jemalloc there
 
-#if os(macOS) || os(iOS) || os(watchOS) || os(tvOS) || os(visionOS)
+#if canImport(Darwin)
     if let spiBuildEnvironment = ProcessInfo.processInfo.environment["SPI_BUILD"], spiBuildEnvironment == "1" {
         macOSSPIBuild = true
         print("Building for SPI@macOS, disabling Jemalloc")

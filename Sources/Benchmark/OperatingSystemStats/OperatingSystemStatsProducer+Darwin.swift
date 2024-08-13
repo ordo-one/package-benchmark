@@ -8,7 +8,7 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 //
 
-#if os(macOS) || os(iOS) || os(watchOS) || os(tvOS) || os(visionOS)
+#if canImport(Darwin)
 
     import CDarwinOperatingSystemStats
     import Darwin
@@ -228,7 +228,7 @@
         }
 
         func metricSupported(_ metric: BenchmarkMetric) -> Bool {
-            #if os(macOS) || os(iOS) || os(watchOS) || os(tvOS) || os(visionOS)
+            #if canImport(Darwin)
                 switch metric {
                 case .readSyscalls:
                     return false
