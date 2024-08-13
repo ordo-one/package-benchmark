@@ -282,9 +282,7 @@ import PackagePlugin
 
             var buildParameters = PackageManager.BuildParameters(configuration: .release)
 
-            if !otherSwiftFlagsSpecified.isEmpty {
-                buildParameters.otherSwiftcFlags = otherSwiftFlagsSpecified.map { "-" + $0 }
-            }
+            buildParameters.otherSwiftcFlags.append(contentsOf: otherSwiftFlagsSpecified.map { "-\($0)" })
 
             let buildResult = try packageManager.build(
                 .product(benchmarkToolModule.name),
