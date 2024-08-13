@@ -61,7 +61,7 @@ extension BenchmarkClock: Clock {
 
     /// The minimum non-zero resolution between any two calls to `now`.
     public var minimumResolution: Swift.Duration {
-#if os(macOS) || os(iOS) || os(watchOS) || os(tvOS) || os(visionOS)
+#if canImport(Darwin)
         return Duration.nanoseconds(1)
 #elseif os(Linux)
         var resolution = timespec()
@@ -83,7 +83,7 @@ extension BenchmarkClock: Clock {
 
     /// The current continuous instant.
     public static var now: BenchmarkClock.Instant {
-#if os(macOS) || os(iOS) || os(watchOS) || os(tvOS) || os(visionOS)
+#if canImport(Darwin)
         let nanos = clock_gettime_nsec_np(CLOCK_UPTIME_RAW) // to get ns resolution on macOS
 
         let seconds: UInt64 = nanos / 1_000_000_000
