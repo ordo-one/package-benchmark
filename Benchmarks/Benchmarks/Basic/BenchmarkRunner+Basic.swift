@@ -143,7 +143,7 @@ let benchmarks = {
                         free(something)
                     }
                     if let fileHandle = FileHandle(forWritingAtPath: "/dev/null") {
-                        let data = "Data to discard".data(using: .utf8)!
+                        let data = Data("Data to discard".utf8)
                         fileHandle.write(data)
                         fileHandle.closeFile()
                     }

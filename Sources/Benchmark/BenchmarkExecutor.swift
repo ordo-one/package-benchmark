@@ -43,6 +43,7 @@ struct BenchmarkExecutor { // swiftlint:disable:this type_body_length
             let signPost = OSSignposter(logHandle: logHandler)
             let signpostID = OSSignpostID(log: logHandler)
             var warmupInterval: OSSignpostIntervalState?
+            var explicitStartStopInterval: OSSignpostIntervalState?
 
             if benchmark.configuration.warmupIterations > 0 {
                 warmupInterval = signPost.beginInterval("Benchmark", id: signpostID, "\(benchmark.name) warmup")
@@ -141,7 +142,13 @@ struct BenchmarkExecutor { // swiftlint:disable:this type_body_length
         // then reset to a new starting state.
         // NB that the order is important, as we will get leaked
         // ARC measurements if initializing it before malloc etc.
-        benchmark.measurementPreSynchronization = {
+        benchmark.measurementPreSynchronization = { explicitStartStop in
+            #if canImport(OSLog)
+            if explicitStartStop {
+                explicitStartStopInterval = signPost.beginInterval("Benchmark", id: signpostID, "\(benchmark.name) startMeasurement()")
+            }
+            #endif
+
             if mallocStatsRequested {
                 startMallocStats = MallocStatsProducer.makeMallocStats()
             }
@@ -164,7 +171,7 @@ struct BenchmarkExecutor { // swiftlint:disable:this type_body_length
 
         // And corresponding hook for then the benchmark has finished and capture finishing metrics here
         // This closure will only be called once for a given run though.
-        benchmark.measurementPostSynchronization = {
+        benchmark.measurementPostSynchronization = { _ in
             if performanceCountersRequested {
                 stopPerformanceCounters = operatingSystemStatsProducer.makePerformanceCounters()
             }
@@ -182,6 +189,12 @@ struct BenchmarkExecutor { // swiftlint:disable:this type_body_length
             if mallocStatsRequested {
                 stopMallocStats = MallocStatsProducer.makeMallocStats()
             }
+
+#if canImport(OSLog)
+            if let explicitStartStopInterval {
+                signPost.endInterval("Benchmark", explicitStartStopInterval, "\(benchmark.name) stopMeasurement()")
+            }
+#endif
 
             var delta = 0
             let runningTime: Duration = startTime.duration(to: stopTime)
