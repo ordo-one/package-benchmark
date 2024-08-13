@@ -171,7 +171,7 @@ struct BenchmarkExecutor { // swiftlint:disable:this type_body_length
 
         // And corresponding hook for then the benchmark has finished and capture finishing metrics here
         // This closure will only be called once for a given run though.
-        benchmark.measurementPostSynchronization = { explicitStartStop in
+        benchmark.measurementPostSynchronization = { _ in
             if performanceCountersRequested {
                 stopPerformanceCounters = operatingSystemStatsProducer.makePerformanceCounters()
             }
