@@ -33,7 +33,7 @@ public final class Benchmark: Codable, Hashable {
     #if swift(>=5.8)
         @_documentation(visibility: internal)
     #endif
-    public typealias BenchmarkMeasurementSynchronization = () -> Void
+    public typealias BenchmarkMeasurementSynchronization = (_ explicitStartStop: Bool) -> Void
     #if swift(>=5.8)
         @_documentation(visibility: internal)
     #endif
@@ -283,8 +283,12 @@ public final class Benchmark: Codable, Hashable {
     /// `startMeasurement` can be called explicitly to define when measurement should begin.
     /// Otherwise the whole benchmark will be measured.
     public func startMeasurement() {
+        _startMeasurement(true)
+    }
+
+    private func _startMeasurement(_ explicitStartStop: Bool) {
         if let measurementPreSynchronization {
-            measurementPreSynchronization()
+            measurementPreSynchronization(explicitStartStop)
         }
         measurementCompleted = false
     }
@@ -293,13 +297,17 @@ public final class Benchmark: Codable, Hashable {
     /// `stopMeasurement` can be called explicitly to define when measurement should stop.
     /// Otherwise the whole benchmark will be measured.
     public func stopMeasurement() {
+        _stopMeasurement(true)
+    }
+
+    private func _stopMeasurement(_ explicitStartStop: Bool) {
         guard measurementCompleted == false else { // This is to skip the implicit stop if we did an explicit before
             return
         }
 
         if let measurementPostSynchronization {
             measurementCompleted = true
-            measurementPostSynchronization()
+            measurementPostSynchronization(explicitStartStop)
         }
     }
 
@@ -324,9 +332,9 @@ public final class Benchmark: Codable, Hashable {
         // Must do this in a separate thread, otherwise we block the concurrent thread pool
         DispatchQueue.global(qos: .userInitiated).async {
             Task {
-                self.startMeasurement()
+                self._startMeasurement(false)
                 await asyncClosure(self)
-                self.stopMeasurement()
+                self._stopMeasurement(false)
 
                 semaphore.signal()
             }
@@ -340,9 +348,9 @@ public final class Benchmark: Codable, Hashable {
     #endif
     public func run() {
         if let closure {
-            startMeasurement()
+            _startMeasurement(false)
             closure(self)
-            stopMeasurement()
+            _stopMeasurement(false)
         } else {
             runAsync()
         }
