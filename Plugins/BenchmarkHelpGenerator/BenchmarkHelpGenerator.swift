@@ -82,7 +82,7 @@ struct Benchmark: AsyncParsableCommand {
         """
     )
 
-    @Argument(help: "The benchmark command to perform, one of: \((Command.allCases).map { String(describing: $0) }). If not specified, 'run' is implied.")
+    @Argument(help: "The benchmark command to perform. If not specified, 'run' is implied.")
     var command: Command
 
     @Option(name: .long, help: "Benchmarks matching the regexp filter that should be run")
@@ -97,10 +97,10 @@ struct Benchmark: AsyncParsableCommand {
     @Option(name: .long, help: "Benchmark targets matching the regexp filter that should be skipped")
     var skipTarget: [String] = []
 
-    @Option(name: .long, help: "The output format to use, one of: \((OutputFormat.allCases).map { String(describing: $0) }), default is '\(OutputFormat.text.rawValue)'")
+    @Option(name: .long, help: "The output format to use, default is '\(OutputFormat.text.rawValue)'")
     var format: OutputFormat
 
-    @Option(name: .long, help: "Specifies that the benchmark run should use one or more specific metrics instead of the ones defined by the benchmarks, valid values are: \(availableMetrics)")
+    @Option(name: .long, help: "Specifies that the benchmark run should use one or more specific metrics instead of the ones defined by the benchmarks. (values: \(availableMetrics.joined(separator: ", ")))")
     var metric: [String] = []
 
     @Option(name: .long, help: "The path where exported data is stored, default is the current directory (\".\"). ")
@@ -136,6 +136,9 @@ struct Benchmark: AsyncParsableCommand {
 
     @Option(name: .long, help: "The grouping to use, one of: \((Grouping.allCases).map { String(describing: $0) }). default is '\(Grouping.benchmark.rawValue)'")
     var grouping: Grouping
+
+    @Option(name: .long, help: "Pass an argument to the swift compiler when building the benchmark")
+    var Xswiftc: String
 
     mutating func run() async throws {}
 }

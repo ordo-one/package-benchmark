@@ -75,7 +75,7 @@ swift package benchmark baseline compare <baseline> [<otherBaseline>] [<options>
 swift package benchmark help
 
 ARGUMENTS:
-<command>               The benchmark command to perform, one of: ["run", "list", "baseline", "help", "init"]. If not specified, 'run' is implied.
+<command>               The benchmark command to perform. If not specified, 'run' is implied. (values: run, list, baseline, help, init)
 
 OPTIONS:
 --filter <filter>       Benchmarks matching the regexp filter that should be run
@@ -83,13 +83,12 @@ OPTIONS:
 --target <target>       Benchmark targets matching the regexp filter that should be run
 --skip-target <skip-target>
 Benchmark targets matching the regexp filter that should be skipped
---format <format>       The output format to use, one of: ["text", "markdown", "influx", "jmh", "histogramEncoded", "histogram", "histogramSamples", "histogramPercentiles", "metricP90AbsoluteThresholds"], default is 'text'
---metric <metric>       Specifies that the benchmark run should use one or more specific metrics instead of the ones defined by the benchmarks, valid values are:
-["cpuUser", "cpuSystem", "cpuTotal", "wallClock", "throughput", "peakMemoryResident", "peakMemoryResidentDelta", "peakMemoryVirtual",
-"mallocCountSmall", "mallocCountLarge", "mallocCountTotal", "allocatedResidentMemory", "memoryLeaked", "syscalls", "contextSwitches",
-"threads", "threadsRunning", "readSyscalls", "writeSyscalls", "readBytesLogical", "writeBytesLogical", "readBytesPhysical",
-"writeBytesPhysical", "instructions", "retainCount", "releaseCount", "retainReleaseDelta", "custom"]
---path <path>           The path where exported data is stored, default is the current directory (".").
+--format <format>       The output format to use, default is 'text' (values: text, markdown, influx, jmh, histogramEncoded, histogram, histogramSamples, histogramPercentiles, metricP90AbsoluteThresholds)
+--metric <metric>       Specifies that the benchmark run should use one or more specific metrics instead of the ones defined by the benchmarks. (values: cpuUser, cpuSystem, cpuTotal, wallClock, throughput,
+peakMemoryResident, peakMemoryResidentDelta, peakMemoryVirtual, mallocCountSmall, mallocCountLarge, mallocCountTotal, allocatedResidentMemory, memoryLeaked, syscalls, contextSwitches,
+threads, threadsRunning, readSyscalls, writeSyscalls, readBytesLogical, writeBytesLogical, readBytesPhysical, writeBytesPhysical, instructions, retainCount, releaseCount,
+retainReleaseDelta, custom)
+--path <path>           The path where exported data is stored, default is the current directory ("."). 
 --quiet                 Specifies that output should be suppressed (useful for if you just want to check return code)
 --scale                 Specifies that some of the text output should be scaled using the scalingFactor (denoted by '*' in output)
 --check-absolute        Set to true if thresholds should be checked against an absolute reference point rather than delta between baselines.
@@ -103,7 +102,8 @@ By default, thresholds are checked comparing two baselines, or a baseline and a 
 The path from which p90 thresholds will be loaded for absolute threshold checks.
 This implicitly sets --check-absolute to true as well.
 --no-progress           Specifies that benchmark progress information should not be displayed
---grouping <grouping>   The grouping to use, one of: ["metric", "benchmark"]. default is 'benchmark'
+--grouping <grouping>   The grouping to use, one of: ["metric", "benchmark"]. default is 'benchmark' (values: metric, benchmark)
+--xswiftc <xswiftc>     Pass an argument to the swift compiler when building the benchmark
 -h, --help              Show help information.
 ```
 
@@ -181,6 +181,14 @@ swift package --disable-sandbox benchmark
 ```
 
 This is also required for e.g. benchmarks that uses the network.
+
+## Specifying specific flags to swiftc
+
+It is possible to pass arbitrary flags to swiftc using the `Xswiftc` option, e.g.:
+
+```
+swift package benchmark --Xswiftc lto=llvm-full --Xswiftc experimental-hermetic-seal-at-link
+```
 
 ## Sample usage
 
