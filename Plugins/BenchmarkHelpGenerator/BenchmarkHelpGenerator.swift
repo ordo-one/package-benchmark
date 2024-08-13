@@ -137,7 +137,7 @@ struct Benchmark: AsyncParsableCommand {
     @Option(name: .long, help: "The grouping to use, one of: \((Grouping.allCases).map { String(describing: $0) }). default is '\(Grouping.benchmark.rawValue)'")
     var grouping: Grouping
 
-    @Option(name: .long, help: "Pass an argument to the swift compiler when building the benchmark")
+    @Option(name: .long, help: "Pass an argument to the Swift compiler when building the benchmark")
     var Xswiftc: String
 
     mutating func run() async throws {}
