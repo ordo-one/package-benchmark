@@ -103,7 +103,7 @@ The path from which p90 thresholds will be loaded for absolute threshold checks.
 This implicitly sets --check-absolute to true as well.
 --no-progress           Specifies that benchmark progress information should not be displayed
 --grouping <grouping>   The grouping to use, one of: ["metric", "benchmark"]. default is 'benchmark' (values: metric, benchmark)
---xswiftc <xswiftc>     Pass an argument to the swift compiler when building the benchmark
+--xswiftc <xswiftc>     Pass an argument to the Swift compiler when building the benchmark
 -h, --help              Show help information.
 ```
 
