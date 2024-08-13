@@ -46,6 +46,7 @@ import PackagePlugin
         let metricsToUse = argumentExtractor.extractOption(named: "metric")
         let debug = argumentExtractor.extractFlag(named: "debug")
         let scale = argumentExtractor.extractFlag(named: "scale")
+        let otherSwiftFlagsSpecified = argumentExtractor.extractOption(named: "Xswiftc")
         var outputFormat: OutputFormat = .text
         var grouping = "benchmark"
         var exportPath = "."
@@ -279,9 +280,13 @@ import PackagePlugin
                 }
             }
 
+            var buildParameters = PackageManager.BuildParameters(configuration: .release)
+
+            buildParameters.otherSwiftcFlags.append(contentsOf: otherSwiftFlagsSpecified.map { "-\($0)" })
+
             let buildResult = try packageManager.build(
                 .product(benchmarkToolModule.name),
-                parameters: .init(configuration: .release)
+                parameters: buildParameters
             )
 
             guard buildResult.succeeded else {
