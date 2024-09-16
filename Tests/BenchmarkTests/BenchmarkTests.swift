@@ -73,4 +73,17 @@ final class BenchmarkTests: XCTestCase {
         XCTAssertNotNil(benchmark)
         benchmark?.run()
     }
+
+    func testBenchmarkParameterizedDescription() throws {
+        let benchmark = Benchmark("testBenchmarkParameterizedDescription benchmark",
+                                  configuration: .init(
+                                    tags: [
+                                        "foo": "bar",
+                                        "bin": String(42),
+                                        "pi": String(3.14)
+                                    ]
+                                  )) { _ in }
+        XCTAssertNotNil(benchmark)
+        XCTAssertEqual(benchmark?.name, "testBenchmarkParameterizedDescription benchmark (bin: 42, foo: bar, pi: 3.14)")
+    }
 }

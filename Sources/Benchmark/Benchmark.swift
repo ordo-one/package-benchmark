@@ -10,7 +10,7 @@
 
 import Dispatch
 
-// swiftlint: disable file_length
+// swiftlint: disable file_length, type_body_length
 
 /// Defines a benchmark
 public final class Benchmark: Codable, Hashable {
@@ -69,8 +69,28 @@ public final class Benchmark: Codable, Hashable {
     #endif
     public static var benchmarks: [Benchmark] = [] // Bookkeeping of all registered benchmarks
 
+    /// The default name used for display purposes of the benchmark when no parameters exist.
+    private var baseName: String
+
     /// The name used for display purposes of the benchmark (also used for matching when comparing to baselines)
-    public var name: String
+    public var name: String {
+        get {
+            if configuration.tags.isEmpty {
+                return baseName
+            } else {
+                return baseName
+                    + " ("
+                    + configuration.tags
+                        .sorted(by: { $0.key < $1.key })
+                        .map({ "\($0.key): \($0.value)" })
+                        .joined(separator: ", ")
+                    + ")"
+            }
+        }
+        set {
+            baseName = newValue
+        }
+    }
 
     /// The reason for a benchmark failure, not set if successful
     public var failureReason: String?
@@ -119,6 +139,7 @@ public final class Benchmark: Codable, Hashable {
 
     /// Hook for setting defaults for a whole benchmark suite
     public static var defaultConfiguration: Configuration = .init(metrics: BenchmarkMetric.default,
+                                                                  tags: [:],
                                                                   timeUnits: .automatic,
                                                                   warmupIterations: 1,
                                                                   scalingFactor: .one,
@@ -131,7 +152,7 @@ public final class Benchmark: Codable, Hashable {
     var measurementCompleted = false // Keep track so we skip multiple 'end of measurement'
 
     enum CodingKeys: String, CodingKey {
-        case name
+        case baseName = "name"
         case target
         case executablePath
         case configuration
@@ -168,7 +189,7 @@ public final class Benchmark: Codable, Hashable {
             return nil
         }
         target = ""
-        self.name = name
+        self.baseName = name
         self.configuration = configuration
         self.closure = closure
         self.setup = setup
@@ -193,7 +214,7 @@ public final class Benchmark: Codable, Hashable {
             return nil
         }
         target = ""
-        self.name = name
+        self.baseName = name
         self.configuration = configuration
         asyncClosure = closure
         self.setup = setup
@@ -362,6 +383,8 @@ public extension Benchmark {
     struct Configuration: Codable {
         /// Defines the metrics that should be measured for the benchmark
         public var metrics: [BenchmarkMetric]
+        /// Specifies the parameters used to define the benchmark.
+        public var tags: [String: String]
         /// Override the automatic detection of timeunits for metrics related to time to a specific
         /// one (auto should work for most use cases)
         public var timeUnits: BenchmarkTimeUnits
@@ -386,6 +409,7 @@ public extension Benchmark {
         public var teardown: BenchmarkTeardownHook?
 
         public init(metrics: [BenchmarkMetric] = defaultConfiguration.metrics,
+                    tags: [String: String] = defaultConfiguration.tags,
                     timeUnits: BenchmarkTimeUnits = defaultConfiguration.timeUnits,
                     warmupIterations: Int = defaultConfiguration.warmupIterations,
                     scalingFactor: BenchmarkScalingFactor = defaultConfiguration.scalingFactor,
@@ -397,6 +421,7 @@ public extension Benchmark {
                     setup: BenchmarkSetupHook? = nil,
                     teardown: BenchmarkTeardownHook? = nil) {
             self.metrics = metrics
+            self.tags = tags
             self.timeUnits = timeUnits
             self.warmupIterations = warmupIterations
             self.scalingFactor = scalingFactor
@@ -411,6 +436,7 @@ public extension Benchmark {
         // swiftlint:disable nesting
         enum CodingKeys: String, CodingKey {
             case metrics
+            case tags
             case timeUnits
             case warmupIterations
             case scalingFactor
