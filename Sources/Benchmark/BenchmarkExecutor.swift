@@ -444,6 +444,7 @@ struct BenchmarkExecutor { // swiftlint:disable:this type_body_length
                                                      scalingFactor: benchmark.configuration.scalingFactor,
                                                      warmupIterations: benchmark.configuration.warmupIterations,
                                                      thresholds: benchmark.configuration.thresholds?[metric],
+                                                     tags: benchmark.configuration.tags,
                                                      statistics: value)
                         results.append(result)
                     }
@@ -457,6 +458,7 @@ struct BenchmarkExecutor { // swiftlint:disable:this type_body_length
                                                      scalingFactor: benchmark.configuration.scalingFactor,
                                                      warmupIterations: benchmark.configuration.warmupIterations,
                                                      thresholds: benchmark.configuration.thresholds?[metric],
+                                                     tags: benchmark.configuration.tags,
                                                      statistics: value)
                         results.append(result)
                     }

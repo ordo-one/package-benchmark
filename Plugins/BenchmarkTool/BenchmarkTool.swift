@@ -268,7 +268,7 @@ struct BenchmarkTool: AsyncParsableCommand {
 
         // run each benchmark for the target as a separate process
         try benchmarks.forEach { benchmark in
-            if try shouldIncludeBenchmark(benchmark.name) {
+            if try shouldIncludeBenchmark(benchmark.baseName) {
                 let results = try runChild(benchmarkPath: benchmark.executablePath!,
                                            benchmarkCommand: command,
                                            benchmark: benchmark) { [self] result in
