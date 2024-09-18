@@ -227,9 +227,7 @@ import PackagePlugin
                         print("Must specify exactly zero or one baseline for check against absolute thresholds, got: \(positionalArguments)")
                         throw MyError.invalidArgument
                     }
-                    if positionalArguments.count == validRange.upperBound { // dont check if we just read baselines
-                        shouldBuildTargets = false
-                    }
+                    shouldBuildTargets = true // still need to load benchmarks to load threshold-tolerances
                 } else {
                     let validRange = 1 ... 2
                     guard validRange.contains(positionalArguments.count) else {
