@@ -70,7 +70,7 @@ public final class Benchmark: Codable, Hashable {
     public static var benchmarks: [Benchmark] = [] // Bookkeeping of all registered benchmarks
 
     /// The default name used for display purposes of the benchmark when no parameters exist.
-    private var baseName: String
+    public var baseName: String
 
     /// The name used for display purposes of the benchmark (also used for matching when comparing to baselines)
     public var name: String {
