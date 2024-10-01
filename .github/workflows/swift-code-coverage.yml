@@ -13,10 +13,14 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
+    - uses: NeedleInAJayStack/setup-swift@feat/swift-6
+      with:
+         swift-version: "6"
+
     - name: Ubuntu deps
       if: ${{ runner.os == 'Linux' }}
       run: |
-        sudo apt-get install -y libjemalloc-dev llvm-15
+        sudo apt-get install -y libjemalloc-dev #llvm-15
 
     - name: Start consul
       uses: ./.github/actions/consul-start
@@ -35,7 +39,7 @@ jobs:
          fi
 
          if [ -f ${xctest_binary} ]; then
-             llvm-cov-15 export -format="lcov" ${xctest_binary} -instr-profile .build/debug/codecov/default.profdata > info.lcov
+             llvm-cov export -format="lcov" ${xctest_binary} -instr-profile .build/debug/codecov/default.profdata > info.lcov
          fi
 
     - name: Upload codecov
