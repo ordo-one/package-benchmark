@@ -15,7 +15,7 @@ jobs:
 
     - uses: NeedleInAJayStack/setup-swift@feat/swift-6
       with:
-         swift-version: "5.9"
+         swift-version: "5.10"
 
     - name: Ubuntu deps
       if: ${{ runner.os == 'Linux' }}
@@ -44,7 +44,7 @@ jobs:
          fi
 
     - name: Upload codecov
-      uses: codecov/codecov-action@v4
+      uses: codecov/codecov-action@543c3d42fc76502218ecdadc04e65dbd2640a67a
       with: 
         #token: ${{ secrets.CODECOV_REPO_TOKEN }} 
         files: info.lcov
