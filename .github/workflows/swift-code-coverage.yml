@@ -16,7 +16,7 @@ jobs:
     - name: Ubuntu deps
       if: ${{ runner.os == 'Linux' }}
       run: |
-        sudo apt-get install -y libjemalloc-dev llvm-18
+        sudo apt-get install -y libjemalloc-dev llvm-toolchain-jammy-18
 
     - name: Start consul
       uses: ./.github/actions/consul-start
