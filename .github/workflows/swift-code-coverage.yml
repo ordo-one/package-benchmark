@@ -44,7 +44,7 @@ jobs:
          fi
 
     - name: Upload codecov
-      uses: codecov/codecov-action@v4.6.0
+      uses: codecov/codecov-action@v4.5.0
       with: 
         #token: ${{ secrets.CODECOV_REPO_TOKEN }}
         version: v0.7.3
