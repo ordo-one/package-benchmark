@@ -44,9 +44,10 @@ jobs:
          fi
 
     - name: Upload codecov
-      uses: codecov/codecov-action@543c3d42fc76502218ecdadc04e65dbd2640a67a
+      uses: codecov/codecov-action@v4
       with: 
-        #token: ${{ secrets.CODECOV_REPO_TOKEN }} 
+        #token: ${{ secrets.CODECOV_REPO_TOKEN }}
+        version: 0.7.3
         files: info.lcov
         fail_ci_if_error: true
       env:
