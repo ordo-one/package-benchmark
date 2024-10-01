@@ -15,7 +15,7 @@ jobs:
 
     - uses: NeedleInAJayStack/setup-swift@feat/swift-6
       with:
-         swift-version: "6"
+         swift-version: "5.10"
 
     - name: Ubuntu deps
       if: ${{ runner.os == 'Linux' }}
