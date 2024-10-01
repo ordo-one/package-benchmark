@@ -47,7 +47,7 @@ jobs:
       uses: codecov/codecov-action@v4
       with: 
         #token: ${{ secrets.CODECOV_REPO_TOKEN }}
-        version: 0.7.3
+        version: 0.7.4
         files: info.lcov
         fail_ci_if_error: true
       env:
