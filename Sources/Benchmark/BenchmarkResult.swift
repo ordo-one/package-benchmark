@@ -161,12 +161,14 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
                 scalingFactor: BenchmarkScalingFactor,
                 warmupIterations: Int,
                 thresholds: BenchmarkThresholds? = nil,
+                tags: [String: String] = [:],
                 statistics: Statistics) {
         self.metric = metric
         self.timeUnits = timeUnits == .automatic ? BenchmarkTimeUnits(statistics.units()) : timeUnits
         self.scalingFactor = scalingFactor
         self.warmupIterations = warmupIterations
         self.thresholds = thresholds
+        self.tags = tags
         self.statistics = statistics
     }
 
@@ -175,6 +177,7 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
     public var scalingFactor: BenchmarkScalingFactor
     public var warmupIterations: Int
     public var thresholds: BenchmarkThresholds?
+    public var tags: [String: String]
     public var statistics: Statistics
 
     public var scaledTimeUnits: BenchmarkTimeUnits {
