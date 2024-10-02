@@ -1,4 +1,4 @@
-name: Swift macOS build
+name: macOS build
 
 on:
   workflow_dispatch:
