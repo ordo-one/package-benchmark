@@ -84,10 +84,10 @@ struct BenchmarkBaseline: Codable {
         var metrics: BenchmarkResult
     }
 
-    init(baselineName: String, machine: BenchmarkMachine, results: [BenchmarkIdentifier: [BenchmarkResult]]) {
+    init(baselineName: String, machine: BenchmarkMachine, results: [BenchmarkIdentifier: Profile]) {
         self.baselineName = baselineName
         self.machine = machine
-        self.results = results
+        self.profiles = results
     }
 
     //    @discardableResult
@@ -95,17 +95,27 @@ struct BenchmarkBaseline: Codable {
         if machine != otherBaseline.machine {
             print("Warning: Merging baselines from two different machine configurations")
         }
-        results.merge(otherBaseline.results) { first, _ in first }
+        profiles.merge(otherBaseline.profiles) { first, _ in first }
 
         return self
     }
 
     var baselineName: String
     var machine: BenchmarkMachine
-    var results: BenchmarkResultsByIdentifier
+    var profiles: [BenchmarkIdentifier: Profile]
+
+    /// Represents a particular execution of a specific benchmark
+    /// and its set of results.
+    struct Profile: Codable {
+        var results: [BenchmarkResult]
+
+        init(results: [BenchmarkResult] = []) {
+            self.results = results
+        }
+    }
 
     var benchmarkIdentifiers: [BenchmarkIdentifier] {
-        Array(results.keys).sorted(by: { ($0.target, $0.name) < ($1.target, $1.name) })
+        Array(profiles.keys).sorted(by: { ($0.target, $0.name) < ($1.target, $1.name) })
     }
 
     var targets: [String] {
@@ -118,8 +128,8 @@ struct BenchmarkBaseline: Codable {
 
     var benchmarkMetrics: [BenchmarkMetric] {
         var results: [BenchmarkMetric] = []
-        self.results.forEach { _, resultVector in
-            resultVector.forEach {
+        self.profiles.forEach { _, profile in
+            profile.results.forEach {
                 results.append($0.metric)
             }
         }
@@ -129,8 +139,8 @@ struct BenchmarkBaseline: Codable {
 
     func resultEntriesMatching(_ closure: (BenchmarkIdentifier, BenchmarkResult) -> (Bool, String)) -> [ResultsEntry] {
         var results: [ResultsEntry] = []
-        self.results.forEach { identifier, resultVector in
-            resultVector.forEach {
+        self.profiles.forEach { identifier, profile in
+            profile.results.forEach {
                 let (include, description) = closure(identifier, $0)
                 if include {
                     results.append(ResultsEntry(description: description, metrics: $0))
@@ -143,8 +153,8 @@ struct BenchmarkBaseline: Codable {
 
     func metricsMatching(_ closure: (BenchmarkIdentifier, BenchmarkResult) -> Bool) -> [BenchmarkMetric] {
         var results: [BenchmarkMetric] = []
-        self.results.forEach { identifier, resultVector in
-            resultVector.forEach {
+        self.profiles.forEach { identifier, profile in
+            profile.results.forEach {
                 if closure(identifier, $0) {
                     results.append($0.metric)
                 }
@@ -156,8 +166,8 @@ struct BenchmarkBaseline: Codable {
 
     func resultsMatching(_ closure: (BenchmarkIdentifier, BenchmarkResult) -> Bool) -> [BenchmarkResult] {
         var results: [BenchmarkResult] = []
-        self.results.forEach { identifier, resultVector in
-            resultVector.forEach {
+        self.profiles.forEach { identifier, profile in
+            profile.results.forEach {
                 if closure(identifier, $0) {
                     results.append($0)
                 }
@@ -168,8 +178,8 @@ struct BenchmarkBaseline: Codable {
     }
 
     func resultsByTarget(_ target: String) -> [String: [BenchmarkResult]] {
-        let filteredResults = results.filter { $0.key.target == target }.sorted(by: { $0.key.name < $1.key.name })
-        let resultsPerTarget = Dictionary(uniqueKeysWithValues: filteredResults.map { key, value in (key.name, value) })
+        let filteredResults = profiles.filter { $0.key.target == target }.sorted(by: { $0.key.name < $1.key.name })
+        let resultsPerTarget = Dictionary(uniqueKeysWithValues: filteredResults.map { key, value in (key.name, value.results) })
 
         return resultsPerTarget
     }
@@ -425,10 +435,10 @@ extension BenchmarkBaseline: Equatable {
         var warningPrinted = false
         var allDeviationResults = BenchmarkResult.ThresholdDeviations()
 
-        for (lhsBenchmarkIdentifier, lhsBenchmarkResults) in lhs.results {
-            for lhsBenchmarkResult in lhsBenchmarkResults {
-                if let rhsResults = rhs.results.first(where: { $0.key == lhsBenchmarkIdentifier }) {
-                    if let rhsBenchmarkResult = rhsResults.value.first(where: { $0.metric == lhsBenchmarkResult.metric }) {
+        for (lhsBenchmarkIdentifier, lhsBenchmarkProfiles) in lhs.profiles {
+            for lhsBenchmarkResult in lhsBenchmarkProfiles.results {
+                if let rhsProfile = rhs.profiles.first(where: { $0.key == lhsBenchmarkIdentifier }) {
+                    if let rhsBenchmarkResult = rhsProfile.value.results.first(where: { $0.metric == lhsBenchmarkResult.metric }) {
                         let thresholds = thresholdsForBenchmarks(benchmarks,
                                                                  name: lhsBenchmarkIdentifier.name,
                                                                  target: lhsBenchmarkIdentifier.target,
@@ -462,8 +472,8 @@ extension BenchmarkBaseline: Equatable {
                                                                 [BenchmarkMetric: BenchmarkThresholds.AbsoluteThreshold]]) -> BenchmarkResult.ThresholdDeviations {
         var allDeviationResults = BenchmarkResult.ThresholdDeviations()
 
-        for (lhsBenchmarkIdentifier, lhsBenchmarkResults) in results {
-            for lhsBenchmarkResult in lhsBenchmarkResults {
+        for (lhsBenchmarkIdentifier, lhsBenchmarkProfile) in profiles {
+            for lhsBenchmarkResult in lhsBenchmarkProfile.results {
                 let thresholds = thresholdsForBenchmarks(benchmarks,
                                                          name: lhsBenchmarkIdentifier.name,
                                                          target: lhsBenchmarkIdentifier.target,
@@ -492,10 +502,10 @@ extension BenchmarkBaseline: Equatable {
             return false
         }
 
-        for (lhsBenchmarkIdentifier, lhsBenchmarkResults) in lhs.results {
-            for lhsBenchmarkResult in lhsBenchmarkResults {
-                if let rhsResults = rhs.results.first(where: { $0.key == lhsBenchmarkIdentifier }) {
-                    if let rhsBenchmarkResult = rhsResults.value.first(where: { $0.metric == lhsBenchmarkResult.metric }) {
+        for (lhsBenchmarkIdentifier, lhsBenchmarkProfile) in lhs.profiles {
+            for lhsBenchmarkResult in lhsBenchmarkProfile.results {
+                if let rhsProfile = rhs.profiles.first(where: { $0.key == lhsBenchmarkIdentifier }) {
+                    if let rhsBenchmarkResult = rhsProfile.value.results.first(where: { $0.metric == lhsBenchmarkResult.metric }) {
                         if lhsBenchmarkResult != rhsBenchmarkResult {
                             return false
                         }

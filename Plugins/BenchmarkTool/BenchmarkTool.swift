@@ -289,7 +289,7 @@ struct BenchmarkTool: AsyncParsableCommand {
             "Running Benchmarks".printAsHeader()
         }
 
-        var benchmarkResults: BenchmarkResultsByIdentifier = [:]
+        var benchmarkResults: [BenchmarkIdentifier: BenchmarkBaseline.Profile] = [:]
 
         benchmarks.sort { ($0.target, $0.name) < ($1.target, $1.name) }
 
@@ -303,8 +303,12 @@ struct BenchmarkTool: AsyncParsableCommand {
                         printChildRunError(error: result, benchmarkExecutablePath: benchmark.executablePath!)
                     }
                 }
-
-                benchmarkResults = benchmarkResults.merging(results) { _, new in new }
+                
+                for result in results {
+                    benchmarkResults[result.key] = BenchmarkBaseline.Profile(
+                        results: result.value
+                    )
+                }
             }
         }
 

@@ -114,7 +114,7 @@ extension BenchmarkTool {
         baseline.targets.forEach { key in
             let exportStruct = saveExportableResults(BenchmarkBaseline(baselineName: baseline.baselineName,
                                                                        machine: benchmarkMachine(),
-                                                                       results: baseline.results),
+                                                                       results: baseline.profiles),
                                                      target: key)
 
             let formatter = InfluxCSVFormatter(exportableBenchmark: exportStruct)
@@ -128,14 +128,14 @@ extension BenchmarkTool {
     }
 
     func saveExportableResults(_ benchmarks: BenchmarkBaseline, target: String) -> ExportableBenchmark {
-        var keys = benchmarks.results.keys.sorted(by: { $0.name < $1.name })
+        var keys = benchmarks.profiles.keys.sorted(by: { $0.name < $1.name })
         var testList: [TestData] = []
         keys.removeAll(where: { $0.target != target })
 
         keys.forEach { test in
-            if let value = benchmarks.results[test] {
+            if let profile = benchmarks.profiles[test] {
                 var allResults: [BenchmarkResult] = []
-                value.forEach { result in
+                profile.results.forEach { result in
                     allResults.append(result)
                 }
 

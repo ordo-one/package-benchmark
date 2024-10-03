@@ -126,7 +126,7 @@ extension BenchmarkTool {
                 }
 
                 if benchmarks.isEmpty { // if we read from baseline and didn't run them, we put in some fake entries for the compare
-                    currentBaseline.results.keys.forEach { baselineKey in
+                    currentBaseline.profiles.keys.forEach { baselineKey in
                         if let benchmark: Benchmark = .init(baselineKey.name, closure:{_ in}) {
                             benchmark.target = baselineKey.target
                             benchmarks.append(benchmark)
@@ -230,7 +230,7 @@ extension BenchmarkTool {
                 let baseline = benchmarkBaselines[0]
                 if let baselineName = self.baseline.first {
                     try baseline.targets.forEach { target in
-                        let results = baseline.results.filter { $0.key.target == target }
+                        let results = baseline.profiles.filter { $0.key.target == target }
                         let subset = BenchmarkBaseline(baselineName: baselineName,
                                                        machine: baseline.machine,
                                                        results: results)
@@ -257,7 +257,7 @@ extension BenchmarkTool {
                     }
 
                     if benchmarks.isEmpty { // if we read from baseline and didn't run them, we put in some fake entries for the compare
-                        currentBaseline.results.keys.forEach { baselineKey in
+                        currentBaseline.profiles.keys.forEach { baselineKey in
                             if let benchmark: Benchmark = .init(baselineKey.name, closure:{_ in}) {
                                 benchmark.target = baselineKey.target
                                 benchmarks.append(benchmark)

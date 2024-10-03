@@ -207,15 +207,15 @@ extension BenchmarkTool {
             let baseBaselineName = currentBaseline.baselineName
             let comparisonBaselineName = baseline.baselineName
 
-            var keys = baseline.results.keys.sorted(by: { $0.name < $1.name })
+            var keys = baseline.profiles.keys.sorted(by: { $0.name < $1.name })
 
             keys.removeAll(where: { $0.target != target })
 
             var firstOutput = true
 
             keys.forEach { key in
-                if let value = baseline.results[key] {
-                    guard let baselineComparison = currentBaseline.results[key] else {
+                if let profile = baseline.profiles[key] {
+                    guard let baselineComparison = currentBaseline.profiles[key] else {
                         //       print("No baseline to compare with for `\(key.target):\(key.name)`.")
                         return
                     }
@@ -234,9 +234,9 @@ extension BenchmarkTool {
                     printText("----------------------------------------------------------------------------------------------------------------------------")
                     print("")
 
-                    value.forEach { currentResult in
+                    profile.results.forEach { currentResult in
                         var result = currentResult
-                        if let base = baselineComparison.first(where: { $0.metric == result.metric }) {
+                        if let base = baselineComparison.results.first(where: { $0.metric == result.metric }) {
                             let hideResults = result.deviationsComparedWith(base, thresholds: result.thresholds ?? BenchmarkThresholds.none).regressions.isEmpty
 
                             // We hide the markdown results if they are better than baseline to cut down noise
