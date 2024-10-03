@@ -167,7 +167,8 @@ extension BenchmarkTool {
 
                     var p90Thresholds: [BenchmarkIdentifier : [BenchmarkMetric: BenchmarkThresholds.AbsoluteThreshold]] = [:]
 
-                    if let benchmarkPath = checkAbsolutePath { // load statically defined thresholds for .p90
+                    // load statically defined thresholds for .p90 from file if defined
+                    if let benchmarkPath = checkAbsolutePath {
                         benchmarks.forEach { benchmark in
                             if let thresholds = BenchmarkTool.makeBenchmarkThresholds(
                                 path: benchmarkPath,
@@ -182,6 +183,25 @@ extension BenchmarkTool {
                                               exitCode: .thresholdRegression)
                             }
                             failBenchmark("Could not find any matching absolute thresholds at path [\(benchmarkPath)], failing threshold check.",
+                                          exitCode: .thresholdRegression)
+                        }
+                    } else { // get thresholds for .p90 from the benchmark definitions
+                        benchmarks.forEach { benchmark in
+                            let absoluteThresholds = benchmark.configuration.thresholds?.compactMapValues { 
+                                return $0.absolute[.p90]
+                            }
+
+                            if let absoluteThresholds = absoluteThresholds {
+                                p90Thresholds[benchmark.benchmarkIdentifier] = absoluteThresholds
+                            }
+                        }
+
+                        if p90Thresholds.isEmpty {
+                            if benchmarks.count == 0 {
+                                failBenchmark("No benchmarks matching filter selection, failing threshold check.",
+                                              exitCode: .thresholdRegression)
+                            }
+                            failBenchmark("Could not find any matching absolute p90 thresholds in benchmark definitions, failing threshold check.",
                                           exitCode: .thresholdRegression)
                         }
                     }

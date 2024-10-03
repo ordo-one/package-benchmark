@@ -26,6 +26,6 @@ public struct BenchmarkThresholds: Codable {
         self.absolute = absolute
     }
 
-    let relative: RelativeThresholds
-    let absolute: AbsoluteThresholds
+    public let relative: RelativeThresholds
+    public let absolute: AbsoluteThresholds
 }
