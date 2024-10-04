@@ -1,44 +1,62 @@
-# Comparing Benchmarks using Continuous Integration
+# Checking Benchmark Results Using Continuous Integration
 
 Benchmark was written with continuous integration in mind, and allows you to set up comparisons to validate builds. 
 
 ## Overview
 
-It may be useful to compare code performance against a baseline in an automated fashion.
 Benchmark was developed to be invoked through command line options to support automation.
-Additionally, the `swift package benchmark baseline check` command exits with a non-zero error if there are performance degradations found during the comparison.
 
-It's possible to do both checks for a PR vs the main baseline, or for simply checking a baseline / benchmark run vs a fixed reference point using `--check-absolute`.
+There are two approaches to checking benchmarks vs expected results with CI:
 
-### Comparing two baselines (e.g. PR vs main)
+* Dynamic Comparative Analysis: Run a benchmark on the current branch and on the main branch, then compare the results.
+* Static Threshold Validation: Run a benchmark on the current branch and compare it against a pre-established baseline or threshold.
 
-The following will check two previously stored baselines for deviations vs the defined thresholds
+Regardless of which approach you use, you can specify tolerance thresholds (both absolute and relative) that determine whether metrics from different runs should be considered equivalent. These thresholds are defined in Swift code alongside the actual benchmark.
+
+The Dynamic Comparative Analysis approach offers the advantage of being resilient to environmental changes (such as toolchain and operating system updates). If your primary concern is detecting regressions in your own code rather than those introduced by toolchain or OS updates, this method is particularly useful. It doesn't require storing historical data, which can be both an advantage and a limitation.
+
+The Static Threshold Validation approach involves maintaining a set of predefined performance thresholds against which new benchmark runs are compared. This method can significantly reduce build time for more complex setups. However, it necessitates periodic manual validation and updates of the baseline thresholds.
+
+The `swift package benchmark baseline check` command exits with a non-zero status if performance degradations are detected when comparing a benchmark run against the established baseline.
+
+### Baselines
+A baseline captures a specific benchmark run and serves as a reference point for future comparisons or threshold updates.
+
+### Static Thresholds
+A threshold defines an acceptable performance value for a specific metric within a benchmark. It's used to validate subsequent baseline or benchmark runs when using static threshold validation.
+
+### Comparison Methods
+
+#### 1. Comparing Two Baselines (e.g., PR vs. main)
+To check two previously stored baselines for deviations (taking tolerance thresholds specified into the code into account):
 ```bash
 swift package benchmark baseline check main pull_request
 ```
 
-### Comparing a test run against hardcoded thresholds
-
-The following will run all benchmarks and compare them against a fixed absolute threshold (as defined by the benchmark setup code)
+#### 2. Comparing a Test Run Against Static Thresholds
+To run all benchmarks and compare them against previously saved static thresholds (taking tolerance thresholds specified into the code into account):
 ```bash
-swift package benchmark baseline check --check-absolute
-```
-This is typically used in conjunction with the built in support for exporting absolute p90 baselines using the `metricP90AbsoluteThresholds` export format.
-```bash
-swift package --allow-writing-to-package-directory benchmark --filter "P90.*" --format metricP90AbsoluteThresholds --path Thresholds/
+swift package benchmark thresholds check
 ```
 
-These baselines can then be checked with:
+#### 3. Storing Static Thresholds
 ```bash
-swift package benchmark baseline check --check-absolute-path /relative/or/absolute/path/to/Thresholds
+swift package --allow-writing-to-package-directory benchmark thresholds update
 ```
 
-The absolute check will have an exit code of 0 if the check is exactly equal, but will return with exit code 2 if there were any regressions or exit code 4 if there were only improvements.
+#### 4. Reading the Static Thresholds
+```bash
+swift package benchmark thresholds read
+```
 
-### Example GitHub CI workflow comparing against a baseline
+### Return Codes from checking thresholds (dynamic comparison or static comparison)
+- 0: Check is exactly equal
+- 2: Regressions detected
+- 4: Only improvements detected
 
-The following GitHub workflow provides an example of comparing any pull request against the `main` branch of your repository, failing on a comparison regression.
-If the comparison is equal or favorable, it comments the pull request with the comparison. 
+### Example: GitHub CI Workflow for Baseline Comparison
+
+This workflow compares any pull request against the `main` branch, failing on regression. If the comparison is equal or favorable, it comments on the pull request with the results.
 
 ```yaml
 name: Benchmark PR vs main

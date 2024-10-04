@@ -24,6 +24,7 @@ import SystemPackage
 
 enum BenchmarkOperation: String, ExpressibleByArgument {
     case baseline
+    case thresholds
     case list
     case run
     case query // query all benchmarks from target, used internally in tool
@@ -33,6 +34,7 @@ enum BenchmarkOperation: String, ExpressibleByArgument {
 extension Grouping: ExpressibleByArgument {}
 extension OutputFormat: ExpressibleByArgument {}
 extension BaselineOperation: ExpressibleByArgument {}
+extension ThresholdsOperation: ExpressibleByArgument {}
 extension BenchmarkMetric: ExpressibleByArgument {}
 
 typealias BenchmarkResults = [BenchmarkIdentifier: [BenchmarkResult]]
@@ -56,7 +58,7 @@ struct BenchmarkTool: AsyncParsableCommand {
     @Option(name: .long, help: "The path to baseline directory for storage")
     var baselineStoragePath: String
 
-    @Option(name: .long, help: "The path to export to")
+    @Option(name: .long, help: "The path to export to or read thresholds from")
     var path: String?
 
     @Option(name: .long, help: "The name of the new benchmark target to create")
@@ -64,6 +66,9 @@ struct BenchmarkTool: AsyncParsableCommand {
 
     @Option(name: .long, help: "The operation to perform on the specified baselines")
     var baselineOperation: BaselineOperation?
+
+    @Option(name: .long, help: "The operation to perform for thresholds")
+    var thresholdsOperation: ThresholdsOperation?
 
     @Flag(name: .long, help: "True if we should suppress output")
     var quiet: Bool = false
@@ -117,6 +122,10 @@ struct BenchmarkTool: AsyncParsableCommand {
     var checkBaseline: BenchmarkBaseline?
 
     var failedBenchmarkList: [String] = []
+
+    var thresholdsPath: String {
+        path ?? "Thresholds"
+    }
 
     mutating func failBenchmark(_ reason: String? = nil, exitCode: ExitCode = .genericFailure, _ failedBenchmark: String? = nil) {
         if let reason {
@@ -218,6 +227,11 @@ struct BenchmarkTool: AsyncParsableCommand {
             }
         }
 
+        // Skip reading baselines for threshold operations not needing them
+        if let operation = thresholdsOperation, [.read].contains(operation) == false {
+            try readBaselines()
+        }
+
         // First get a list of all benchmarks
         try benchmarkExecutablePaths.forEach { benchmarkExecutablePath in
             try runChild(benchmarkPath: benchmarkExecutablePath,
@@ -234,6 +248,21 @@ struct BenchmarkTool: AsyncParsableCommand {
         }
 
         // If we just need data from disk, skip running benchmarks
+        if let operation = thresholdsOperation, [.read].contains(operation) {
+            try postProcessBenchmarkResults()
+            return
+        }
+
+        if let operation = thresholdsOperation, [.update].contains(operation), let baselineName = benchmarkBaselines.first?.baselineName {
+            print("Updating thresholds at \"\(thresholdsPath)\" from baseline \"\(baselineName)\"")
+            try postProcessBenchmarkResults()
+            return
+        }
+
+        if let operation = thresholdsOperation, [.check].contains(operation), benchmarkBaselines.count > 0 {
+            try postProcessBenchmarkResults()
+            return
+        }
 
         if let operation = baselineOperation, [.delete, .list, .read].contains(operation) {
             try postProcessBenchmarkResults()
@@ -344,6 +373,8 @@ struct BenchmarkTool: AsyncParsableCommand {
                 case .list:
                     try listBenchmarks()
                 case .baseline:
+                    fallthrough
+                case .thresholds:
                     fallthrough
                 case .run:
                     guard let benchmark else {

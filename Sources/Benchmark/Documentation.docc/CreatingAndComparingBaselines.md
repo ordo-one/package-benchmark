@@ -1,6 +1,6 @@
 # Creating and Comparing Benchmark Baselines
 
-Benchmark supports storing, and comparing, benchmark results as you develop.
+Benchmark supports storing, and comparing, benchmark baselines as you develop.
 
 ## Overview
 
@@ -31,9 +31,9 @@ The following command compares a baseline named `alpha` against baseline named `
 swift package benchmark baseline compare alpha beta
 ```
 
-### Comparing a test run against hardcoded thresholds
+### Comparing a test run against static thresholds
 
-The following will run all benchmarks and compare them against a fixed absolute threshold (as defined by the benchmark setup code)
+The following will run all benchmarks and compare them against a previously saved static threshold.
 ```bash
-swift package benchmark baseline check --check-absolute
+swift package benchmark thresholds check
 ```

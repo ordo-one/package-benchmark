@@ -16,6 +16,8 @@ let help =
     
     The init command will create a skeleton benchmark suite for you and add it to Package.swift.
     
+    The `thresholds` commands reads/updates/checks benchmark runs vs. static thresholds.
+    
     For the 'text' default format, the output is implicitly 'stdout' unless otherwise specified.
     For all other formats, the output is to a file in either the current working directory, or
     the directory specified by the '--path' option, unless the special 'stdout' path is specified
@@ -35,10 +37,13 @@ let help =
        swift package benchmark baseline delete <baseline> [<baseline2> ... <baselineN>] [<options>]
        swift package benchmark baseline check <baseline> [<otherBaseline>] [<options>]
        swift package benchmark baseline compare <baseline> [<otherBaseline>] [<options>]
+       swift package benchmark thresholds read [<options>]
+       swift package benchmark thresholds update [<baseline>] [<options>]
+       swift package benchmark thresholds check [<baseline>] [<options>]
        swift package benchmark help
     
     ARGUMENTS:
-    <command>               The benchmark command to perform. If not specified, 'run' is implied. (values: run, list, baseline, help, init)
+    <command>               The benchmark command to perform. If not specified, 'run' is implied. (values: run, list, baseline, thresholds, help, init)
     
     OPTIONS:
     --filter <filter>       Benchmarks matching the regexp filter that should be run
@@ -47,14 +52,13 @@ let help =
     --skip-target <skip-target>
                           Benchmark targets matching the regexp filter that should be skipped
     --format <format>       The output format to use, default is 'text' (values: text, markdown, influx, jmh, histogramEncoded, histogram, histogramSamples, histogramPercentiles, metricP90AbsoluteThresholds)
-    --metric <metric>       Specifies that the benchmark run should use one or more specific metrics instead of the ones defined by the benchmarks. (values: cpuUser, cpuSystem, cpuTotal, wallClock, throughput,
-                          peakMemoryResident, peakMemoryResidentDelta, peakMemoryVirtual, mallocCountSmall, mallocCountLarge, mallocCountTotal, allocatedResidentMemory, memoryLeaked, syscalls, contextSwitches,
-                          threads, threadsRunning, readSyscalls, writeSyscalls, readBytesLogical, writeBytesLogical, readBytesPhysical, writeBytesPhysical, instructions, retainCount, releaseCount,
-                          retainReleaseDelta, custom)
-    --path <path>           The path where exported data is stored, default is the current directory ("."). 
+    --metric <metric>       Specifies that the benchmark run should use one or more specific metrics instead of the ones defined by the benchmarks. (values: cpuUser, cpuSystem, cpuTotal, wallClock, throughput, peakMemoryResident, peakMemoryResidentDelta, peakMemoryVirtual, mallocCountSmall, mallocCountLarge, mallocCountTotal,
+                          allocatedResidentMemory, memoryLeaked, syscalls, contextSwitches, threads, threadsRunning, readSyscalls, writeSyscalls, readBytesLogical, writeBytesLogical, readBytesPhysical, writeBytesPhysical, instructions, retainCount, releaseCount, retainReleaseDelta, custom)
+    --path <path>           The path to operate on for data export or threshold operations, default is the current directory (".") for exports and the ("./Thresholds") directory for thresholds. 
     --quiet                 Specifies that output should be suppressed (useful for if you just want to check return code)
     --scale                 Specifies that some of the text output should be scaled using the scalingFactor (denoted by '*' in output)
-    --check-absolute        Set to true if thresholds should be checked against an absolute reference point rather than delta between baselines.
+    --check-absolute        <This is deprecated, use swift package benchmark thresholds updated/check/read instead>
+                          Set to true if thresholds should be checked against an absolute reference point rather than delta between baselines.
                           This is used for CI workflows when you want to validate the thresholds vs. a persisted benchmark baseline
                           rather than comparing PR vs main or vs a current run. This is useful to cut down the build matrix needed
                           for those wanting to validate performance of e.g. toolchains or OS:s as well (or have other reasons for wanting
