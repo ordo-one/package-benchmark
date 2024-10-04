@@ -20,7 +20,7 @@ public struct BenchmarkThresholds: Codable {
     ///  The Benchmark thresholds define the tolerances to use when comparing two baselines/runs or when comparing with static thresholds.
     /// - Parameters:
     ///   - relative: A dictionary with relative thresholds tolerances per percentile (using for delta comparisons)
-    ///   - absolute: A dictionary with absolute thresholds tolerancesper percentile (used both for delta and absolute comparisons)
+    ///   - absolute: A dictionary with absolute thresholds tolerances per percentile (used both for delta and absolute comparisons)
     public init(relative: RelativeThresholds = Self.Relative.none,
                 absolute: AbsoluteThresholds = Self.Absolute.none) {
         self.relative = relative
