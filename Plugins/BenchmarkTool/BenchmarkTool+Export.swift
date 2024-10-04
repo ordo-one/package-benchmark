@@ -27,7 +27,8 @@ extension BenchmarkTool {
         // Set up desired output path and create any intermediate directories for structure as required:
         var outputPath: FilePath
 
-        if let path {
+
+        if let path = (thresholdsOperation != nil) ? path : thresholdsPath {
             if path == "stdout" {
                 print(exportData)
                 return
