@@ -62,7 +62,7 @@ public final class Benchmark: Codable, Hashable { // swiftlint:disable:this type
     /// Set to true if this benchmark results should be compared with an absolute threshold when `--check-absolute` is
     /// specified on the command line. An implementation can then choose to configure thresholds differently for
     /// such comparisons by e.g. reading them in from external storage.
-    @available(*, deprecated,  message: "The checking of absolute thresholds should now be done using `swift package benchmark thresholds`")
+    @available(*, deprecated, message: "The checking of absolute thresholds should now be done using `swift package benchmark thresholds`")
     public static var checkAbsoluteThresholds = false
 
     #if swift(>=5.8)
