@@ -144,8 +144,10 @@ extension BenchmarkTool {
 
                 var p90Thresholds: [BenchmarkIdentifier : [BenchmarkMetric: BenchmarkThresholds.AbsoluteThreshold]] = [:]
 
-                print("")
-                print("Reading thresholds from \"\(thresholdsPath)\"")
+                if noProgress == false {
+                    print("")
+                    print("Reading thresholds from \"\(thresholdsPath)\"")
+                }
 
                 benchmarks.forEach { benchmark in
                     if let thresholds = BenchmarkTool.makeBenchmarkThresholds(
@@ -164,9 +166,11 @@ extension BenchmarkTool {
                                   exitCode: .thresholdRegression)
                 }
 
-                print("")
-                print("Checking \(benchmarks.map { $0.target + ":" + $0.name })")
-                print("")
+                if noProgress == false {
+                    print("")
+                    print("Checking \(benchmarks.map { $0.target + ":" + $0.name })")
+                    print("")
+                }
 
                 let deviationResults = currentBaseline.failsAbsoluteThresholdChecks(benchmarks: benchmarks,
                                                                                     p90Thresholds: p90Thresholds)
