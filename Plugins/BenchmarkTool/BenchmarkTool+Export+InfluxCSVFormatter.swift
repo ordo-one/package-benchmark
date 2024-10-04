@@ -19,9 +19,16 @@ struct ExportableBenchmark: Codable {
 
 struct TestData: Codable {
     var test: String
+    var tags: [String: String]
+    var fields: [String: Field]
     var iterations: Int
     var warmupIterations: Int
     var data: [TestMetricData]
+
+    struct Field: Codable {
+        let type: String
+        let value: String
+    }
 }
 
 struct TestMetricData: Codable {
@@ -53,17 +60,29 @@ class InfluxCSVFormatter {
         let processors = machine.processors
         let memory = machine.memory
 
-        if header {
-            let dataTypeHeader = "#datatype tag,tag,tag,tag,tag,tag,tag,tag,tag,double,double,long,long,dateTime\n"
-            finalFileFormat.append(dataTypeHeader)
-            let headers = "measurement,hostName,processoryType,processors,memory,kernelVersion,metric,unit,test,value,test_average,iterations,warmup_iterations,time\n"
-            finalFileFormat.append(headers)
-        }
-
         for testData in exportableBenchmark.benchmarks {
+            let orderedTags = testData.tags.map({ (key: $0, value: $1) })
+            let orderedFields = testData.fields.map({ (key: $0, field: $1) })
+
+            let customHeaderDataTypes = String(repeating: "tag,", count: orderedTags.count)
+            + orderedFields.map({ "\($0.field.type)," }).joined()
+
+            let customHeaders = (orderedTags.map({ "\($0.key)," })
+            + orderedFields.map({ "\($0.key)," })).joined()
+
+            if header {
+                let dataTypeHeader = "#datatype tag,tag,tag,tag,tag,tag,tag,tag,tag,\(customHeaderDataTypes)double,double,long,long,dateTime\n"
+                finalFileFormat.append(dataTypeHeader)
+                let headers = "measurement,hostName,processoryType,processors,memory,kernelVersion,metric,unit,test,\(customHeaders)value,test_average,iterations,warmup_iterations,time\n"
+                finalFileFormat.append(headers)
+            }
+
             let testName = testData.test
             let iterations = testData.iterations
             let warmup_iterations = testData.warmupIterations
+
+            let customTagValues = orderedTags.map({ "\($0.value)," }).joined()
+            let customFieldValues = orderedFields.map({ "\($0.field.value)," }).joined()
 
             for granularData in testData.data {
                 let metric = granularData.metric
@@ -73,10 +92,11 @@ class InfluxCSVFormatter {
 
                 for dataTableValue in granularData.metricsdata {
                     let time = ISO8601DateFormatter().string(from: Date())
-                    let dataLine = "\(exportableBenchmark.target),\(hostName),\(processorType),\(processors),\(memory),\(kernelVersion),\(metric),\(units),\(testName),\(dataTableValue),\(average),\(iterations),\(warmup_iterations),\(time)\n"
+                    let dataLine = "\(exportableBenchmark.target),\(hostName),\(processorType),\(processors),\(memory),\(kernelVersion),\(metric),\(units),\(testName),\(customTagValues)\(customFieldValues)\(dataTableValue),\(average),\(iterations),\(warmup_iterations),\(time)\n"
                     finalFileFormat.append(dataLine)
                 }
             }
+            finalFileFormat.append("\n")
         }
 
         return finalFileFormat
@@ -161,9 +181,23 @@ extension BenchmarkTool {
                     iterations = results.statistics.measurementCount
                     warmupIterations = results.warmupIterations
                 }
+                
+                let exportConfig = profile.benchmark.configuration.exportConfigurations?[.influx] as? InfluxExportConfiguration
+
+                var tags: [String: String] = [:]
+                var fields: [String: TestData.Field] = [:]
+                for (tag, value) in profile.benchmark.configuration.tags {
+                    if let field = exportConfig?.fields[tag] {
+                        fields[tag] = TestData.Field(type: field.rawValue, value: value)
+                    } else {
+                        tags[tag] = value
+                    }
+                }
 
                 testList.append(
                     TestData(test: cleanedTestName,
+                             tags: tags,
+                             fields: fields,
                              iterations: iterations,
                              warmupIterations: warmupIterations,
                              data: benchmarkResultData)

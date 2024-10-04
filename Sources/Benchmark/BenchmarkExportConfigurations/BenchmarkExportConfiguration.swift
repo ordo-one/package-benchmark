@@ -5,6 +5,10 @@ public struct BenchmarkExportConfigurationKey: Hashable, Codable {
     private let value: String
 }
 
+public extension BenchmarkExportConfigurationKey {
+    static var influx: Self { .init(value: #function) }
+}
+
 /// The set of export configurations for a particular benchmark
 public struct BenchmarkExportConfigurations: Codable {
     let configs: [BenchmarkExportConfigurationKey: any BenchmarkExportConfiguration]
@@ -38,6 +42,7 @@ extension BenchmarkExportConfigurationKey {
     static func resolveConfigType(from key: Self) -> BenchmarkExportConfiguration.Type? {
         switch key {
         // Add a case here when adding a new exporter config
+        case .influx: InfluxExportConfiguration.self
         default: nil
         }
     }
