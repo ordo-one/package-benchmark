@@ -22,7 +22,7 @@ import Glibc
 extension BenchmarkRunner {}
 
 let benchmarks = {
-    var thresholds: [BenchmarkMetric: BenchmarkThresholds]
+    var thresholdTolerances: [BenchmarkMetric: BenchmarkThresholds]
 
     if Benchmark.checkAbsoluteThresholds {
         let absolute: BenchmarkThresholds.AbsoluteThresholds = [.p0: .microseconds(1),
@@ -33,15 +33,15 @@ let benchmarks = {
                                                                 .p99: .milliseconds(3),
                                                                 .p100: .milliseconds(1)]
 
-        thresholds = [.wallClock: .init(absolute: absolute)]
+        thresholdTolerances = [.wallClock: .init(absolute: absolute)]
     } else {
-        thresholds = [.wallClock: .relaxed]
+        thresholdTolerances = [.wallClock: .relaxed]
     }
 
     Benchmark.defaultConfiguration = .init(warmupIterations: 0,
                                            maxDuration: .seconds(1),
                                            maxIterations: Int.max,
-                                           thresholds: thresholds)
+                                           thresholds: thresholdTolerances)
 
     testSetUpTearDown()
 

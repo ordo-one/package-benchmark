@@ -201,7 +201,7 @@ let benchmarks = {
   let parameterization = (0...5).map { 1 << $0 } // 1, 2, 4, ...
 
   parameterization.forEach { count in
-    Benchmark("ParameterizedWith\(count)") { benchmark in
+    Benchmark("Parameterized", configuration: .init(tags: ["count" : count.description])) { benchmark in
       for _ in 0 ..< count {
         blackHole(Int.random(in: benchmark.scaledIterations))
       }
@@ -210,7 +210,10 @@ let benchmarks = {
 }
 ```
 
-### Custom thresholds
+### Custom tolerance thresholds
+The tolerance thresholds written in the code specifies what should be viewed as an equal/better/worse benchmark run.
+The tolerance thresholds can be both absolute and relative and is used when comparing baselines with each other (or
+with a current benchmark run) as well as for comparison with saved static thresholds.
 
 ```swift
     let customThreshold = BenchmarkThresholds(

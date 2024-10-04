@@ -46,6 +46,7 @@ import PackagePlugin
         let metricsToUse = argumentExtractor.extractOption(named: "metric")
         let debug = argumentExtractor.extractFlag(named: "debug")
         let scale = argumentExtractor.extractFlag(named: "scale")
+        let helpRequested = argumentExtractor.extractFlag(named: "help")
         let otherSwiftFlagsSpecified = argumentExtractor.extractOption(named: "Xswiftc")
         var outputFormat: OutputFormat = .text
         var grouping = "benchmark"
@@ -53,6 +54,13 @@ import PackagePlugin
 
         // Flush stdout so we see any failures clearly
         setbuf(stdout, nil)
+
+        if helpRequested > 0 {
+            print("")
+            print(help)
+            print("")
+            return
+        }
 
         if argumentExtractor.unextractedOptionsOrFlags.count > 0 {
             print("Unknown option/flag specfied: \(argumentExtractor.unextractedOptionsOrFlags)")
@@ -68,6 +76,9 @@ import PackagePlugin
             if commandString != "help" {
                 print("")
                 print("Unknown command '\(commandString)'.")
+                print("")
+                print(help)
+                print("")
                 throw MyError.invalidArgument
             }
             print("")
@@ -81,7 +92,7 @@ import PackagePlugin
         if pathSpecified.count > 0 {
             exportPath = pathSpecified.first!
             if pathSpecified.count > 1 {
-                print("Only a single output path may be specified, will use the first one specified '\(exportPath)'")
+                print("Only a single path may be specified, will use the first one specified '\(exportPath)'")
             }
         }
 
@@ -160,8 +171,11 @@ import PackagePlugin
         }
 
         if checkAbsoluteThresholds > 0 {
+            print("Using --check-absolute is deprecated. Please use swift package benchmark threshold and related operations instead.")
+            print("This option will be removed in a future release.")
+
             if checkAbsoluteThresholdsPath.count > 1 {
-                print("Only a single path for thresholds can be specified, got \(checkAbsoluteThresholdsPath.count).")
+                print("Only a single path for static thresholds can be specified, got \(checkAbsoluteThresholdsPath.count).")
                 throw MyError.invalidArgument
             }
             args.append(contentsOf: ["--check-absolute"])
@@ -196,6 +210,47 @@ import PackagePlugin
             throw MyError.invalidArgument
         }
 
+        if commandToPerform == .thresholds {
+            guard positionalArguments.count > 0,
+                  let thresholdsOperation = ThresholdsOperation(rawValue: positionalArguments.removeFirst()) else {
+                print("")
+                print("A valid threshold command must be specified, one of: '\(ThresholdsOperation.allCases.description)'.")
+                print("")
+                print(help)
+                print("")
+                print("Please visit https://github.com/ordo-one/package-benchmark for more in-depth documentation")
+                print("")
+                throw MyError.invalidArgument
+            }
+
+            args.append(contentsOf: ["--thresholds-operation", thresholdsOperation.rawValue])
+
+            switch thresholdsOperation {
+            case .read:
+                break
+            case .update:
+                let validRange = 0 ... 1
+                guard validRange.contains(positionalArguments.count) else {
+                    print("Must specify exactly zero or one baselines for update of absolute thresholds, got: \(positionalArguments)")
+                    throw MyError.invalidArgument
+                }
+                if positionalArguments.count > 0 {
+                    shouldBuildTargets = false
+                }
+                break
+            case .check:
+                let validRange = 0 ... 1
+                guard validRange.contains(positionalArguments.count) else {
+                    print("Must specify exactly zero or one baseline for check against absolute thresholds, got: \(positionalArguments)")
+                    throw MyError.invalidArgument
+                }
+            }
+
+            positionalArguments.forEach { baseline in
+                args.append(contentsOf: ["--baseline", baseline])
+            }
+        }
+
         if commandToPerform == .baseline {
             guard positionalArguments.count > 0,
                   let baselineOperation = BaselineOperation(rawValue: positionalArguments.removeFirst()) else {
@@ -227,17 +282,11 @@ import PackagePlugin
                         print("Must specify exactly zero or one baseline for check against absolute thresholds, got: \(positionalArguments)")
                         throw MyError.invalidArgument
                     }
-                    if positionalArguments.count == validRange.upperBound { // dont check if we just read baselines
-                        shouldBuildTargets = false
-                    }
                 } else {
                     let validRange = 1 ... 2
                     guard validRange.contains(positionalArguments.count) else {
                         print("Must specify exactly one or two baselines for comparisons or threshold violation checks, got: \(positionalArguments)")
                         throw MyError.invalidArgument
-                    }
-                    if positionalArguments.count == validRange.upperBound { // dont check if we just read baselines
-                        shouldBuildTargets = false
                     }
                 }
             case .read, .list, .delete:

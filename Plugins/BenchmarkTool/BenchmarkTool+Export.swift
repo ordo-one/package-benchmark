@@ -55,7 +55,7 @@ extension BenchmarkTool {
 
         outputPath.append(csvFile.components)
 
-        print("Writing output to \(outputPath)")
+        print("Writing to \(outputPath)")
 
         printFailedBenchmarks()
 
@@ -110,7 +110,7 @@ extension BenchmarkTool {
 
         outputPath.append(jsonFile.components)
 
-        print("Writing output to \(outputPath)")
+        print("Writing to \(outputPath)")
 
         printFailedBenchmarks()
 

@@ -62,6 +62,7 @@ public final class Benchmark: Codable, Hashable { // swiftlint:disable:this type
     /// Set to true if this benchmark results should be compared with an absolute threshold when `--check-absolute` is
     /// specified on the command line. An implementation can then choose to configure thresholds differently for
     /// such comparisons by e.g. reading them in from external storage.
+    @available(*, deprecated,  message: "The checking of absolute thresholds should now be done using `swift package benchmark thresholds`")
     public static var checkAbsoluteThresholds = false
 
     #if swift(>=5.8)
@@ -277,7 +278,7 @@ public final class Benchmark: Codable, Hashable { // swiftlint:disable:this type
 
         configuration.thresholds?.forEach { thresholdMetric, _ in
             if self.configuration.metrics.contains(thresholdMetric) == false {
-                print("Warning: Custom threshold defined for metric `\(thresholdMetric)` " +
+                print("Warning: Custom threshold tolerance defined for metric `\(thresholdMetric)` " +
                     "which isn't used by benchmark `\(name)`")
             }
         }
@@ -401,7 +402,7 @@ public extension Benchmark {
         public var maxIterations: Int
         /// Whether to skip this test (convenience for not having to comment out tests that have issues)
         public var skip = false
-        /// Customized CI failure thresholds for a given metric for the Benchmark
+        /// Customized threshold tolerances for a given metric for the Benchmark used for checking for regressions/improvements/equality.
         public var thresholds: [BenchmarkMetric: BenchmarkThresholds]?
         /// Optional per-benchmark specific setup done before warmup and all iterations
         public var setup: BenchmarkSetupHook?

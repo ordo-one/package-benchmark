@@ -390,7 +390,7 @@ extension BenchmarkTool {
         namesAndTargets.forEach { nameAndTarget in
 
             printMarkdown("```")
-            "\(deviationTitle) for \(nameAndTarget.name):\(nameAndTarget.target)".printAsHeader(addWhiteSpace: false)
+            "\(deviationTitle) for \(nameAndTarget.target):\(nameAndTarget.name)".printAsHeader(addWhiteSpace: false)
             printMarkdown("```")
 
             metrics.forEach { metric in
