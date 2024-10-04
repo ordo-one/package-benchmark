@@ -111,6 +111,9 @@ struct Benchmark: AsyncParsableCommand {
     @Option(name: .long, help: "The path to operate on for data export or threshold operations, default is the current directory (\".\") for exports and the (\"./Thresholds\") directory for thresholds. ")
     var path: String
 
+    @Flag(name: .long, help: "Skip building both the benchmark tool and the benchmarks to allow for faster workflows - workaround for https://github.com/swiftlang/swift-package-manager/issues/7210")
+    var skipBuild: Int
+
     @Flag(name: .long, help: "Specifies that output should be suppressed (useful for if you just want to check return code)")
     var quiet: Int
 
