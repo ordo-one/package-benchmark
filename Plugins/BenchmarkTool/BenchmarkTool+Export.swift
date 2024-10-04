@@ -28,7 +28,7 @@ extension BenchmarkTool {
         var outputPath: FilePath
 
 
-        if let path = (thresholdsOperation != nil) ? path : thresholdsPath {
+        if let path = (thresholdsOperation == nil) ? path : thresholdsPath {
             if path == "stdout" {
                 print(exportData)
                 return
