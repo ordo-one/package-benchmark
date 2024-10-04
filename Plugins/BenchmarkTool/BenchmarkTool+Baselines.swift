@@ -107,9 +107,11 @@ struct BenchmarkBaseline: Codable {
     /// Represents a particular execution of a specific benchmark
     /// and its set of results.
     struct Profile: Codable {
+        var benchmark: Benchmark
         var results: [BenchmarkResult]
 
-        init(results: [BenchmarkResult] = []) {
+        init(benchmark: Benchmark, results: [BenchmarkResult] = []) {
+            self.benchmark = benchmark
             self.results = results
         }
     }

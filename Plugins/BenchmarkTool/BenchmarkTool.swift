@@ -306,6 +306,7 @@ struct BenchmarkTool: AsyncParsableCommand {
                 
                 for result in results {
                     benchmarkResults[result.key] = BenchmarkBaseline.Profile(
+                        benchmark: benchmark,
                         results: result.value
                     )
                 }
