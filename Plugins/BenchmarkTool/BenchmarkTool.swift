@@ -375,7 +375,6 @@ struct BenchmarkTool: AsyncParsableCommand {
                 case .baseline:
                     fallthrough
                 case .thresholds:
-                    //                    print("threshold command")
                     fallthrough
                 case .run:
                     guard let benchmark else {
