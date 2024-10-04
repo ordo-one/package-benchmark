@@ -40,7 +40,6 @@ import PackagePlugin
         let pathSpecified = argumentExtractor.extractOption(named: "path") // export path
         let quietRunning = argumentExtractor.extractFlag(named: "quiet")
         let noProgress = argumentExtractor.extractFlag(named: "no-progress")
-        let skipBuild: Bool = argumentExtractor.extractFlag(named: "skip-build") > 0
         let checkAbsoluteThresholdsPath = argumentExtractor.extractOption(named: "check-absolute-path")
         let checkAbsoluteThresholds = checkAbsoluteThresholdsPath.count > 0 ? 1 : argumentExtractor.extractFlag(named: "check-absolute")
         let groupingToUse = argumentExtractor.extractOption(named: "grouping")
@@ -141,7 +140,7 @@ import PackagePlugin
         }
 
         let swiftSourceModuleTargets: [SwiftSourceModuleTarget]
-        var shouldBuildTargets = skipBuild ? false : true // We don't rebuild the targets when we dont need to execute them, e.g. baseline read/compare
+        var shouldBuildTargets = true // We don't rebuild the targets when we dont need to execute them, e.g. baseline read/compare
 
         let packageBenchmarkIdentifier = "package-benchmark"
         let benchmarkToolName = "BenchmarkTool"
