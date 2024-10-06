@@ -144,7 +144,7 @@ extension BenchmarkTool {
 
                 var p90Thresholds: [BenchmarkIdentifier : [BenchmarkMetric: BenchmarkThresholds.AbsoluteThreshold]] = [:]
 
-                if quiet == false {
+                if noProgress == false {
                     print("")
                     print("Reading thresholds from \"\(thresholdsPath)\"")
                 }
@@ -166,7 +166,7 @@ extension BenchmarkTool {
                                   exitCode: .thresholdRegression)
                 }
 
-                if quiet == false {
+                if noProgress == false {
                     print("")
                     print("Checking \(benchmarks.map { $0.target + ":" + $0.name })")
                     print("")
