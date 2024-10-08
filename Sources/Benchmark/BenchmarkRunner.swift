@@ -196,7 +196,7 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
                             try await hook?()
                         }
                     } catch {
-                        try channel.write(.error("Benchmark.teardown or local benchmark teardown failed: \(error)"))
+                        try channel.write(.error("Benchmark.teardown or local benchmark teardown failed: \(String(reflecting: error))"))
                         return
                     }
 
