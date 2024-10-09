@@ -41,7 +41,7 @@ public extension BenchmarkThresholds {
 /// Convenience benchmark absolute thresholds
 public extension BenchmarkThresholds {
     enum Absolute {
-        // The allowed regression for a given percentile in absolute numbers (e.g. '25 regression ok for .p25')
+        // The tolerance for a given percentile in absolute numbers (e.g. '25 regression ok for .p25')
         // Useful for e.g. malloc counters
         public static var strict: AbsoluteThresholds {
             [.p0: 0,

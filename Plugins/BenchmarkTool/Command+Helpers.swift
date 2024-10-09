@@ -17,6 +17,7 @@ enum Command: String, CaseIterable {
     case run
     case list
     case baseline
+    case thresholds
     case help
     case `init`
 }
@@ -46,6 +47,12 @@ enum OutputFormat: String, CaseIterable {
 enum Grouping: String, CaseIterable {
     case metric
     case benchmark
+}
+
+enum ThresholdsOperation: String, CaseIterable {
+    case read
+    case update
+    case check
 }
 
 enum BaselineOperation: String, CaseIterable {

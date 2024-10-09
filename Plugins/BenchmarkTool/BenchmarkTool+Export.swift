@@ -27,7 +27,8 @@ extension BenchmarkTool {
         // Set up desired output path and create any intermediate directories for structure as required:
         var outputPath: FilePath
 
-        if let path {
+
+        if let path = (thresholdsOperation == nil) ? path : thresholdsPath {
             if path == "stdout" {
                 print(exportData)
                 return
@@ -55,7 +56,7 @@ extension BenchmarkTool {
 
         outputPath.append(csvFile.components)
 
-        print("Writing output to \(outputPath)")
+        print("Writing to \(outputPath)")
 
         printFailedBenchmarks()
 
@@ -110,7 +111,7 @@ extension BenchmarkTool {
 
         outputPath.append(jsonFile.components)
 
-        print("Writing output to \(outputPath)")
+        print("Writing to \(outputPath)")
 
         printFailedBenchmarks()
 

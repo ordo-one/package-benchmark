@@ -1,8 +1,10 @@
 [![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fordo-one%2Fpackage-benchmark%2Fbadge%3Ftype%3Dswift-versions)](https://swiftpackageindex.com/ordo-one/package-benchmark)
 [![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fordo-one%2Fpackage-benchmark%2Fbadge%3Ftype%3Dplatforms)](https://swiftpackageindex.com/ordo-one/package-benchmark)
+[![codecov](https://codecov.io/gh/ordo-one/package-benchmark/branch/main/graph/badge.svg?token=hXHmhEG1iF)](https://codecov.io/gh/ordo-one/package-benchmark)<br>
 [![Swift address sanitizer](https://github.com/ordo-one/package-benchmark/actions/workflows/swift-sanitizer-address.yml/badge.svg)](https://github.com/ordo-one/package-benchmark/actions/workflows/swift-sanitizer-address.yml)
 [![Swift thread sanitizer](https://github.com/ordo-one/package-benchmark/actions/workflows/swift-sanitizer-thread.yml/badge.svg)](https://github.com/ordo-one/package-benchmark/actions/workflows/swift-sanitizer-thread.yml)
-[![codecov](https://codecov.io/gh/ordo-one/package-benchmark/branch/main/graph/badge.svg?token=hXHmhEG1iF)](https://codecov.io/gh/ordo-one/package-benchmark)
+[![Swift Linux build](https://github.com/ordo-one/package-benchmark/actions/workflows/swift-linux-build.yml/badge.svg)](https://github.com/ordo-one/package-benchmark/actions/workflows/swift-linux-build.yml)
+[![Swift macOS build](https://github.com/ordo-one/package-benchmark/actions/workflows/swift-macos-build.yml/badge.svg)](https://github.com/ordo-one/package-benchmark/actions/workflows/swift-macos-build.yml)
 
 # Benchmark 
 
@@ -14,7 +16,7 @@ Performance is a key feature for many apps and frameworks. Benchmark helps make 
 
 Benchmark works on both macOS and Linux and supports several key workflows for performance measurements:
 
-* **[Automated Pull Request performance regression checks](https://swiftpackageindex.com/ordo-one/package-benchmark/documentation/benchmark/comparingbenchmarksci)** by comparing the performance metrics of a pull request with the main branch and having the PR workflow check fail if there is a regression according to absolute or relative thresholds specified per benchmark
+* **[Automated Pull Request performance regression checks](https://swiftpackageindex.com/ordo-one/package-benchmark/documentation/benchmark/comparingbenchmarksci)** by comparing the performance metrics of a pull request with the main branch and having the PR workflow check fail if there is a regression according to absolute or relative threshold tolerances specified per benchmark
 * **[Manual comparison of multiple performance baselines](https://swiftpackageindex.com/ordo-one/package-benchmark/documentation/benchmark/creatingandcomparingbaselines)** for iterative or A/B performance work by an individual developer
 * **[Export of benchmark results in several formats](https://swiftpackageindex.com/ordo-one/package-benchmark/documentation/benchmark/exportingbenchmarks)** for analysis or visualization
 
