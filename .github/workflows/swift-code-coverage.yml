@@ -12,7 +12,7 @@ jobs:
     timeout-minutes: 60
     steps:
     - uses: actions/checkout@v4
-    - uses: swift-actions/setup-swift@v2
+    - uses: khlopko/setup-swift@bfd61cbd14eeef55a27afc45138b61ced7174839
     - name: Swift version
       run: swift --version
     - name: Ubuntu deps
