@@ -12,11 +12,13 @@ jobs:
     timeout-minutes: 60
     steps:
     - uses: actions/checkout@v4
-
+    - uses: khlopko/setup-swift@bfd61cbd14eeef55a27afc45138b61ced7174839
+    - name: Swift version
+      run: swift --version
     - name: Ubuntu deps
       if: ${{ runner.os == 'Linux' }}
       run: |
-        sudo apt-get install -y libjemalloc-dev llvm-15
+        sudo apt-get install -y libjemalloc-dev #llvm-15
 
     - name: Start consul
       uses: ./.github/actions/consul-start
@@ -35,12 +37,13 @@ jobs:
          fi
 
          if [ -f ${xctest_binary} ]; then
-             llvm-cov-15 export -format="lcov" ${xctest_binary} -instr-profile .build/debug/codecov/default.profdata > info.lcov
+             llvm-cov export -format="lcov" ${xctest_binary} -instr-profile .build/debug/codecov/default.profdata > info.lcov
          fi
 
     - name: Upload codecov
       uses: codecov/codecov-action@v4
       with: 
-        token: ${{ secrets.CODECOV_REPO_TOKEN }} 
+        token: ${{ secrets.CODECOV_REPO_TOKEN }}
         files: info.lcov
         fail_ci_if_error: true
+        verbose: true
