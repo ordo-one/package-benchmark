@@ -14,15 +14,18 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        swift: ["5.8", "5.9"]
+        swift: ["5.9", "5.10"]
 
 
     runs-on: ${{ matrix.os }}
 
     steps:
-    - uses: fwal/setup-swift@v1
+    - uses: swift-actions/setup-swift@v2
       with:
         swift-version: ${{ matrix.swift }}
+
+    - name: Swift version
+      run: swift --version
 
     - uses: actions/checkout@v3    
 
