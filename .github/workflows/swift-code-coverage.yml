@@ -40,7 +40,7 @@ jobs:
          fi
 
          if [ -f ${xctest_binary} ]; then
-             llvm-cov-15 export -format="lcov" ${xctest_binary} -instr-profile .build/debug/codecov/default.profdata > info.lcov
+             llvm-cov export -format="lcov" ${xctest_binary} -instr-profile .build/debug/codecov/default.profdata > info.lcov
          fi
 
     - name: Upload codecov
