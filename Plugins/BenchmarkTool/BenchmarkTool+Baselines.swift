@@ -223,7 +223,7 @@ extension BenchmarkTool {
                                             print("Removing baseline '\(baselineName)' for \(target)")
                                             try filemanager.removeItem(atPath: file.description)
                                         } catch {
-                                            print("Failed to remove file \(file), error \(error)")
+                                            print("Failed to remove file \(file), error \(String(reflecting: error))")
                                             print("Give benchmark plugin permissions to delete files by running with e.g.:")
                                             print("")
                                             print("swift package --allow-writing-to-package-directory benchmark baseline delete")
@@ -376,7 +376,7 @@ extension BenchmarkTool {
                         baseline = try JSONDecoder().decode(BenchmarkBaseline.self, from: Data(readBytes))
 
                     } catch {
-                        print("Failed to open file for reading \(path) [\(error)]")
+                        print("Failed to open file for reading \(path) [\(String(reflecting: error))]")
                     }
                 }
             } catch {

@@ -67,7 +67,7 @@ public extension Benchmark {
                 let setupResult = benchmark.setupState! as! SetupResult // swiftlint:disable:this force_cast
                 try closure(benchmark, setupResult)
             } catch {
-                benchmark.error("Benchmark \(name) failed with \(error)")
+                benchmark.error("Benchmark \(name) failed with \(String(reflecting: error))")
             }
         }, teardown: teardown)
 
@@ -94,7 +94,7 @@ public extension Benchmark {
                 let setupResult = benchmark.setupState! as! SetupResult // swiftlint:disable:this force_cast
                 try await closure(benchmark, setupResult)
             } catch {
-                benchmark.error("Benchmark \(name) failed with \(error)")
+                benchmark.error("Benchmark \(name) failed with \(String(reflecting: error))")
             }
         }, teardown: teardown)
 

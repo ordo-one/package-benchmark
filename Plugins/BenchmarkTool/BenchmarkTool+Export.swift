@@ -73,11 +73,11 @@ extension BenchmarkTool {
                             _ = try fd.write(UnsafeRawBufferPointer($0))
                         }
                     } catch {
-                        print("Failed to write to file \(outputPath) [\(error)]")
+                        print("Failed to write to file \(outputPath) [\(String(reflecting: error))]")
                     }
                 }
             } catch {
-                print("Failed to close fd for \(outputPath) after write [\(error)].")
+                print("Failed to close fd for \(outputPath) after write [\(String(reflecting: error))].")
             }
         } catch {
             if errno == EPERM {
@@ -127,11 +127,11 @@ extension BenchmarkTool {
                             _ = try fd.write(rawBuffer)
                         }
                     } catch {
-                        print("Failed to write to file \(outputPath) [\(error)]")
+                        print("Failed to write to file \(outputPath) [\(String(reflecting: error))]")
                     }
                 }
             } catch {
-                print("Failed to close fd for \(outputPath) after write [\(error)].")
+                print("Failed to close fd for \(outputPath) after write [\(String(reflecting: error))].")
             }
         } catch {
             if errno == EPERM {

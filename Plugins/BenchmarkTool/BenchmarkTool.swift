@@ -385,7 +385,7 @@ struct BenchmarkTool: AsyncParsableCommand {
 
                 try write(.end)
             } catch {
-                print("Process failed: \(error)")
+                print("Process failed: \(String(reflecting: error))")
             }
 
             if status == 0 {
