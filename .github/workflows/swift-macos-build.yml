@@ -14,7 +14,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [macos-15]
-        swift: [ "5.10", "6.0" ]
+#        swift: [ "5.10", "6.0" ]
 
     runs-on: ${{ matrix.os }}
 #    env:
