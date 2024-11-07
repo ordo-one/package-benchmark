@@ -89,11 +89,11 @@ jobs:
           } > benchmark_comment
       - name: Comment PR
         if: ${{ env.hasBenchmark == '1' }}
-        uses: thollander/actions-comment-pull-request@v2
+        uses: thollander/actions-comment-pull-request@v3
         with:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          filePath: benchmark_comment
-          comment_tag: 'Pull request benchmark comparison [${{ matrix.os }}] with'
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          file-path: benchmark_comment
+          comment-tag: 'Pull request benchmark comparison [${{ matrix.os }}] with'
       - name: Exit with correct status
         if: ${{ success() || failure() }}
         run: |

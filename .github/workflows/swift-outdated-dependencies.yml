@@ -19,7 +19,7 @@ jobs:
          failWhenOutdated: false
     - name: Create Pull Request
       if: steps.spm-dep-check.outputs.outdatedDependencies  == 'true'
-      uses: peter-evans/create-pull-request@v6
+      uses: peter-evans/create-pull-request@v7
       with:
         commit-message: 'chore: update package dependencies'
         branch: updatePackageDepedencies
