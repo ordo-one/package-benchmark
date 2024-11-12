@@ -95,9 +95,19 @@ let benchmarks = {
       // measure something here
     }
 
+    func defaultCounter() -> Int {
+        10
+    }
+    
+    func dummyCounter(_ count: Int) {
+        for index in 0 ..< count {
+            blackHole(index)
+        }
+    }
+    
     Benchmark("All metrics, full concurrency, async",
               configuration: .init(metrics: BenchmarkMetric.all,
-                                   maxDuration: .seconds(10)) { benchmark in
+                                   maxDuration: .seconds(10))) { benchmark in
         let _ = await withTaskGroup(of: Void.self, returning: Void.self, body: { taskGroup in
             for _ in 0..<80  {
                 taskGroup.addTask {
@@ -107,7 +117,7 @@ let benchmarks = {
             for await _ in taskGroup {
             }
         })
-    }
+    }     
 }
 ```
 
