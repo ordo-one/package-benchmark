@@ -106,7 +106,10 @@ final class OperatingSystemAndMallocTests: XCTestCase {
         let amplificationFactor = 1_000
 
         let tempFile = tmpfile()
-        XCTAssertNotNil(tempFile, "tmpfile() failed: \(errno)")
+        guard let tempFile else {
+            XCTFail("tmpfile() failed: \(errno)")
+            return
+        }
 
         let fildes = fileno(tempFile)
 
