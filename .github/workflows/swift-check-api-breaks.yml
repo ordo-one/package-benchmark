@@ -27,6 +27,10 @@ jobs:
     - name: Build
       if: ${{ env.spmlibrarytarget }}
       run: swift build
+    - name: Analyze API breakage ((workaround compile issue on first run)
+      if: ${{ env.spmlibrarytarget }}
+      continue-on-error: true
+      run: swift package diagnose-api-breaking-changes origin/main --targets ${{ env.spmlibrarytarget }}
     - name: Analyze API breakage
       if: ${{ env.spmlibrarytarget }}
       run: swift package diagnose-api-breaking-changes origin/main --targets ${{ env.spmlibrarytarget }}
