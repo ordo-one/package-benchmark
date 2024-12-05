@@ -79,7 +79,7 @@ extension BenchmarkTool {
                             }
                         }
                     } catch {
-                        print("Failed to read file at \(path) [\(error)] \(Errno(rawValue: errno).description)")
+                        print("Failed to read file at \(path) [\(String(reflecting: error))] \(Errno(rawValue: errno).description)")
                     }
                 }
             } catch {

@@ -240,7 +240,7 @@ public final class Benchmark: Codable, Hashable { // swiftlint:disable:this type
             do {
                 try closure(benchmark)
             } catch {
-                benchmark.error("Benchmark \(name) failed with \(error)")
+                benchmark.error("Benchmark \(name) failed with \(String(reflecting: error))")
             }
         }, setup: setup, teardown: teardown)
     }
@@ -261,7 +261,7 @@ public final class Benchmark: Codable, Hashable { // swiftlint:disable:this type
             do {
                 try await closure(benchmark)
             } catch {
-                benchmark.error("Benchmark \(name) failed with \(error)")
+                benchmark.error("Benchmark \(name) failed with \(String(reflecting: error))")
             }
         }, setup: setup, teardown: teardown)
     }
