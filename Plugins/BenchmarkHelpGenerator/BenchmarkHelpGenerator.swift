@@ -45,14 +45,11 @@ let availableMetrics = [
     "custom"
 ]
 
-extension Command: @retroactive ExpressibleByArgument {}
-extension Grouping: @retroactive ExpressibleByArgument {}
-extension OutputFormat: @retroactive ExpressibleByArgument {}
-extension BaselineOperation: @retroactive ExpressibleByArgument {}
-#if swift(>=5.8)
-@_documentation(visibility: internal)
-#endif
-extension TimeUnits: @retroactive ExpressibleByArgument {}
+extension Command: ExpressibleByArgument {}
+extension Grouping: ExpressibleByArgument {}
+extension OutputFormat: ExpressibleByArgument {}
+extension BaselineOperation: ExpressibleByArgument {}
+extension TimeUnits: ExpressibleByArgument {}
 
 @main
 struct Benchmark: AsyncParsableCommand {

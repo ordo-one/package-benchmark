@@ -32,11 +32,11 @@ enum BenchmarkOperation: String, ExpressibleByArgument {
     case `init`
 }
 
-extension Grouping: @retroactive ExpressibleByArgument {}
-extension OutputFormat: @retroactive ExpressibleByArgument {}
-extension BaselineOperation: @retroactive ExpressibleByArgument {}
-extension ThresholdsOperation: @retroactive ExpressibleByArgument {}
-extension BenchmarkMetric: @retroactive ExpressibleByArgument {}
+extension Grouping: ExpressibleByArgument {}
+extension OutputFormat: ExpressibleByArgument {}
+extension BaselineOperation: ExpressibleByArgument {}
+extension ThresholdsOperation: ExpressibleByArgument {}
+extension BenchmarkMetric: ExpressibleByArgument {}
 
 typealias BenchmarkResults = [BenchmarkIdentifier: [BenchmarkResult]]
 

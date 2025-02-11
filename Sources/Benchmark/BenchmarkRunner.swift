@@ -22,7 +22,7 @@ import Shared
 #if swift(>=5.8)
 @_documentation(visibility: internal)
 #endif
-extension TimeUnits: @retroactive ExpressibleByArgument {}
+extension TimeUnits: ExpressibleByArgument {}
 
 #if swift(>=5.8)
     @_documentation(visibility: internal)
