@@ -212,7 +212,7 @@ let benchmarks = {
 ```
 
 
-### Running mutliple similar Benchmarks with Parameterizations
+### Running multiple similar Benchmarks with Parameterizations
  
 ```swift
 let benchmarks = {
