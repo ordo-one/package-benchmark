@@ -141,15 +141,15 @@ public final class Benchmark: Codable, Hashable { // swiftlint:disable:this type
     /// Hook for setting defaults for a whole benchmark suite
     private static let configurationLock = NSLock()
     private static var _defaultConfiguration: Configuration = .init(metrics: BenchmarkMetric.default,
-                                                                   tags: [:],
-                                                                   timeUnits: .automatic,
-                                                                   units: [:],
-                                                                   warmupIterations: 1,
-                                                                   scalingFactor: .one,
-                                                                   maxDuration: .seconds(1),
-                                                                   maxIterations: 10_000,
-                                                                   skip: false,
-                                                                   thresholds: nil)
+                                                                    tags: [:],
+                                                                    timeUnits: .automatic,
+                                                                    units: [:],
+                                                                    warmupIterations: 1,
+                                                                    scalingFactor: .one,
+                                                                    maxDuration: .seconds(1),
+                                                                    maxIterations: 10_000,
+                                                                    skip: false,
+                                                                    thresholds: nil)
 
 #if swift(<5.10)
     public static var defaultConfiguration: Configuration {
