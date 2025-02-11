@@ -203,7 +203,7 @@ By default a metric will be displayed in the most appropriate unit for the value
 
 This is done by using the ``Benchmark/Configuration-swift.struct/units`` property in the configuration.
 
-E.g. to set the units for a specific metric for all benchmarks in a suite, here proving resident memory in M and virtual in G:
+E.g. to set the units for a specific metric for all benchmarks in a suite, here providing resident memory in M and virtual in G:
 
 ```swift
 let benchmarks = {
