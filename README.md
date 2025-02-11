@@ -168,6 +168,16 @@ This multi-modal nature of the latency measurements leads to the common statisti
 
 Please see the [documentation for further details on percentiles](https://swiftpackageindex.com/ordo-one/package-benchmark/documentation/benchmark/aboutpercentiles).
 
+## Swift 6 support
+The package will be updated to be fully Swift 6 when 5.x support is dropped (planned to be when Swift 6.2 is released).
+
+Workaround needed for Swift 6 targets, use the following signature for the benchmarks closure:
+```swift
+let benchmarks : @Sendable () -> Void = {
+```
+
+See https://github.com/ordo-one/package-benchmark/issues/258 for more details.
+
 ## API and file format stability
 The API will be deemed stable as of `1.0.0` and follows semantical versioning for future releases. 
 
