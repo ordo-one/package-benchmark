@@ -12,6 +12,7 @@
 
 import ArgumentParser
 import Benchmark
+import Shared
 import SystemPackage
 
 #if canImport(Darwin)
@@ -79,6 +80,9 @@ struct BenchmarkTool: AsyncParsableCommand {
     @Flag(name: .long, help: "True if we should scale time units, syscall rate, etc to scalingFactor")
     var scale: Bool = false
 
+    @Option(name: .long, help: "Specifies that time related metrics output should be specified units")
+    var timeUnits: TimeUnits?
+
     @Flag(name: .long, help:
         """
         Set to true if thresholds should be checked against an absolute reference point rather than delta between baselines.
@@ -127,7 +131,7 @@ struct BenchmarkTool: AsyncParsableCommand {
         path ?? "Thresholds"
     }
 
-    mutating func failBenchmark(_ reason: String? = nil, exitCode: ExitCode = .genericFailure, _ failedBenchmark: String? = nil) {
+    mutating func failBenchmark(_ reason: String? = nil, exitCode: Shared.ExitCode = .genericFailure, _ failedBenchmark: String? = nil) {
         if let reason {
             print(reason)
             print("")
@@ -148,7 +152,7 @@ struct BenchmarkTool: AsyncParsableCommand {
         }
     }
 
-    func exitBenchmark(exitCode: ExitCode) {
+    func exitBenchmark(exitCode: Shared.ExitCode) {
         #if canImport(Darwin)
             Darwin.exit(exitCode.rawValue)
         #elseif canImport(Glibc)
@@ -352,6 +356,10 @@ struct BenchmarkTool: AsyncParsableCommand {
 
         if checkAbsolute {
             args.append("--check-absolute")
+        }
+
+        if let timeUnits {
+            args.append(contentsOf: ["--time-units", timeUnits.rawValue])
         }
 
         inputFD = fromChild.readEnd.rawValue

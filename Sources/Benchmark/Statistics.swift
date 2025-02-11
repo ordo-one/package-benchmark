@@ -22,7 +22,7 @@ public final class Statistics: Codable {
     public static let defaultPercentilesToCalculate = [0.0, 25.0, 50.0, 75.0, 90.0, 99.0, 100.0]
     public static let defaultPercentilesToCalculateP90Index = 4
     
-    public enum Units: Int, Codable {
+    public enum Units: Int, Codable, CaseIterable {
         case count = 1 // e.g. nanoseconds
         case kilo = 1_000 // microseconds
         case mega = 1_000_000 // milliseconds

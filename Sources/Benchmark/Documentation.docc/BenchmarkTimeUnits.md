@@ -5,10 +5,12 @@
 ### Creating Time Units
 
 - ``BenchmarkTimeUnits/automatic``
-- ``BenchmarkTimeUnits/seconds``
-- ``BenchmarkTimeUnits/milliseconds``
-- ``BenchmarkTimeUnits/microseconds``
 - ``BenchmarkTimeUnits/nanoseconds``
+- ``BenchmarkTimeUnits/microseconds``
+- ``BenchmarkTimeUnits/milliseconds``
+- ``BenchmarkTimeUnits/seconds``
+- ``BenchmarkTimeUnits/kiloseconds``
+- ``BenchmarkTimeUnits/megaseconds``
 - ``BenchmarkTimeUnits/init(_:)``
 - ``BenchmarkTimeUnits/init(rawValue:)``
 

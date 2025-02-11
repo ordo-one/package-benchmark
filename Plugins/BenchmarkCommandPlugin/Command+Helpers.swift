@@ -8,12 +8,14 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 //
 
-// This file need to be manually copied between the Benchmark plugin and
-// the BenchmarkTool when updated, as no external dependencies are allowed
-// for SwiftPM command tools. The source file is in BenchmarkCommandPlugin and should be
-// edited there, then manually copied to BenchmarkTool AND BenchmarkHelpGenerator.
+// This file need to be manually copied between the Benchmark plugin and the BenchmarkTool when updated,
+// as no external dependencies are allowed for SwiftPM command tools.
 
-enum Command: String, CaseIterable {
+// *************************************************************************************************************************
+// The source file is in BenchmarkCommandPlugin and should be edited there, then manually copied to Shared/Command+Helpers.
+// *************************************************************************************************************************
+
+public enum Command: String, CaseIterable {
     case run
     case list
     case baseline
@@ -23,7 +25,7 @@ enum Command: String, CaseIterable {
 }
 
 /// The benchmark data output format.
-enum OutputFormat: String, CaseIterable {
+public enum OutputFormat: String, CaseIterable {
     /// Text output formatted into a visual table suitable for console output
     case text
     /// The text output format, formatted in markdown, suitable for GitHub workflows
@@ -44,18 +46,30 @@ enum OutputFormat: String, CaseIterable {
     case metricP90AbsoluteThresholds
 }
 
-enum Grouping: String, CaseIterable {
+public enum Grouping: String, CaseIterable {
     case metric
     case benchmark
 }
 
-enum ThresholdsOperation: String, CaseIterable {
+#if swift(>=5.8)
+@_documentation(visibility: internal)
+#endif
+public enum TimeUnits: String, CaseIterable {
+    case nanoseconds
+    case microseconds
+    case milliseconds
+    case seconds
+    case kiloseconds
+    case megaseconds
+}
+
+public enum ThresholdsOperation: String, CaseIterable {
     case read
     case update
     case check
 }
 
-enum BaselineOperation: String, CaseIterable {
+public enum BaselineOperation: String, CaseIterable {
     case read
     case update
     case list
@@ -64,7 +78,7 @@ enum BaselineOperation: String, CaseIterable {
     case check
 }
 
-enum ExitCode: Int32 {
+public enum ExitCode: Int32 {
     case success = 0
     case genericFailure = 1
     case thresholdRegression = 2
