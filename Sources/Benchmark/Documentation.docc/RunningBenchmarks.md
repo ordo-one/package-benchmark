@@ -93,7 +93,6 @@ Benchmark targets matching the regexp filter that should be skipped
 peakMemoryResident, peakMemoryResidentDelta, peakMemoryVirtual, mallocCountSmall, mallocCountLarge, mallocCountTotal, allocatedResidentMemory, memoryLeaked, syscalls, contextSwitches, threads,
 threadsRunning, readSyscalls, writeSyscalls, readBytesLogical, writeBytesLogical, readBytesPhysical, writeBytesPhysical, instructions, retainCount, releaseCount, retainReleaseDelta, custom)
 --path <path>           The path to operate on for data export or threshold operations, default is the current directory (".") for exports and the ("./Thresholds") directory for thresholds. 
---skip-build            Skip building both the benchmark tool and the benchmarks to allow for faster workflows - workaround for https://github.com/swiftlang/swift-package-manager/issues/7210
 --quiet                 Specifies that output should be suppressed (useful for if you just want to check return code)
 --scale                 Specifies that some of the text output should be scaled using the scalingFactor (denoted by '*' in output)
 --time-units <time-units>
