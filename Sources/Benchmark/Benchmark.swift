@@ -9,7 +9,7 @@
 //
 
 import Dispatch
-
+import Foundation
 // swiftlint:disable file_length
 
 /// Defines a benchmark
@@ -139,16 +139,31 @@ public final class Benchmark: Codable, Hashable { // swiftlint:disable:this type
     public var configuration: Configuration = .init()
 
     /// Hook for setting defaults for a whole benchmark suite
-    public static var defaultConfiguration: Configuration = .init(metrics: BenchmarkMetric.default,
-                                                                  tags: [:],
-                                                                  timeUnits: .automatic,
-                                                                  units: [:],
-                                                                  warmupIterations: 1,
-                                                                  scalingFactor: .one,
-                                                                  maxDuration: .seconds(1),
-                                                                  maxIterations: 10_000,
-                                                                  skip: false,
-                                                                  thresholds: nil)
+    private static let configurationLock = NSLock()
+    private static var _defaultConfiguration: Configuration = .init(metrics: BenchmarkMetric.default,
+                                                                   tags: [:],
+                                                                   timeUnits: .automatic,
+                                                                   units: [:],
+                                                                   warmupIterations: 1,
+                                                                   scalingFactor: .one,
+                                                                   maxDuration: .seconds(1),
+                                                                   maxIterations: 10_000,
+                                                                   skip: false,
+                                                                   thresholds: nil)
+
+    nonisolated(unsafe)
+    public static var defaultConfiguration: Configuration {
+        get {
+            configurationLock.lock()
+            defer { configurationLock.unlock() }
+            return _defaultConfiguration
+        }
+        set {
+            configurationLock.lock()
+            defer { configurationLock.unlock() }
+            _defaultConfiguration = newValue
+        }
+    }
 
     static var testSkipBenchmarkRegistrations = false // true in test to avoid bench registration fail
     var measurementCompleted = false // Keep track so we skip multiple 'end of measurement'
