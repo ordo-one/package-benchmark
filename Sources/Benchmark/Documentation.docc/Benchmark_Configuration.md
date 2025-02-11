@@ -14,6 +14,7 @@
 - ``Benchmark/Configuration-swift.struct/skip``
 - ``Benchmark/Configuration-swift.struct/thresholds``
 - ``Benchmark/Configuration-swift.struct/scalingFactor``
+- ``Benchmark/Configuration-swift.struct/units``
 - ``Benchmark/Configuration-swift.struct/timeUnits``
 - ``Benchmark/Configuration-swift.struct/warmupIterations``
 

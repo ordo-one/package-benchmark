@@ -12,6 +12,7 @@
 // instead of writing it by hand
 
 import ArgumentParser
+import Shared
 
 let availableMetrics = [
     "cpuUser",
@@ -44,10 +45,14 @@ let availableMetrics = [
     "custom"
 ]
 
-extension Command: ExpressibleByArgument {}
-extension Grouping: ExpressibleByArgument {}
-extension OutputFormat: ExpressibleByArgument {}
-extension BaselineOperation: ExpressibleByArgument {}
+extension Command: @retroactive ExpressibleByArgument {}
+extension Grouping: @retroactive ExpressibleByArgument {}
+extension OutputFormat: @retroactive ExpressibleByArgument {}
+extension BaselineOperation: @retroactive ExpressibleByArgument {}
+#if swift(>=5.8)
+@_documentation(visibility: internal)
+#endif
+extension TimeUnits: @retroactive ExpressibleByArgument {}
 
 @main
 struct Benchmark: AsyncParsableCommand {
@@ -119,6 +124,9 @@ struct Benchmark: AsyncParsableCommand {
 
     @Flag(name: .long, help: "Specifies that some of the text output should be scaled using the scalingFactor (denoted by '*' in output)")
     var scale: Int
+
+    @Option(name: .long, help: "Specifies that time related metrics output should be specified units")
+    var timeUnits: TimeUnits?
 
     @Flag(name: .long, help:
         """

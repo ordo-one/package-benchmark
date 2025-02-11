@@ -105,6 +105,8 @@ public extension Benchmark {
         /// related to time to a specific one
         /// (auto should work for most use cases)
         public var timeUnits: BenchmarkTimeUnits
+        /// Override the automatic detection of units for metrics not related to time to a specific one
+        public var units: [BenchmarkMetric: BenchmarkUnits]
         /// Specifies a number of warmup iterations should be performed before
         /// the measurement to reduce outliers due to e.g. cache population
         public var warmupIterations: Int
@@ -186,6 +188,7 @@ let benchmarks = {
     Benchmark("Foundation Date()") {
         ...
     }
+}
 ```
 
 Similar defaults can be set for all benchmark settings using the class variable that takes a standard ``Benchmark/Configuration-swift.struct``:
@@ -193,6 +196,21 @@ Similar defaults can be set for all benchmark settings using the class variable 
 ```swift
 Benchmark.defaultConfiguration = .init(...)
 ```
+
+### Units
+
+By default a metric will be displayed in the most appropriate unit for the value, but it can be useful to override this behavior to ensure that the output is consistent across runs or between benchmarks.
+
+This is done by using the ``Benchmark/Configuration-swift.struct/units`` property in the configuration.
+
+E.g. to set the units for a specific metric for all benchmarks in a suite, here proving resident memory in M and virtual in G:
+
+```swift
+let benchmarks = {
+    Benchmark.defaultConfiguration.units = [.peakMemoryResident: .mega, .peakMemoryVirtual: .giga]
+}
+```
+
 
 ### Running mutliple similar Benchmarks with Parameterizations
  

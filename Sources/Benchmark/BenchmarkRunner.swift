@@ -17,6 +17,12 @@
 #endif
 
 import ArgumentParser
+import Shared
+
+#if swift(>=5.8)
+@_documentation(visibility: internal)
+#endif
+extension TimeUnits: @retroactive ExpressibleByArgument {}
 
 #if swift(>=5.8)
     @_documentation(visibility: internal)
@@ -59,6 +65,9 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
 
     @Option(name: .long, help: "Benchmarks matching the regexp filter that should be skipped")
     var skip: [String] = []
+
+    @Option(name: .long, help: "Specifies that time related metrics output should be specified units")
+    var timeUnits: TimeUnits?
 
     @Flag(name: .long, help:
         """
@@ -166,6 +175,11 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
                     }
 
                     benchmark.target = benchmarkToRun.target
+
+                    if let timeUnits,
+                       let units = BenchmarkTimeUnits(rawValue: timeUnits.rawValue) {
+                        benchmark.configuration.timeUnits = units
+                    }
 
                     do {
                         for hook in [Benchmark.startupHook, Benchmark.setup, benchmark.configuration.setup, benchmark.setup] {

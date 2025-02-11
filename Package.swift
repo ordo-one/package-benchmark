@@ -40,7 +40,7 @@ let package = Package(
                 )
             ),
             dependencies: [
-                "BenchmarkTool",
+                "BenchmarkTool"
             ],
             path: "Plugins/BenchmarkCommandPlugin"
         ),
@@ -50,7 +50,7 @@ let package = Package(
             name: "BenchmarkPlugin",
             capability: .buildTool(),
             dependencies: [
-                "BenchmarkBoilerplateGenerator",
+                "BenchmarkBoilerplateGenerator"
             ],
             path: "Plugins/BenchmarkPlugin"
         ),
@@ -63,6 +63,7 @@ let package = Package(
                 .product(name: "SystemPackage", package: "swift-system"),
                 .product(name: "TextTable", package: "TextTable"),
                 "Benchmark",
+                "Shared"
             ],
             path: "Plugins/BenchmarkTool"
         ),
@@ -81,7 +82,8 @@ let package = Package(
         .executableTarget(
             name: "BenchmarkHelpGenerator",
             dependencies: [
-                .product(name: "ArgumentParser", package: "swift-argument-parser")
+                .product(name: "ArgumentParser", package: "swift-argument-parser"),
+                "Shared"
             ],
             path: "Plugins/BenchmarkHelpGenerator"
         ),
@@ -104,6 +106,9 @@ let package = Package(
 
         // Hooks for ARC
         .target(name: "SwiftRuntimeHooks"),
+
+        // Shared definitions
+        .target(name: "Shared"),
 
         .testTarget(
             name: "BenchmarkTests",
@@ -137,6 +142,7 @@ var dependencies: [PackageDescription.Target.Dependency] = [
     .byNameItem(name: "CLinuxOperatingSystemStats", condition: .when(platforms: [.linux])),
     .product(name: "Atomics", package: "swift-atomics"),
     "SwiftRuntimeHooks",
+    "Shared",
 ]
 
 if macOSSPIBuild == false { // jemalloc always disable for macOSSPIBuild

@@ -439,8 +439,14 @@ struct BenchmarkExecutor { // swiftlint:disable:this type_body_length
             case .custom:
                 if let value = customStatistics[metric] {
                     if value.measurementCount > 0 {
+                        var units: BenchmarkTimeUnits = BenchmarkTimeUnits(value.timeUnits)
+
+                        if let overriddenUnits = benchmark.configuration.units[metric] {
+                            units = .init(overriddenUnits)
+                        }
+
                         let result = BenchmarkResult(metric: metric,
-                                                     timeUnits: BenchmarkTimeUnits(value.timeUnits),
+                                                     timeUnits: units,
                                                      scalingFactor: benchmark.configuration.scalingFactor,
                                                      warmupIterations: benchmark.configuration.warmupIterations,
                                                      thresholds: benchmark.configuration.thresholds?[metric],
@@ -453,8 +459,14 @@ struct BenchmarkExecutor { // swiftlint:disable:this type_body_length
                 if operatingSystemsStatsProducerNeeded(metric) == false || operatingSystemStatsProducer.metricSupported(metric) {
                     let value = statistics[metric.index]
                     if value.measurementCount > 0 {
+                        var units: BenchmarkTimeUnits = BenchmarkTimeUnits(value.timeUnits)
+
+                        if let overriddenUnits = benchmark.configuration.units[metric] {
+                            units = BenchmarkTimeUnits(overriddenUnits)
+                        }
+
                         let result = BenchmarkResult(metric: metric,
-                                                     timeUnits: BenchmarkTimeUnits(value.timeUnits),
+                                                     timeUnits: units,
                                                      scalingFactor: benchmark.configuration.scalingFactor,
                                                      warmupIterations: benchmark.configuration.warmupIterations,
                                                      thresholds: benchmark.configuration.thresholds?[metric],

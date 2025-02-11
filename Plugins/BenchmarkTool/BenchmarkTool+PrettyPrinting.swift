@@ -9,6 +9,7 @@
 //
 
 import Benchmark
+import Shared
 import SystemPackage
 import TextTable
 

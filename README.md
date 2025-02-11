@@ -8,7 +8,9 @@
 
 # Benchmark 
 
-[Benchmark](https://swiftpackageindex.com/ordo-one/package-benchmark/documentation/benchmark) allows you to easily create sophisticated Swift performance benchmarks
+The Benchmark package allows you to easily create sophisticated Swift performance benchmarks for a wide variety of metrics.
+
+This README provides a quick overview of the Benchmark package. For more detailed information, please [see the documentation](https://swiftpackageindex.com/ordo-one/package-benchmark/documentation/benchmark).
 
 ## Overview
 
@@ -163,6 +165,8 @@ The default text output from Benchmark is oriented around [the five-number summa
 We've found that focusing on percentiles rather than average or standard deviations, is more useful for a wider range of benchmark measurements and gives a deeper understanding of the results.
 Percentiles allows for a consistent way of expressing benchmark results of both throughput and latency measurements (which typically do **not** have a standardized distribution, being almost always multi-modal in nature).
 This multi-modal nature of the latency measurements leads to the common statistical measures of mean and standard deviation being potentially misleading.
+
+Please see the [documentation for further details on percentiles](https://swiftpackageindex.com/ordo-one/package-benchmark/documentation/benchmark/aboutpercentiles).
 
 ## API and file format stability
 The API will be deemed stable as of `1.0.0` and follows semantical versioning for future releases. 

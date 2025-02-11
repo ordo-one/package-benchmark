@@ -142,6 +142,7 @@ public final class Benchmark: Codable, Hashable { // swiftlint:disable:this type
     public static var defaultConfiguration: Configuration = .init(metrics: BenchmarkMetric.default,
                                                                   tags: [:],
                                                                   timeUnits: .automatic,
+                                                                  units: [:],
                                                                   warmupIterations: 1,
                                                                   scalingFactor: .one,
                                                                   maxDuration: .seconds(1),
@@ -387,8 +388,10 @@ public extension Benchmark {
         /// Specifies the parameters used to define the benchmark.
         public var tags: [String: String]
         /// Override the automatic detection of timeunits for metrics related to time to a specific
-        /// one (auto should work for most use cases)
+        /// one (auto should work for most use cases).
         public var timeUnits: BenchmarkTimeUnits
+        /// Override the automatic detection of units for metrics not related to time to a specific one
+        public var units: [BenchmarkMetric: BenchmarkUnits]
         /// Specifies a number of warmup iterations should be performed before the measurement to
         /// reduce outliers due to e.g. cache population
         public var warmupIterations: Int
@@ -412,6 +415,7 @@ public extension Benchmark {
         public init(metrics: [BenchmarkMetric] = defaultConfiguration.metrics,
                     tags: [String: String] = defaultConfiguration.tags,
                     timeUnits: BenchmarkTimeUnits = defaultConfiguration.timeUnits,
+                    units: [BenchmarkMetric: BenchmarkUnits] = defaultConfiguration.units,
                     warmupIterations: Int = defaultConfiguration.warmupIterations,
                     scalingFactor: BenchmarkScalingFactor = defaultConfiguration.scalingFactor,
                     maxDuration: Duration = defaultConfiguration.maxDuration,
@@ -424,6 +428,7 @@ public extension Benchmark {
             self.metrics = metrics
             self.tags = tags
             self.timeUnits = timeUnits
+            self.units = units
             self.warmupIterations = warmupIterations
             self.scalingFactor = scalingFactor
             self.maxDuration = maxDuration
@@ -439,6 +444,7 @@ public extension Benchmark {
             case metrics
             case tags
             case timeUnits
+            case units
             case warmupIterations
             case scalingFactor
             case maxDuration
