@@ -151,6 +151,22 @@ public final class Benchmark: Codable, Hashable { // swiftlint:disable:this type
                                                                    skip: false,
                                                                    thresholds: nil)
 
+#if swift(<5.10)
+    public static var defaultConfiguration: Configuration {
+        get {
+            configurationLock.lock()
+            defer { configurationLock.unlock() }
+            return _defaultConfiguration
+        }
+        set {
+            configurationLock.lock()
+            defer { configurationLock.unlock() }
+            _defaultConfiguration = newValue
+        }
+    }
+#endif
+
+#if swift(>=5.10)
     nonisolated(unsafe)
     public static var defaultConfiguration: Configuration {
         get {
@@ -164,6 +180,7 @@ public final class Benchmark: Codable, Hashable { // swiftlint:disable:this type
             _defaultConfiguration = newValue
         }
     }
+#endif
 
     static var testSkipBenchmarkRegistrations = false // true in test to avoid bench registration fail
     var measurementCompleted = false // Keep track so we skip multiple 'end of measurement'
