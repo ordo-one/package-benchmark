@@ -14,7 +14,7 @@
 ///
 /// Some metrics are only available on macOS or Linux, but you can specify all the metrics without worrying about platform availability.
 /// If a metric is unavailable on a specific platform, the Benchmark system filters unsupported metrics out as needed.
-public enum BenchmarkMetric: Hashable, Equatable, Codable, CustomStringConvertible {
+public enum BenchmarkMetric: Hashable, Equatable, Codable, CustomStringConvertible, Sendable {
     /// CPU user space time spent for running the test
     case cpuUser
     /// CPU system time spent for running the test
@@ -102,7 +102,7 @@ public extension BenchmarkMetric {
 
 public extension BenchmarkMetric {
     /// A constant that states whether larger or smaller measurements, relative to a set baseline, indicate better performance.
-    enum Polarity: Codable { // same naming as XCTest uses, polarity is known for all metrics except custom
+    enum Polarity: Codable, Sendable { // same naming as XCTest uses, polarity is known for all metrics except custom
         /// A performance measurement where a larger value, relative to a set baseline, indicates better performance.
         case prefersLarger
         /// A performance measurement where a smaller value, relative to a set baseline, indicates better performance.
