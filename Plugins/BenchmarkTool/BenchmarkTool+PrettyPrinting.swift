@@ -13,7 +13,7 @@ import Shared
 import SystemPackage
 import TextTable
 
-private let percentileWidth = 7
+private let percentileWidth = 9
 private let maxDescriptionWidth = 100
 
 extension OutputFormat {
@@ -36,6 +36,14 @@ extension BenchmarkTool {
         if format == .text {
             print(markdown, terminator: terminator)
         }
+    }
+
+    private func formatLargeNumber(_ value: Int) -> String {
+        if abs(value) >= 10000000 { // 8 digits or more
+            let doubleValue = Double(value)
+            return String(format: "%.2e", doubleValue)
+        }
+        return "\(value)"
     }
 
     private func formatTableEntry(_ base: Int, _ comparison: Int, _ reversePolarity: Bool = false) -> Int {
@@ -90,16 +98,15 @@ extension BenchmarkTool {
                               useGroupingDescription: Bool = false) {
         let table = TextTable<ScaledResults> {
             [Column(title: title, value: "\($0.description)", width: width, align: .left),
-             Column(title: "p0", value: $0.percentiles.p0, width: percentileWidth, align: .right),
-             Column(title: "p25", value: $0.percentiles.p25, width: percentileWidth, align: .right),
-             Column(title: "p50", value: $0.percentiles.p50, width: percentileWidth, align: .right),
-             Column(title: "p75", value: $0.percentiles.p75, width: percentileWidth, align: .right),
-             Column(title: "p90", value: $0.percentiles.p90, width: percentileWidth, align: .right),
-             Column(title: "p99", value: $0.percentiles.p99, width: percentileWidth, align: .right),
-             Column(title: "p100", value: $0.percentiles.p100, width: percentileWidth, align: .right),
-             Column(title: "Samples", value: $0.samples, width: percentileWidth, align: .right)]
+             Column(title: "p0", value: formatLargeNumber($0.percentiles.p0), width: percentileWidth, align: .right),
+             Column(title: "p25", value: formatLargeNumber($0.percentiles.p25), width: percentileWidth, align: .right),
+             Column(title: "p50", value: formatLargeNumber($0.percentiles.p50), width: percentileWidth, align: .right),
+             Column(title: "p75", value: formatLargeNumber($0.percentiles.p75), width: percentileWidth, align: .right),
+             Column(title: "p90", value: formatLargeNumber($0.percentiles.p90), width: percentileWidth, align: .right),
+             Column(title: "p99", value: formatLargeNumber($0.percentiles.p99), width: percentileWidth, align: .right),
+             Column(title: "p100", value: formatLargeNumber($0.percentiles.p100), width: percentileWidth, align: .right),
+             Column(title: "Samples", value: formatLargeNumber($0.samples), width: percentileWidth, align: .right)]
         }
-
         var scaledResults: [ScaledResults] = []
         results.forEach { result in
             var resultPercentiles = ScaledResults.Percentiles()
@@ -258,14 +265,14 @@ extension BenchmarkTool {
                             let width = 40
                             let table = TextTable<ScaledResults> {
                                 [Column(title: title, value: "\($0.description)", width: width, align: .center),
-                                 Column(title: "p0", value: $0.percentiles.p0, width: percentileWidth, align: .right),
-                                 Column(title: "p25", value: $0.percentiles.p25, width: percentileWidth, align: .right),
-                                 Column(title: "p50", value: $0.percentiles.p50, width: percentileWidth, align: .right),
-                                 Column(title: "p75", value: $0.percentiles.p75, width: percentileWidth, align: .right),
-                                 Column(title: "p90", value: $0.percentiles.p90, width: percentileWidth, align: .right),
-                                 Column(title: "p99", value: $0.percentiles.p99, width: percentileWidth, align: .right),
-                                 Column(title: "p100", value: $0.percentiles.p100, width: percentileWidth, align: .right),
-                                 Column(title: "Samples", value: $0.samples, width: percentileWidth, align: .right)]
+                                 Column(title: "p0", value: formatLargeNumber($0.percentiles.p0), width: percentileWidth, align: .right),
+                                 Column(title: "p25", value: formatLargeNumber($0.percentiles.p25), width: percentileWidth, align: .right),
+                                 Column(title: "p50", value: formatLargeNumber($0.percentiles.p50), width: percentileWidth, align: .right),
+                                 Column(title: "p75", value: formatLargeNumber($0.percentiles.p75), width: percentileWidth, align: .right),
+                                 Column(title: "p90", value: formatLargeNumber($0.percentiles.p90), width: percentileWidth, align: .right),
+                                 Column(title: "p99", value: formatLargeNumber($0.percentiles.p99), width: percentileWidth, align: .right),
+                                 Column(title: "p100", value: formatLargeNumber($0.percentiles.p100), width: percentileWidth, align: .right),
+                                 Column(title: "Samples", value: formatLargeNumber($0.samples), width: percentileWidth, align: .right)]
                             }
 
                             // Rescale result to base if needed
