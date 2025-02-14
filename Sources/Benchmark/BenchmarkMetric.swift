@@ -288,8 +288,7 @@ public extension BenchmarkMetric {
 
     // Used by the Benchmark Executor for efficient indexing into results
     @_documentation(visibility: internal)
-    // swiftlint:disable:next cyclomatic_complexity function_body_length
-    func metricFor(index: Int) -> BenchmarkMetric {
+    func metricFor(index: Int) -> BenchmarkMetric { // swiftlint:disable:this cyclomatic_complexity function_body_length
         switch index {
         case 1:
             return .cpuUser

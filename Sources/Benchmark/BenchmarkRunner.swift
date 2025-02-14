@@ -23,7 +23,6 @@ import Shared
 extension TimeUnits: ExpressibleByArgument {}
 
 @_documentation(visibility: internal)
-/// Internal type that will be hidden from documentation when upgrading doc generation to Swift 5.8+
 public protocol BenchmarkRunnerHooks {
     static func main() async
     static func registerBenchmarks()
@@ -37,7 +36,6 @@ public extension BenchmarkRunnerHooks {
 }
 
 @_documentation(visibility: internal)
-/// Internal type that will be hidden from documentation when upgrading doc generation to Swift 5.8+
 public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
     static var testReadWrite: BenchmarkRunnerReadWrite?
 
