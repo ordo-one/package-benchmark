@@ -13,7 +13,7 @@ import Foundation
 // swiftlint:disable file_length identifier_name
 
 /// Defines a benchmark
-public final class Benchmark: Codable, Hashable {
+public final class Benchmark: Codable, Hashable { // swiftlint:disable:this type_body_length
     #if swift(>=5.8)
         @_documentation(visibility: internal)
     #endif
