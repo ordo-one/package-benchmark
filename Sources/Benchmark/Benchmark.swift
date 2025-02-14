@@ -10,10 +10,10 @@
 
 import Dispatch
 import Foundation
-// swiftlint:disable file_length
+// swiftlint:disable file_length identifier_name
 
 /// Defines a benchmark
-public final class Benchmark: Codable, Hashable { // swiftlint:disable:this type_body_length
+public final class Benchmark: Codable, Hashable {
     #if swift(>=5.8)
         @_documentation(visibility: internal)
     #endif
@@ -43,7 +43,6 @@ public final class Benchmark: Codable, Hashable { // swiftlint:disable:this type
     public typealias BenchmarkSetupHook = () async throws -> Void
     public typealias BenchmarkTeardownHook = () async throws -> Void
 
-
     private static let setupTeardownLock = NSLock()
 
     #if swift(>=5.8)
@@ -69,7 +68,6 @@ public final class Benchmark: Codable, Hashable { // swiftlint:disable:this type
     #endif
     @ThreadSafeProperty(wrappedValue: nil, lock: setupTeardownLock)
     public static var _teardown: BenchmarkTeardownHook?
-
 
 #if swift(<5.10)
 #if swift(>=5.8)
@@ -572,8 +570,6 @@ public extension Benchmark {
     @_optimize(none) // Used after tip here: https://forums.swift.org/t/compiler-swallows-blackhole/64305/10 - see also https://github.com/apple/swift/commit/1fceeab71e79dc96f1b6f560bf745b016d7fcdcf
     static func blackHole(_: some Any) {}
 }
-// swiftlint:enable file_length
-
 
 // Wrapper for static properties for Swift 6 mode compatibility
 @propertyWrapper
@@ -599,3 +595,5 @@ public struct ThreadSafeProperty<T> {
         }
     }
 }
+
+// swiftlint:enable file_length identifier_name
