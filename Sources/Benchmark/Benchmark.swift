@@ -72,9 +72,7 @@ public final class Benchmark: Codable, Hashable { // swiftlint:disable:this type
         get { _teardown  }
         set { _teardown = newValue }
     }
-#endif
-
-#if swift(>=5.10)
+#elseif swift(>=5.10)
     @_documentation(visibility: internal)
     nonisolated(unsafe)
     public static var startupHook: BenchmarkSetupHook? {
@@ -192,9 +190,7 @@ public final class Benchmark: Codable, Hashable { // swiftlint:disable:this type
         get { _defaultConfiguration  }
         set { _defaultConfiguration = newValue }
     }
-#endif
-
-#if swift(>=5.10)
+#elseif swift(>=5.10)
     nonisolated(unsafe)
     public static var defaultConfiguration: Configuration {
         get { _defaultConfiguration  }
