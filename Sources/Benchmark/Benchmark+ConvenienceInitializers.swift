@@ -6,6 +6,8 @@ public extension Benchmark {
     ///   - configuration: Defines the settings that should be used for this benchmark
     ///   - closure: The actual benchmark closure that will be measured, this one takes one additional parameter
     ///   apart from the benchmark instance, which is the generic SetupResult type returned from the setup
+    ///   - setup: A closure that will be run once before the benchmark iterations are run
+    ///   - teardown: A closure that will be run once after the benchmark iterations are done
     @discardableResult
     convenience init?<SetupResult>(_ name: String,
                                    configuration: Benchmark.Configuration = Benchmark.defaultConfiguration,
@@ -31,6 +33,8 @@ public extension Benchmark {
     ///   - configuration: Defines the settings that should be used for this benchmark
     ///   - closure: The actual `async` benchmark closure that will be measured, this one takes one additional parameter
     ///   apart from the benchmark instance, which is the generic SetupResult type returned from the setup
+    ///   - setup: A closure that will be run once before the benchmark iterations are run
+    ///   - teardown: A closure that will be run once after the benchmark iterations are done
     @discardableResult
     convenience init?<SetupResult>(_ name: String,
                                    configuration: Benchmark.Configuration = Benchmark.defaultConfiguration,
@@ -56,6 +60,8 @@ public extension Benchmark {
     ///   - configuration: Defines the settings that should be used for this benchmark
     ///   - closure: The actual throwing benchmark closure that will be measured, this one takes one additional parameter
     ///   apart from the benchmark instance, which is the generic SetupResult type returned from the setup
+    ///   - setup: A closure that will be run once before the benchmark iterations are run
+    ///   - teardown: A closure that will be run once after the benchmark iterations are done
     @discardableResult
     convenience init?<SetupResult>(_ name: String,
                                    configuration: Benchmark.Configuration = Benchmark.defaultConfiguration,
@@ -83,6 +89,8 @@ public extension Benchmark {
     ///   - configuration: Defines the settings that should be used for this benchmark
     ///   - closure: The actual async throwing benchmark closure that will be measured, this one takes one additional parameter
     ///   apart from the benchmark instance, which is the generic SetupResult type returned from the setup
+    ///   - setup: A closure that will be run once before the benchmark iterations are run
+    ///   - teardown: A closure that will be run once after the benchmark iterations are done
     @discardableResult
     convenience init?<SetupResult>(_ name: String,
                                    configuration: Benchmark.Configuration = Benchmark.defaultConfiguration,

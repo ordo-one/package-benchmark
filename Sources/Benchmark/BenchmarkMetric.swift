@@ -76,20 +76,14 @@ public enum BenchmarkMetric: Hashable, Equatable, Codable, CustomStringConvertib
     case custom(_ name: String, polarity: Polarity = .prefersSmaller, useScalingFactor: Bool = true)
 
     /// Used internally as placeholders for formatting deltas in an easy way, please don't use
-    #if swift(>=5.8)
-        @_documentation(visibility: internal)
-    #endif
+    @_documentation(visibility: internal)
     case delta
-    #if swift(>=5.8)
-        @_documentation(visibility: internal)
-    #endif
+    @_documentation(visibility: internal)
     case deltaPercentage
 }
 
 // We don't want to take polarity and useScalingFactor into consideration as it makes dealing with custom metrics hard
-#if swift(>=5.8)
-    @_documentation(visibility: internal)
-#endif
+@_documentation(visibility: internal)
 public extension BenchmarkMetric {
     func hash(into hasher: inout Hasher) {
         hasher.combine(description)
@@ -225,9 +219,7 @@ public extension BenchmarkMetric {
     }
 
     // Used by the Benchmark Executor for efficient indexing into results
-    #if swift(>=5.8)
-        @_documentation(visibility: internal)
-    #endif
+    @_documentation(visibility: internal)
     var index: Int {
         switch self {
         case .cpuUser:
@@ -291,15 +283,11 @@ public extension BenchmarkMetric {
         }
     }
 
-    #if swift(>=5.8)
-        @_documentation(visibility: internal)
-    #endif
+    @_documentation(visibility: internal)
     static var maxIndex: Int { 28} //
 
     // Used by the Benchmark Executor for efficient indexing into results
-    #if swift(>=5.8)
-        @_documentation(visibility: internal)
-    #endif
+    @_documentation(visibility: internal)
     // swiftlint:disable:next cyclomatic_complexity function_body_length
     func metricFor(index: Int) -> BenchmarkMetric {
         switch index {
@@ -366,9 +354,7 @@ public extension BenchmarkMetric {
     }
 }
 
-#if swift(>=5.8)
-    @_documentation(visibility: internal)
-#endif
+@_documentation(visibility: internal)
 public extension BenchmarkMetric {
     var rawDescription: String { // As we can't have raw values due to custom support, we do this...
         switch self {
@@ -440,9 +426,7 @@ public extension BenchmarkMetric {
 
 // swiftlint:disable cyclomatic_complexity function_body_length
 // As we can't have raw values and associated data we add this...
-#if swift(>=5.8)
-    @_documentation(visibility: internal)
-#endif
+@_documentation(visibility: internal)
 public extension BenchmarkMetric {
     init?(argument: String) {
         switch argument {

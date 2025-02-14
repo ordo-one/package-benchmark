@@ -11,7 +11,7 @@
 - ``BenchmarkTimeUnits/seconds``
 - ``BenchmarkTimeUnits/kiloseconds``
 - ``BenchmarkTimeUnits/megaseconds``
-- ``BenchmarkTimeUnits/init(_:)``
+- ``BenchmarkTimeUnits/init(_:)-3tc3e``
 - ``BenchmarkTimeUnits/init(rawValue:)``
 
 ### Describing Time Units

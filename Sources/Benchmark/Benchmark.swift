@@ -14,29 +14,17 @@ import Foundation
 
 /// Defines a benchmark
 public final class Benchmark: Codable, Hashable { // swiftlint:disable:this type_body_length
-    #if swift(>=5.8)
-        @_documentation(visibility: internal)
-    #endif
+    @_documentation(visibility: internal)
     public typealias BenchmarkClosure = (_ benchmark: Benchmark) -> Void
-    #if swift(>=5.8)
-        @_documentation(visibility: internal)
-    #endif
+    @_documentation(visibility: internal)
     public typealias BenchmarkAsyncClosure = (_ benchmark: Benchmark) async -> Void
-    #if swift(>=5.8)
-        @_documentation(visibility: internal)
-    #endif
+    @_documentation(visibility: internal)
     public typealias BenchmarkThrowingClosure = (_ benchmark: Benchmark) throws -> Void
-    #if swift(>=5.8)
-        @_documentation(visibility: internal)
-    #endif
+    @_documentation(visibility: internal)
     public typealias BenchmarkAsyncThrowingClosure = (_ benchmark: Benchmark) async throws -> Void
-    #if swift(>=5.8)
-        @_documentation(visibility: internal)
-    #endif
+    @_documentation(visibility: internal)
     public typealias BenchmarkMeasurementSynchronization = (_ explicitStartStop: Bool) -> Void
-    #if swift(>=5.8)
-        @_documentation(visibility: internal)
-    #endif
+    @_documentation(visibility: internal)
     public typealias BenchmarkCustomMetricMeasurement = (BenchmarkMetric, Int) -> Void
 
     /// Alias for closures used to hook into setup / teardown
@@ -45,41 +33,29 @@ public final class Benchmark: Codable, Hashable { // swiftlint:disable:this type
 
     private static let setupTeardownLock = NSLock()
 
-    #if swift(>=5.8)
-        @_documentation(visibility: internal)
-    #endif
+    @_documentation(visibility: internal)
     @ThreadSafeProperty(wrappedValue: nil, lock: setupTeardownLock)
     public static var _startupHook: BenchmarkSetupHook? // Should be removed when going to 2.0, just kept for API compatiblity
 
-    #if swift(>=5.8)
-        @_documentation(visibility: internal)
-    #endif
+    @_documentation(visibility: internal)
     @ThreadSafeProperty(wrappedValue: nil, lock: setupTeardownLock)
     public static var _shutdownHook: BenchmarkTeardownHook? // Should be removed when going to 2.0, just kept for API compatiblity
 
-    #if swift(>=5.8)
-        @_documentation(visibility: internal)
-    #endif
+    @_documentation(visibility: internal)
     @ThreadSafeProperty(wrappedValue: nil, lock: setupTeardownLock)
     public static var _setup: BenchmarkSetupHook?
 
-    #if swift(>=5.8)
-        @_documentation(visibility: internal)
-    #endif
+    @_documentation(visibility: internal)
     @ThreadSafeProperty(wrappedValue: nil, lock: setupTeardownLock)
     public static var _teardown: BenchmarkTeardownHook?
 
 #if swift(<5.10)
-#if swift(>=5.8)
     @_documentation(visibility: internal)
-#endif
     public static var startupHook: BenchmarkSetupHook? {
         get { _startupHook  }
         set { _startupHook = newValue }
     }
-#if swift(>=5.8)
     @_documentation(visibility: internal)
-#endif
     public static var shutdownHook: BenchmarkTeardownHook? {
         get { _shutdownHook  }
         set { _shutdownHook = newValue }
@@ -99,18 +75,14 @@ public final class Benchmark: Codable, Hashable { // swiftlint:disable:this type
 #endif
 
 #if swift(>=5.10)
-#if swift(>=5.8)
     @_documentation(visibility: internal)
-#endif
     nonisolated(unsafe)
     public static var startupHook: BenchmarkSetupHook? {
         get { _startupHook  }
         set { _startupHook = newValue }
     }
 
-#if swift(>=5.8)
     @_documentation(visibility: internal)
-#endif
     nonisolated(unsafe)
     public static var shutdownHook: BenchmarkTeardownHook? {
         get { _shutdownHook  }
@@ -138,9 +110,7 @@ public final class Benchmark: Codable, Hashable { // swiftlint:disable:this type
     @available(*, deprecated, message: "The checking of absolute thresholds should now be done using `swift package benchmark thresholds`")
     public static var checkAbsoluteThresholds = false
 
-    #if swift(>=5.8)
-        @_documentation(visibility: internal)
-    #endif
+    @_documentation(visibility: internal)
     public static var benchmarks: [Benchmark] = [] // Bookkeeping of all registered benchmarks
 
     /// The name of the benchmark without any of the tags appended
@@ -176,13 +146,9 @@ public final class Benchmark: Codable, Hashable { // swiftlint:disable:this type
     public var scaledIterations: Range<Int> { 0 ..< configuration.scalingFactor.rawValue }
 
     /// Some internal state for display purposes of the benchmark by the BenchmarkTool
-    #if swift(>=5.8)
-        @_documentation(visibility: internal)
-    #endif
+    @_documentation(visibility: internal)
     public var target: String
-    #if swift(>=5.8)
-        @_documentation(visibility: internal)
-    #endif
+    @_documentation(visibility: internal)
     public var executablePath: String?
     /// closure: The actual benchmark closure that will be measured
     var closure: BenchmarkClosure? // The actual benchmark to run
@@ -196,13 +162,9 @@ public final class Benchmark: Codable, Hashable { // swiftlint:disable:this type
     public var setupState: Any?
 
     // Hooks for benchmark infrastructure to capture metrics of actual measurement() block without preamble:
-    #if swift(>=5.8)
-        @_documentation(visibility: internal)
-    #endif
+    @_documentation(visibility: internal)
     public var measurementPreSynchronization: BenchmarkMeasurementSynchronization?
-    #if swift(>=5.8)
-        @_documentation(visibility: internal)
-    #endif
+    @_documentation(visibility: internal)
     public var measurementPostSynchronization: BenchmarkMeasurementSynchronization?
 
     // Hook for custom metrics capturing
@@ -251,16 +213,12 @@ public final class Benchmark: Codable, Hashable { // swiftlint:disable:this type
         case failureReason
     }
 
-    #if swift(>=5.8)
-        @_documentation(visibility: internal)
-    #endif
+    @_documentation(visibility: internal)
     public func hash(into hasher: inout Hasher) {
         hasher.combine(name)
     }
 
-    #if swift(>=5.8)
-        @_documentation(visibility: internal)
-    #endif
+    @_documentation(visibility: internal)
     public static func == (lhs: Benchmark, rhs: Benchmark) -> Bool {
         lhs.name == rhs.name
     }
@@ -271,6 +229,8 @@ public final class Benchmark: Codable, Hashable { // swiftlint:disable:this type
     ///   matching when comparing to baselines)
     ///   - configuration: Defines the settings that should be used for this benchmark
     ///   - closure: The actual benchmark closure that will be measured
+    ///   - setup: A closure that will be run once before the benchmark iterations are run
+    ///   - teardown: A closure that will be run once after the benchmark iterations are done
     @discardableResult
     public init?(_ name: String,
                  configuration: Benchmark.Configuration = Benchmark.defaultConfiguration,
@@ -296,6 +256,8 @@ public final class Benchmark: Codable, Hashable { // swiftlint:disable:this type
     ///   matching when comparing to baselines)
     ///   - configuration: Defines the settings that should be used for this benchmark
     ///   - closure: The actual `async` benchmark closure that will be measured
+    ///   - setup: A closure that will be run once before the benchmark iterations are run
+    ///   - teardown: A closure that will be run once after the benchmark iterations are done
     @discardableResult
     public init?(_ name: String,
                  configuration: Benchmark.Configuration = Benchmark.defaultConfiguration,
@@ -321,6 +283,8 @@ public final class Benchmark: Codable, Hashable { // swiftlint:disable:this type
     ///   matching when comparing to baselines)
     ///   - configuration: Defines the settings that should be used for this benchmark
     ///   - closure: The actual throwing benchmark closure that will be measured
+    ///   - setup: A closure that will be run once before the benchmark iterations are run
+    ///   - teardown: A closure that will be run once after the benchmark iterations are done
     @discardableResult
     public convenience init?(_ name: String,
                              configuration: Benchmark.Configuration = Benchmark.defaultConfiguration,
@@ -342,6 +306,8 @@ public final class Benchmark: Codable, Hashable { // swiftlint:disable:this type
     ///   matching when comparing to baselines)
     ///   - configuration: Defines the settings that should be used for this benchmark
     ///   - closure: The actual async throwing benchmark closure that will be measured
+    ///   - setup: A closure that will be run once before the benchmark iterations are run
+    ///   - teardown: A closure that will be run once after the benchmark iterations are done
     @discardableResult
     public convenience init?(_ name: String,
                              configuration: Benchmark.Configuration = Benchmark.defaultConfiguration,
@@ -456,9 +422,7 @@ public final class Benchmark: Codable, Hashable { // swiftlint:disable:this type
     }
 
     // Public but should only be used by BenchmarkRunner
-    #if swift(>=5.8)
-        @_documentation(visibility: internal)
-    #endif
+    @_documentation(visibility: internal)
     public func run() {
         if let closure {
             _startMeasurement(false)
