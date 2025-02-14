@@ -18,9 +18,9 @@ func sharedTeardown() {
 }
 
 func testSetUpTearDown() {
-    //    Benchmark.setup = { print("Global setup hook")}
+//    Benchmark.setup = { print("Global setup hook")}
 //        Benchmark.setup = { 123 }
-    //    Benchmark.teardown = { print("Global teardown hook") }
+//    Benchmark.teardown = { print("Global teardown hook") }
 
     Benchmark("SetupTeardown",
               configuration: .init(setup: sharedSetup, teardown: sharedTeardown)) { _ in

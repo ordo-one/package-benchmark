@@ -18,7 +18,7 @@ import Foundation
     #error("Unsupported Platform")
 #endif
 
-let benchmarks = {
+let benchmarks: @Sendable () -> Void = {
     var thresholdTolerances: [BenchmarkMetric: BenchmarkThresholds]
     let relative: BenchmarkThresholds.RelativeThresholds = [.p25: 25.0, .p50: 50.0, .p75: 75.0, .p90: 100.0, .p99: 101.0, .p100: 201.0]
     let absolute: BenchmarkThresholds.AbsoluteThresholds = [.p75: 999, .p90: 1_000, .p99: 1_001, .p100: 2_001]

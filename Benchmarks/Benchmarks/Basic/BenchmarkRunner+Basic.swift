@@ -21,22 +21,10 @@ import Glibc
 // quiet swiftlint for now
 extension BenchmarkRunner {}
 
-let benchmarks = {
+let benchmarks: @Sendable () -> Void = {
     var thresholdTolerances: [BenchmarkMetric: BenchmarkThresholds]
 
-    if Benchmark.checkAbsoluteThresholds {
-        let absolute: BenchmarkThresholds.AbsoluteThresholds = [.p0: .microseconds(1),
-                                                                .p25: .microseconds(1),
-                                                                .p50: .microseconds(2_500),
-                                                                .p75: .microseconds(1),
-                                                                .p90: .microseconds(2),
-                                                                .p99: .milliseconds(3),
-                                                                .p100: .milliseconds(1)]
-
-        thresholdTolerances = [.wallClock: .init(absolute: absolute)]
-    } else {
-        thresholdTolerances = [.wallClock: .relaxed]
-    }
+    thresholdTolerances = [.wallClock: .relaxed]
 
     Benchmark.defaultConfiguration = .init(warmupIterations: 0,
                                            maxDuration: .seconds(1),
