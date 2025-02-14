@@ -10,54 +10,98 @@
 
 import Dispatch
 import Foundation
-// swiftlint:disable file_length
+// swiftlint:disable file_length identifier_name
 
 /// Defines a benchmark
 public final class Benchmark: Codable, Hashable { // swiftlint:disable:this type_body_length
-    #if swift(>=5.8)
-        @_documentation(visibility: internal)
-    #endif
+    @_documentation(visibility: internal)
     public typealias BenchmarkClosure = (_ benchmark: Benchmark) -> Void
-    #if swift(>=5.8)
-        @_documentation(visibility: internal)
-    #endif
+    @_documentation(visibility: internal)
     public typealias BenchmarkAsyncClosure = (_ benchmark: Benchmark) async -> Void
-    #if swift(>=5.8)
-        @_documentation(visibility: internal)
-    #endif
+    @_documentation(visibility: internal)
     public typealias BenchmarkThrowingClosure = (_ benchmark: Benchmark) throws -> Void
-    #if swift(>=5.8)
-        @_documentation(visibility: internal)
-    #endif
+    @_documentation(visibility: internal)
     public typealias BenchmarkAsyncThrowingClosure = (_ benchmark: Benchmark) async throws -> Void
-    #if swift(>=5.8)
-        @_documentation(visibility: internal)
-    #endif
+    @_documentation(visibility: internal)
     public typealias BenchmarkMeasurementSynchronization = (_ explicitStartStop: Bool) -> Void
-    #if swift(>=5.8)
-        @_documentation(visibility: internal)
-    #endif
+    @_documentation(visibility: internal)
     public typealias BenchmarkCustomMetricMeasurement = (BenchmarkMetric, Int) -> Void
 
     /// Alias for closures used to hook into setup / teardown
     public typealias BenchmarkSetupHook = () async throws -> Void
     public typealias BenchmarkTeardownHook = () async throws -> Void
 
-    #if swift(>=5.8)
-        @_documentation(visibility: internal)
-    #endif
-    public static var startupHook: BenchmarkSetupHook? // Should be removed when going to 2.0, just kept for API compatiblity
+    private static let setupTeardownLock = NSLock()
 
-    #if swift(>=5.8)
-        @_documentation(visibility: internal)
-    #endif
-    public static var shutdownHook: BenchmarkTeardownHook? // Should be removed when going to 2.0, just kept for API compatiblity
+    @_documentation(visibility: internal)
+    @ThreadSafeProperty(wrappedValue: nil, lock: setupTeardownLock)
+    public static var _startupHook: BenchmarkSetupHook? // Should be removed when going to 2.0, just kept for API compatiblity
+
+    @_documentation(visibility: internal)
+    @ThreadSafeProperty(wrappedValue: nil, lock: setupTeardownLock)
+    public static var _shutdownHook: BenchmarkTeardownHook? // Should be removed when going to 2.0, just kept for API compatiblity
+
+    @_documentation(visibility: internal)
+    @ThreadSafeProperty(wrappedValue: nil, lock: setupTeardownLock)
+    public static var _setup: BenchmarkSetupHook?
+
+    @_documentation(visibility: internal)
+    @ThreadSafeProperty(wrappedValue: nil, lock: setupTeardownLock)
+    public static var _teardown: BenchmarkTeardownHook?
+
+#if swift(<5.10)
+    @_documentation(visibility: internal)
+    public static var startupHook: BenchmarkSetupHook? {
+        get { _startupHook  }
+        set { _startupHook = newValue }
+    }
+    
+    @_documentation(visibility: internal)
+    public static var shutdownHook: BenchmarkTeardownHook? {
+        get { _shutdownHook  }
+        set { _shutdownHook = newValue }
+    }
 
     /// This closure if set, will be run before a targets benchmarks are run, but after they are registered
-    public static var setup: BenchmarkSetupHook?
+    public static var setup: BenchmarkSetupHook? {
+        get { _setup  }
+        set { _setup = newValue }
+    }
 
     /// This closure if set, will be run after a targets benchmarks run, but after they are registered
-    public static var teardown: BenchmarkTeardownHook?
+    public static var teardown: BenchmarkTeardownHook? {
+        get { _teardown  }
+        set { _teardown = newValue }
+    }
+#elseif swift(>=5.10)
+    @_documentation(visibility: internal)
+    nonisolated(unsafe)
+    public static var startupHook: BenchmarkSetupHook? {
+        get { _startupHook  }
+        set { _startupHook = newValue }
+    }
+
+    @_documentation(visibility: internal)
+    nonisolated(unsafe)
+    public static var shutdownHook: BenchmarkTeardownHook? {
+        get { _shutdownHook  }
+        set { _shutdownHook = newValue }
+    }
+
+    /// This closure if set, will be run before a targets benchmarks are run, but after they are registered
+    nonisolated(unsafe)
+    public static var setup: BenchmarkSetupHook? {
+        get { _setup  }
+        set { _setup = newValue }
+    }
+
+    /// This closure if set, will be run after a targets benchmarks run, but after they are registered
+    nonisolated(unsafe)
+    public static var teardown: BenchmarkTeardownHook? {
+        get { _teardown  }
+        set { _teardown = newValue }
+    }
+#endif
 
     /// Set to true if this benchmark results should be compared with an absolute threshold when `--check-absolute` is
     /// specified on the command line. An implementation can then choose to configure thresholds differently for
@@ -65,9 +109,7 @@ public final class Benchmark: Codable, Hashable { // swiftlint:disable:this type
     @available(*, deprecated, message: "The checking of absolute thresholds should now be done using `swift package benchmark thresholds`")
     public static var checkAbsoluteThresholds = false
 
-    #if swift(>=5.8)
-        @_documentation(visibility: internal)
-    #endif
+    @_documentation(visibility: internal)
     public static var benchmarks: [Benchmark] = [] // Bookkeeping of all registered benchmarks
 
     /// The name of the benchmark without any of the tags appended
@@ -103,13 +145,9 @@ public final class Benchmark: Codable, Hashable { // swiftlint:disable:this type
     public var scaledIterations: Range<Int> { 0 ..< configuration.scalingFactor.rawValue }
 
     /// Some internal state for display purposes of the benchmark by the BenchmarkTool
-    #if swift(>=5.8)
-        @_documentation(visibility: internal)
-    #endif
+    @_documentation(visibility: internal)
     public var target: String
-    #if swift(>=5.8)
-        @_documentation(visibility: internal)
-    #endif
+    @_documentation(visibility: internal)
     public var executablePath: String?
     /// closure: The actual benchmark closure that will be measured
     var closure: BenchmarkClosure? // The actual benchmark to run
@@ -123,13 +161,9 @@ public final class Benchmark: Codable, Hashable { // swiftlint:disable:this type
     public var setupState: Any?
 
     // Hooks for benchmark infrastructure to capture metrics of actual measurement() block without preamble:
-    #if swift(>=5.8)
-        @_documentation(visibility: internal)
-    #endif
+    @_documentation(visibility: internal)
     public var measurementPreSynchronization: BenchmarkMeasurementSynchronization?
-    #if swift(>=5.8)
-        @_documentation(visibility: internal)
-    #endif
+    @_documentation(visibility: internal)
     public var measurementPostSynchronization: BenchmarkMeasurementSynchronization?
 
     // Hook for custom metrics capturing
@@ -140,45 +174,28 @@ public final class Benchmark: Codable, Hashable { // swiftlint:disable:this type
 
     /// Hook for setting defaults for a whole benchmark suite
     private static let configurationLock = NSLock()
-    private static var _defaultConfiguration: Configuration = .init(metrics: BenchmarkMetric.default,
-                                                                    tags: [:],
-                                                                    timeUnits: .automatic,
-                                                                    units: [:],
-                                                                    warmupIterations: 1,
-                                                                    scalingFactor: .one,
-                                                                    maxDuration: .seconds(1),
-                                                                    maxIterations: 10_000,
-                                                                    skip: false,
-                                                                    thresholds: nil)
+    @ThreadSafeProperty(wrappedValue: .init(metrics: BenchmarkMetric.default,
+                                            tags: [:],
+                                            timeUnits: .automatic,
+                                            units: [:],
+                                            warmupIterations: 1,
+                                            scalingFactor: .one,
+                                            maxDuration: .seconds(1),
+                                            maxIterations: 10_000,
+                                            skip: false,
+                                            thresholds: nil), lock: configurationLock)
+    private static var _defaultConfiguration: Configuration
 
 #if swift(<5.10)
     public static var defaultConfiguration: Configuration {
-        get {
-            configurationLock.lock()
-            defer { configurationLock.unlock() }
-            return _defaultConfiguration
-        }
-        set {
-            configurationLock.lock()
-            defer { configurationLock.unlock() }
-            _defaultConfiguration = newValue
-        }
+        get { _defaultConfiguration  }
+        set { _defaultConfiguration = newValue }
     }
-#endif
-
-#if swift(>=5.10)
+#elseif swift(>=5.10)
     nonisolated(unsafe)
     public static var defaultConfiguration: Configuration {
-        get {
-            configurationLock.lock()
-            defer { configurationLock.unlock() }
-            return _defaultConfiguration
-        }
-        set {
-            configurationLock.lock()
-            defer { configurationLock.unlock() }
-            _defaultConfiguration = newValue
-        }
+        get { _defaultConfiguration  }
+        set { _defaultConfiguration = newValue }
     }
 #endif
 
@@ -193,16 +210,12 @@ public final class Benchmark: Codable, Hashable { // swiftlint:disable:this type
         case failureReason
     }
 
-    #if swift(>=5.8)
-        @_documentation(visibility: internal)
-    #endif
+    @_documentation(visibility: internal)
     public func hash(into hasher: inout Hasher) {
         hasher.combine(name)
     }
 
-    #if swift(>=5.8)
-        @_documentation(visibility: internal)
-    #endif
+    @_documentation(visibility: internal)
     public static func == (lhs: Benchmark, rhs: Benchmark) -> Bool {
         lhs.name == rhs.name
     }
@@ -213,6 +226,8 @@ public final class Benchmark: Codable, Hashable { // swiftlint:disable:this type
     ///   matching when comparing to baselines)
     ///   - configuration: Defines the settings that should be used for this benchmark
     ///   - closure: The actual benchmark closure that will be measured
+    ///   - setup: A closure that will be run once before the benchmark iterations are run
+    ///   - teardown: A closure that will be run once after the benchmark iterations are done
     @discardableResult
     public init?(_ name: String,
                  configuration: Benchmark.Configuration = Benchmark.defaultConfiguration,
@@ -238,6 +253,8 @@ public final class Benchmark: Codable, Hashable { // swiftlint:disable:this type
     ///   matching when comparing to baselines)
     ///   - configuration: Defines the settings that should be used for this benchmark
     ///   - closure: The actual `async` benchmark closure that will be measured
+    ///   - setup: A closure that will be run once before the benchmark iterations are run
+    ///   - teardown: A closure that will be run once after the benchmark iterations are done
     @discardableResult
     public init?(_ name: String,
                  configuration: Benchmark.Configuration = Benchmark.defaultConfiguration,
@@ -263,6 +280,8 @@ public final class Benchmark: Codable, Hashable { // swiftlint:disable:this type
     ///   matching when comparing to baselines)
     ///   - configuration: Defines the settings that should be used for this benchmark
     ///   - closure: The actual throwing benchmark closure that will be measured
+    ///   - setup: A closure that will be run once before the benchmark iterations are run
+    ///   - teardown: A closure that will be run once after the benchmark iterations are done
     @discardableResult
     public convenience init?(_ name: String,
                              configuration: Benchmark.Configuration = Benchmark.defaultConfiguration,
@@ -284,6 +303,8 @@ public final class Benchmark: Codable, Hashable { // swiftlint:disable:this type
     ///   matching when comparing to baselines)
     ///   - configuration: Defines the settings that should be used for this benchmark
     ///   - closure: The actual async throwing benchmark closure that will be measured
+    ///   - setup: A closure that will be run once before the benchmark iterations are run
+    ///   - teardown: A closure that will be run once after the benchmark iterations are done
     @discardableResult
     public convenience init?(_ name: String,
                              configuration: Benchmark.Configuration = Benchmark.defaultConfiguration,
@@ -398,9 +419,7 @@ public final class Benchmark: Codable, Hashable { // swiftlint:disable:this type
     }
 
     // Public but should only be used by BenchmarkRunner
-    #if swift(>=5.8)
-        @_documentation(visibility: internal)
-    #endif
+    @_documentation(visibility: internal)
     public func run() {
         if let closure {
             _startMeasurement(false)
@@ -512,4 +531,30 @@ public extension Benchmark {
     @_optimize(none) // Used after tip here: https://forums.swift.org/t/compiler-swallows-blackhole/64305/10 - see also https://github.com/apple/swift/commit/1fceeab71e79dc96f1b6f560bf745b016d7fcdcf
     static func blackHole(_: some Any) {}
 }
-// swiftlint:enable file_length
+
+// Wrapper for static properties for Swift 6 mode compatibility
+@propertyWrapper
+public struct ThreadSafeProperty<T> {
+    private var value: T
+    private let lock: NSLock
+
+    public init(wrappedValue: T, lock: NSLock) {
+        self.value = wrappedValue
+        self.lock = lock
+    }
+
+    public var wrappedValue: T {
+        get {
+            lock.lock()
+            defer { lock.unlock() }
+            return value
+        }
+        set {
+            lock.lock()
+            defer { lock.unlock() }
+            value = newValue
+        }
+    }
+}
+
+// swiftlint:enable file_length identifier_name

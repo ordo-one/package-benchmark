@@ -14,14 +14,19 @@ jobs:
       fail-fast: false
       matrix:
         os: [macos-14]
-        swift: ["5.9", "5.10"]
+        xcode: ["15.2", "15.3"]
+        #swift: ["5.9", "5.10"]
 
     runs-on: ${{ matrix.os }}
 
     steps:
     - uses: swift-actions/setup-swift@v2
+      if: ${{ false }}
       with:
         swift-version: ${{ matrix.swift }}
+    - uses: maxim-lobanov/setup-xcode@v1
+      with:
+        xcode-version: ${{ matrix.xcode }}
 
     - name: Homebrew Mac
       if: ${{ runner.os == 'Macos' }}
@@ -49,3 +54,6 @@ jobs:
         if [ -d Tests ]; then
           swift test -c release --parallel
         fi
+    - name: Setup tmate session
+      if: failure()
+      uses: mxschmitt/action-tmate@v3

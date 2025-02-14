@@ -10,7 +10,7 @@
 import Benchmark
 import Histogram
 
-let benchmarks = {
+let benchmarks: @Sendable () -> Void = {
     let metrics: [BenchmarkMetric] = [
         .wallClock,
         .throughput,

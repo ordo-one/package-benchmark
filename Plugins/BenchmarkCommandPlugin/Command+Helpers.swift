@@ -51,9 +51,7 @@ public enum Grouping: String, CaseIterable {
     case benchmark
 }
 
-#if swift(>=5.8)
 @_documentation(visibility: internal)
-#endif
 public enum TimeUnits: String, CaseIterable {
     case nanoseconds
     case microseconds

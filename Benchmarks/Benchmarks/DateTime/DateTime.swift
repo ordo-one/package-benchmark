@@ -10,7 +10,7 @@
 import Benchmark
 import DateTime
 
-let benchmarks = {
+let benchmarks: @Sendable () -> Void = {
     Benchmark.defaultConfiguration = .init(metrics: [.throughput, .wallClock, .instructions] + .arc,
                                            warmupIterations: 10,
                                            scalingFactor: .kilo,

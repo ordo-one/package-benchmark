@@ -92,7 +92,7 @@ There are [documentation available](https://swiftpackageindex.com/ordo-one/packa
 ```swift
 import Benchmark
 
-let benchmarks = {
+let benchmarks : @Sendable () -> Void = {
     Benchmark("Minimal benchmark") { benchmark in
       // measure something here
     }
@@ -159,6 +159,14 @@ Using [jmh.morethan.io](https://jmh.morethan.io)
 
 <img width="1482" alt="image" src="https://user-images.githubusercontent.com/8501048/225313559-33014755-797f-4ddf-b536-24c1a618f271.png">
 
+## Swift 6 support
+The package supports Swift 6.0 benchmark targets as well as Swift 5.10 targets (for Swift 5.9 support, need to use version 1.28.0 exactly).
+
+For Swift 6 targets, use the following signature for the benchmarks closure:
+```swift
+let benchmarks : @Sendable () -> Void = {
+```
+
 ## Output
 
 The default text output from Benchmark is oriented around [the five-number summary](https://en.wikipedia.org/wiki/Five-number_summary) percentiles, plus the last decile (`p90`) and the last percentile (`p99`) - it's thus a variation of a [seven-figure summary](https://en.wikipedia.org/wiki/Seven-number_summary) with the focus on the 'bad' end of results (as those are what we typically care about addressing).
@@ -167,16 +175,6 @@ Percentiles allows for a consistent way of expressing benchmark results of both 
 This multi-modal nature of the latency measurements leads to the common statistical measures of mean and standard deviation being potentially misleading.
 
 Please see the [documentation for further details on percentiles](https://swiftpackageindex.com/ordo-one/package-benchmark/documentation/benchmark/aboutpercentiles).
-
-## Swift 6 support
-The package will be updated to be fully Swift 6 when 5.x support is dropped (planned to be when Swift 6.2 is released).
-
-Workaround needed for Swift 6 targets, use the following signature for the benchmarks closure:
-```swift
-let benchmarks : @Sendable () -> Void = {
-```
-
-See https://github.com/ordo-one/package-benchmark/issues/258 for more details.
 
 ## API and file format stability
 The API will be deemed stable as of `1.0.0` and follows semantical versioning for future releases. 

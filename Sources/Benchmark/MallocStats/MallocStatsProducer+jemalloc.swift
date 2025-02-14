@@ -17,10 +17,7 @@ import Foundation
     // was used during development to figure out most relevant stats,
     // Keeping them around as we may want to expand malloc statistics
     // to become more detailed.
-    // Disable this for now as it gives unexpected error with Swift 5.7.1 toolchain
-//    #if swift(>=5.8)
-//        @_documentation(visibility: internal)
-//    #endif
+    @_documentation(visibility: internal)
     final class MallocStatsProducer {
         // Basically just set up a number of cached MIB structures for
         // more efficient queries later of malloc statistics.

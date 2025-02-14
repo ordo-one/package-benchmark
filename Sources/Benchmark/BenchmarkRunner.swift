@@ -19,33 +19,23 @@
 import ArgumentParser
 import Shared
 
-#if swift(>=5.8)
 @_documentation(visibility: internal)
-#endif
 extension TimeUnits: ExpressibleByArgument {}
 
-#if swift(>=5.8)
-    @_documentation(visibility: internal)
-#endif
-/// Internal type that will be hidden from documentation when upgrading doc generation to Swift 5.8+
+@_documentation(visibility: internal)
 public protocol BenchmarkRunnerHooks {
     static func main() async
     static func registerBenchmarks()
 }
 
-#if swift(>=5.8)
-    @_documentation(visibility: internal)
-#endif
+@_documentation(visibility: internal)
 public extension BenchmarkRunnerHooks {
     static func main() async {
         await BenchmarkRunner.setupBenchmarkRunner(registerBenchmarks: registerBenchmarks)
     }
 }
 
-#if swift(>=5.8)
-    @_documentation(visibility: internal)
-#endif
-/// Internal type that will be hidden from documentation when upgrading doc generation to Swift 5.8+
+@_documentation(visibility: internal)
 public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
     static var testReadWrite: BenchmarkRunnerReadWrite?
 

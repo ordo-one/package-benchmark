@@ -10,9 +10,7 @@
 
 // swiftlint: disable file_length identifier_name
 
-#if swift(>=5.8)
-    @_documentation(visibility: internal)
-#endif
+@_documentation(visibility: internal)
 public extension BenchmarkResult {
     enum Percentile: Int, Codable {
         case p0 = 0
@@ -223,10 +221,7 @@ public extension BenchmarkScalingFactor {
 
 // swiftlint:disable type_body_length
 
-#if swift(>=5.8)
-    @_documentation(visibility: internal)
-#endif
-/// Internal type that will be hidden from documentation when upgrading doc generation to Swift 5.8+
+@_documentation(visibility: internal)
 public struct BenchmarkResult: Codable, Comparable, Equatable {
     public init(metric: BenchmarkMetric,
                 timeUnits: BenchmarkTimeUnits,

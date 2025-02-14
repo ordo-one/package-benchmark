@@ -10,6 +10,7 @@
 
 // Project wide shared types
 
+@_documentation(visibility: internal)
 public enum Command: String, CaseIterable {
     case run
     case list
@@ -46,9 +47,7 @@ public enum Grouping: String, CaseIterable {
     case benchmark
 }
 
-#if swift(>=5.8)
 @_documentation(visibility: internal)
-#endif
 public enum TimeUnits: String, CaseIterable {
     case nanoseconds
     case microseconds
@@ -58,12 +57,14 @@ public enum TimeUnits: String, CaseIterable {
     case megaseconds
 }
 
+@_documentation(visibility: internal)
 public enum ThresholdsOperation: String, CaseIterable {
     case read
     case update
     case check
 }
 
+@_documentation(visibility: internal)
 public enum BaselineOperation: String, CaseIterable {
     case read
     case update
