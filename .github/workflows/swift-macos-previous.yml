@@ -13,7 +13,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-15]
+        os: [macos-14]
         swift: ["5.9", "5.10"]
 
     runs-on: ${{ matrix.os }}
@@ -49,3 +49,6 @@ jobs:
         if [ -d Tests ]; then
           swift test -c release --parallel
         fi
+    - name: Setup tmate session
+      if: failure()
+      uses: mxschmitt/action-tmate@v3
