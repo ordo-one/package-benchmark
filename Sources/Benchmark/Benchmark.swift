@@ -72,11 +72,17 @@ public final class Benchmark: Codable, Hashable { // swiftlint:disable:this type
 
 
 #if swift(<5.10)
+#if swift(>=5.8)
+    @_documentation(visibility: internal)
+#endif
     public static var startupHook: BenchmarkSetupHook? {
         get { _startupHook  }
         set { _startupHook = newValue }
     }
-    public static var shutdownHook: BenchmarkSetupHook? {
+#if swift(>=5.8)
+    @_documentation(visibility: internal)
+#endif
+    public static var shutdownHook: BenchmarkTeardownHook? {
         get { _shutdownHook  }
         set { _shutdownHook = newValue }
     }
@@ -88,21 +94,27 @@ public final class Benchmark: Codable, Hashable { // swiftlint:disable:this type
     }
 
     /// This closure if set, will be run after a targets benchmarks run, but after they are registered
-    public static var teardown: BenchmarkSetupHook? {
+    public static var teardown: BenchmarkTeardownHook? {
         get { _teardown  }
         set { _teardown = newValue }
     }
 #endif
 
 #if swift(>=5.10)
+#if swift(>=5.8)
+    @_documentation(visibility: internal)
+#endif
     nonisolated(unsafe)
     public static var startupHook: BenchmarkSetupHook? {
         get { _startupHook  }
         set { _startupHook = newValue }
     }
 
+#if swift(>=5.8)
+    @_documentation(visibility: internal)
+#endif
     nonisolated(unsafe)
-    public static var shutdownHook: BenchmarkSetupHook? {
+    public static var shutdownHook: BenchmarkTeardownHook? {
         get { _shutdownHook  }
         set { _shutdownHook = newValue }
     }
@@ -116,7 +128,7 @@ public final class Benchmark: Codable, Hashable { // swiftlint:disable:this type
 
     /// This closure if set, will be run after a targets benchmarks run, but after they are registered
     nonisolated(unsafe)
-    public static var teardown: BenchmarkSetupHook? {
+    public static var teardown: BenchmarkTeardownHook? {
         get { _teardown  }
         set { _teardown = newValue }
     }
