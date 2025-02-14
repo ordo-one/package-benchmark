@@ -55,5 +55,5 @@ jobs:
           swift test -c release --parallel
         fi
     - name: Setup tmate session
-      if: failure()
+      if: false && failure()
       uses: mxschmitt/action-tmate@v3
