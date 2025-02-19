@@ -55,7 +55,7 @@ public final class Benchmark: Codable, Hashable { // swiftlint:disable:this type
         get { _startupHook  }
         set { _startupHook = newValue }
     }
-    
+
     @_documentation(visibility: internal)
     public static var shutdownHook: BenchmarkTeardownHook? {
         get { _shutdownHook  }

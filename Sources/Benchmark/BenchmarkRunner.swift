@@ -206,7 +206,6 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
                         if quiet {
                             try suppressor.restoreOutput()
                         }
-
                     } catch {
                         print("Error: \(error.localizedDescription)")
                         try channel.write(.error("OutputSuppressor failed: \(String(reflecting: error.localizedDescription))"))
