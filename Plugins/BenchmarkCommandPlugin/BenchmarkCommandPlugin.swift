@@ -44,6 +44,7 @@ import PackagePlugin
         let checkAbsoluteThresholds = checkAbsoluteThresholdsPath.count > 0 ? 1 : argumentExtractor.extractFlag(named: "check-absolute")
         let groupingToUse = argumentExtractor.extractOption(named: "grouping")
         let metricsToUse = argumentExtractor.extractOption(named: "metric")
+        let timeUnits = argumentExtractor.extractOption(named: "time-units")
         let debug = argumentExtractor.extractFlag(named: "debug")
         let scale = argumentExtractor.extractFlag(named: "scale")
         let helpRequested = argumentExtractor.extractFlag(named: "help")
@@ -154,6 +155,18 @@ import PackagePlugin
 
         metricsToUse.forEach { metric in
             args.append(contentsOf: ["--metrics", metric.description])
+        }
+
+        if let firstValue = timeUnits.first {
+            if let unit = TimeUnits(rawValue: firstValue) {
+                args.append(contentsOf: ["--time-units", unit.rawValue])
+                if timeUnits.count > 1 {
+                    print("Only a single time unit may be specified, will use the first one specified '\(unit.rawValue)'")
+                }
+            } else {
+                print("Unknown time unit specified '\(firstValue)', valid units are: \(TimeUnits.allCases.map {$0.rawValue}.joined(separator: ", "))")
+                throw MyError.invalidArgument
+            }
         }
 
         if outputFormat == .text {

@@ -10,9 +10,7 @@
 
 // swiftlint: disable file_length identifier_name
 
-#if swift(>=5.8)
-    @_documentation(visibility: internal)
-#endif
+@_documentation(visibility: internal)
 public extension BenchmarkResult {
     enum Percentile: Int, Codable {
         case p0 = 0
@@ -26,13 +24,13 @@ public extension BenchmarkResult {
 }
 
 /// Time units for cpu/wall clock time
-public enum BenchmarkTimeUnits: Codable, CustomStringConvertible {
+public enum BenchmarkTimeUnits: String, Codable, CustomStringConvertible, CaseIterable {
     case nanoseconds
     case microseconds
     case milliseconds
     case seconds
-    case kiloSeconds
-    case megaSeconds
+    case kiloseconds
+    case megaseconds
     case automatic // will pick time unit above automatically
     public var factor: Int {
         switch self {
@@ -44,9 +42,9 @@ public enum BenchmarkTimeUnits: Codable, CustomStringConvertible {
             return 1_000
         case .seconds:
             return 1
-        case .kiloSeconds:
+        case .kiloseconds:
             return 2 // Yeah, not right but we need to refactor to get rid of this, works for now
-        case .megaSeconds:
+        case .megaseconds:
             return 3
         case .automatic:
             fatalError("Should never extract scalingFactor for .automatic")
@@ -63,9 +61,9 @@ public enum BenchmarkTimeUnits: Codable, CustomStringConvertible {
             return 1_000_000
         case .seconds:
             return 1_000_000_000
-        case .kiloSeconds:
+        case .kiloseconds:
             return 1_000_000_000_000
-        case .megaSeconds:
+        case .megaseconds:
             return 1_000_000_000_000_000
         case .automatic:
             fatalError("Should never extract scalingFactor for .automatic")
@@ -82,12 +80,84 @@ public enum BenchmarkTimeUnits: Codable, CustomStringConvertible {
             return "ms"
         case .seconds:
             return "s"
-        case .kiloSeconds:
+        case .kiloseconds:
             return "ks"
-        case .megaSeconds:
+        case .megaseconds:
             return "Ms"
         case .automatic:
             return "#"
+        }
+    }
+}
+
+/// Units for countable metrics
+public enum BenchmarkUnits: Int, Codable, CustomStringConvertible, CaseIterable {
+    case count = 1
+    case kilo = 1_000
+    case mega = 1_000_000
+    case giga = 1_000_000_000
+    case tera = 1_000_000_000_000
+    case peta = 1_000_000_000_000_000
+    case automatic // will pick unit above automatically
+
+    public var description: String {
+        switch self {
+        case .count:
+            return "#"
+        case .kilo:
+            return "K"
+        case .mega:
+            return "M"
+        case .giga:
+            return "G"
+        case .tera:
+            return "T"
+        case .peta:
+            return "P"
+        case .automatic:
+            return "#"
+        }
+    }
+}
+
+public extension Statistics.Units {
+    init(_ units: BenchmarkUnits) {
+        switch units {
+        case .count:
+            self = .count
+        case .kilo:
+            self = .kilo
+        case .mega:
+            self = .mega
+        case .giga:
+            self = .giga
+        case .tera:
+            self = .tera
+        case .peta:
+            self = .peta
+        case .automatic:
+            self = .automatic
+        }
+    }
+}
+
+public extension BenchmarkTimeUnits {
+    init(_ units: BenchmarkUnits) {
+        switch units {
+        case .count:
+            self = .nanoseconds
+        case .kilo:
+            self = .microseconds
+        case .mega:
+            self = .milliseconds
+        case .giga:
+            self = .seconds
+        case .tera:
+            self = .kiloseconds
+        case .peta:
+            self = .megaseconds
+        case .automatic:
+            self = .automatic
         }
     }
 }
@@ -141,9 +211,9 @@ public extension BenchmarkScalingFactor {
             self = .mega
         case .seconds:
             self = .giga
-        case .kiloSeconds:
+        case .kiloseconds:
             self = .tera
-        case .megaSeconds:
+        case .megaseconds:
             self = .peta
         }
     }
@@ -151,10 +221,7 @@ public extension BenchmarkScalingFactor {
 
 // swiftlint:disable type_body_length
 
-#if swift(>=5.8)
-    @_documentation(visibility: internal)
-#endif
-/// Internal type that will be hidden from documentation when upgrading doc generation to Swift 5.8+
+@_documentation(visibility: internal)
 public struct BenchmarkResult: Codable, Comparable, Equatable {
     public init(metric: BenchmarkMetric,
                 timeUnits: BenchmarkTimeUnits,
@@ -525,9 +592,9 @@ public extension Statistics.Units {
             self = .mega
         case .seconds:
             self = .giga
-        case .kiloSeconds:
+        case .kiloseconds:
             self = .tera
-        case .megaSeconds:
+        case .megaseconds:
             self = .peta
         case .automatic:
             self = .automatic
@@ -546,9 +613,9 @@ public extension Statistics.Units {
             self = .mega
         case .seconds:
             self = .giga
-        case .kiloSeconds:
+        case .kiloseconds:
             self = .tera
-        case .megaSeconds:
+        case .megaseconds:
             self = .peta
         case .automatic:
             self = .automatic
@@ -570,9 +637,9 @@ public extension BenchmarkTimeUnits {
         case .giga:
             self = .seconds
         case .tera:
-            self = .kiloSeconds
+            self = .kiloseconds
         case .peta:
-            self = .megaSeconds
+            self = .megaseconds
         case .automatic:
             self = .automatic
         }

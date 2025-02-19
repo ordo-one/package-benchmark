@@ -3,4 +3,4 @@ builder:
   configs:
   - documentation_targets: [Benchmark]
     platform: linux
-    swift_version: '5.10'
+    swift_version: '6.0'

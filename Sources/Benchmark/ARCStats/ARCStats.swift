@@ -9,10 +9,7 @@
 //
 
 /// The ARC stats the ARCStatsProducer can provide
-#if swift(>=5.8)
-    @_documentation(visibility: internal)
-#endif
-
+@_documentation(visibility: internal)
 struct ARCStats {
     var objectAllocCount: Int = 0 /// total number allocations, implicit retain
     var retainCount: Int = 0 /// total number retains

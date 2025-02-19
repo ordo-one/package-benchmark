@@ -291,13 +291,6 @@ final class BenchmarkResultTests: XCTestCase {
 
         let absoluteThresholds = BenchmarkThresholds(absolute: absolute)
 
-        let absoluteTwo: BenchmarkThresholds.AbsoluteThresholds = [.p0: 1_500,
-                                                                   .p25: 1_500,
-                                                                   .p50: 1_500,
-                                                                   .p75: 1_500,
-                                                                   .p90: 1_500,
-                                                                   .p99: 1_500]
-
         let absoluteP90: BenchmarkThresholds.AbsoluteThresholds = [.p90: 3]
 
         let absoluteThresholdsP90 = BenchmarkThresholds(absolute: absoluteP90)

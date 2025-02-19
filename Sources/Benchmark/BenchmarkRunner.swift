@@ -17,29 +17,25 @@
 #endif
 
 import ArgumentParser
+import Shared
 
-#if swift(>=5.8)
-    @_documentation(visibility: internal)
-#endif
-/// Internal type that will be hidden from documentation when upgrading doc generation to Swift 5.8+
+@_documentation(visibility: internal)
+extension TimeUnits: ExpressibleByArgument {}
+
+@_documentation(visibility: internal)
 public protocol BenchmarkRunnerHooks {
     static func main() async
     static func registerBenchmarks()
 }
 
-#if swift(>=5.8)
-    @_documentation(visibility: internal)
-#endif
+@_documentation(visibility: internal)
 public extension BenchmarkRunnerHooks {
     static func main() async {
         await BenchmarkRunner.setupBenchmarkRunner(registerBenchmarks: registerBenchmarks)
     }
 }
 
-#if swift(>=5.8)
-    @_documentation(visibility: internal)
-#endif
-/// Internal type that will be hidden from documentation when upgrading doc generation to Swift 5.8+
+@_documentation(visibility: internal)
 public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
     static var testReadWrite: BenchmarkRunnerReadWrite?
 
@@ -59,6 +55,9 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
 
     @Option(name: .long, help: "Benchmarks matching the regexp filter that should be skipped")
     var skip: [String] = []
+
+    @Option(name: .long, help: "Specifies that time related metrics output should be specified units")
+    var timeUnits: TimeUnits?
 
     @Flag(name: .long, help:
         """
@@ -97,8 +96,9 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
 
     // swiftlint:disable cyclomatic_complexity function_body_length
     public mutating func run() async throws {
-        // Flush stdout so we see any failures clearly
+        // Flush stdout/stderr so we see any failures clearly
         setbuf(stdout, nil)
+        setbuf(stderr, nil)
 
         // We just run everything in debug mode to simplify workflow with debuggers/profilers
         if inputFD == nil, outputFD == nil {
@@ -112,6 +112,8 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
         let benchmarkExecutor = BenchmarkExecutor(quiet: quiet)
         var benchmark: Benchmark?
         var results: [BenchmarkResult] = []
+
+        let suppressor = OutputSuppressor()
 
         while true {
             if debug { // in debug mode we run all benchmarks matching filter/skip specified
@@ -167,6 +169,11 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
 
                     benchmark.target = benchmarkToRun.target
 
+                    if let timeUnits,
+                       let units = BenchmarkTimeUnits(rawValue: timeUnits.rawValue) {
+                        benchmark.configuration.timeUnits = units
+                    }
+
                     do {
                         for hook in [Benchmark.startupHook, Benchmark.setup, benchmark.configuration.setup, benchmark.setup] {
                             try await hook?()
@@ -189,7 +196,20 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
                         return
                     }
 
-                    results = benchmarkExecutor.run(benchmark)
+                    do {
+                        if quiet {
+                            try suppressor.suppressOutput()
+                        }
+
+                        results = benchmarkExecutor.run(benchmark)
+
+                        if quiet {
+                            try suppressor.restoreOutput()
+                        }
+                    } catch {
+                        print("Error: \(error.localizedDescription)")
+                        try channel.write(.error("OutputSuppressor failed: \(String(reflecting: error.localizedDescription))"))
+                    }
 
                     do {
                         for hook in [benchmark.teardown, benchmark.configuration.teardown, Benchmark.shutdownHook, Benchmark.teardown] {

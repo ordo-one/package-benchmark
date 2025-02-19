@@ -43,6 +43,7 @@ Thanks to the use of [Histogram](https://github.com/ordo-one/package-histogram) 
 - ``Benchmark/Configuration-swift.struct``
 - ``BenchmarkMetric``
 - ``BenchmarkTimeUnits``
+- ``BenchmarkUnits``
 - ``BenchmarkScalingFactor``
 
 ### Supporting Functions

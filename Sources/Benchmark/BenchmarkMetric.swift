@@ -14,7 +14,7 @@
 ///
 /// Some metrics are only available on macOS or Linux, but you can specify all the metrics without worrying about platform availability.
 /// If a metric is unavailable on a specific platform, the Benchmark system filters unsupported metrics out as needed.
-public enum BenchmarkMetric: Hashable, Equatable, Codable, CustomStringConvertible {
+public enum BenchmarkMetric: Hashable, Equatable, Codable, CustomStringConvertible, Sendable {
     /// CPU user space time spent for running the test
     case cpuUser
     /// CPU system time spent for running the test
@@ -76,20 +76,14 @@ public enum BenchmarkMetric: Hashable, Equatable, Codable, CustomStringConvertib
     case custom(_ name: String, polarity: Polarity = .prefersSmaller, useScalingFactor: Bool = true)
 
     /// Used internally as placeholders for formatting deltas in an easy way, please don't use
-    #if swift(>=5.8)
-        @_documentation(visibility: internal)
-    #endif
+    @_documentation(visibility: internal)
     case delta
-    #if swift(>=5.8)
-        @_documentation(visibility: internal)
-    #endif
+    @_documentation(visibility: internal)
     case deltaPercentage
 }
 
 // We don't want to take polarity and useScalingFactor into consideration as it makes dealing with custom metrics hard
-#if swift(>=5.8)
-    @_documentation(visibility: internal)
-#endif
+@_documentation(visibility: internal)
 public extension BenchmarkMetric {
     func hash(into hasher: inout Hasher) {
         hasher.combine(description)
@@ -102,7 +96,7 @@ public extension BenchmarkMetric {
 
 public extension BenchmarkMetric {
     /// A constant that states whether larger or smaller measurements, relative to a set baseline, indicate better performance.
-    enum Polarity: Codable { // same naming as XCTest uses, polarity is known for all metrics except custom
+    enum Polarity: Codable, Sendable { // same naming as XCTest uses, polarity is known for all metrics except custom
         /// A performance measurement where a larger value, relative to a set baseline, indicates better performance.
         case prefersLarger
         /// A performance measurement where a smaller value, relative to a set baseline, indicates better performance.
@@ -225,9 +219,7 @@ public extension BenchmarkMetric {
     }
 
     // Used by the Benchmark Executor for efficient indexing into results
-    #if swift(>=5.8)
-        @_documentation(visibility: internal)
-    #endif
+    @_documentation(visibility: internal)
     var index: Int {
         switch self {
         case .cpuUser:
@@ -291,17 +283,12 @@ public extension BenchmarkMetric {
         }
     }
 
-    #if swift(>=5.8)
-        @_documentation(visibility: internal)
-    #endif
+    @_documentation(visibility: internal)
     static var maxIndex: Int { 28} //
 
     // Used by the Benchmark Executor for efficient indexing into results
-    #if swift(>=5.8)
-        @_documentation(visibility: internal)
-    #endif
-    // swiftlint:disable:next cyclomatic_complexity function_body_length
-    func metricFor(index: Int) -> BenchmarkMetric {
+    @_documentation(visibility: internal)
+    func metricFor(index: Int) -> BenchmarkMetric { // swiftlint:disable:this cyclomatic_complexity function_body_length
         switch index {
         case 1:
             return .cpuUser
@@ -366,9 +353,7 @@ public extension BenchmarkMetric {
     }
 }
 
-#if swift(>=5.8)
-    @_documentation(visibility: internal)
-#endif
+@_documentation(visibility: internal)
 public extension BenchmarkMetric {
     var rawDescription: String { // As we can't have raw values due to custom support, we do this...
         switch self {
@@ -440,9 +425,7 @@ public extension BenchmarkMetric {
 
 // swiftlint:disable cyclomatic_complexity function_body_length
 // As we can't have raw values and associated data we add this...
-#if swift(>=5.8)
-    @_documentation(visibility: internal)
-#endif
+@_documentation(visibility: internal)
 public extension BenchmarkMetric {
     init?(argument: String) {
         switch argument {

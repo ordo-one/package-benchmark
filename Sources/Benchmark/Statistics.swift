@@ -13,16 +13,13 @@ import Histogram
 import Numerics
 
 // A type that provides distribution / percentile calculations of latency measurements
-#if swift(>=5.8)
-    @_documentation(visibility: internal)
-#endif
-/// Internal type that will be hidden from documentation when upgrading doc generation to Swift 5.8+
+@_documentation(visibility: internal)
 public final class Statistics: Codable {
     public static let defaultMaximumMeasurement = 1_000_000_000 // 1 second in nanoseconds
     public static let defaultPercentilesToCalculate = [0.0, 25.0, 50.0, 75.0, 90.0, 99.0, 100.0]
     public static let defaultPercentilesToCalculateP90Index = 4
     
-    public enum Units: Int, Codable {
+    public enum Units: Int, Codable, CaseIterable {
         case count = 1 // e.g. nanoseconds
         case kilo = 1_000 // microseconds
         case mega = 1_000_000 // milliseconds

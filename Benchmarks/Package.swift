@@ -1,4 +1,4 @@
-// swift-tools-version: 5.9
+// swift-tools-version: 6.0
 
 import class Foundation.ProcessInfo
 import PackageDescription
@@ -8,7 +8,7 @@ let disableJemalloc = ProcessInfo.processInfo.environment["BENCHMARK_DISABLE_JEM
 
 let package = Package(
     name: "Benchmarks",
-    platforms: [.macOS(.v14), .iOS(.v17)],
+    platforms: [.macOS(.v15), .iOS(.v17)],
     dependencies: [
         .package(path: "../"),
         .package(url: "https://github.com/ordo-one/package-datetime", .upToNextMajor(from: "1.0.1")),

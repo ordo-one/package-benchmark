@@ -27,18 +27,14 @@
 //
 
 
-#if swift(>=5.8)
 @_documentation(visibility: internal)
-#endif
 public protocol ProgressElementType {
     func value(_ progressBar: ProgressBar) -> String
 }
 
 
 /// the progress bar element e.g. "[----------------------        ]"
-#if swift(>=5.8)
 @_documentation(visibility: internal)
-#endif
 public struct ProgressBarLine: ProgressElementType {
     let barLength: Int
 
@@ -62,9 +58,7 @@ public struct ProgressBarLine: ProgressElementType {
 
 
 /// the index element e.g. "2 of 3"
-#if swift(>=5.8)
 @_documentation(visibility: internal)
-#endif
 public struct ProgressIndex: ProgressElementType {
     public init() {}
 
@@ -75,9 +69,7 @@ public struct ProgressIndex: ProgressElementType {
 
 
 /// the percentage element e.g. "90.0%"
-#if swift(>=5.8)
 @_documentation(visibility: internal)
-#endif
 public struct ProgressPercent: ProgressElementType {
     let decimalPlaces: Int
 
@@ -101,9 +93,7 @@ public struct ProgressPercent: ProgressElementType {
 
 
 /// the time estimates e.g. "ETA: 00:00:02 (at 1.00 it/s)"
-#if swift(>=5.8)
 @_documentation(visibility: internal)
-#endif
 public struct ProgressTimeEstimates: ProgressElementType {
     public init() {}
 
@@ -137,9 +127,7 @@ public struct ProgressTimeEstimates: ProgressElementType {
 
 
 /// an arbitrary string that can be added to the progress bar.
-#if swift(>=5.8)
 @_documentation(visibility: internal)
-#endif
 public struct ProgressString: ProgressElementType {
     let string: String
 
