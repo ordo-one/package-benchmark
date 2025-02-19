@@ -55,7 +55,7 @@ public final class Benchmark: Codable, Hashable { // swiftlint:disable:this type
         get { _startupHook  }
         set { _startupHook = newValue }
     }
-    
+
     @_documentation(visibility: internal)
     public static var shutdownHook: BenchmarkTeardownHook? {
         get { _shutdownHook  }
@@ -75,29 +75,25 @@ public final class Benchmark: Codable, Hashable { // swiftlint:disable:this type
     }
 #elseif swift(>=5.10)
     @_documentation(visibility: internal)
-    nonisolated(unsafe)
-    public static var startupHook: BenchmarkSetupHook? {
+    nonisolated(unsafe) public static var startupHook: BenchmarkSetupHook? {
         get { _startupHook  }
         set { _startupHook = newValue }
     }
 
     @_documentation(visibility: internal)
-    nonisolated(unsafe)
-    public static var shutdownHook: BenchmarkTeardownHook? {
+    nonisolated(unsafe) public static var shutdownHook: BenchmarkTeardownHook? {
         get { _shutdownHook  }
         set { _shutdownHook = newValue }
     }
 
     /// This closure if set, will be run before a targets benchmarks are run, but after they are registered
-    nonisolated(unsafe)
-    public static var setup: BenchmarkSetupHook? {
+    nonisolated(unsafe) public static var setup: BenchmarkSetupHook? {
         get { _setup  }
         set { _setup = newValue }
     }
 
     /// This closure if set, will be run after a targets benchmarks run, but after they are registered
-    nonisolated(unsafe)
-    public static var teardown: BenchmarkTeardownHook? {
+    nonisolated(unsafe) public static var teardown: BenchmarkTeardownHook? {
         get { _teardown  }
         set { _teardown = newValue }
     }

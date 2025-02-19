@@ -96,8 +96,9 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
 
     // swiftlint:disable cyclomatic_complexity function_body_length
     public mutating func run() async throws {
-        // Flush stdout so we see any failures clearly
+        // Flush stdout/stderr so we see any failures clearly
         setbuf(stdout, nil)
+        setbuf(stderr, nil)
 
         // We just run everything in debug mode to simplify workflow with debuggers/profilers
         if inputFD == nil, outputFD == nil {
@@ -111,6 +112,8 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
         let benchmarkExecutor = BenchmarkExecutor(quiet: quiet)
         var benchmark: Benchmark?
         var results: [BenchmarkResult] = []
+
+        let suppressor = OutputSuppressor()
 
         while true {
             if debug { // in debug mode we run all benchmarks matching filter/skip specified
@@ -193,7 +196,20 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
                         return
                     }
 
-                    results = benchmarkExecutor.run(benchmark)
+                    do {
+                        if quiet {
+                            try suppressor.suppressOutput()
+                        }
+
+                        results = benchmarkExecutor.run(benchmark)
+
+                        if quiet {
+                            try suppressor.restoreOutput()
+                        }
+                    } catch {
+                        print("Error: \(error.localizedDescription)")
+                        try channel.write(.error("OutputSuppressor failed: \(String(reflecting: error.localizedDescription))"))
+                    }
 
                     do {
                         for hook in [benchmark.teardown, benchmark.configuration.teardown, Benchmark.shutdownHook, Benchmark.teardown] {
