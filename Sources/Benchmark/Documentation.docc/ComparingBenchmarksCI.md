@@ -54,6 +54,13 @@ swift package benchmark thresholds read
 - 2: Regressions detected
 - 4: Only improvements detected
 
+### Example GitHub CI Workflow from Vapor
+
+Vapor have a nice example [for CI integration at GitHub](https://github.com/vapor/ci/blob/main/.github/workflows/run-benchmark.yml) which
+can [be manually run like this](https://github.com/vapor/multipart-kit/blob/main/.github/workflows/benchmark.yml).
+
+Sample output [can be found here](https://github.com/vapor/multipart-kit/pull/107#issuecomment-2629492189).
+
 ### Example: GitHub CI Workflow for Baseline Comparison
 
 This workflow compares any pull request against the `main` branch, failing on regression. If the comparison is equal or favorable, it comments on the pull request with the results.
