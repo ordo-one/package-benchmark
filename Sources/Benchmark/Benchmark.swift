@@ -454,6 +454,8 @@ public extension Benchmark {
         public var skip = false
         /// Customized threshold tolerances for a given metric for the Benchmark used for checking for regressions/improvements/equality.
         public var thresholds: [BenchmarkMetric: BenchmarkThresholds]?
+        /// Benchmark specific configurations to be provided to the exporters
+        public var exportConfigurations: BenchmarkExportConfigurations?
         /// Optional per-benchmark specific setup done before warmup and all iterations
         public var setup: BenchmarkSetupHook?
         /// Optional per-benchmark specific teardown done after final run is done
@@ -470,6 +472,7 @@ public extension Benchmark {
                     skip: Bool = defaultConfiguration.skip,
                     thresholds: [BenchmarkMetric: BenchmarkThresholds]? =
                         defaultConfiguration.thresholds,
+                    exportConfigurations: [BenchmarkExportConfigurationKey: any BenchmarkExportConfiguration] = [:],
                     setup: BenchmarkSetupHook? = nil,
                     teardown: BenchmarkTeardownHook? = nil) {
             self.metrics = metrics
@@ -482,6 +485,7 @@ public extension Benchmark {
             self.maxIterations = maxIterations
             self.skip = skip
             self.thresholds = thresholds
+            self.exportConfigurations = BenchmarkExportConfigurations(configs: exportConfigurations)
             self.setup = setup
             self.teardown = teardown
         }
@@ -497,6 +501,7 @@ public extension Benchmark {
             case maxDuration
             case maxIterations
             case thresholds
+            case exportConfigurations
         }
         // swiftlint:enable nesting
     }

@@ -157,8 +157,8 @@ extension BenchmarkTool {
             try write(exportData: "\(convertToInflux(baseline))",
                       fileName: "\(baselineName).influx.csv")
         case .histogram:
-            try baseline.results.forEach { key, results in
-                try results.forEach { values in
+            try baseline.profiles.forEach { key, profile in
+                try profile.results.forEach { values in
                     let outputString = values.statistics.histogram
                     let description = values.metric.rawDescription
                     try write(exportData: "\(outputString)",
@@ -169,10 +169,10 @@ extension BenchmarkTool {
             try write(exportData: "\(convertToJMH(baseline))",
                       fileName: cleanupStringForShellSafety("\(baselineName).jmh.json"))
         case .histogramSamples:
-            try baseline.results.forEach { key, results in
+            try baseline.profiles.forEach { key, profile in
                 var outputString = ""
 
-                try results.forEach { values in
+                try profile.results.forEach { values in
                     let histogram = values.statistics.histogram
 
                     outputString += "\(values.metric.description) \(values.unitDescriptionPretty)\n"
@@ -189,10 +189,10 @@ extension BenchmarkTool {
                 }
             }
         case .histogramEncoded:
-            try baseline.results.forEach { key, results in
+            try baseline.profiles.forEach { key, profile in
                 let encoder = JSONEncoder()
 
-                try results.forEach { values in
+                try profile.results.forEach { values in
                     let histogram = values.statistics.histogram
                     let jsonData = try encoder.encode(histogram)
                     let description = values.metric.rawDescription
@@ -207,8 +207,8 @@ extension BenchmarkTool {
         case .histogramPercentiles:
             var outputString = ""
 
-            try baseline.results.forEach { key, results in
-                try results.forEach { values in
+            try baseline.profiles.forEach { key, profile in
+                try profile.results.forEach { values in
                     let histogram = values.statistics.histogram
 
                     outputString += "Percentile\t" + "\(values.metric.description) \(values.unitDescriptionPretty)\n"
@@ -224,12 +224,12 @@ extension BenchmarkTool {
                 }
             }
         case .metricP90AbsoluteThresholds:
-            try baseline.results.forEach { key, results in
+            try baseline.profiles.forEach { key, profile in
                 let jsonEncoder = JSONEncoder()
                 jsonEncoder.outputFormatting = [.prettyPrinted, .sortedKeys]
 
                 var outputResults: [String: BenchmarkThresholds.AbsoluteThreshold] = [:]
-                results.forEach { values in
+                profile.results.forEach { values in
                     outputResults[values.metric.rawDescription] = Int(values.statistics.histogram.valueAtPercentile(90.0))
                 }
 

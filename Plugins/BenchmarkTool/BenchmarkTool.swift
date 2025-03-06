@@ -38,8 +38,6 @@ extension BaselineOperation: ExpressibleByArgument {}
 extension ThresholdsOperation: ExpressibleByArgument {}
 extension BenchmarkMetric: ExpressibleByArgument {}
 
-typealias BenchmarkResults = [BenchmarkIdentifier: [BenchmarkResult]]
-
 fileprivate var failedBenchmarkRuns = 0
 
 @main
@@ -295,7 +293,7 @@ struct BenchmarkTool: AsyncParsableCommand {
             "Running Benchmarks".printAsHeader()
         }
 
-        var benchmarkResults: BenchmarkResults = [:]
+        var benchmarkResults: [BenchmarkIdentifier: BenchmarkBaseline.Profile] = [:]
 
         benchmarks.sort { ($0.target, $0.name) < ($1.target, $1.name) }
 
@@ -309,8 +307,13 @@ struct BenchmarkTool: AsyncParsableCommand {
                         printChildRunError(error: result, benchmarkExecutablePath: benchmark.executablePath!)
                     }
                 }
-
-                benchmarkResults = benchmarkResults.merging(results) { _, new in new }
+                
+                for result in results {
+                    benchmarkResults[result.key] = BenchmarkBaseline.Profile(
+                        benchmark: benchmark,
+                        results: result.value
+                    )
+                }
             }
         }
 
@@ -342,10 +345,10 @@ struct BenchmarkTool: AsyncParsableCommand {
     mutating func runChild(benchmarkPath: String,
                            benchmarkCommand: BenchmarkOperation,
                            benchmark: Benchmark? = nil,
-                           completion: ((Int32) -> Void)? = nil) throws -> BenchmarkResults {
+                           completion: ((Int32) -> Void)? = nil) throws -> BenchmarkResultsByIdentifier {
         var pid: pid_t = 0
 
-        var benchmarkResults: BenchmarkResults = [:]
+        var benchmarkResults: BenchmarkResultsByIdentifier = [:]
         let fromChild = try FileDescriptor.pipe()
         let toChild = try FileDescriptor.pipe()
         let path = FilePath(benchmarkPath)
