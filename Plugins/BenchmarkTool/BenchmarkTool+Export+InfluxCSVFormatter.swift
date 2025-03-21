@@ -54,9 +54,9 @@ class InfluxCSVFormatter {
         let memory = machine.memory
 
         if header {
-            let dataTypeHeader = "#datatype tag,tag,tag,tag,tag,tag,tag,tag,tag,double,double,long,long,dateTime\n"
+            let dataTypeHeader = "#datatype tag,tag,tag,tag,tag,tag,tag,tag,tag,double,double,double,long,long,dateTime\n"
             finalFileFormat.append(dataTypeHeader)
-            let headers = "measurement,hostName,processoryType,processors,memory,kernelVersion,metric,unit,test,value,test_average,iterations,warmup_iterations,time\n"
+            let headers = "measurement,hostName,processoryType,processors,memory,kernelVersion,metric,unit,test,percentile,value,test_average,iterations,warmup_iterations,time\n"
             finalFileFormat.append(headers)
         }
 
@@ -64,16 +64,15 @@ class InfluxCSVFormatter {
             let testName = testData.test
             let iterations = testData.iterations
             let warmup_iterations = testData.warmupIterations
-
+            let percentiles = Statistics.defaultPercentilesToCalculate
             for granularData in testData.data {
                 let metric = granularData.metric
                     .replacingOccurrences(of: " ", with: "")
                 let units = granularData.units
                 let average = granularData.average
-
-                for dataTableValue in granularData.metricsdata {
+                for (percentile, dataTableValue) in zip(percentiles, granularData.metricsdata) {
                     let time = ISO8601DateFormatter().string(from: Date())
-                    let dataLine = "\(exportableBenchmark.target),\(hostName),\(processorType),\(processors),\(memory),\(kernelVersion),\(metric),\(units),\(testName),\(dataTableValue),\(average),\(iterations),\(warmup_iterations),\(time)\n"
+                    let dataLine = "\(exportableBenchmark.target),\(hostName),\(processorType),\(processors),\(memory),\(kernelVersion),\(metric),\(units),\(testName),\(percentile),\(dataTableValue),\(average),\(iterations),\(warmup_iterations),\(time)\n"
                     finalFileFormat.append(dataLine)
                 }
             }
