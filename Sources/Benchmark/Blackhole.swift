@@ -36,3 +36,49 @@ public func blackHole(_: some Any) {}
 public func identity<T>(_ value: T) -> T {
     value
 }
+
+/// A more generalized variant of `blackHole` -- forces the compiler to assume that the argument is not only used, but also mutated. 
+/// Foils compiler optimizations like const-folding, loop-invariant code motion, and common-subexpression elimination.
+/// For example, the `blackHole` does not always suffice for the following benchmark.
+/// ```swift
+/// Benchmark("Const-folded?",
+///     configuration: .init(
+///         metrics: [.wallClock, .mallocTotal],
+///         scalingFactor: .mega
+///     ) { benchmark in
+///     let arguments = Arguments()  // set up
+///     benchmark.startMeasurement()
+///     for _ in benchmark.scaledIterations {
+///         blackHole(benchmarkee(arguments)) 
+///     }
+/// ```
+/// If `benchmarkee` is a pure function, i.e. has no side-effects, the above code will get subjected to e.g. loop-invariant code motion.
+/// ```swift
+/// Benchmark("Const-folded?",
+///     configuration: .init(
+///         metrics: [.wallClock, .mallocTotal],
+///         scalingFactor: .mega
+///     ) { benchmark in
+///     let arguments = Arguments()  // set up
+///     benchmark.startMeasurement()
+///     let _result = benchmarkee(arguments)
+///     for _ in benchmark.scaledIterations {
+///         blackHole(_result)  // no longer benchmarking `benchmarkee`!
+///     }
+/// ```
+/// The correct way to implement this benchmark would then be
+/// ```swift
+/// Benchmark("Const-folded?",
+///     configuration: .init(
+///         metrics: [.wallClock, .mallocTotal],
+///         scalingFactor: .mega
+///     ) { benchmark in
+///     var arguments = Arguments()  // set up
+///     benchmark.startMeasurement()
+///     for _ in benchmark.scaledIterations {
+///         clobber(&arguments)
+///         blackHole(benchmarkee(arguments)) 
+///     }
+/// ```
+@_optimize(none)
+public func clobber(_: UnsafeMutableRawPointer) {}
