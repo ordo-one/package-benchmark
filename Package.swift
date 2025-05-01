@@ -21,11 +21,11 @@ let package = Package(
         )
     ],
     dependencies: [
-        .package(url: "https://github.com/apple/swift-system", .upToNextMajor(from: "1.1.0")),
-        .package(url: "https://github.com/apple/swift-argument-parser", .upToNextMajor(from: "1.1.0")),
-        .package(url: "https://github.com/ordo-one/TextTable", .upToNextMajor(from: "0.0.1")),
-        .package(url: "https://github.com/HdrHistogram/hdrhistogram-swift", .upToNextMajor(from: "0.1.0")),
-        .package(url: "https://github.com/apple/swift-atomics", .upToNextMajor(from: "1.0.0"))
+        .package(url: "https://github.com/apple/swift-system.git", .upToNextMajor(from: "1.1.0")),
+        .package(url: "https://github.com/apple/swift-argument-parser.git", .upToNextMajor(from: "1.1.0")),
+        .package(url: "https://github.com/ordo-one/TextTable.git", .upToNextMajor(from: "0.0.1")),
+        .package(url: "https://github.com/HdrHistogram/hdrhistogram-swift.git", .upToNextMajor(from: "0.1.0")),
+        .package(url: "https://github.com/apple/swift-atomics.git", .upToNextMajor(from: "1.0.0"))
     ],
     targets: [
         // Plugins used by users of the package
@@ -149,7 +149,7 @@ if macOSSPIBuild == false { // jemalloc always disable for macOSSPIBuild
     if let disableJemalloc, disableJemalloc != "false", disableJemalloc != "0" {
         print("Jemalloc disabled through environment variable.")
     } else {
-        package.dependencies += [.package(url: "https://github.com/ordo-one/package-jemalloc", .upToNextMajor(from: "1.0.0"))]
+        package.dependencies += [.package(url: "https://github.com/ordo-one/package-jemalloc.git", .upToNextMajor(from: "1.0.0"))]
         dependencies += [.product(name: "jemalloc", package: "package-jemalloc", condition: .when(platforms: [.macOS, .linux]))]
     }
 }
