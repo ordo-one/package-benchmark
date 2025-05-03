@@ -17,7 +17,7 @@
 #endif
 
 import ArgumentParser
-import Shared
+import BenchmarkShared
 
 @_documentation(visibility: internal)
 extension TimeUnits: ExpressibleByArgument {}
