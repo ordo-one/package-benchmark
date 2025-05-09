@@ -21,11 +21,11 @@ let package = Package(
         )
     ],
     dependencies: [
-        .package(url: "https://github.com/apple/swift-system", .upToNextMajor(from: "1.1.0")),
-        .package(url: "https://github.com/apple/swift-argument-parser", .upToNextMajor(from: "1.1.0")),
-        .package(url: "https://github.com/ordo-one/TextTable", .upToNextMajor(from: "0.0.1")),
-        .package(url: "https://github.com/HdrHistogram/hdrhistogram-swift", .upToNextMajor(from: "0.1.0")),
-        .package(url: "https://github.com/apple/swift-atomics", .upToNextMajor(from: "1.0.0"))
+        .package(url: "https://github.com/apple/swift-system.git", .upToNextMajor(from: "1.1.0")),
+        .package(url: "https://github.com/apple/swift-argument-parser.git", .upToNextMajor(from: "1.1.0")),
+        .package(url: "https://github.com/ordo-one/TextTable.git", .upToNextMajor(from: "0.0.1")),
+        .package(url: "https://github.com/HdrHistogram/hdrhistogram-swift.git", .upToNextMajor(from: "0.1.0")),
+        .package(url: "https://github.com/apple/swift-atomics.git", .upToNextMajor(from: "1.0.0"))
     ],
     targets: [
         // Plugins used by users of the package
@@ -63,7 +63,7 @@ let package = Package(
                 .product(name: "SystemPackage", package: "swift-system"),
                 .product(name: "TextTable", package: "TextTable"),
                 "Benchmark",
-                "Shared"
+                "BenchmarkShared"
             ],
             path: "Plugins/BenchmarkTool"
         ),
@@ -83,7 +83,7 @@ let package = Package(
             name: "BenchmarkHelpGenerator",
             dependencies: [
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
-                "Shared"
+                "BenchmarkShared"
             ],
             path: "Plugins/BenchmarkHelpGenerator"
         ),
@@ -108,7 +108,7 @@ let package = Package(
         .target(name: "SwiftRuntimeHooks"),
 
         // Shared definitions
-        .target(name: "Shared"),
+        .target(name: "BenchmarkShared"),
 
         .testTarget(
             name: "BenchmarkTests",
@@ -142,14 +142,14 @@ var dependencies: [PackageDescription.Target.Dependency] = [
     .byNameItem(name: "CLinuxOperatingSystemStats", condition: .when(platforms: [.linux])),
     .product(name: "Atomics", package: "swift-atomics"),
     "SwiftRuntimeHooks",
-    "Shared",
+    "BenchmarkShared",
 ]
 
 if macOSSPIBuild == false { // jemalloc always disable for macOSSPIBuild
     if let disableJemalloc, disableJemalloc != "false", disableJemalloc != "0" {
         print("Jemalloc disabled through environment variable.")
     } else {
-        package.dependencies += [.package(url: "https://github.com/ordo-one/package-jemalloc", .upToNextMajor(from: "1.0.0"))]
+        package.dependencies += [.package(url: "https://github.com/ordo-one/package-jemalloc.git", .upToNextMajor(from: "1.0.0"))]
         dependencies += [.product(name: "jemalloc", package: "package-jemalloc", condition: .when(platforms: [.macOS, .linux]))]
     }
 }

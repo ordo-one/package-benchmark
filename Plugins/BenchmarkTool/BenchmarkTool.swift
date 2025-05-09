@@ -12,7 +12,7 @@
 
 import ArgumentParser
 import Benchmark
-import Shared
+import BenchmarkShared
 import SystemPackage
 
 #if canImport(Darwin)
@@ -131,7 +131,7 @@ struct BenchmarkTool: AsyncParsableCommand {
         path ?? "Thresholds"
     }
 
-    mutating func failBenchmark(_ reason: String? = nil, exitCode: Shared.ExitCode = .genericFailure, _ failedBenchmark: String? = nil) {
+    mutating func failBenchmark(_ reason: String? = nil, exitCode: BenchmarkShared.ExitCode = .genericFailure, _ failedBenchmark: String? = nil) {
         if let reason {
             print(reason)
             print("")
@@ -152,7 +152,7 @@ struct BenchmarkTool: AsyncParsableCommand {
         }
     }
 
-    func exitBenchmark(exitCode: Shared.ExitCode) {
+    func exitBenchmark(exitCode: BenchmarkShared.ExitCode) {
         #if canImport(Darwin)
             Darwin.exit(exitCode.rawValue)
         #elseif canImport(Glibc)

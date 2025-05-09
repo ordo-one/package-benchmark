@@ -12,7 +12,7 @@
 // instead of writing it by hand
 
 import ArgumentParser
-import Shared
+import BenchmarkShared
 
 let availableMetrics = [
     "cpuUser",
