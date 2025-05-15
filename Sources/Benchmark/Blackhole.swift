@@ -76,9 +76,9 @@ public func identity<T>(_ value: T) -> T {
 ///     var arguments = Arguments()  // set up
 ///     benchmark.startMeasurement()
 ///     for _ in benchmark.scaledIterations {
-///         clobber(&arguments)
+///         blackHoleMutating(&arguments)
 ///         blackHole(benchmarkee(arguments)) 
 ///     }
 /// ```
 @_optimize(none)
-public func clobber(_: UnsafeMutableRawPointer) {}
+public func blackHoleMutating(_: UnsafeMutableRawPointer) {}
