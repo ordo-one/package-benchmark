@@ -81,6 +81,27 @@ let benchmarks: @Sendable () -> Void = {
         benchmark.measurement(CustomMetrics.one, Int.random(in: 1 ... 1_000))
     }
 
+    Benchmark("Amortized throughput benchmark using blackHoleMutating",
+              configuration: .init(metrics: .all + [CustomMetrics.two, CustomMetrics.one, CustomMetrics.three],
+                                   scalingFactor: .mega)) { benchmark in
+        var x = 3.1415926e104  // constant value
+        for _ in benchmark.scaledIterations {
+            blackHoleMutating(&x)  // `x` assumed to be mutated, prevents loop-invariant code motion
+            blackHole(sqrt(x))
+        }
+    }
+
+    Benchmark("Amortized latency benchmark using blackHoleMutating",
+              configuration: .init(metrics: .all + [CustomMetrics.two, CustomMetrics.one, CustomMetrics.three],
+                                   scalingFactor: .mega)) { benchmark in
+        var x = 3.1415926e104  // constant value
+        blackHoleMutating(&x)
+        for _ in benchmark.scaledIterations {
+            x = sqrt(x)
+        }
+        blackHole(x)
+    }
+
     Benchmark("All metrics",
               configuration: .init(metrics: .all, skip: true)) { _ in
     }
