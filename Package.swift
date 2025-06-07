@@ -9,8 +9,8 @@ let disableJemalloc = ProcessInfo.processInfo.environment["BENCHMARK_DISABLE_JEM
 let package = Package(
     name: "Benchmark",
     platforms: [
-        .macOS(.v13),
-        .iOS(.v16)
+        .macOS(.v10_15),
+        .iOS(.v13),
     ],
     products: [
         .plugin(name: "BenchmarkCommandPlugin", targets: ["BenchmarkCommandPlugin"]),

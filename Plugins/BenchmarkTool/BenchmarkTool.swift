@@ -43,6 +43,7 @@ typealias BenchmarkResults = [BenchmarkIdentifier: [BenchmarkResult]]
 fileprivate var failedBenchmarkRuns = 0
 
 @main
+@available(macOS 13, iOS 16, tvOS 16, *)
 struct BenchmarkTool: AsyncParsableCommand {
     @Option(name: .long, help: "The paths to the benchmarks to run")
     var benchmarkExecutablePaths: [String] = []

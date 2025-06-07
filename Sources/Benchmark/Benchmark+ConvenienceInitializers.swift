@@ -1,3 +1,4 @@
+@available(macOS 13, iOS 16, tvOS 16, *)
 public extension Benchmark {
     /// Definition of a Benchmark
     /// - Parameters:

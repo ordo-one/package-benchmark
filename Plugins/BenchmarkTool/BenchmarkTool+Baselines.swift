@@ -63,6 +63,7 @@ struct BenchmarkIdentifier: Codable, Hashable {
     }
 }
 
+@available(macOS 13, iOS 16, tvOS 16, *)
 extension Benchmark {
     var benchmarkIdentifier: BenchmarkIdentifier {
         .init(target: self.target, name: self.name)
@@ -177,6 +178,7 @@ struct BenchmarkBaseline: Codable {
 
 let baselinesDirectory: String = ".benchmarkBaselines"
 
+@available(macOS 13, iOS 16, tvOS 16, *)
 extension BenchmarkTool {
     func printAllBaselines() {
         var storagePath = FilePath(baselineStoragePath)
@@ -391,6 +393,7 @@ extension BenchmarkTool {
     }
 }
 
+@available(macOS 13, iOS 16, tvOS 16, *)
 extension BenchmarkBaseline {
     func thresholdsForBenchmarks(
         _ benchmarks: [Benchmark],
@@ -417,6 +420,7 @@ extension BenchmarkBaseline {
     }
 }
 
+@available(macOS 13, iOS 16, tvOS 16, *)
 extension BenchmarkBaseline: Equatable {
     public func deviationsComparedToBaseline(_ rhs: BenchmarkBaseline,
                                              benchmarks: [Benchmark]) -> BenchmarkResult.ThresholdDeviations {

@@ -25,6 +25,7 @@ extension OutputFormat {
     }
 }
 
+@available(macOS 13, iOS 16, tvOS 16, *)
 extension BenchmarkTool {
     private func printMarkdown(_ markdown: String, terminator: String = "\n") {
         if format == .markdown {

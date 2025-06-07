@@ -20,6 +20,7 @@ import Benchmark
     #error("Unsupported Platform")
 #endif
 
+@available(macOS 13, iOS 16, tvOS 16, *)
 extension BenchmarkTool {
     func benchmarkMachine() -> BenchmarkMachine {
         let processors = sysconf(Int32(_SC_NPROCESSORS_ONLN))

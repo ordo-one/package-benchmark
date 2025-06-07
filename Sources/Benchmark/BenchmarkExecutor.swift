@@ -14,6 +14,7 @@
 
 // swiftlint:disable file_length
 
+@available(macOS 13, iOS 16, tvOS 16, *)
 struct BenchmarkExecutor { // swiftlint:disable:this type_body_length
     init(quiet: Bool = false) {
         self.quiet = quiet

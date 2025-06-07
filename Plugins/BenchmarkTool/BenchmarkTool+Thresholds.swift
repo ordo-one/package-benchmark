@@ -22,6 +22,7 @@ fileprivate struct ThresholdsTableEntry {
     var relative: Double
 }
 
+@available(macOS 13, iOS 16, tvOS 16, *)
 extension BenchmarkTool {
     func printThresholds(_ staticThresholdsPerBenchmark: [BenchmarkIdentifier : [BenchmarkMetric: BenchmarkThresholds.AbsoluteThreshold]]) {
 

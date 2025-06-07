@@ -13,6 +13,7 @@ import Foundation
 // swiftlint:disable file_length identifier_name
 
 /// Defines a benchmark
+@available(macOS 13, iOS 16, tvOS 16, *)
 public final class Benchmark: Codable, Hashable { // swiftlint:disable:this type_body_length
     @_documentation(visibility: internal)
     public typealias BenchmarkClosure = (_ benchmark: Benchmark) -> Void
@@ -427,6 +428,7 @@ public final class Benchmark: Codable, Hashable { // swiftlint:disable:this type
     }
 }
 
+@available(macOS 13, iOS 16, tvOS 16, *)
 public extension Benchmark {
     /// The configuration settings for running a benchmark.
     struct Configuration: Codable {
@@ -505,6 +507,7 @@ public extension Benchmark {
 // This is an additional convenience duplicating the free standing function blackHole() for those cases where
 // another module happens to define it, as we have a type clash between module name and type name and otherwise
 // the user would need to do `import func Benchmark.blackHole` which isn't that obvious - thus this duplication.
+@available(macOS 13, iOS 16, tvOS 16, *)
 public extension Benchmark {
     /// A function to foil compiler optimizations that would otherwise optimize out code you want to benchmark.
     ///
