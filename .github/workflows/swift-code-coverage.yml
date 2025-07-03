@@ -8,7 +8,7 @@ on:
     branches: [ main, next ]
 jobs:
   test-code-coverage:
-    runs-on: [ubuntu-22.04]
+    runs-on: [ubuntu-24.04]
     timeout-minutes: 60
     steps:
     - uses: actions/checkout@v4
@@ -18,7 +18,7 @@ jobs:
       run: |
         sudo apt-get install -y libjemalloc-dev
 
-    - uses: khlopko/setup-swift@bfd61cbd14eeef55a27afc45138b61ced7174839
+    #- uses: khlopko/setup-swift@bfd61cbd14eeef55a27afc45138b61ced7174839
 
     - name: Swift version
       run: swift --version
