@@ -25,6 +25,7 @@ struct Benchmark: AsyncParsableCommand {
         import Benchmark
 
         @main
+        @available(macOS 13, iOS 16, tvOS 16, *)
         struct BenchmarkRunner: BenchmarkRunnerHooks {
           static func registerBenchmarks() {
             _ = benchmarks()

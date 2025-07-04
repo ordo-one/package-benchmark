@@ -20,6 +20,7 @@ import SystemPackage
     #error("Unsupported Platform")
 #endif
 
+@available(macOS 13, iOS 16, tvOS 16, *)
 extension BenchmarkTool {
     func write(exportData: String,
                hostIdentifier: String? = nil,

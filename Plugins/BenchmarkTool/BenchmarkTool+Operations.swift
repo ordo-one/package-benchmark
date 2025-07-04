@@ -22,6 +22,7 @@ import Foundation
 import SystemPackage
 import TextTable
 
+@available(macOS 13, iOS 16, tvOS 16, *)
 extension BenchmarkTool {
     mutating func queryBenchmarks(_ benchmarkPath: String) throws {
         try write(.list)

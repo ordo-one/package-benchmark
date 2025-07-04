@@ -13,6 +13,7 @@
 
 // Command sent from benchmark runner to the benchmark under measurement
 
+@available(macOS 13, iOS 16, tvOS 16, *)
 @_documentation(visibility: internal)
 public enum BenchmarkCommandRequest: Codable {
     case list
@@ -21,6 +22,7 @@ public enum BenchmarkCommandRequest: Codable {
 }
 
 // Replies from benchmark under measure to benchmark runner
+@available(macOS 13, iOS 16, tvOS 16, *)
 @_documentation(visibility: internal)
 public enum BenchmarkCommandReply: Codable {
     case list(benchmark: Benchmark)

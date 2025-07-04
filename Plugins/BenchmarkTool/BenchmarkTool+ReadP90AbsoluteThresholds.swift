@@ -20,6 +20,7 @@ import SystemPackage
     #error("Unsupported Platform")
 #endif
 
+@available(macOS 13, iOS 16, tvOS 16, *)
 extension BenchmarkTool {
     /// `makeBenchmarkThresholds` is a convenience function for reading p90 static thresholds that previously have been exported with `metricP90AbsoluteThresholds`
     ///

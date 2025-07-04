@@ -23,6 +23,7 @@ import Glibc
 #endif
 
 @_documentation(visibility: internal)
+@available(macOS 13, iOS 16, tvOS 16, *)
 public struct BenchmarkClock {
     /// A continuous point in time used for `BenchmarkClock`.
     public struct Instant: Codable, Sendable {
@@ -37,6 +38,7 @@ public struct BenchmarkClock {
 }
 
 @_documentation(visibility: internal)
+@available(macOS 13, iOS 16, tvOS 16, *)
 public extension Clock where Self == BenchmarkClock {
     /// A clock that measures time that always increments but does not stop
     /// incrementing while the system is asleep.
@@ -47,6 +49,7 @@ public extension Clock where Self == BenchmarkClock {
 }
 
 @_documentation(visibility: internal)
+@available(macOS 13, iOS 16, tvOS 16, *)
 extension BenchmarkClock: Clock {
     /// The current continuous instant.
     public var now: BenchmarkClock.Instant {
@@ -118,6 +121,7 @@ extension BenchmarkClock: Clock {
 }
 
 @_documentation(visibility: internal)
+@available(macOS 13, iOS 16, tvOS 16, *)
 extension BenchmarkClock.Instant: InstantProtocol {
     public static var now: BenchmarkClock.Instant { BenchmarkClock.now }
 
@@ -182,6 +186,7 @@ extension BenchmarkClock.Instant: InstantProtocol {
 }
 
 @_documentation(visibility: internal)
+@available(macOS 13, iOS 16, tvOS 16, *)
 public extension Duration {
     func nanoseconds() -> Int64 {
         (components.seconds * 1_000_000_000) + (components.attoseconds / 1_000_000_000)

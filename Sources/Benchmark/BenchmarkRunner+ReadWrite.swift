@@ -14,11 +14,13 @@ import Foundation
 import SystemPackage
 
 // For test dependency injection
+@available(macOS 13, iOS 16, tvOS 16, *)
 protocol BenchmarkRunnerReadWrite {
     func write(_ reply: BenchmarkCommandReply) throws
     func read() throws -> BenchmarkCommandRequest
 }
 
+@available(macOS 13, iOS 16, tvOS 16, *)
 extension BenchmarkRunner {
     func write(_ reply: BenchmarkCommandReply) throws {
         guard outputFD != nil else {

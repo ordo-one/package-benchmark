@@ -9,6 +9,7 @@
 //
 // swiftlint:disable cyclomatic_complexity
 
+@available(macOS 13, iOS 16, tvOS 16, *)
 extension BenchmarkExecutor {
     func performanceCountersNeeded(_ metric: BenchmarkMetric) -> Bool {
         switch metric {
@@ -20,6 +21,7 @@ extension BenchmarkExecutor {
     }
 }
 
+@available(macOS 13, iOS 16, tvOS 16, *)
 extension BenchmarkExecutor {
     func mallocStatsProducerNeeded(_ metric: BenchmarkMetric) -> Bool {
         switch metric {
@@ -39,6 +41,7 @@ extension BenchmarkExecutor {
     }
 }
 
+@available(macOS 13, iOS 16, tvOS 16, *)
 extension BenchmarkExecutor {
     func operatingSystemsStatsProducerNeeded(_ metric: BenchmarkMetric) -> Bool {
         switch metric {
@@ -82,6 +85,7 @@ extension BenchmarkExecutor {
     }
 }
 
+@available(macOS 13, iOS 16, tvOS 16, *)
 extension BenchmarkExecutor {
     func arcStatsProducerNeeded(_ metric: BenchmarkMetric) -> Bool {
         switch metric {

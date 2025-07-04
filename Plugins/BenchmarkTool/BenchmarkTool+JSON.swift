@@ -14,6 +14,7 @@ import Benchmark
 import Foundation
 import SystemPackage
 
+@available(macOS 13, iOS 16, tvOS 16, *)
 extension BenchmarkTool {
     func write(_ reply: BenchmarkCommandRequest) throws {
         let bytesArray = try JSONEncoder().encode(reply)

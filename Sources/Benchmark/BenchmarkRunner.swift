@@ -29,6 +29,7 @@ public protocol BenchmarkRunnerHooks {
 }
 
 @_documentation(visibility: internal)
+@available(macOS 13, iOS 16, tvOS 16, *)
 public extension BenchmarkRunnerHooks {
     static func main() async {
         await BenchmarkRunner.setupBenchmarkRunner(registerBenchmarks: registerBenchmarks)
@@ -36,6 +37,7 @@ public extension BenchmarkRunnerHooks {
 }
 
 @_documentation(visibility: internal)
+@available(macOS 13, iOS 16, tvOS 16, *)
 public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
     static var testReadWrite: BenchmarkRunnerReadWrite?
 
