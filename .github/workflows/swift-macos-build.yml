@@ -17,8 +17,8 @@ jobs:
 #        swift: [ "5.10", "6.0" ]
 
     runs-on: ${{ matrix.os }}
-#    env:
-#      DEVELOPER_DIR: /Applications/Xcode_16.1.app/Contents/Developer
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_16.4.app/Contents/Developer
 
     steps:
     - uses: swift-actions/setup-swift@v2
