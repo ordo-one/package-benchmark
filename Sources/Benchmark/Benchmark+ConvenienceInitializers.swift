@@ -17,7 +17,7 @@ public extension Benchmark {
         teardown: BenchmarkTeardownHook? = nil
     ) {
         self.init(name, configuration: configuration) { benchmark in
-            let setupResult = benchmark.setupState! as! SetupResult // swiftlint:disable:this force_cast
+            let setupResult = benchmark.setupState! as! SetupResult  // swiftlint:disable:this force_cast
             closure(benchmark, setupResult)
         } teardown: {
             try await teardown?()
@@ -46,7 +46,7 @@ public extension Benchmark {
         teardown: BenchmarkTeardownHook? = nil
     ) {
         self.init(name, configuration: configuration) { benchmark in
-            let setupResult = benchmark.setupState! as! SetupResult // swiftlint:disable:this force_cast
+            let setupResult = benchmark.setupState! as! SetupResult  // swiftlint:disable:this force_cast
             await closure(benchmark, setupResult)
         } teardown: {
             try await teardown?()

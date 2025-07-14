@@ -117,7 +117,7 @@ let package = Package(
 )
 // Check if this is a SPI build, then we need to disable jemalloc for macOS
 
-let macOSSPIBuild: Bool // Disables jemalloc for macOS SPI builds as the infrastructure doesn't have jemalloc there
+let macOSSPIBuild: Bool  // Disables jemalloc for macOS SPI builds as the infrastructure doesn't have jemalloc there
 
 #if canImport(Darwin)
 if let spiBuildEnvironment = ProcessInfo.processInfo.environment["SPI_BUILD"], spiBuildEnvironment == "1" {
@@ -144,7 +144,7 @@ var dependencies: [PackageDescription.Target.Dependency] = [
     "BenchmarkShared",
 ]
 
-if macOSSPIBuild == false { // jemalloc always disable for macOSSPIBuild
+if macOSSPIBuild == false {  // jemalloc always disable for macOSSPIBuild
     if let disableJemalloc, disableJemalloc != "false", disableJemalloc != "0" {
         print("Jemalloc disabled through environment variable.")
     } else {

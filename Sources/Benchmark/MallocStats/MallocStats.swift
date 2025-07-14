@@ -23,5 +23,5 @@ struct MallocStats {
     /// , and unused dirty pages. This is a maximum rather than precise because pages may
     /// not actually be physically resident if they correspond to demand-zeroed virtual memory
     /// that has not yet been touched. This is a multiple of the page size.
-    var allocatedResidentMemory: Int = 0 // in bytes
+    var allocatedResidentMemory: Int = 0  // in bytes
 }

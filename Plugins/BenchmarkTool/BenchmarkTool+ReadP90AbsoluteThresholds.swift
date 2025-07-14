@@ -89,7 +89,7 @@ extension BenchmarkTool {
                 print("Failed to close fd for \(path) after reading.")
             }
         } catch {
-            if errno != ENOENT { // file not found is ok, e.g. no thresholds found, then silently return nil
+            if errno != ENOENT {  // file not found is ok, e.g. no thresholds found, then silently return nil
                 print("Failed to open file \(path), errno = [\(errno)] \(Errno(rawValue: errno).description)")
             }
         }
