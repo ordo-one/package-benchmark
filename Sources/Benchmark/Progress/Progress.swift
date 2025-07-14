@@ -25,7 +25,6 @@
 //  SOFTWARE.
 //
 
-
 // MARK: - ProgressBarDisplayer
 
 @_documentation(visibility: internal)
@@ -45,13 +44,12 @@ struct ProgressBarTerminalPrinter: ProgressBarPrinter {
 
     mutating func display(_ progressBar: ProgressBar) {
         let currentTime = getTimeOfDay()
-        if (currentTime - lastPrintedTime > 0.1 || progressBar.index == progressBar.count) {
+        if currentTime - lastPrintedTime > 0.1 || progressBar.index == progressBar.count {
             print("\u{1B}[1A\u{1B}[K\(progressBar.value)")
             lastPrintedTime = currentTime
         }
     }
 }
-
 
 // MARK: - ProgressBar
 
@@ -63,7 +61,9 @@ public struct ProgressBar {
     public let count: Int
     let configuration: [ProgressElementType]?
 
-    public static var defaultConfiguration: [ProgressElementType] = [ProgressIndex(), ProgressBarLine(), ProgressTimeEstimates()]
+    public static var defaultConfiguration: [ProgressElementType] = [
+        ProgressIndex(), ProgressBarLine(), ProgressTimeEstimates(),
+    ]
 
     var printer: ProgressBarPrinter
 
@@ -95,7 +95,6 @@ public struct ProgressBar {
 
 }
 
-
 // MARK: - GeneratorType
 
 @_documentation(visibility: internal)
@@ -114,7 +113,6 @@ public struct ProgressGenerator<G: IteratorProtocol>: IteratorProtocol {
     }
 }
 
-
 // MARK: - SequenceType
 
 @_documentation(visibility: internal)
@@ -131,6 +129,11 @@ public struct Progress<G: Sequence>: Sequence {
 
     public func makeIterator() -> ProgressGenerator<G.Iterator> {
         let count = generator.underestimatedCount
-        return ProgressGenerator(source: generator.makeIterator(), count: count, configuration: configuration, printer: printer)
+        return ProgressGenerator(
+            source: generator.makeIterator(),
+            count: count,
+            configuration: configuration,
+            printer: printer
+        )
     }
 }

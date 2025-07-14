@@ -13,26 +13,45 @@ final class OutputSuppressor {
         // Open /dev/null
         nullFile = open("/dev/null", O_WRONLY)
         guard nullFile != -1 else {
-            throw NSError(domain: "OutputSuppressor", code: 1, userInfo: [NSLocalizedDescriptionKey: "Failed to open /dev/null"])
+            throw NSError(
+                domain: "OutputSuppressor",
+                code: 1,
+                userInfo: [NSLocalizedDescriptionKey: "Failed to open /dev/null"]
+            )
         }
 
         // Redirect stdout and stderr to /dev/null
         guard dup2(nullFile!, FileHandle.standardOutput.fileDescriptor) != -1,
-              dup2(nullFile!, FileHandle.standardError.fileDescriptor) != -1 else {
-            throw NSError(domain: "OutputSuppressor", code: 2, userInfo: [NSLocalizedDescriptionKey: "Failed to redirect output"])
+            dup2(nullFile!, FileHandle.standardError.fileDescriptor) != -1
+        else {
+            throw NSError(
+                domain: "OutputSuppressor",
+                code: 2,
+                userInfo: [NSLocalizedDescriptionKey: "Failed to redirect output"]
+            )
         }
     }
 
     func restoreOutput() throws {
         // Restore original stdout and stderr
         guard let stdout = originalStdout,
-              let stderr = originalStderr else {
-            throw NSError(domain: "OutputSuppressor", code: 3, userInfo: [NSLocalizedDescriptionKey: "Original file descriptors not found"])
+            let stderr = originalStderr
+        else {
+            throw NSError(
+                domain: "OutputSuppressor",
+                code: 3,
+                userInfo: [NSLocalizedDescriptionKey: "Original file descriptors not found"]
+            )
         }
 
         guard dup2(stdout, FileHandle.standardOutput.fileDescriptor) != -1,
-              dup2(stderr, FileHandle.standardError.fileDescriptor) != -1 else {
-            throw NSError(domain: "OutputSuppressor", code: 4, userInfo: [NSLocalizedDescriptionKey: "Failed to restore output"])
+            dup2(stderr, FileHandle.standardError.fileDescriptor) != -1
+        else {
+            throw NSError(
+                domain: "OutputSuppressor",
+                code: 4,
+                userInfo: [NSLocalizedDescriptionKey: "Failed to restore output"]
+            )
         }
 
         // Close file descriptors

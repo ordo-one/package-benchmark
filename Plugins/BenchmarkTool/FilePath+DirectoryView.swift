@@ -11,13 +11,13 @@
 import SystemPackage
 
 #if canImport(Darwin)
-    import Darwin
-    typealias DirectoryStreamPointer = UnsafeMutablePointer<DIR>?
+import Darwin
+typealias DirectoryStreamPointer = UnsafeMutablePointer<DIR>?
 #elseif canImport(Glibc)
-    import Glibc
-    typealias DirectoryStreamPointer = OpaquePointer?
+import Glibc
+typealias DirectoryStreamPointer = OpaquePointer?
 #else
-    #error("Unsupported Platform")
+#error("Unsupported Platform")
 #endif
 
 /// Extends FilePath with basic directory iteration capabilities
@@ -53,8 +53,10 @@ extension FilePath.DirectoryView: IteratorProtocol, Sequence {
         }
 
         let fileName = withUnsafePointer(to: &directoryEntry.pointee.d_name) { pointer -> FilePath.Component in
-            pointer.withMemoryRebound(to: CChar.self,
-                                      capacity: MemoryLayout.size(ofValue: directoryEntry.pointee.d_name)) {
+            pointer.withMemoryRebound(
+                to: CChar.self,
+                capacity: MemoryLayout.size(ofValue: directoryEntry.pointee.d_name)
+            ) {
                 guard let fileName = FilePath.Component(platformString: $0) else {
                     fatalError("Could not initialize FilePath.Component from platformString \(String(cString: $0))")
                 }

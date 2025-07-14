@@ -30,28 +30,33 @@ extension JMHPrimaryMetric {
         let percentiles = [0.0, 50.0, 90.0, 95.0, 99.0, 99.9, 99.99, 99.999, 99.9999, 100.0]
         var percentileValues: [String: Double] = [:]
         var recordedValues: [Double] = []
-//        let factor = 1 // result.metric == .throughput ? 1 : 1_000_000_000 / result.timeUnits.rawValue
+        //        let factor = 1 // result.metric == .throughput ? 1 : 1_000_000_000 / result.timeUnits.rawValue
         let factor = result.metric.countable == false ? 1_000 : 1
 
         for p in percentiles {
-            percentileValues[String(p)] = Statistics.roundToDecimalplaces(Double(histogram.valueAtPercentile(p)) / Double(factor), 3)
+            percentileValues[String(p)] = Statistics.roundToDecimalplaces(
+                Double(histogram.valueAtPercentile(p)) / Double(factor),
+                3
+            )
         }
 
         for value in histogram.recordedValues() {
-            for _ in 0 ..< value.count {
+            for _ in 0..<value.count {
                 recordedValues.append(Statistics.roundToDecimalplaces(Double(value.value) / Double(factor), 3))
             }
         }
 
         self.score = Statistics.roundToDecimalplaces(score / Double(factor), 3)
         scoreError = Statistics.roundToDecimalplaces(error / Double(factor), 3)
-        scoreConfidence = [Statistics.roundToDecimalplaces(score - error) / Double(factor),
-                           Statistics.roundToDecimalplaces(score + error) / Double(factor)]
+        scoreConfidence = [
+            Statistics.roundToDecimalplaces(score - error) / Double(factor),
+            Statistics.roundToDecimalplaces(score + error) / Double(factor),
+        ]
         scorePercentiles = percentileValues
         if result.metric.countable {
             scoreUnit = result.metric == .throughput ? "# / s" : "#"
         } else {
-            scoreUnit = "μs" // result.timeUnits.description
+            scoreUnit = "μs"  // result.timeUnits.description
         }
         rawData = [recordedValues]
     }
@@ -61,7 +66,7 @@ extension BenchmarkTool {
     func convertToJMH(_ baseline: BenchmarkBaseline) throws -> String {
         var resultString = ""
         var jmhElements: [JMHElement] = []
-        var secondaryMetrics: [String: JMHPrimaryMetric] = [:] // could move to OrderedDictionary for consistent output
+        var secondaryMetrics: [String: JMHPrimaryMetric] = [:]  // could move to OrderedDictionary for consistent output
 
         baseline.targets.forEach { benchmarkTarget in
 
@@ -85,18 +90,20 @@ extension BenchmarkTool {
 
                 // Some of these are a bit unclear how to map, so to the best of our understanding:
                 let benchmarkKey = key.replacingOccurrences(of: " ", with: "_")
-                let jmh = JMHElement(benchmark: "package.benchmark.\(benchmarkTarget).\(benchmarkKey)",
-                                     mode: "thrpt",
-                                     threads: 1,
-                                     forks: 1,
-                                     warmupIterations: primaryResult.warmupIterations,
-                                     warmupTime: "1 s",
-                                     warmupBatchSize: 1,
-                                     measurementIterations: primaryResult.statistics.measurementCount,
-                                     measurementTime: "1 s",
-                                     measurementBatchSize: 1,
-                                     primaryMetric: primaryMetrics,
-                                     secondaryMetrics: secondaryMetrics)
+                let jmh = JMHElement(
+                    benchmark: "package.benchmark.\(benchmarkTarget).\(benchmarkKey)",
+                    mode: "thrpt",
+                    threads: 1,
+                    forks: 1,
+                    warmupIterations: primaryResult.warmupIterations,
+                    warmupTime: "1 s",
+                    warmupBatchSize: 1,
+                    measurementIterations: primaryResult.statistics.measurementCount,
+                    measurementTime: "1 s",
+                    measurementBatchSize: 1,
+                    primaryMetric: primaryMetrics,
+                    secondaryMetrics: secondaryMetrics
+                )
 
                 jmhElements.append(jmh)
             }

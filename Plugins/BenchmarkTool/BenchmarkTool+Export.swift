@@ -13,20 +13,21 @@ import Foundation
 import SystemPackage
 
 #if canImport(Darwin)
-    import Darwin
+import Darwin
 #elseif canImport(Glibc)
-    import Glibc
+import Glibc
 #else
-    #error("Unsupported Platform")
+#error("Unsupported Platform")
 #endif
 
 extension BenchmarkTool {
-    func write(exportData: String,
-               hostIdentifier: String? = nil,
-               fileName: String = "results.txt") throws {
+    func write(
+        exportData: String,
+        hostIdentifier: String? = nil,
+        fileName: String = "results.txt"
+    ) throws {
         // Set up desired output path and create any intermediate directories for structure as required:
         var outputPath: FilePath
-
 
         if let path = (thresholdsOperation == nil) ? path : thresholdsPath {
             if path == "stdout" {
@@ -62,7 +63,10 @@ extension BenchmarkTool {
 
         do {
             let fd = try FileDescriptor.open(
-                outputPath, .writeOnly, options: [.truncate, .create], permissions: .ownerReadWrite
+                outputPath,
+                .writeOnly,
+                options: [.truncate, .create],
+                permissions: .ownerReadWrite
             )
 
             do {
@@ -97,9 +101,11 @@ extension BenchmarkTool {
     ///   - exportData: A buffer in the form of an array of unsigned 8-bit integers.
     ///   - hostIdentifier: The identifier of the host running the benchmarks.
     ///   - fileName: The filename to write into.
-    func write(exportData: [UInt8],
-               hostIdentifier: String? = nil,
-               fileName: String = "results.txt") throws {
+    func write(
+        exportData: [UInt8],
+        hostIdentifier: String? = nil,
+        fileName: String = "results.txt"
+    ) throws {
         var outputPath = FilePath(".")
 
         var jsonFile = FilePath()
@@ -117,7 +123,10 @@ extension BenchmarkTool {
 
         do {
             let fd = try FileDescriptor.open(
-                outputPath, .writeOnly, options: [.truncate, .create], permissions: .ownerReadWrite
+                outputPath,
+                .writeOnly,
+                options: [.truncate, .create],
+                permissions: .ownerReadWrite
             )
 
             do {
@@ -149,25 +158,31 @@ extension BenchmarkTool {
     func exportResults(baseline: BenchmarkBaseline) throws {
         let baselineName = baseline.baselineName
         switch format {
-        case .text:
-            fallthrough
-        case .markdown:
+        case .text, .markdown:
             prettyPrint(baseline, header: "Baseline '\(baselineName)'")
         case .influx:
-            try write(exportData: "\(convertToInflux(baseline))",
-                      fileName: "\(baselineName).influx.csv")
+            try write(
+                exportData: "\(convertToInflux(baseline))",
+                fileName: "\(baselineName).influx.csv"
+            )
         case .histogram:
             try baseline.results.forEach { key, results in
                 try results.forEach { values in
                     let outputString = values.statistics.histogram
                     let description = values.metric.rawDescription
-                    try write(exportData: "\(outputString)",
-                              fileName: cleanupStringForShellSafety("\(baselineName).\(key.target).\(key.name).\(description).histogram.txt"))
+                    try write(
+                        exportData: "\(outputString)",
+                        fileName: cleanupStringForShellSafety(
+                            "\(baselineName).\(key.target).\(key.name).\(description).histogram.txt"
+                        )
+                    )
                 }
             }
         case .jmh:
-            try write(exportData: "\(convertToJMH(baseline))",
-                      fileName: cleanupStringForShellSafety("\(baselineName).jmh.json"))
+            try write(
+                exportData: "\(convertToJMH(baseline))",
+                fileName: cleanupStringForShellSafety("\(baselineName).jmh.json")
+            )
         case .histogramSamples:
             try baseline.results.forEach { key, results in
                 var outputString = ""
@@ -177,14 +192,19 @@ extension BenchmarkTool {
 
                     outputString += "\(values.metric.description) \(values.unitDescriptionPretty)\n"
 
-                    histogram.recordedValues().forEach { value in
-                        for _ in 0 ..< value.count {
-                            outputString += "\(values.normalize(Int(value.value)))\n"
+                    histogram.recordedValues()
+                        .forEach { value in
+                            for _ in 0..<value.count {
+                                outputString += "\(values.normalize(Int(value.value)))\n"
+                            }
                         }
-                    }
                     let description = values.metric.rawDescription
-                    try write(exportData: "\(outputString)",
-                              fileName: cleanupStringForShellSafety("\(baselineName).\(key.target).\(key.name).\(description).histogram.samples.tsv"))
+                    try write(
+                        exportData: "\(outputString)",
+                        fileName: cleanupStringForShellSafety(
+                            "\(baselineName).\(key.target).\(key.name).\(description).histogram.samples.tsv"
+                        )
+                    )
                     outputString = ""
                 }
             }
@@ -197,8 +217,12 @@ extension BenchmarkTool {
                     let jsonData = try encoder.encode(histogram)
                     let description = values.metric.rawDescription
                     if let encodedData = String(data: jsonData, encoding: .utf8) {
-                        try write(exportData: encodedData,
-                                  fileName: cleanupStringForShellSafety("\(baselineName).\(key.target).\(key.name).\(description).histogram.json"))
+                        try write(
+                            exportData: encodedData,
+                            fileName: cleanupStringForShellSafety(
+                                "\(baselineName).\(key.target).\(key.name).\(description).histogram.json"
+                            )
+                        )
                     } else {
                         fatalError("Failed to encode histogram data \(jsonData.debugDescription)")
                     }
@@ -213,13 +237,19 @@ extension BenchmarkTool {
 
                     outputString += "Percentile\t" + "\(values.metric.description) \(values.unitDescriptionPretty)\n"
 
-                    for percentile in 0 ... 100 {
-                        outputString += "\(percentile)\t" + "\(values.normalize(Int(histogram.valueAtPercentile(Double(percentile)))))\n"
+                    for percentile in 0...100 {
+                        outputString +=
+                            "\(percentile)\t"
+                            + "\(values.normalize(Int(histogram.valueAtPercentile(Double(percentile)))))\n"
                     }
 
                     let description = values.metric.rawDescription
-                    try write(exportData: "\(outputString)",
-                              fileName: cleanupStringForShellSafety("\(baselineName).\(key.target).\(key.name).\(description).histogram.percentiles.tsv"))
+                    try write(
+                        exportData: "\(outputString)",
+                        fileName: cleanupStringForShellSafety(
+                            "\(baselineName).\(key.target).\(key.name).\(description).histogram.percentiles.tsv"
+                        )
+                    )
                     outputString = ""
                 }
             }
@@ -230,14 +260,18 @@ extension BenchmarkTool {
 
                 var outputResults: [String: BenchmarkThresholds.AbsoluteThreshold] = [:]
                 results.forEach { values in
-                    outputResults[values.metric.rawDescription] = Int(values.statistics.histogram.valueAtPercentile(90.0))
+                    outputResults[values.metric.rawDescription] = Int(
+                        values.statistics.histogram.valueAtPercentile(90.0)
+                    )
                 }
 
                 let jsonResultData = try jsonEncoder.encode(outputResults)
 
                 if let stringOutput = String(data: jsonResultData, encoding: .utf8) {
-                    try write(exportData: stringOutput,
-                              fileName: cleanupStringForShellSafety("\(key.target).\(key.name).p90.json"))
+                    try write(
+                        exportData: stringOutput,
+                        fileName: cleanupStringForShellSafety("\(key.target).\(key.name).p90.json")
+                    )
                 } else {
                     print("Failed to encode json for \(outputResults)")
                 }

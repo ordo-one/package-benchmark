@@ -20,19 +20,24 @@ struct Benchmark: AsyncParsableCommand {
     var output: String
 
     mutating func run() async throws {
-        let outputPath = FilePath(output) // package
+        let outputPath = FilePath(output)  // package
         var boilerplate = """
-        import Benchmark
+            import Benchmark
 
-        @main
-        struct BenchmarkRunner: BenchmarkRunnerHooks {
-          static func registerBenchmarks() {
-            _ = benchmarks()
-          }
-        }
-        """
+            @main
+            struct BenchmarkRunner: BenchmarkRunnerHooks {
+              static func registerBenchmarks() {
+                _ = benchmarks()
+              }
+            }
+            """
         do {
-            let fd = try FileDescriptor.open(outputPath, .writeOnly, options: [.truncate, .create], permissions: .ownerReadWrite)
+            let fd = try FileDescriptor.open(
+                outputPath,
+                .writeOnly,
+                options: [.truncate, .create],
+                permissions: .ownerReadWrite
+            )
             do {
                 try fd.closeAfter {
                     do {

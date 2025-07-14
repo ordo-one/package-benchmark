@@ -36,15 +36,16 @@ import Darwin.C
 func getTimeOfDay() -> Double {
     var tv = timeval()
     gettimeofday(&tv, nil)
-    return Double(tv.tv_sec) + Double(tv.tv_usec) / 1000000
+    return Double(tv.tv_sec) + Double(tv.tv_usec) / 1_000_000
 }
 
 @_documentation(visibility: internal)
 extension Double {
     func format(_ decimalPartLength: Int, minimumIntegerPartLength: Int = 0) -> String {
         let value = String(self)
-        let components = value
-            .split() { $0 == "." }
+        let components =
+            value
+            .split { $0 == "." }
             .map { String($0) }
 
         var integerPart = components.first ?? "0"
@@ -76,11 +77,10 @@ extension String {
         var end = end
         if start < 0 || start > self.count {
             return ""
-        }
-        else if end < 0 || end > self.count {
+        } else if end < 0 || end > self.count {
             end = self.count
         }
-        let range = self.index(self.startIndex, offsetBy: start) ..< self.index(self.startIndex, offsetBy: end)
+        let range = self.index(self.startIndex, offsetBy: start)..<self.index(self.startIndex, offsetBy: end)
         return String(self[range])
     }
 }

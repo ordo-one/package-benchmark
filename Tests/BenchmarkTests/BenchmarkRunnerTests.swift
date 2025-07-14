@@ -18,7 +18,7 @@ final class BenchmarkRunnerTests: XCTestCase, BenchmarkRunnerReadWrite {
     // swiftlint:disable test_case_accessibility
     func write(_: BenchmarkCommandReply) throws {
         writeCount += 1
-//        print("write \(reply)")
+        //        print("write \(reply)")
     }
 
     func read() throws -> BenchmarkCommandRequest {
@@ -30,10 +30,12 @@ final class BenchmarkRunnerTests: XCTestCase, BenchmarkRunnerReadWrite {
         }
         let benchmark3 = Benchmark("Minimal benchmark 3") { _ in
         }
-        let returnValues: [BenchmarkCommandRequest] = [.run(benchmark: benchmark!),
-                                                       .run(benchmark: benchmark2!),
-                                                       .run(benchmark: benchmark3!),
-                                                       .end]
+        let returnValues: [BenchmarkCommandRequest] = [
+            .run(benchmark: benchmark!),
+            .run(benchmark: benchmark2!),
+            .run(benchmark: benchmark3!),
+            .end,
+        ]
 
         readMessage += 1
         return returnValues[readMessage - 1]
@@ -53,7 +55,7 @@ final class BenchmarkRunnerTests: XCTestCase, BenchmarkRunnerReadWrite {
         runner.quiet = false
         runner.timeUnits = .nanoseconds
         try await runner.run()
-        XCTAssertEqual(writeCount, 6) // 3 tests results + 3 end markers
+        XCTAssertEqual(writeCount, 6)  // 3 tests results + 3 end markers
     }
 }
 

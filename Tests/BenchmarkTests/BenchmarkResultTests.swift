@@ -20,19 +20,23 @@ final class BenchmarkResultTests: XCTestCase {
         firstStatistics.add(175_000_000_000)
         firstStatistics.add(190_000_000_000)
 
-        let firstResult = BenchmarkResult(metric: .cpuUser,
-                                          timeUnits: .nanoseconds,
-                                          scalingFactor: .one,
-                                          warmupIterations: 0,
-                                          thresholds: .default,
-                                          statistics: firstStatistics)
+        let firstResult = BenchmarkResult(
+            metric: .cpuUser,
+            timeUnits: .nanoseconds,
+            scalingFactor: .one,
+            warmupIterations: 0,
+            thresholds: .default,
+            statistics: firstStatistics
+        )
 
-        let secondResult = BenchmarkResult(metric: .cpuUser,
-                                           timeUnits: .nanoseconds,
-                                           scalingFactor: .giga,
-                                           warmupIterations: 20,
-                                           thresholds: .default,
-                                           statistics: firstStatistics)
+        let secondResult = BenchmarkResult(
+            metric: .cpuUser,
+            timeUnits: .nanoseconds,
+            scalingFactor: .giga,
+            warmupIterations: 20,
+            thresholds: .default,
+            statistics: firstStatistics
+        )
 
         XCTAssertEqual(firstResult, secondResult)
     }
@@ -54,43 +58,53 @@ final class BenchmarkResultTests: XCTestCase {
         thirdStatistics.add(251_000_000_000)
         thirdStatistics.add(275_000_000_000)
 
-        let firstResult = BenchmarkResult(metric: .cpuUser,
-                                          timeUnits: .nanoseconds,
-                                          scalingFactor: .one,
-                                          warmupIterations: 0,
-                                          thresholds: .default,
-                                          statistics: firstStatistics)
+        let firstResult = BenchmarkResult(
+            metric: .cpuUser,
+            timeUnits: .nanoseconds,
+            scalingFactor: .one,
+            warmupIterations: 0,
+            thresholds: .default,
+            statistics: firstStatistics
+        )
 
-        var secondResult = BenchmarkResult(metric: .cpuUser,
-                                           timeUnits: .microseconds,
-                                           scalingFactor: .one,
-                                           warmupIterations: 0,
-                                           thresholds: .default,
-                                           statistics: secondStatistics)
+        var secondResult = BenchmarkResult(
+            metric: .cpuUser,
+            timeUnits: .microseconds,
+            scalingFactor: .one,
+            warmupIterations: 0,
+            thresholds: .default,
+            statistics: secondStatistics
+        )
 
-        var thirdResult = BenchmarkResult(metric: .cpuUser,
-                                          timeUnits: .microseconds,
-                                          scalingFactor: .one,
-                                          warmupIterations: 0,
-                                          thresholds: .default,
-                                          statistics: thirdStatistics)
+        var thirdResult = BenchmarkResult(
+            metric: .cpuUser,
+            timeUnits: .microseconds,
+            scalingFactor: .one,
+            warmupIterations: 0,
+            thresholds: .default,
+            statistics: thirdStatistics
+        )
 
         XCTAssertLessThan(firstResult, secondResult)
         XCTAssertGreaterThan(thirdResult, secondResult)
 
-        secondResult = BenchmarkResult(metric: .throughput,
-                                       timeUnits: .microseconds,
-                                       scalingFactor: .one,
-                                       warmupIterations: 0,
-                                       thresholds: .default,
-                                       statistics: secondStatistics)
+        secondResult = BenchmarkResult(
+            metric: .throughput,
+            timeUnits: .microseconds,
+            scalingFactor: .one,
+            warmupIterations: 0,
+            thresholds: .default,
+            statistics: secondStatistics
+        )
 
-        thirdResult = BenchmarkResult(metric: .throughput,
-                                      timeUnits: .microseconds,
-                                      scalingFactor: .one,
-                                      warmupIterations: 0,
-                                      thresholds: .default,
-                                      statistics: thirdStatistics)
+        thirdResult = BenchmarkResult(
+            metric: .throughput,
+            timeUnits: .microseconds,
+            scalingFactor: .one,
+            warmupIterations: 0,
+            thresholds: .default,
+            statistics: thirdStatistics
+        )
 
         // Should be reversed for throughput measurements
         XCTAssertLessThan(thirdResult, secondResult)
@@ -105,19 +119,23 @@ final class BenchmarkResultTests: XCTestCase {
         firstStatistics.add(198_000_000_000)
         firstStatistics.add(200_000_000_000)
 
-        let firstResult = BenchmarkResult(metric: .cpuUser,
-                                          timeUnits: .microseconds,
-                                          scalingFactor: .one,
-                                          warmupIterations: 0,
-                                          thresholds: .default,
-                                          statistics: firstStatistics)
+        let firstResult = BenchmarkResult(
+            metric: .cpuUser,
+            timeUnits: .microseconds,
+            scalingFactor: .one,
+            warmupIterations: 0,
+            thresholds: .default,
+            statistics: firstStatistics
+        )
 
-        let secondResult = BenchmarkResult(metric: .cpuSystem,
-                                           timeUnits: .microseconds,
-                                           scalingFactor: .one,
-                                           warmupIterations: 0,
-                                           thresholds: .default,
-                                           statistics: firstStatistics)
+        let secondResult = BenchmarkResult(
+            metric: .cpuSystem,
+            timeUnits: .microseconds,
+            scalingFactor: .one,
+            warmupIterations: 0,
+            thresholds: .default,
+            statistics: firstStatistics
+        )
 
         XCTAssertNotEqual(firstResult, secondResult)
         XCTAssertFalse(firstResult > secondResult)
@@ -144,19 +162,23 @@ final class BenchmarkResultTests: XCTestCase {
         secondStatistics.add(199_001)
         secondStatistics.add(200_004)
 
-        let firstResult = BenchmarkResult(metric: .cpuUser,
-                                          timeUnits: .milliseconds,
-                                          scalingFactor: .one,
-                                          warmupIterations: 0,
-                                          thresholds: .default,
-                                          statistics: firstStatistics)
+        let firstResult = BenchmarkResult(
+            metric: .cpuUser,
+            timeUnits: .milliseconds,
+            scalingFactor: .one,
+            warmupIterations: 0,
+            thresholds: .default,
+            statistics: firstStatistics
+        )
 
-        let secondResult = BenchmarkResult(metric: .cpuUser,
-                                           timeUnits: .microseconds,
-                                           scalingFactor: .one,
-                                           warmupIterations: 0,
-                                           thresholds: .default,
-                                           statistics: secondStatistics)
+        let secondResult = BenchmarkResult(
+            metric: .cpuUser,
+            timeUnits: .microseconds,
+            scalingFactor: .one,
+            warmupIterations: 0,
+            thresholds: .default,
+            statistics: secondStatistics
+        )
 
         XCTAssert(secondResult.deviationsComparedWith(firstResult).regressions.isEmpty)
     }
@@ -180,71 +202,88 @@ final class BenchmarkResultTests: XCTestCase {
         secondStatistics.add(199)
         secondStatistics.add(210)
 
-        let relative: BenchmarkThresholds.RelativeThresholds = [.p0: 0.0,
-                                                                .p25: 0.0,
-                                                                .p50: 0.0,
-                                                                .p75: 0.0,
-                                                                .p90: 0.0,
-                                                                .p99: 0.0,
-                                                                .p100: 0.0]
+        let relative: BenchmarkThresholds.RelativeThresholds = [
+            .p0: 0.0,
+            .p25: 0.0,
+            .p50: 0.0,
+            .p75: 0.0,
+            .p90: 0.0,
+            .p99: 0.0,
+            .p100: 0.0,
+        ]
 
-        let relativeRelaxed: BenchmarkThresholds.RelativeThresholds = [.p0: 10.0,
-                                                                       .p25: 10.0,
-                                                                       .p50: 10.0,
-                                                                       .p75: 10.0,
-                                                                       .p90: 10.0,
-                                                                       .p99: 10.0,
-                                                                       .p100: 10.0]
+        let relativeRelaxed: BenchmarkThresholds.RelativeThresholds = [
+            .p0: 10.0,
+            .p25: 10.0,
+            .p50: 10.0,
+            .p75: 10.0,
+            .p90: 10.0,
+            .p99: 10.0,
+            .p100: 10.0,
+        ]
 
-        let absolute: BenchmarkThresholds.AbsoluteThresholds = [.p0: 1,
-                                                                .p25: 1,
-                                                                .p50: 1,
-                                                                .p75: 0,
-                                                                .p90: 0,
-                                                                .p99: 0,
-                                                                .p100: 0]
+        let absolute: BenchmarkThresholds.AbsoluteThresholds = [
+            .p0: 1,
+            .p25: 1,
+            .p50: 1,
+            .p75: 0,
+            .p90: 0,
+            .p99: 0,
+            .p100: 0,
+        ]
 
         let bothThresholds = BenchmarkThresholds(relative: relative, absolute: absolute)
         let absoluteThresholds = BenchmarkThresholds(absolute: absolute)
         let relativeThresholds = BenchmarkThresholds(relative: relative)
         let relativeRelaxedThresholds = BenchmarkThresholds(relative: relativeRelaxed)
 
-        let firstResult = BenchmarkResult(metric: .cpuUser,
-                                          timeUnits: .nanoseconds,
-                                          scalingFactor: .one,
-                                          warmupIterations: 0,
-                                          thresholds: .default,
-                                          statistics: firstStatistics)
+        let firstResult = BenchmarkResult(
+            metric: .cpuUser,
+            timeUnits: .nanoseconds,
+            scalingFactor: .one,
+            warmupIterations: 0,
+            thresholds: .default,
+            statistics: firstStatistics
+        )
 
-        let secondResult = BenchmarkResult(metric: .cpuUser,
-                                           timeUnits: .nanoseconds,
-                                           scalingFactor: .one,
-                                           warmupIterations: 0,
-                                           thresholds: .default,
-                                           statistics: secondStatistics)
+        let secondResult = BenchmarkResult(
+            metric: .cpuUser,
+            timeUnits: .nanoseconds,
+            scalingFactor: .one,
+            warmupIterations: 0,
+            thresholds: .default,
+            statistics: secondStatistics
+        )
 
-        var betterOrEqual = secondResult.deviationsComparedWith(firstResult, thresholds: bothThresholds).regressions.isEmpty
+        var betterOrEqual = secondResult.deviationsComparedWith(firstResult, thresholds: bothThresholds).regressions
+            .isEmpty
         XCTAssertFalse(betterOrEqual)
 
-        betterOrEqual = secondResult.deviationsComparedWith(firstResult, thresholds: relativeRelaxedThresholds).regressions.isEmpty
+        betterOrEqual =
+            secondResult.deviationsComparedWith(firstResult, thresholds: relativeRelaxedThresholds).regressions.isEmpty
         XCTAssert(betterOrEqual)
 
-        betterOrEqual = secondResult.deviationsComparedWith(firstResult, thresholds: relativeThresholds).regressions.isEmpty
+        betterOrEqual =
+            secondResult.deviationsComparedWith(firstResult, thresholds: relativeThresholds).regressions.isEmpty
         XCTAssertFalse(betterOrEqual)
 
-        betterOrEqual = secondResult.deviationsComparedWith(firstResult, thresholds: absoluteThresholds).regressions.isEmpty
+        betterOrEqual =
+            secondResult.deviationsComparedWith(firstResult, thresholds: absoluteThresholds).regressions.isEmpty
         XCTAssertFalse(betterOrEqual)
 
         betterOrEqual = firstResult.deviationsComparedWith(secondResult, thresholds: bothThresholds).regressions.isEmpty
         XCTAssert(betterOrEqual)
 
-        betterOrEqual = firstResult.deviationsComparedWith(secondResult, thresholds: relativeRelaxedThresholds).regressions.isEmpty
+        betterOrEqual =
+            firstResult.deviationsComparedWith(secondResult, thresholds: relativeRelaxedThresholds).regressions.isEmpty
         XCTAssert(betterOrEqual)
 
-        betterOrEqual = firstResult.deviationsComparedWith(secondResult, thresholds: relativeThresholds).regressions.isEmpty
+        betterOrEqual =
+            firstResult.deviationsComparedWith(secondResult, thresholds: relativeThresholds).regressions.isEmpty
         XCTAssert(betterOrEqual)
 
-        betterOrEqual = firstResult.deviationsComparedWith(secondResult, thresholds: absoluteThresholds).regressions.isEmpty
+        betterOrEqual =
+            firstResult.deviationsComparedWith(secondResult, thresholds: absoluteThresholds).regressions.isEmpty
         XCTAssert(betterOrEqual)
     }
 
@@ -282,12 +321,14 @@ final class BenchmarkResultTests: XCTestCase {
         fourthStatistics.add(1_501)
         fourthStatistics.add(1_501)
 
-        let absolute: BenchmarkThresholds.AbsoluteThresholds = [.p0: 1,
-                                                                .p25: 1,
-                                                                .p50: 1,
-                                                                .p75: 1,
-                                                                .p90: 1,
-                                                                .p99: 1]
+        let absolute: BenchmarkThresholds.AbsoluteThresholds = [
+            .p0: 1,
+            .p25: 1,
+            .p50: 1,
+            .p75: 1,
+            .p90: 1,
+            .p99: 1,
+        ]
 
         let absoluteThresholds = BenchmarkThresholds(absolute: absolute)
 
@@ -295,45 +336,64 @@ final class BenchmarkResultTests: XCTestCase {
 
         let absoluteThresholdsP90 = BenchmarkThresholds(absolute: absoluteP90)
 
-        let firstResult = BenchmarkResult(metric: .cpuUser,
-                                          timeUnits: .nanoseconds,
-                                          scalingFactor: .one,
-                                          warmupIterations: 0,
-                                          thresholds: .default,
-                                          statistics: firstStatistics)
+        let firstResult = BenchmarkResult(
+            metric: .cpuUser,
+            timeUnits: .nanoseconds,
+            scalingFactor: .one,
+            warmupIterations: 0,
+            thresholds: .default,
+            statistics: firstStatistics
+        )
 
-        let secondResult = BenchmarkResult(metric: .cpuUser,
-                                           timeUnits: .nanoseconds,
-                                           scalingFactor: .one,
-                                           warmupIterations: 0,
-                                           thresholds: .default,
-                                           statistics: secondStatistics)
+        let secondResult = BenchmarkResult(
+            metric: .cpuUser,
+            timeUnits: .nanoseconds,
+            scalingFactor: .one,
+            warmupIterations: 0,
+            thresholds: .default,
+            statistics: secondStatistics
+        )
 
-        let thirdResult = BenchmarkResult(metric: .cpuUser,
-                                          timeUnits: .nanoseconds,
-                                          scalingFactor: .one,
-                                          warmupIterations: 0,
-                                          thresholds: .default,
-                                          statistics: thirdStatistics)
+        let thirdResult = BenchmarkResult(
+            metric: .cpuUser,
+            timeUnits: .nanoseconds,
+            scalingFactor: .one,
+            warmupIterations: 0,
+            thresholds: .default,
+            statistics: thirdStatistics
+        )
 
-        var deviations = secondResult.deviationsComparedWith(firstResult,
-                                                             thresholds: absoluteThresholds)
+        var deviations = secondResult.deviationsComparedWith(
+            firstResult,
+            thresholds: absoluteThresholds
+        )
         XCTAssertFalse(deviations.regressions.isEmpty, "Regressions: \(deviations.regressions)")
 
-        deviations = firstResult.deviationsComparedWith(secondResult,
-                                                        thresholds: absoluteThresholds)
+        deviations = firstResult.deviationsComparedWith(
+            secondResult,
+            thresholds: absoluteThresholds
+        )
         XCTAssert(deviations.regressions.isEmpty)
 
         Benchmark.checkAbsoluteThresholds = true
-        deviations = thirdResult.deviationsAgainstAbsoluteThresholds(thresholds: absoluteThresholdsP90, p90Threshold: 1_497)
+        deviations = thirdResult.deviationsAgainstAbsoluteThresholds(
+            thresholds: absoluteThresholdsP90,
+            p90Threshold: 1_497
+        )
         XCTAssertFalse(deviations.regressions.isEmpty)
 
         Benchmark.checkAbsoluteThresholds = true
-        deviations = thirdResult.deviationsAgainstAbsoluteThresholds(thresholds: absoluteThresholdsP90, p90Threshold: 1_505)
+        deviations = thirdResult.deviationsAgainstAbsoluteThresholds(
+            thresholds: absoluteThresholdsP90,
+            p90Threshold: 1_505
+        )
         XCTAssertFalse(deviations.improvements.isEmpty)
 
         Benchmark.checkAbsoluteThresholds = true
-        deviations = thirdResult.deviationsAgainstAbsoluteThresholds(thresholds: absoluteThresholdsP90, p90Threshold: 1_501)
+        deviations = thirdResult.deviationsAgainstAbsoluteThresholds(
+            thresholds: absoluteThresholdsP90,
+            p90Threshold: 1_501
+        )
         XCTAssertTrue(deviations.improvements.isEmpty && deviations.regressions.isEmpty)
     }
 
@@ -347,12 +407,14 @@ final class BenchmarkResultTests: XCTestCase {
         firstStatistics.add(199)
         firstStatistics.add(200)
 
-        let firstResult = BenchmarkResult(metric: .cpuUser,
-                                          timeUnits: .nanoseconds,
-                                          scalingFactor: .one,
-                                          warmupIterations: 0,
-                                          thresholds: .default,
-                                          statistics: firstStatistics)
+        let firstResult = BenchmarkResult(
+            metric: .cpuUser,
+            timeUnits: .nanoseconds,
+            scalingFactor: .one,
+            warmupIterations: 0,
+            thresholds: .default,
+            statistics: firstStatistics
+        )
 
         XCTAssertGreaterThan((firstResult.unitDescription + firstResult.unitDescriptionPretty).count, 5)
     }
@@ -361,30 +423,36 @@ final class BenchmarkResultTests: XCTestCase {
         let firstStatistics = Statistics()
         firstStatistics.add(125_000_000_000)
 
-        var result = BenchmarkResult(metric: .cpuUser,
-                                     timeUnits: .milliseconds,
-                                     scalingFactor: .giga,
-                                     warmupIterations: 0,
-                                     thresholds: .default,
-                                     statistics: firstStatistics)
+        var result = BenchmarkResult(
+            metric: .cpuUser,
+            timeUnits: .milliseconds,
+            scalingFactor: .giga,
+            warmupIterations: 0,
+            thresholds: .default,
+            statistics: firstStatistics
+        )
 
         XCTAssertEqual(result.normalize(125_000_000), result.scale(125_000_000_000))
 
-        result = BenchmarkResult(metric: .cpuUser,
-                                 timeUnits: .microseconds,
-                                 scalingFactor: .mega,
-                                 warmupIterations: 0,
-                                 thresholds: .default,
-                                 statistics: firstStatistics)
+        result = BenchmarkResult(
+            metric: .cpuUser,
+            timeUnits: .microseconds,
+            scalingFactor: .mega,
+            warmupIterations: 0,
+            thresholds: .default,
+            statistics: firstStatistics
+        )
 
         XCTAssertEqual(result.normalize(125_000_000), result.scale(125_000_000_000))
 
-        result = BenchmarkResult(metric: .cpuUser,
-                                 timeUnits: .nanoseconds,
-                                 scalingFactor: .kilo,
-                                 warmupIterations: 0,
-                                 thresholds: .default,
-                                 statistics: firstStatistics)
+        result = BenchmarkResult(
+            metric: .cpuUser,
+            timeUnits: .nanoseconds,
+            scalingFactor: .kilo,
+            warmupIterations: 0,
+            thresholds: .default,
+            statistics: firstStatistics
+        )
 
         XCTAssertEqual(result.normalize(125_000_000), result.scale(125_000_000_000))
     }

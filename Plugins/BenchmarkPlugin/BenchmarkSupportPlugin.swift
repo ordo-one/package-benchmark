@@ -2,7 +2,9 @@ import PackagePlugin
 
 @main
 struct PluginFactory: BuildToolPlugin {
-    func createBuildCommands(context: PackagePlugin.PluginContext, target: PackagePlugin.Target) async throws -> [PackagePlugin.Command] {
+    func createBuildCommands(context: PackagePlugin.PluginContext, target: PackagePlugin.Target) async throws
+        -> [PackagePlugin.Command]
+    {
         guard let target = target as? SwiftSourceModuleTarget else { return [] }
         guard target.kind == .executable else { return [] }
         let path = target.directory.removingLastComponent()
@@ -16,7 +18,7 @@ struct PluginFactory: BuildToolPlugin {
 
         let commandArgs: [String] = [
             "--target", target.name,
-            "--output", swiftFile.string
+            "--output", swiftFile.string,
         ]
 
         let command: Command = .buildCommand(

@@ -13,11 +13,11 @@ import Foundation
 import SystemPackage
 
 #if canImport(Darwin)
-    import Darwin
+import Darwin
 #elseif canImport(Glibc)
-    import Glibc
+import Glibc
 #else
-    #error("Unsupported Platform")
+#error("Unsupported Platform")
 #endif
 
 extension BenchmarkTool {
@@ -33,7 +33,7 @@ extension BenchmarkTool {
     static func makeBenchmarkThresholds(
         path: String,
         benchmarkIdentifier: BenchmarkIdentifier
-    ) -> [BenchmarkMetric : BenchmarkThresholds.AbsoluteThreshold]? {
+    ) -> [BenchmarkMetric: BenchmarkThresholds.AbsoluteThreshold]? {
         var path = FilePath(path)
         if path.isAbsolute {
             path.append("\(benchmarkIdentifier.target).\(benchmarkIdentifier.name).p90.json")
@@ -66,10 +66,11 @@ extension BenchmarkTool {
                             readBytes.append(contentsOf: nextBytes)
                         }
 
-                        p90ThresholdsRaw = try JSONDecoder().decode(
-                            [String: BenchmarkThresholds.AbsoluteThreshold].self,
-                            from: Data(readBytes)
-                        )
+                        p90ThresholdsRaw = try JSONDecoder()
+                            .decode(
+                                [String: BenchmarkThresholds.AbsoluteThreshold].self,
+                                from: Data(readBytes)
+                            )
 
                         if let p90ThresholdsRaw {
                             p90ThresholdsRaw.forEach { metric, threshold in
@@ -79,14 +80,16 @@ extension BenchmarkTool {
                             }
                         }
                     } catch {
-                        print("Failed to read file at \(path) [\(String(reflecting: error))] \(Errno(rawValue: errno).description)")
+                        print(
+                            "Failed to read file at \(path) [\(String(reflecting: error))] \(Errno(rawValue: errno).description)"
+                        )
                     }
                 }
             } catch {
                 print("Failed to close fd for \(path) after reading.")
             }
         } catch {
-            if errno != ENOENT { // file not found is ok, e.g. no thresholds found, then silently return nil
+            if errno != ENOENT {  // file not found is ok, e.g. no thresholds found, then silently return nil
                 print("Failed to open file \(path), errno = [\(errno)] \(Errno(rawValue: errno).description)")
             }
         }
