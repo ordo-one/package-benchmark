@@ -20,7 +20,7 @@ struct Benchmark: AsyncParsableCommand {
     var output: String
 
     mutating func run() async throws {
-        let outputPath = FilePath(output) // package
+        let outputPath = FilePath(output)  // package
         var boilerplate = """
             import Benchmark
 
