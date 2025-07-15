@@ -11,11 +11,11 @@
 import SystemPackage
 
 #if canImport(Darwin)
-    import Darwin
+import Darwin
 #elseif canImport(Glibc)
-    import Glibc
+import Glibc
 #else
-    #error("Unsupported Platform")
+#error("Unsupported Platform")
 #endif
 
 public extension FilePath {
@@ -27,7 +27,10 @@ public extension FilePath {
 
             do {
                 let fd = try FileDescriptor.open(
-                    creationPath, .readOnly, options: [.directory], permissions: .ownerReadWrite
+                    creationPath,
+                    .readOnly,
+                    options: [.directory],
+                    permissions: .ownerReadWrite
                 )
 
                 do {
@@ -35,7 +38,7 @@ public extension FilePath {
                 } catch { print("failed close directory") }
             } catch {
                 switch errno {
-                case ENOENT: // doesn't exist, let's create it
+                case ENOENT:  // doesn't exist, let's create it
                     if mkdir(creationPath.string, S_IRWXU | S_IRWXG | S_IRWXO) == -1 {
                         if errno == EPERM {
                             print("Lacking permissions to write to \(creationPath)")
