@@ -11,14 +11,17 @@
 /// The memory allocation stats the the MallocStatsProducer can provide
 @_documentation(visibility: internal)
 struct MallocStats {
-    var mallocCountTotal: Int = 0 /// total number of mallocs done
-    var mallocCountSmall: Int = 0 /// number of small mallocs (as defined by jemalloc)
-    var mallocCountLarge: Int = 0 /// number of large mallocs (as defined by jemalloc)
+    var mallocCountTotal: Int = 0
+    /// total number of mallocs done
+    var mallocCountSmall: Int = 0
+    /// number of small mallocs (as defined by jemalloc)
+    var mallocCountLarge: Int = 0
+    /// number of large mallocs (as defined by jemalloc)
 
     /// Maximum number of bytes in physically resident data pages mapped by the allocator,
     /// comprising all pages dedicated to allocator metadata, pages backing active allocations
     /// , and unused dirty pages. This is a maximum rather than precise because pages may
     /// not actually be physically resident if they correspond to demand-zeroed virtual memory
     /// that has not yet been touched. This is a multiple of the page size.
-    var allocatedResidentMemory: Int = 0 // in bytes
+    var allocatedResidentMemory: Int = 0  // in bytes
 }
