@@ -21,8 +21,10 @@ public struct BenchmarkThresholds: Codable {
     /// - Parameters:
     ///   - relative: A dictionary with relative thresholds tolerances per percentile (using for delta comparisons)
     ///   - absolute: A dictionary with absolute thresholds tolerances per percentile (used both for delta and absolute comparisons)
-    public init(relative: RelativeThresholds = Self.Relative.none,
-                absolute: AbsoluteThresholds = Self.Absolute.none) {
+    public init(
+        relative: RelativeThresholds = Self.Relative.none,
+        absolute: AbsoluteThresholds = Self.Absolute.none
+    ) {
         self.relative = relative
         self.absolute = absolute
     }

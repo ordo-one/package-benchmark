@@ -28,9 +28,9 @@ public struct BenchmarkClock {
     public struct Instant: Codable, Sendable {
         internal var _value: Swift.Duration
 
-//        internal init(_value: Swift.Duration) {
-//            self._value = _value
-//        }
+        //        internal init(_value: Swift.Duration) {
+        //            self._value = _value
+        //        }
     }
 
     public init() {}
@@ -55,9 +55,9 @@ extension BenchmarkClock: Clock {
 
     /// The minimum non-zero resolution between any two calls to `now`.
     public var minimumResolution: Swift.Duration {
-#if canImport(Darwin)
+        #if canImport(Darwin)
         return Duration.nanoseconds(1)
-#elseif os(Linux)
+        #elseif os(Linux)
         var resolution = timespec()
 
         let result = clock_getres(CLOCK_BOOTTIME, &resolution)
@@ -70,21 +70,25 @@ extension BenchmarkClock: Clock {
         let attoseconds = Int64(resolution.tv_nsec) * 1_000_000_000
 
         return Duration(secondsComponent: seconds, attosecondsComponent: attoseconds)
-#else
-#error("Unsupported Platform")
-#endif
+        #else
+        #error("Unsupported Platform")
+        #endif
     }
 
     /// The current continuous instant.
     public static var now: BenchmarkClock.Instant {
-#if canImport(Darwin)
-        let nanos = clock_gettime_nsec_np(CLOCK_UPTIME_RAW) // to get ns resolution on macOS
+        #if canImport(Darwin)
+        let nanos = clock_gettime_nsec_np(CLOCK_UPTIME_RAW)  // to get ns resolution on macOS
 
         let seconds: UInt64 = nanos / 1_000_000_000
         let attoseconds: UInt64 = (nanos % 1_000_000_000) * 1_000_000_000
-        return BenchmarkClock.Instant(_value: Duration(secondsComponent: Int64(seconds),
-                                                       attosecondsComponent: Int64(attoseconds)))
-#elseif os(Linux)
+        return BenchmarkClock.Instant(
+            _value: Duration(
+                secondsComponent: Int64(seconds),
+                attosecondsComponent: Int64(attoseconds)
+            )
+        )
+        #elseif os(Linux)
         var timespec = timespec()
         let result = clock_gettime(CLOCK_BOOTTIME, &timespec)
 
@@ -94,11 +98,15 @@ extension BenchmarkClock: Clock {
         let seconds = Int64(timespec.tv_sec)
         let attoseconds = Int64(timespec.tv_nsec) * 1_000_000_000
 
-        return BenchmarkClock.Instant(_value: Duration(secondsComponent: Int64(seconds),
-                                                       attosecondsComponent: Int64(attoseconds)))
-#else
-#error("Unsupported Platform")
-#endif
+        return BenchmarkClock.Instant(
+            _value: Duration(
+                secondsComponent: Int64(seconds),
+                attosecondsComponent: Int64(attoseconds)
+            )
+        )
+        #else
+        #error("Unsupported Platform")
+        #endif
     }
 
     /// Suspend task execution until a given deadline within a tolerance.
@@ -111,7 +119,8 @@ extension BenchmarkClock: Clock {
     ///
     /// This function doesn't block the underlying thread.
     public func sleep(
-        until deadline: Instant, tolerance: Swift.Duration? = nil
+        until deadline: Instant,
+        tolerance: Swift.Duration? = nil
     ) async throws {
         try await Task.sleep(until: deadline, tolerance: tolerance, clock: .internalUTC)
     }
@@ -134,48 +143,55 @@ extension BenchmarkClock.Instant: InstantProtocol {
     }
 
     public static func == (
-        _ lhs: BenchmarkClock.Instant, _ rhs: BenchmarkClock.Instant
+        _ lhs: BenchmarkClock.Instant,
+        _ rhs: BenchmarkClock.Instant
     ) -> Bool {
         lhs._value == rhs._value
     }
 
     public static func < (
-        _ lhs: BenchmarkClock.Instant, _ rhs: BenchmarkClock.Instant
+        _ lhs: BenchmarkClock.Instant,
+        _ rhs: BenchmarkClock.Instant
     ) -> Bool {
         lhs._value < rhs._value
     }
 
     @inlinable
     public static func + (
-        _ lhs: BenchmarkClock.Instant, _ rhs: Swift.Duration
+        _ lhs: BenchmarkClock.Instant,
+        _ rhs: Swift.Duration
     ) -> BenchmarkClock.Instant {
         lhs.advanced(by: rhs)
     }
 
     @inlinable
     public static func += (
-        _ lhs: inout BenchmarkClock.Instant, _ rhs: Swift.Duration
+        _ lhs: inout BenchmarkClock.Instant,
+        _ rhs: Swift.Duration
     ) {
         lhs = lhs.advanced(by: rhs)
     }
 
     @inlinable
     public static func - (
-        _ lhs: BenchmarkClock.Instant, _ rhs: Swift.Duration
+        _ lhs: BenchmarkClock.Instant,
+        _ rhs: Swift.Duration
     ) -> BenchmarkClock.Instant {
         lhs.advanced(by: .zero - rhs)
     }
 
     @inlinable
     public static func -= (
-        _ lhs: inout BenchmarkClock.Instant, _ rhs: Swift.Duration
+        _ lhs: inout BenchmarkClock.Instant,
+        _ rhs: Swift.Duration
     ) {
         lhs = lhs.advanced(by: .zero - rhs)
     }
 
     @inlinable
     public static func - (
-        _ lhs: BenchmarkClock.Instant, _ rhs: BenchmarkClock.Instant
+        _ lhs: BenchmarkClock.Instant,
+        _ rhs: BenchmarkClock.Instant
     ) -> Swift.Duration {
         rhs.duration(to: lhs)
     }

@@ -12,11 +12,11 @@
 import XCTest
 
 #if canImport(Darwin)
-    import Darwin
+import Darwin
 #elseif canImport(Glibc)
-    import Glibc
+import Glibc
 #else
-    #error("Unsupported Platform")
+#error("Unsupported Platform")
 #endif
 
 final class OperatingSystemAndMallocTests: XCTestCase {
@@ -24,8 +24,8 @@ final class OperatingSystemAndMallocTests: XCTestCase {
         let operatingSystemStatsProducer = OperatingSystemStatsProducer()
         operatingSystemStatsProducer.startSampling(1)
         let startOperatingSystemStats = operatingSystemStatsProducer.makeOperatingSystemStats()
-        for outerloop in 0 ..< 100 {
-            for innerloop in 0 ..< 10 {
+        for outerloop in 0..<100 {
+            for innerloop in 0..<10 {
                 blackHole(outerloop * outerloop * outerloop * innerloop * innerloop)
                 usleep(1)
                 blackHole(malloc(1))
@@ -36,10 +36,14 @@ final class OperatingSystemAndMallocTests: XCTestCase {
         XCTAssertGreaterThanOrEqual(stopOperatingSystemStats.cpuTotal, startOperatingSystemStats.cpuTotal)
         XCTAssertGreaterThanOrEqual(stopOperatingSystemStats.cpuUser, startOperatingSystemStats.cpuUser)
         XCTAssertGreaterThanOrEqual(stopOperatingSystemStats.cpuSystem, startOperatingSystemStats.cpuSystem)
-        XCTAssertGreaterThanOrEqual(stopOperatingSystemStats.peakMemoryResident,
-                                    startOperatingSystemStats.peakMemoryResident)
-        XCTAssertGreaterThanOrEqual(stopOperatingSystemStats.peakMemoryVirtual,
-                                    startOperatingSystemStats.peakMemoryVirtual)
+        XCTAssertGreaterThanOrEqual(
+            stopOperatingSystemStats.peakMemoryResident,
+            startOperatingSystemStats.peakMemoryResident
+        )
+        XCTAssertGreaterThanOrEqual(
+            stopOperatingSystemStats.peakMemoryVirtual,
+            startOperatingSystemStats.peakMemoryVirtual
+        )
     }
 
     func testOperatingSystemStatsProducerMetricSupported() throws {
@@ -56,19 +60,21 @@ final class OperatingSystemAndMallocTests: XCTestCase {
     }
 
     #if canImport(jemalloc)
-        func testMallocProducerLeaks() throws {
-            let startMallocStats = MallocStatsProducer.makeMallocStats()
+    func testMallocProducerLeaks() throws {
+        let startMallocStats = MallocStatsProducer.makeMallocStats()
 
-            for outerloop in 1 ... 100 {
-                blackHole(malloc(outerloop * 1_024))
-            }
-
-            let stopMallocStats = MallocStatsProducer.makeMallocStats()
-
-            XCTAssertGreaterThanOrEqual(stopMallocStats.mallocCountTotal - startMallocStats.mallocCountTotal, 100)
-            XCTAssertGreaterThanOrEqual(stopMallocStats.allocatedResidentMemory - startMallocStats.allocatedResidentMemory,
-                                        100 * 1_024)
+        for outerloop in 1...100 {
+            blackHole(malloc(outerloop * 1_024))
         }
+
+        let stopMallocStats = MallocStatsProducer.makeMallocStats()
+
+        XCTAssertGreaterThanOrEqual(stopMallocStats.mallocCountTotal - startMallocStats.mallocCountTotal, 100)
+        XCTAssertGreaterThanOrEqual(
+            stopMallocStats.allocatedResidentMemory - startMallocStats.allocatedResidentMemory,
+            100 * 1_024
+        )
+    }
     #endif
 
     func testARCStatsProducer() throws {
@@ -77,7 +83,7 @@ final class OperatingSystemAndMallocTests: XCTestCase {
 
         let startStats = ARCStatsProducer.makeARCStats()
 
-        for outerloop in 1 ... 100 {
+        for outerloop in 1...100 {
             var arrayCopy = array
             arrayCopy.append(outerloop)
             blackHole(array)
@@ -116,11 +122,15 @@ final class OperatingSystemAndMallocTests: XCTestCase {
         var stat = stat()
         XCTAssertEqual(fstat(fildes, &stat), 0, "fstat() failed: \(errno)")
 
-        var buffer = (0 ..< stat.st_blksize).map { _ in UInt8.random(in: 0 ... UInt8.max) }
+        var buffer = (0..<stat.st_blksize).map { _ in UInt8.random(in: 0...UInt8.max) }
 
-        for _ in 0 ..< amplificationFactor {
+        for _ in 0..<amplificationFactor {
             buffer.withUnsafeBytes { buffer in
-                XCTAssertEqual(write(fildes, buffer.baseAddress, buffer.count), buffer.count, "write() failed: \(errno)")
+                XCTAssertEqual(
+                    write(fildes, buffer.baseAddress, buffer.count),
+                    buffer.count,
+                    "write() failed: \(errno)"
+                )
             }
             XCTAssertEqual(lseek(fildes, 0, SEEK_SET), 0, "lseek() failed: \(errno)")
         }
@@ -134,9 +144,13 @@ final class OperatingSystemAndMallocTests: XCTestCase {
         buffer.withUnsafeMutableBytes { buffer in
             let block = iovec(iov_base: buffer.baseAddress, iov_len: buffer.count)
 
-            [block].withUnsafeBufferPointer { iov in
-                XCTAssertEqual(pwritev(fildes, iov.baseAddress, Int32(iov.count), off_t(buffer.count * 2)), buffer.count)
-            }
+            [block]
+                .withUnsafeBufferPointer { iov in
+                    XCTAssertEqual(
+                        pwritev(fildes, iov.baseAddress, Int32(iov.count), off_t(buffer.count * 2)),
+                        buffer.count
+                    )
+                }
         }
 
         XCTAssertEqual(fflush(tempFile), 0, "fflush() failed: \(errno)")

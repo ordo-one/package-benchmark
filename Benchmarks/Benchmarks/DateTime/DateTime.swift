@@ -11,11 +11,13 @@ import Benchmark
 import DateTime
 
 let benchmarks: @Sendable () -> Void = {
-    Benchmark.defaultConfiguration = .init(metrics: [.throughput, .wallClock, .instructions] + .arc,
-                                           warmupIterations: 10,
-                                           scalingFactor: .kilo,
-                                           maxDuration: .seconds(1),
-                                           maxIterations: .kilo(10))
+    Benchmark.defaultConfiguration = .init(
+        metrics: [.throughput, .wallClock, .instructions] + .arc,
+        warmupIterations: 10,
+        scalingFactor: .kilo,
+        maxDuration: .seconds(1),
+        maxIterations: .kilo(10)
+    )
 
     Benchmark("InternalUTCClock-now") { benchmark in
         for _ in benchmark.scaledIterations {
