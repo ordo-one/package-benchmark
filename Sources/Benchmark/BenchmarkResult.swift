@@ -493,7 +493,6 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
         _ rhs: Int,
         _ percentile: Self.Percentile,
         _ thresholds: BenchmarkThresholds,
-        _ scalingFactor: Statistics.Units,
         _ thresholdResults: inout ThresholdDeviations,
         _ name: String = "unknown name",
         _ target: String = "unknown target"
@@ -514,7 +513,7 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
                 difference: Int(Statistics.roundToDecimalplaces(relativeDifference, 1)),
                 differenceThreshold: Int(threshold),
                 relative: true,
-                units: scalingFactor
+                units: Statistics.Units(timeUnits)
             )
             if relativeDifference > threshold {
                 thresholdResults.regressions.append(deviation)
@@ -534,7 +533,7 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
                 difference: normalize(absoluteDifference),
                 differenceThreshold: normalize(threshold),
                 relative: false,
-                units: scalingFactor
+                units: Statistics.Units(timeUnits)
             )
 
             if absoluteDifference > threshold {
@@ -568,7 +567,6 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
                 rhsPercentiles[percentile],
                 Self.Percentile(rawValue: percentile)!,
                 thresholds,
-                lhs.statistics.units(),
                 &thresholdResults,
                 name,
                 target
@@ -594,7 +592,6 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
             p90Threshold,
             .p90,
             thresholds,
-            statistics.units(),
             &thresholdResults,
             name,
             target
