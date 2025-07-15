@@ -41,6 +41,7 @@ import Glibc
         let quietRunning = argumentExtractor.extractFlag(named: "quiet")
         let noProgress = argumentExtractor.extractFlag(named: "no-progress")
         let checkAbsoluteThresholdsPath = argumentExtractor.extractOption(named: "check-absolute-path")
+        let skipLoadingBenchmarks = argumentExtractor.extractFlag(named: "skip-loading-benchmark-targets")
         let checkAbsoluteThresholds =
             checkAbsoluteThresholdsPath.count > 0 ? 1 : argumentExtractor.extractFlag(named: "check-absolute")
         let groupingToUse = argumentExtractor.extractOption(named: "grouping")
@@ -233,6 +234,7 @@ import Glibc
             throw MyError.invalidArgument
         }
 
+        var skipLoadingBenchmarksFlagIsValid = skipLoadingBenchmarks == 0
         if commandToPerform == .thresholds {
             guard positionalArguments.count > 0,
                 let thresholdsOperation = ThresholdsOperation(rawValue: positionalArguments.removeFirst())
@@ -267,6 +269,8 @@ import Glibc
                 }
                 break
             case .check:
+                skipLoadingBenchmarksFlagIsValid = true
+                shouldBuildTargets = skipLoadingBenchmarks == 0
                 let validRange = 0...1
                 guard validRange.contains(positionalArguments.count) else {
                     print(
@@ -279,6 +283,19 @@ import Glibc
             positionalArguments.forEach { baseline in
                 args.append(contentsOf: ["--baseline", baseline])
             }
+        }
+
+        if !skipLoadingBenchmarksFlagIsValid {
+            print("")
+            print(
+                "Flag --skip-loading-benchmark-targets is only valid for 'thresholds check' operations."
+            )
+            print("")
+            print(help)
+            print("")
+            print("Please visit https://github.com/ordo-one/package-benchmark for more in-depth documentation")
+            print("")
+            throw MyError.invalidArgument
         }
 
         if commandToPerform == .baseline {
