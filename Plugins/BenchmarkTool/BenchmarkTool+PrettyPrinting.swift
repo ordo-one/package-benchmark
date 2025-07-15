@@ -536,24 +536,22 @@ extension BenchmarkTool {
         guard quiet == false else { return }
 
         let metrics = deviationResults.map(\.metric).unique()
-        // Get a unique set of all name/target pairs that have threshold deviations, sorted lexically:
-        let namesAndTargets = deviationResults.map { NameAndTarget(name: $0.name, target: $0.target) }
-            .unique().sorted { ($0.target, $0.name) < ($1.target, $1.name) }
 
-        namesAndTargets.forEach { nameAndTarget in
+        var groupedDeviations = [NameAndTarget: [BenchmarkResult.ThresholdDeviation]]()
+        groupedDeviations.reserveCapacity(deviationResults.count)
+        for result in deviationResults {
+            let nameAndTarget = NameAndTarget(name: result.name, target: result.target)
+            groupedDeviations[nameAndTarget, default: []].append(result)
+        }
+        let sortedGroupedDeviations = groupedDeviations.sorted(by: { $0.key < $1.key })
 
+        for (nameAndTarget, deviationResults) in sortedGroupedDeviations {
             printMarkdown("```")
             "\(deviationTitle) for \(nameAndTarget.target):\(nameAndTarget.name)".printAsHeader(addWhiteSpace: false)
             printMarkdown("```")
 
             metrics.forEach { metric in
-                let filteredDeviations =
-                    deviationResults.filter {
-                        $0.name == nameAndTarget.name
-                            && $0.target == nameAndTarget.target
-                            && $0.metric == metric
-                    }
-                    .sorted(by: { $0.uxPriority > $1.uxPriority })
+                let filteredDeviations = deviationResults.filter { $0.metric == metric }
 
                 let width = 40
                 let percentileWidthFor4Columns = 15
@@ -589,7 +587,7 @@ extension BenchmarkTool {
                         )
                     }
 
-                    // If absolute or relative add their columns together
+                    // If absolute or relative, we can calculate their columns together
                     var comparisonValue: Int?
                     var difference: String?
                     var tolerance: String?
@@ -600,8 +598,8 @@ extension BenchmarkTool {
                         tolerance = tol.description
                     case .relative(let compareTo, let diff, let tol):
                         comparisonValue = compareTo
-                        difference = Statistics.roundToDecimalPlaces(diff, 1).description
-                        tolerance = Statistics.roundToDecimalPlaces(tol, 1).description
+                        difference = Statistics.roundToDecimalPlaces(diff, 2).description
+                        tolerance = Statistics.roundToDecimalPlaces(tol, 2).description
                     case .range:
                         break
                     }
@@ -655,7 +653,9 @@ extension BenchmarkTool {
                     return columns
                 }
 
-                table.print(filteredDeviations, style: format.tableStyle)
+                table.print(filteredDeviations.filter(\.deviation.isRange), style: format.tableStyle)
+                table.print(filteredDeviations.filter(\.deviation.isAbsolute), style: format.tableStyle)
+                table.print(filteredDeviations.filter(\.deviation.isRelative), style: format.tableStyle)
             }
         }
     }

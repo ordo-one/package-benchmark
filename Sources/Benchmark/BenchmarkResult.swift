@@ -468,19 +468,26 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
                 switch self {
                 case .relative:
                     return true
-                default:
+                case .absolute, .range:
                     return false
                 }
             }
 
-            public var uxPriority: Int {
+            public var isRange: Bool {
                 switch self {
                 case .range:
-                    return 2
+                    return true
+                case .absolute, .relative:
+                    return false
+                }
+            }
+
+            public var isAbsolute: Bool {
+                switch self {
                 case .absolute:
-                    return 1
-                case .relative:
-                    return 0
+                    return true
+                case .relative, .range:
+                    return false
                 }
             }
         }
@@ -492,10 +499,6 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
         public let baseValue: Int
         public let deviation: Deviation
         public let units: Statistics.Units
-
-        public var uxPriority: Int {
-            return deviation.uxPriority
-        }
     }
 
     public struct ThresholdDeviations {
@@ -544,8 +547,8 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
                     baseValue: normalize(lhs),
                     deviation: .relative(
                         comparedTo: normalize(rhs),
-                        differencePercentage: Statistics.roundToDecimalPlaces(relativeDifference, 1),
-                        tolerancePercentage: Statistics.roundToDecimalPlaces(threshold, 1)
+                        differencePercentage: Statistics.roundToDecimalPlaces(relativeDifference, 2),
+                        tolerancePercentage: Statistics.roundToDecimalPlaces(threshold, 2)
                     ),
                     units: Statistics.Units(timeUnits)
                 )
@@ -604,17 +607,18 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
                         baseValue: normalize(lhs),
                         deviation: .relative(
                             comparedTo: normalize(relative.base),
-                            differencePercentage: Statistics.roundToDecimalPlaces(relativeDifference, 1),
+                            differencePercentage: Statistics.roundToDecimalPlaces(relativeDifference, 2),
                             tolerancePercentage: Statistics.roundToDecimalPlaces(
                                 relative.tolerancePercentage,
-                                1
+                                2
                             )
                         ),
                         units: Statistics.Units(timeUnits)
                     )
-                    if relativeDifference > relative.tolerancePercentage {
+                    switch relativeDifference.sign {
+                    case .minus:
                         thresholdResults.regressions.append(deviation)
-                    } else if relativeDifference < -relative.tolerancePercentage {
+                    case .plus:
                         thresholdResults.improvements.append(deviation)
                     }
                 }
