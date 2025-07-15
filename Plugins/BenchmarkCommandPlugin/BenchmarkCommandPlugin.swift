@@ -44,6 +44,9 @@ import Glibc
         let skipLoadingBenchmarks = argumentExtractor.extractFlag(named: "skip-loading-benchmark-targets")
         let checkAbsoluteThresholds =
             checkAbsoluteThresholdsPath.count > 0 ? 1 : argumentExtractor.extractFlag(named: "check-absolute")
+        let runCount = argumentExtractor.extractOption(named: "run-count")
+        let relative = argumentExtractor.extractFlag(named: "relative")
+        let range = argumentExtractor.extractFlag(named: "range")
         let groupingToUse = argumentExtractor.extractOption(named: "grouping")
         let metricsToUse = argumentExtractor.extractOption(named: "metric")
         let timeUnits = argumentExtractor.extractOption(named: "time-units")
@@ -234,6 +237,7 @@ import Glibc
             throw MyError.invalidArgument
         }
 
+        var totalRunCount = 1
         var skipLoadingBenchmarksFlagIsValid = skipLoadingBenchmarks == 0
         if commandToPerform == .thresholds {
             guard positionalArguments.count > 0,
@@ -264,10 +268,27 @@ import Glibc
                     )
                     throw MyError.invalidArgument
                 }
-                if positionalArguments.count > 0 {
+                let usesExistingBaseline = positionalArguments.count > 0
+                if usesExistingBaseline {
                     shouldBuildTargets = false
                 }
-                break
+                let requestedRunCount = runCount.first.flatMap { Int($0) } ?? 1
+                /// These update the run count to 5 by default if it's set to 1.
+                /// Using relative/range flags doesn't mean anything if we're not running multiple times.
+                /// The benchmarks will need to be run multiple times in order to be able to calculate a
+                /// relative/range of thresholds which satisfy all benchmark runs.
+                if relative > 0 {
+                    args.append("--wants-relative-thresholds")
+                    if !usesExistingBaseline {
+                        totalRunCount = requestedRunCount < 2 ? 5 : requestedRunCount
+                    }
+                }
+                if range > 0 {
+                    args.append("--wants-range-thresholds")
+                    if !usesExistingBaseline {
+                        totalRunCount = requestedRunCount < 2 ? 5 : requestedRunCount
+                    }
+                }
             case .check:
                 skipLoadingBenchmarksFlagIsValid = true
                 shouldBuildTargets = skipLoadingBenchmarks == 0
@@ -480,53 +501,108 @@ import Glibc
 
         var failedBenchmarkCount = 0
 
-        try withCStrings(args) { cArgs in
-            if debug > 0 {
-                print("To debug, start \(benchmarkToolName) in LLDB using:")
-                print("lldb \(benchmarkTool.string)")
-                print("")
-                print("Then launch \(benchmarkToolName) with:")
-                print("run \(args.dropFirst().joined(separator: " "))")
-                print("")
-                return
+        var allFailureCount = 0
+        let results: [Result<Void, Error>] = (0..<max(totalRunCount, 1))
+            .map { runIdx in
+                // If we're running multiple times, we need to add the run count to the arguments
+                var args = args
+                if totalRunCount > 1 {
+                    args += ["--run-number", "\(runIdx + 1)"]
+                    if quietRunning == 0 {
+                        print(
+                            """
+
+                            Running the command multiple times, round \(runIdx + 1) of \(totalRunCount)...
+                            """
+                        )
+                    }
+                }
+
+                return Result<Void, Error> {
+                    try withCStrings(args) { cArgs in
+                        /// We'll decrement this in the success path
+                        allFailureCount += 1
+
+                        if debug > 0 {
+                            print("To debug, start \(benchmarkToolName) in LLDB using:")
+                            print("lldb \(benchmarkTool.string)")
+                            print("")
+                            print("Then launch \(benchmarkToolName) with:")
+                            print("run \(args.dropFirst().joined(separator: " "))")
+                            print("")
+                            return
+                        }
+
+                        var pid: pid_t = 0
+                        var status = posix_spawn(&pid, benchmarkTool.string, nil, nil, cArgs, environ)
+
+                        if status == 0 {
+                            if waitpid(pid, &status, 0) != -1 {
+                                // Ok, this sucks, but there is no way to get a C support target for plugins and
+                                // the way the status is extracted portably is with macros - so we just need to
+                                // reimplement the logic here in Swift according to the waitpid man page to
+                                // get some nicer feedback on failure reason.
+                                guard let waitStatus = ExitCode(rawValue: (status & 0xFF00) >> 8) else {
+                                    print("One or more benchmarks returned an unexpected return code \(status)")
+                                    throw MyError.benchmarkUnexpectedReturnCode
+                                }
+                                switch waitStatus {
+                                case .success:
+                                    allFailureCount -= 1
+                                case .baselineNotFound:
+                                    throw MyError.baselineNotFound
+                                case .genericFailure:
+                                    print("One or more benchmark suites crashed during runtime.")
+                                    throw MyError.benchmarkCrashed
+                                case .thresholdRegression:
+                                    throw MyError.benchmarkThresholdRegression
+                                case .thresholdImprovement:
+                                    throw MyError.benchmarkThresholdImprovement
+                                case .benchmarkJobFailed:
+                                    failedBenchmarkCount += 1
+                                case .noPermissions:
+                                    throw MyError.noPermissions
+                                }
+                            } else {
+                                print(
+                                    "waitpid() for pid \(pid) returned a non-zero exit code \(status), errno = \(errno)"
+                                )
+                                exit(errno)
+                            }
+                        } else {
+                            print("Failed to run BenchmarkTool, posix_spawn() returned [\(status)]")
+                        }
+                    }
+                }
             }
 
-            var pid: pid_t = 0
-            var status = posix_spawn(&pid, benchmarkTool.string, nil, nil, cArgs, environ)
+        switch results.count {
+        case ...0:
+            throw MyError.unknownFailure
+        case 1:
+            try results[0].get()
+        default:
+            if allFailureCount > 0 {
+                print(
+                    """
+                    Ran BenchmarkTool \(results.count) times, but it failed \(allFailureCount) times.
+                    Will exit with the first failure.
 
-            if status == 0 {
-                if waitpid(pid, &status, 0) != -1 {
-                    // Ok, this sucks, but there is no way to get a C support target for plugins and
-                    // the way the status is extracted portably is with macros - so we just need to
-                    // reimplement the logic here in Swift according to the waitpid man page to
-                    // get some nicer feedback on failure reason.
-                    guard let waitStatus = ExitCode(rawValue: (status & 0xFF00) >> 8) else {
-                        print("One or more benchmarks returned an unexpected return code \(status)")
-                        throw MyError.benchmarkUnexpectedReturnCode
-                    }
-                    switch waitStatus {
-                    case .success:
-                        break
-                    case .baselineNotFound:
-                        throw MyError.baselineNotFound
-                    case .genericFailure:
-                        print("One or more benchmark suites crashed during runtime.")
-                        throw MyError.benchmarkCrashed
-                    case .thresholdRegression:
-                        throw MyError.benchmarkThresholdRegression
-                    case .thresholdImprovement:
-                        throw MyError.benchmarkThresholdImprovement
-                    case .benchmarkJobFailed:
-                        failedBenchmarkCount += 1
-                    case .noPermissions:
-                        throw MyError.noPermissions
-                    }
-                } else {
-                    print("waitpid() for pid \(pid) returned a non-zero exit code \(status), errno = \(errno)")
-                    exit(errno)
+                    """
+                )
+                guard
+                    let failure = results.first(where: { result in
+                        switch result {
+                        case .failure:
+                            return true
+                        case .success:
+                            return false
+                        }
+                    })
+                else {
+                    throw MyError.unknownFailure
                 }
-            } else {
-                print("Failed to run BenchmarkTool, posix_spawn() returned [\(status)]")
+                try failure.get()
             }
         }
 
@@ -546,5 +622,6 @@ import Glibc
         case noPermissions = 6
         case invalidArgument = 101
         case buildFailed = 102
+        case unknownFailure = 103
     }
 }

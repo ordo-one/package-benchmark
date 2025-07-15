@@ -79,12 +79,17 @@ extension BenchmarkTool {
         return cleanedString
     }
 
-    struct NameAndTarget: Hashable {
+    struct NameAndTarget: Hashable, Comparable {
         let name: String
         let target: String
+
+        static func < (lhs: NameAndTarget, rhs: NameAndTarget) -> Bool {
+            (lhs.target, lhs.name) < (rhs.target, rhs.name)
+        }
     }
 
     mutating func postProcessBenchmarkResults() throws {
+
         // Turn on buffering again for output
         setvbuf(stdout, nil, _IOFBF, Int(BUFSIZ))
 

@@ -536,28 +536,25 @@ extension BenchmarkTool {
         guard quiet == false else { return }
 
         let metrics = deviationResults.map(\.metric).unique()
-        // Get a unique set of all name/target pairs that have threshold deviations, sorted lexically:
-        let namesAndTargets = deviationResults.map { NameAndTarget(name: $0.name, target: $0.target) }
-            .unique().sorted { ($0.target, $0.name) < ($1.target, $1.name) }
 
-        namesAndTargets.forEach { nameAndTarget in
+        var groupedDeviations = [NameAndTarget: [BenchmarkResult.ThresholdDeviation]]()
+        groupedDeviations.reserveCapacity(deviationResults.count)
+        for result in deviationResults {
+            let nameAndTarget = NameAndTarget(name: result.name, target: result.target)
+            groupedDeviations[nameAndTarget, default: []].append(result)
+        }
+        let sortedGroupedDeviations = groupedDeviations.sorted(by: { $0.key < $1.key })
 
+        for (nameAndTarget, deviationResults) in sortedGroupedDeviations {
             printMarkdown("```")
             "\(deviationTitle) for \(nameAndTarget.target):\(nameAndTarget.name)".printAsHeader(addWhiteSpace: false)
             printMarkdown("```")
 
             metrics.forEach { metric in
-                let filteredDeviations =
-                    deviationResults.filter {
-                        $0.name == nameAndTarget.name
-                            && $0.target == nameAndTarget.target
-                            && $0.metric == metric
-                    }
-                    .sorted(by: { $0.uxPriority > $1.uxPriority })
+                let filteredDeviations = deviationResults.filter { $0.metric == metric }
 
                 let width = 40
-                let percentileWidthFor4Columns = 15
-                let percentileWidthFor3Columns = 20
+                let percentileWidth = 15
 
                 let table = TextTable<BenchmarkResult.ThresholdDeviation> {
                     var columns: [Column] = []
@@ -568,6 +565,11 @@ extension BenchmarkTool {
                         case .absolute: "Δ"
                         case .relative: "%"
                         case .range: "↔"
+                        }
+                    let diffSign =
+                        switch $0.deviation {
+                        case .absolute, .range: "Δ"
+                        case .relative: "%"
                         }
                     let unitDescription = metric.countable ? $0.units.description : $0.units.timeDescription
                     columns.append(
@@ -580,82 +582,65 @@ extension BenchmarkTool {
                     )
 
                     let baseValue = $0.baseValue
-                    func baselineColumn(percentileWidth: Int) -> Column {
-                        Column(
-                            title: "\(comparingBaselineName)",
-                            value: baseValue,
-                            width: percentileWidth,
-                            align: .right
-                        )
-                    }
 
-                    // If absolute or relative add their columns together
-                    var comparisonValue: Int?
-                    var difference: String?
-                    var tolerance: String?
+                    // If absolute or relative, we can calculate their columns together
+                    let comparisonValue: String
+                    let difference: String
+                    let tolerance: String?
                     switch $0.deviation {
                     case .absolute(let compareTo, let diff, let tol):
-                        comparisonValue = compareTo
+                        comparisonValue = "\(compareTo)"
                         difference = diff.description
                         tolerance = tol.description
                     case .relative(let compareTo, let diff, let tol):
-                        comparisonValue = compareTo
-                        difference = Statistics.roundToDecimalPlaces(diff, 1).description
-                        tolerance = Statistics.roundToDecimalPlaces(tol, 1).description
-                    case .range:
-                        break
+                        comparisonValue = "\(compareTo)"
+                        difference = Statistics.roundToDecimalPlaces(diff, 2).description
+                        tolerance = Statistics.roundToDecimalPlaces(tol, 2).description
+                    case .range(let min, let max):
+                        comparisonValue = "\(min) ... \(max)"
+                        let diff = baseValue >= max ? baseValue - max : baseValue - min
+                        difference = "\(diff)"
+                        tolerance = nil
                     }
 
-                    if let comparisonValue = comparisonValue,
-                        let difference = difference,
-                        let tolerance = tolerance
-                    {
-                        columns.append(contentsOf: [
+                    columns.append(contentsOf: [
+                        Column(
+                            title: baselineName,
+                            value: comparisonValue,
+                            width: percentileWidth,
+                            align: .right
+                        ),
+                        Column(
+                            title: comparingBaselineName,
+                            value: baseValue,
+                            width: percentileWidth,
+                            align: .right
+                        ),
+                        Column(
+                            title: "Difference \(diffSign)",
+                            value: difference,
+                            width: percentileWidth,
+                            align: .right
+                        ),
+                    ])
+
+                    if let tolerance = tolerance {
+                        columns.append(
                             Column(
-                                title: "\(baselineName)",
-                                value: comparisonValue,
-                                width: percentileWidthFor4Columns,
-                                align: .right
-                            ),
-                            baselineColumn(percentileWidth: percentileWidthFor4Columns),
-                            Column(
-                                title: "Difference \(sign)",
-                                value: difference,
-                                width: percentileWidthFor4Columns,
-                                align: .right
-                            ),
-                            Column(
-                                title: "Tolerance \(sign)",
+                                title: "Tolerance \(diffSign)",
                                 value: tolerance,
-                                width: percentileWidthFor4Columns,
+                                width: percentileWidth,
                                 align: .right
-                            ),
-                        ])
-                    }
-
-                    // Otherwise if range, then handle it alone
-                    if case .range(let min, let max) = $0.deviation {
-                        columns.append(contentsOf: [
-                            baselineColumn(percentileWidth: percentileWidthFor3Columns),
-                            Column(
-                                title: "Minimum",
-                                value: min,
-                                width: percentileWidthFor3Columns,
-                                align: .right
-                            ),
-                            Column(
-                                title: "Maximum",
-                                value: max,
-                                width: percentileWidthFor3Columns,
-                                align: .right
-                            ),
-                        ])
+                            )
+                        )
                     }
 
                     return columns
                 }
 
-                table.print(filteredDeviations, style: format.tableStyle)
+                table.print(filteredDeviations.filter(\.deviation.isRange), style: format.tableStyle)
+                table.print(filteredDeviations.filter(\.deviation.isAbsolute), style: format.tableStyle)
+                table.print(filteredDeviations.filter(\.deviation.isRelative), style: format.tableStyle)
             }
         }
     }

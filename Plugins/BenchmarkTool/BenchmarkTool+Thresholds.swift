@@ -52,10 +52,8 @@ extension BenchmarkTool {
                     Column(title: "Allowed Δ", value: absoluteTolerance, width: percentileWidth, align: .right),
                 ])
             case .relativeOrRange(let relativeOrRange):
-                relativeOrRange.preconditionContainsAnyValue()
-
                 if let relative = relativeOrRange.relative {
-                    let tolerancePercentage = Statistics.roundToDecimalPlaces(relative.tolerancePercentage, 1)
+                    let tolerancePercentage = Statistics.roundToDecimalPlaces(relative.tolerancePercentage, 2)
                     columns.append(contentsOf: [
                         Column(
                             title: "Allowed %",
