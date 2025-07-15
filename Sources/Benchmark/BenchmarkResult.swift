@@ -468,19 +468,26 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
                 switch self {
                 case .relative:
                     return true
-                default:
+                case .absolute, .range:
                     return false
                 }
             }
 
-            public var uxPriority: Int {
+            public var isRange: Bool {
                 switch self {
                 case .range:
-                    return 2
+                    return true
+                case .absolute, .relative:
+                    return false
+                }
+            }
+
+            public var isAbsolute: Bool {
+                switch self {
                 case .absolute:
-                    return 1
-                case .relative:
-                    return 0
+                    return true
+                case .relative, .range:
+                    return false
                 }
             }
         }
@@ -492,10 +499,6 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
         public let baseValue: Int
         public let deviation: Deviation
         public let units: Statistics.Units
-
-        public var uxPriority: Int {
-            return deviation.uxPriority
-        }
     }
 
     public struct ThresholdDeviations {
@@ -526,12 +529,25 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
         _ name: String = "unknown name",
         _ target: String = "unknown target"
     ) {
-        let reverseComparison = metric.polarity == .prefersLarger
+
+        let needsReverseComparison = metric.polarity == .prefersLarger
+        /// By default, exceeding a threshold is a regression.
+        /// If `needsReverseComparison` then exceeding a threshold is an improvement.
+        func keyPathForAppending(
+            exceedsThreshold: Bool
+        ) -> WritableKeyPath<ThresholdDeviations, [BenchmarkResult.ThresholdDeviation]> {
+            switch exceedsThreshold {
+            case true:
+                return needsReverseComparison ? \.improvements : \.regressions
+            case false:
+                return needsReverseComparison ? \.regressions : \.improvements
+            }
+        }
+
         switch rhs {
         case .absolute(let rhs):
-            let absoluteDifference = (reverseComparison ? -1 : 1) * (lhs - rhs)
-            let relativeDifference =
-                (reverseComparison ? 1 : -1) * (rhs != 0 ? (100 - (100.0 * Double(lhs) / Double(rhs))) : 0.0)
+            let absoluteDifference = lhs - rhs
+            let relativeDifference = (rhs != 0 ? (Double(absoluteDifference) / Double(rhs)) : 0.0)
 
             if let threshold = thresholdsFromCode.relative[percentile],
                 !(-threshold...threshold).contains(relativeDifference)
@@ -544,16 +560,13 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
                     baseValue: normalize(lhs),
                     deviation: .relative(
                         comparedTo: normalize(rhs),
-                        differencePercentage: Statistics.roundToDecimalPlaces(relativeDifference, 1),
-                        tolerancePercentage: Statistics.roundToDecimalPlaces(threshold, 1)
+                        differencePercentage: Statistics.roundToDecimalPlaces(relativeDifference, 2),
+                        tolerancePercentage: Statistics.roundToDecimalPlaces(threshold, 2)
                     ),
                     units: Statistics.Units(timeUnits)
                 )
-                if relativeDifference > threshold {
-                    thresholdResults.regressions.append(deviation)
-                } else if relativeDifference < -threshold {
-                    thresholdResults.improvements.append(deviation)
-                }
+                let keyPath = keyPathForAppending(exceedsThreshold: relativeDifference > threshold)
+                thresholdResults[keyPath: keyPath].append(deviation)
             }
 
             if let threshold = thresholdsFromCode.absolute[percentile],
@@ -572,11 +585,8 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
                     ),
                     units: Statistics.Units(timeUnits)
                 )
-                if absoluteDifference > threshold {
-                    thresholdResults.regressions.append(deviation)
-                } else if absoluteDifference < -threshold {
-                    thresholdResults.improvements.append(deviation)
-                }
+                let keyPath = keyPathForAppending(exceedsThreshold: absoluteDifference > threshold)
+                thresholdResults[keyPath: keyPath].append(deviation)
             }
 
         case .relativeOrRange(let rhs):
@@ -595,7 +605,7 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
             if let relative = rhs.relative {
                 let relativeComparison = relative.contains(lhs)
                 if !relativeComparison.contains {
-                    let relativeDifference = (reverseComparison ? 1 : -1) * relativeComparison.deviation
+                    let relativeDifference = relativeComparison.deviation
                     let deviation = ThresholdDeviation(
                         name: name,
                         target: target,
@@ -604,19 +614,16 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
                         baseValue: normalize(lhs),
                         deviation: .relative(
                             comparedTo: normalize(relative.base),
-                            differencePercentage: Statistics.roundToDecimalPlaces(relativeDifference, 1),
+                            differencePercentage: Statistics.roundToDecimalPlaces(relativeDifference, 2),
                             tolerancePercentage: Statistics.roundToDecimalPlaces(
                                 relative.tolerancePercentage,
-                                1
+                                2
                             )
                         ),
                         units: Statistics.Units(timeUnits)
                     )
-                    if relativeDifference > relative.tolerancePercentage {
-                        thresholdResults.regressions.append(deviation)
-                    } else if relativeDifference < -relative.tolerancePercentage {
-                        thresholdResults.improvements.append(deviation)
-                    }
+                    let keyPath = keyPathForAppending(exceedsThreshold: relativeDifference.sign == .plus)
+                    thresholdResults[keyPath: keyPath].append(deviation)
                 }
             }
 
@@ -633,11 +640,8 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
                     ),
                     units: Statistics.Units(timeUnits)
                 )
-                if lhs < range.min {
-                    thresholdResults.regressions.append(deviation)
-                } else if lhs > range.max {
-                    thresholdResults.improvements.append(deviation)
-                }
+                let keyPath = keyPathForAppending(exceedsThreshold: lhs > range.max)
+                thresholdResults[keyPath: keyPath].append(deviation)
             }
         }
     }

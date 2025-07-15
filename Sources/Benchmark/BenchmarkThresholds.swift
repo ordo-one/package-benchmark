@@ -51,55 +51,97 @@ extension BenchmarkThresholds {
 }
 
 public enum BenchmarkThreshold: Codable {
+    /// A relative or range threshold. And that is a logical "or", meaning any or both.
     public struct RelativeOrRange: Codable {
-        public struct Relative: Encodable {
+        public struct Relative {
             public let base: Int
             public let tolerancePercentage: Double
 
-            init(base: Int, tolerancePercentage: Double) {
-                precondition(base > 0, "base must be positive")
-                precondition(tolerancePercentage > 0, "tolerancePercentage must be positive")
+            public init(base: Int, tolerancePercentage: Double) {
                 self.base = base
                 self.tolerancePercentage = tolerancePercentage
+
+                if !self.checkValid() {
+                    print(
+                        """
+                        Warning: Got invalid relative threshold values. base: \(self.base), tolerancePercentage: \(self.tolerancePercentage).
+                        These must satisfy the following conditions:
+                        - base must be non-negative
+                        - tolerancePercentage must be finite
+                        - tolerancePercentage must be non-negative
+                        - tolerancePercentage must be less than or equal to 100
+                        """
+                    )
+                }
             }
 
             /// Returns whether or not the value satisfies this relative range, as well as the
             /// percentage of the deviation of the value.
             public func contains(_ value: Int) -> (contains: Bool, deviation: Double) {
-                let deviation = Double(value - base) / Double(base) * 100
-                return (abs(deviation) <= tolerancePercentage, deviation)
+                let diff = Double(value - base)
+                let allowedDiff = (Double(base) * tolerancePercentage / 100)
+                let allowedDiffWithPrecision = Statistics.roundToDecimalPlaces(allowedDiff, 6, .up)
+                let absDiffWithPrecision = Statistics.roundToDecimalPlaces(abs(diff), 6, .up)
+                let contains = absDiffWithPrecision <= allowedDiffWithPrecision
+                let deviation = (base == 0) ? 0 : diff / Double(base) * 100
+                return (contains, deviation)
+            }
+
+            func checkValid() -> Bool {
+                self.base >= 0
+                    && self.tolerancePercentage.isFinite
+                    && self.tolerancePercentage >= 0
+                    && self.tolerancePercentage <= 100
             }
         }
 
-        public struct Range: Encodable {
+        public struct Range {
             public let min: Int
             public let max: Int
 
-            init(min: Int, max: Int) {
-                precondition(min <= max, "min must be less than or equal to max")
+            public init(min: Int, max: Int) {
                 self.min = min
                 self.max = max
+
+                if !self.checkValid() {
+                    print(
+                        """
+                        Warning: Got invalid range threshold values. min: \(self.min), max: \(self.max).
+                        These must satisfy the following conditions:
+                        - min must be less than or equal to max
+                        """
+                    )
+                }
             }
 
             public func contains(_ value: Int) -> Bool {
                 return value >= min && value <= max
+            }
+
+            func checkValid() -> Bool {
+                self.min <= self.max
             }
         }
 
         public let relative: Relative?
         public let range: Range?
 
-        init(relative: Relative?, range: Range?) {
+        public init(relative: Relative?, range: Range?) {
             self.relative = relative
             self.range = range
-            preconditionContainsAnyValue()
+
+            if !self.checkValid() {
+                print(
+                    """
+                    Warning: Got invalid RelativeOrRange threshold values. relative: \(String(describing: self.relative)), range: \(String(describing: self.range)).
+                    At least one of the values must be non-nil.
+                    """
+                )
+            }
         }
 
-        public func preconditionContainsAnyValue() {
-            precondition(
-                self.containsAnyValue,
-                "RelativeOrRange must contain either a relative or range, but contains neither"
-            )
+        func checkValid() -> Bool {
+            self.containsAnyValue
         }
 
         var containsAnyValue: Bool {
@@ -127,13 +169,18 @@ public enum BenchmarkThreshold: Codable {
             if let base, let tolerancePercentage {
                 relative = Relative(base: base, tolerancePercentage: tolerancePercentage)
 
-                guard base > 0, tolerancePercentage > 0 else {
+                guard relative?.checkValid() != false else {
                     throw DecodingError.dataCorrupted(
                         .init(
                             codingPath: decoder.codingPath,
                             debugDescription: """
                                 RelativeOrRange thresholds object contains an invalid relative values.
-                                'base' (\(base)) and 'tolerancePercentage' (\(tolerancePercentage)) must be positive.
+                                base: \(base), tolerancePercentage: \(tolerancePercentage).
+                                These must satisfy the following conditions:
+                                - base must be non-negative
+                                - tolerancePercentage must be finite
+                                - tolerancePercentage must be non-negative
+                                - tolerancePercentage must be less than or equal to 100
                                 """
                         )
                     )
@@ -142,7 +189,7 @@ public enum BenchmarkThreshold: Codable {
             if let min, let max {
                 range = Range(min: min, max: max)
 
-                guard min <= max else {
+                guard range?.checkValid() != false else {
                     throw DecodingError.dataCorrupted(
                         .init(
                             codingPath: decoder.codingPath,
@@ -177,8 +224,15 @@ public enum BenchmarkThreshold: Codable {
         }
 
         public func encode(to encoder: any Encoder) throws {
-            try self.relative?.encode(to: encoder)
-            try self.range?.encode(to: encoder)
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            if let relative {
+                try container.encode(relative.base, forKey: .base)
+                try container.encode(relative.tolerancePercentage, forKey: .tolerancePercentage)
+            }
+            if let range {
+                try container.encode(range.min, forKey: .min)
+                try container.encode(range.max, forKey: .max)
+            }
         }
     }
 
