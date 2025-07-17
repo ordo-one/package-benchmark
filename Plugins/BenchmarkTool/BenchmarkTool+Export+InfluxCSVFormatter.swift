@@ -54,9 +54,11 @@ class InfluxCSVFormatter {
         let memory = machine.memory
 
         if header {
-            let dataTypeHeader = "#datatype tag,tag,tag,tag,tag,tag,tag,tag,tag,double,double,double,long,long,dateTime\n"
+            let dataTypeHeader =
+                "#datatype tag,tag,tag,tag,tag,tag,tag,tag,tag,double,double,double,long,long,dateTime\n"
             finalFileFormat.append(dataTypeHeader)
-            let headers = "measurement,hostName,processoryType,processors,memory,kernelVersion,metric,unit,test,percentile,value,test_average,iterations,warmup_iterations,time\n"
+            let headers =
+                "measurement,hostName,processoryType,processors,memory,kernelVersion,metric,unit,test,percentile,value,test_average,iterations,warmup_iterations,time\n"
             finalFileFormat.append(headers)
         }
 
@@ -72,7 +74,8 @@ class InfluxCSVFormatter {
                 let average = granularData.average
                 for (percentile, dataTableValue) in zip(percentiles, granularData.metricsdata) {
                     let time = ISO8601DateFormatter().string(from: Date())
-                    let dataLine = "\(exportableBenchmark.target),\(hostName),\(processorType),\(processors),\(memory),\(kernelVersion),\(metric),\(units),\(testName),\(percentile),\(dataTableValue),\(average),\(iterations),\(warmup_iterations),\(time)\n"
+                    let dataLine =
+                        "\(exportableBenchmark.target),\(hostName),\(processorType),\(processors),\(memory),\(kernelVersion),\(metric),\(units),\(testName),\(percentile),\(dataTableValue),\(average),\(iterations),\(warmup_iterations),\(time)\n"
                     finalFileFormat.append(dataLine)
                 }
             }
@@ -111,10 +114,14 @@ extension BenchmarkTool {
         var printHeader = true
 
         baseline.targets.forEach { key in
-            let exportStruct = saveExportableResults(BenchmarkBaseline(baselineName: baseline.baselineName,
-                                                                       machine: benchmarkMachine(),
-                                                                       results: baseline.results),
-                                                     target: key)
+            let exportStruct = saveExportableResults(
+                BenchmarkBaseline(
+                    baselineName: baseline.baselineName,
+                    machine: benchmarkMachine(),
+                    results: baseline.results
+                ),
+                target: key
+            )
 
             let formatter = InfluxCSVFormatter(exportableBenchmark: exportStruct)
             outputString += formatter.influxCSVFormat(header: printHeader)
@@ -153,8 +160,10 @@ extension BenchmarkTool {
                 allResults.forEach { results in
 
                     benchmarkResultData.append(
-                        processBenchmarkResult(test: results,
-                                               testName: cleanedTestName)
+                        processBenchmarkResult(
+                            test: results,
+                            testName: cleanedTestName
+                        )
                     )
 
                     iterations = results.statistics.measurementCount
@@ -162,36 +171,45 @@ extension BenchmarkTool {
                 }
 
                 testList.append(
-                    TestData(test: cleanedTestName,
-                             iterations: iterations,
-                             warmupIterations: warmupIterations,
-                             data: benchmarkResultData)
+                    TestData(
+                        test: cleanedTestName,
+                        iterations: iterations,
+                        warmupIterations: warmupIterations,
+                        data: benchmarkResultData
+                    )
                 )
             }
         }
 
-        return ExportableBenchmark(benchmarkMachine: benchmarks.machine,
-                                   target: target,
-                                   benchmarks: testList)
+        return ExportableBenchmark(
+            benchmarkMachine: benchmarks.machine,
+            target: target,
+            benchmarks: testList
+        )
     }
 
-    func processBenchmarkResult(test: BenchmarkResult,
-                                testName _: String) -> TestMetricData {
+    func processBenchmarkResult(
+        test: BenchmarkResult,
+        testName _: String
+    ) -> TestMetricData {
         var testData: [Int] = []
 
         let percentiles = test.statistics
 
-        percentiles.percentiles().forEach { result in
-            testData.append(result)
-        }
+        percentiles.percentiles()
+            .forEach { result in
+                testData.append(result)
+            }
 
         let totalValue = Double(testData.reduce(0, +))
         let totalCount = Double(testData.count)
         let averageValue = (totalValue / totalCount)
 
-        return TestMetricData(metric: test.metric.description,
-                              units: test.unitDescription,
-                              average: averageValue,
-                              metricsdata: testData)
+        return TestMetricData(
+            metric: test.metric.description,
+            units: test.unitDescription,
+            average: averageValue,
+            metricsdata: testData
+        )
     }
 }

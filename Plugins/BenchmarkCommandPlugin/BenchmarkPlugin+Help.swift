@@ -11,23 +11,23 @@
 let help =
     """
     OVERVIEW: Run benchmarks or update, compare or check performance baselines
-    
+
     Performs operations on benchmarks (running or listing them), as well as storing, comparing baselines as well as checking them for threshold deviations.
-    
+
     The init command will create a skeleton benchmark suite for you and add it to Package.swift.
-    
+
     The `thresholds` commands reads/updates/checks benchmark runs vs. static thresholds.
-    
+
     For the 'text' default format, the output is implicitly 'stdout' unless otherwise specified.
     For all other formats, the output is to a file in either the current working directory, or
     the directory specified by the '--path' option, unless the special 'stdout' path is specified
     in which case output will go to stdout (useful for e.g. baseline 'tsv' format export piped to youplot).
-    
+
     To allow writing to the package directory, you may need to pass the appropriate option to swift package:
     swift package --allow-writing-to-package-directory benchmark <command> <options>
-    
+
     USAGE: swift package benchmark <command>
-    
+
        swift package benchmark [run] <options>
        swift package benchmark init <benchmarkTargetName>
        swift package benchmark list
@@ -41,10 +41,10 @@ let help =
        swift package benchmark thresholds update [<baseline>] [<options>]
        swift package benchmark thresholds check [<baseline>] [<options>]
        swift package benchmark help
-    
+
     ARGUMENTS:
     <command>               The benchmark command to perform. If not specified, 'run' is implied. (values: run, list, baseline, thresholds, help, init)
-    
+
     OPTIONS:
     --filter <filter>       Benchmarks matching the regexp filter that should be run
     --skip <skip>           Benchmarks matching the regexp filter that should be skipped
