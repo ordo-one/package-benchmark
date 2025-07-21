@@ -42,7 +42,7 @@ final class BenchmarkMetricsTests: XCTestCase {
         .releaseCount,
         .retainReleaseDelta,
         .custom("test", polarity: .prefersSmaller, useScalingFactor: false),
-        .custom("test2", polarity: .prefersLarger, useScalingFactor: true)
+        .custom("test2", polarity: .prefersLarger, useScalingFactor: true),
     ]
 
     private let textualMetrics: [String] = [
@@ -73,7 +73,7 @@ final class BenchmarkMetricsTests: XCTestCase {
         "objectAllocCount",
         "retainCount",
         "releaseCount",
-        "retainReleaseDelta"
+        "retainReleaseDelta",
     ]
 
     func testBenchmarkMetrics() throws {
@@ -93,7 +93,7 @@ final class BenchmarkMetricsTests: XCTestCase {
     func testBenchmarkTextualMetrics() throws {
         var description = ""
 
-        for metricIndex in 0 ..< textualMetrics.count {
+        for metricIndex in 0..<textualMetrics.count {
             if let metric = BenchmarkMetric(argument: textualMetrics[metricIndex]) {
                 description += metric.description
                 XCTAssertEqual(metrics[metricIndex], metric)

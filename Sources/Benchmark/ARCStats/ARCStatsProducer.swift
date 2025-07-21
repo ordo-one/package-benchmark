@@ -51,9 +51,11 @@ final class ARCStatsProducer {
     }
 
     static func makeARCStats() -> ARCStats {
-        ARCStats(objectAllocCount: allocCount.load(ordering: .relaxed),
-                 retainCount: retainCount.load(ordering: .relaxed),
-                 releaseCount: releaseCount.load(ordering: .relaxed))
+        ARCStats(
+            objectAllocCount: allocCount.load(ordering: .relaxed),
+            retainCount: retainCount.load(ordering: .relaxed),
+            releaseCount: releaseCount.load(ordering: .relaxed)
+        )
     }
 }
 

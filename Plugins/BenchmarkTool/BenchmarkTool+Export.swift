@@ -13,25 +13,25 @@ import Foundation
 import SystemPackage
 
 #if canImport(Darwin)
-    import Darwin
+import Darwin
 #elseif canImport(Glibc)
-    import Glibc
+import Glibc
 #else
-    #error("Unsupported Platform")
+#error("Unsupported Platform")
 #endif
 
 extension BenchmarkTool {
-    func write(exportData: String,
-               hostIdentifier: String? = nil,
-               fileName: String = "results.txt") throws {
-        // Set up desired output path and create any intermediate directories for structure as required:
-        var outputPath: FilePath
+    enum OutputPath {
+        case stdout
+        case file(FilePath)
+    }
 
+    func outputPath(hostIdentifier: String? = nil, fileName: String) -> OutputPath {
+        var outputPath: FilePath
 
         if let path = (thresholdsOperation == nil) ? path : thresholdsPath {
             if path == "stdout" {
-                print(exportData)
-                return
+                return .stdout
             }
 
             let subPath = FilePath(path).removingRoot()
@@ -56,13 +56,34 @@ extension BenchmarkTool {
 
         outputPath.append(csvFile.components)
 
+        return .file(outputPath)
+    }
+
+    func write(
+        exportData: String,
+        hostIdentifier: String? = nil,
+        fileName: String = "results.txt"
+    ) throws {
+        // Set up desired output path and create any intermediate directories for structure as required:
+        let outputPath: FilePath
+        switch self.outputPath(hostIdentifier: hostIdentifier, fileName: fileName) {
+        case .stdout:
+            print(exportData)
+            return
+        case .file(let path):
+            outputPath = path
+        }
+
         print("Writing to \(outputPath)")
 
         printFailedBenchmarks()
 
         do {
             let fd = try FileDescriptor.open(
-                outputPath, .writeOnly, options: [.truncate, .create], permissions: .ownerReadWrite
+                outputPath,
+                .writeOnly,
+                options: [.truncate, .create],
+                permissions: .ownerReadWrite
             )
 
             do {
@@ -97,9 +118,11 @@ extension BenchmarkTool {
     ///   - exportData: A buffer in the form of an array of unsigned 8-bit integers.
     ///   - hostIdentifier: The identifier of the host running the benchmarks.
     ///   - fileName: The filename to write into.
-    func write(exportData: [UInt8],
-               hostIdentifier: String? = nil,
-               fileName: String = "results.txt") throws {
+    func write(
+        exportData: [UInt8],
+        hostIdentifier: String? = nil,
+        fileName: String = "results.txt"
+    ) throws {
         var outputPath = FilePath(".")
 
         var jsonFile = FilePath()
@@ -117,7 +140,10 @@ extension BenchmarkTool {
 
         do {
             let fd = try FileDescriptor.open(
-                outputPath, .writeOnly, options: [.truncate, .create], permissions: .ownerReadWrite
+                outputPath,
+                .writeOnly,
+                options: [.truncate, .create],
+                permissions: .ownerReadWrite
             )
 
             do {
@@ -149,25 +175,31 @@ extension BenchmarkTool {
     func exportResults(baseline: BenchmarkBaseline) throws {
         let baselineName = baseline.baselineName
         switch format {
-        case .text:
-            fallthrough
-        case .markdown:
+        case .text, .markdown:
             prettyPrint(baseline, header: "Baseline '\(baselineName)'")
         case .influx:
-            try write(exportData: "\(convertToInflux(baseline))",
-                      fileName: "\(baselineName).influx.csv")
+            try write(
+                exportData: "\(convertToInflux(baseline))",
+                fileName: "\(baselineName).influx.csv"
+            )
         case .histogram:
             try baseline.results.forEach { key, results in
                 try results.forEach { values in
                     let outputString = values.statistics.histogram
                     let description = values.metric.rawDescription
-                    try write(exportData: "\(outputString)",
-                              fileName: cleanupStringForShellSafety("\(baselineName).\(key.target).\(key.name).\(description).histogram.txt"))
+                    try write(
+                        exportData: "\(outputString)",
+                        fileName: cleanupStringForShellSafety(
+                            "\(baselineName).\(key.target).\(key.name).\(description).histogram.txt"
+                        )
+                    )
                 }
             }
         case .jmh:
-            try write(exportData: "\(convertToJMH(baseline))",
-                      fileName: cleanupStringForShellSafety("\(baselineName).jmh.json"))
+            try write(
+                exportData: "\(convertToJMH(baseline))",
+                fileName: cleanupStringForShellSafety("\(baselineName).jmh.json")
+            )
         case .histogramSamples:
             try baseline.results.forEach { key, results in
                 var outputString = ""
@@ -177,14 +209,19 @@ extension BenchmarkTool {
 
                     outputString += "\(values.metric.description) \(values.unitDescriptionPretty)\n"
 
-                    histogram.recordedValues().forEach { value in
-                        for _ in 0 ..< value.count {
-                            outputString += "\(values.normalize(Int(value.value)))\n"
+                    histogram.recordedValues()
+                        .forEach { value in
+                            for _ in 0..<value.count {
+                                outputString += "\(values.normalize(Int(value.value)))\n"
+                            }
                         }
-                    }
                     let description = values.metric.rawDescription
-                    try write(exportData: "\(outputString)",
-                              fileName: cleanupStringForShellSafety("\(baselineName).\(key.target).\(key.name).\(description).histogram.samples.tsv"))
+                    try write(
+                        exportData: "\(outputString)",
+                        fileName: cleanupStringForShellSafety(
+                            "\(baselineName).\(key.target).\(key.name).\(description).histogram.samples.tsv"
+                        )
+                    )
                     outputString = ""
                 }
             }
@@ -197,8 +234,12 @@ extension BenchmarkTool {
                     let jsonData = try encoder.encode(histogram)
                     let description = values.metric.rawDescription
                     if let encodedData = String(data: jsonData, encoding: .utf8) {
-                        try write(exportData: encodedData,
-                                  fileName: cleanupStringForShellSafety("\(baselineName).\(key.target).\(key.name).\(description).histogram.json"))
+                        try write(
+                            exportData: encodedData,
+                            fileName: cleanupStringForShellSafety(
+                                "\(baselineName).\(key.target).\(key.name).\(description).histogram.json"
+                            )
+                        )
                     } else {
                         fatalError("Failed to encode histogram data \(jsonData.debugDescription)")
                     }
@@ -213,31 +254,136 @@ extension BenchmarkTool {
 
                     outputString += "Percentile\t" + "\(values.metric.description) \(values.unitDescriptionPretty)\n"
 
-                    for percentile in 0 ... 100 {
-                        outputString += "\(percentile)\t" + "\(values.normalize(Int(histogram.valueAtPercentile(Double(percentile)))))\n"
+                    for percentile in 0...100 {
+                        outputString +=
+                            "\(percentile)\t"
+                            + "\(values.normalize(Int(histogram.valueAtPercentile(Double(percentile)))))\n"
                     }
 
                     let description = values.metric.rawDescription
-                    try write(exportData: "\(outputString)",
-                              fileName: cleanupStringForShellSafety("\(baselineName).\(key.target).\(key.name).\(description).histogram.percentiles.tsv"))
+                    try write(
+                        exportData: "\(outputString)",
+                        fileName: cleanupStringForShellSafety(
+                            "\(baselineName).\(key.target).\(key.name).\(description).histogram.percentiles.tsv"
+                        )
+                    )
                     outputString = ""
                 }
             }
         case .metricP90AbsoluteThresholds:
-            try baseline.results.forEach { key, results in
-                let jsonEncoder = JSONEncoder()
-                jsonEncoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+            let jsonEncoder = JSONEncoder()
+            jsonEncoder.outputFormatting = [.prettyPrinted, .sortedKeys]
 
-                var outputResults: [String: BenchmarkThresholds.AbsoluteThreshold] = [:]
-                results.forEach { values in
-                    outputResults[values.metric.rawDescription] = Int(values.statistics.histogram.valueAtPercentile(90.0))
+            try baseline.results.forEach { key, results in
+                let fileName = cleanupStringForShellSafety("\(key.target).\(key.name).p90.json")
+
+                var outputResults: [BenchmarkMetric: BenchmarkThreshold] = [:]
+
+                let wantsRelative = self.wantsRelativeThresholds
+                let wantsRange = self.wantsRangeThresholds
+                let wantsRelativeOrRange = wantsRelative || wantsRange
+
+                /// If it's the first run or if relative/range are not specified, then
+                /// override the thresholds file with the new results we have.
+                /// If runNumber is zero that'd mean this is not part of a multi-run benchmark,
+                /// so we'll still try to update thresholds instead of overriding them.
+                if runNumber == 1 || !wantsRelativeOrRange {
+                    for values in results {
+                        outputResults[values.metric] = .absolute(
+                            Int(values.statistics.histogram.valueAtPercentile(90.0))
+                        )
+                    }
+
+                } else {
+                    /// If it's not the first run and any of relative/range are specified, then
+                    /// merge the new results with the existing thresholds.
+
+                    var currentThresholds: [BenchmarkMetric: BenchmarkThreshold]?
+
+                    switch self.outputPath(fileName: fileName) {
+                    case .stdout:
+                        currentThresholds = nil
+                    case .file(let path):
+                        currentThresholds = Self.makeBenchmarkThresholds(
+                            path: path,
+                            benchmarkIdentifier: key
+                        )
+                    }
+
+                    outputResults = currentThresholds ?? [:]
+
+                    for values in results {
+                        let metric = values.metric
+                        let newValue = values.statistics.histogram.valueAtPercentile(90.0)
+
+                        var relativeResult: BenchmarkThreshold.RelativeOrRange.Relative?
+                        var rangeResult: BenchmarkThreshold.RelativeOrRange.Range?
+                        if wantsRelativeOrRange {
+                            let newValue = Double(Int(truncatingIfNeeded: newValue))
+                            /// Prefer Double to keep precision
+                            var min = Double(newValue)
+                            var max = Double(newValue)
+
+                            /// Load current min/max values from static thresholds file
+                            switch currentThresholds?[metric] {
+                            case .absolute(let value):
+                                min = Double(value)
+                                max = Double(value)
+                            case .relativeOrRange(let relativeOrRange):
+                                /// If for "wantsRelative", we prefer to use the min/max
+                                if let range = relativeOrRange.range {
+                                    min = Double(range.min)
+                                    max = Double(range.max)
+                                } else if let relative = relativeOrRange.relative {
+                                    let base = Double(relative.base)
+                                    let diff = (base / 100) * relative.tolerancePercentage
+                                    min = base - diff
+                                    max = base + diff
+                                }
+                            case .none: break
+                            }
+
+                            /// Update the min/max values
+                            min = Swift.min(min, Double(newValue))
+                            max = Swift.max(max, Double(newValue))
+
+                            /// If min == max, it won't make a difference than using .absolute
+                            if min != max {
+                                rangeResult = .init(min: Int(min), max: Int(max))
+
+                                /// Calculate base and tolerancePercentage
+                                let base = (min + max) / 2
+                                let diff = max - base
+                                let diffPercentage = (base == 0) ? 0 : (diff / base * 100)
+                                let tolerancePercentage = Statistics.roundToDecimalPlaces(diffPercentage, 2, .up)
+
+                                relativeResult = .init(
+                                    base: Int(base),
+                                    tolerancePercentage: tolerancePercentage
+                                )
+                            }
+                        }
+
+                        if relativeResult == nil && rangeResult == nil {
+                            outputResults[metric] = .absolute(Int(truncatingIfNeeded: newValue))
+                        } else {
+                            outputResults[metric] = .relativeOrRange(
+                                BenchmarkThreshold.RelativeOrRange(
+                                    relative: relativeResult,
+                                    range: rangeResult
+                                )
+                            )
+                        }
+                    }
                 }
 
                 let jsonResultData = try jsonEncoder.encode(outputResults)
 
                 if let stringOutput = String(data: jsonResultData, encoding: .utf8) {
-                    try write(exportData: stringOutput,
-                              fileName: cleanupStringForShellSafety("\(key.target).\(key.name).p90.json"))
+                    try write(
+                        exportData: stringOutput,
+                        fileName: fileName
+                    )
                 } else {
                     print("Failed to encode json for \(outputResults)")
                 }
