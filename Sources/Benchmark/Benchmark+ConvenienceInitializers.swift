@@ -17,7 +17,7 @@ public extension Benchmark {
         teardown: BenchmarkTeardownHook? = nil
     ) {
         self.init(name, configuration: configuration) { benchmark in
-            let setupResult = benchmark.setupState! as! SetupResult  // swiftlint:disable:this force_cast
+            let setupResult = benchmark.setupState! as! SetupResult // swiftlint:disable:this force_cast
             closure(benchmark, setupResult)
         } teardown: {
             try await teardown?()
@@ -46,7 +46,7 @@ public extension Benchmark {
         teardown: BenchmarkTeardownHook? = nil
     ) {
         self.init(name, configuration: configuration) { benchmark in
-            let setupResult = benchmark.setupState! as! SetupResult  // swiftlint:disable:this force_cast
+            let setupResult = benchmark.setupState! as! SetupResult // swiftlint:disable:this force_cast
             await closure(benchmark, setupResult)
         } teardown: {
             try await teardown?()
@@ -79,7 +79,7 @@ public extension Benchmark {
             configuration: configuration,
             closure: { benchmark in
                 do {
-                    let setupResult = benchmark.setupState! as! SetupResult  // swiftlint:disable:this force_cast
+                    let setupResult = benchmark.setupState! as! SetupResult // swiftlint:disable:this force_cast
                     try closure(benchmark, setupResult)
                 } catch {
                     benchmark.error("Benchmark \(name) failed with \(String(reflecting: error))")
@@ -115,7 +115,7 @@ public extension Benchmark {
             configuration: configuration,
             closure: { benchmark in
                 do {
-                    let setupResult = benchmark.setupState! as! SetupResult  // swiftlint:disable:this force_cast
+                    let setupResult = benchmark.setupState! as! SetupResult // swiftlint:disable:this force_cast
                     try await closure(benchmark, setupResult)
                 } catch {
                     benchmark.error("Benchmark \(name) failed with \(String(reflecting: error))")

@@ -44,9 +44,9 @@ extension BenchmarkTool {
             ]
             """
 
-        var outputPath = FilePath(baselineStoragePath)  // package
-        var subPath = FilePath()  // subpath rooted in package used for directory creation
-        subPath.append("Package.swift")  // package/Benchmarks/targetName
+        var outputPath = FilePath(baselineStoragePath) // package
+        var subPath = FilePath() // subpath rooted in package used for directory creation
+        subPath.append("Package.swift") // package/Benchmarks/targetName
         outputPath.append(subPath.components)
 
         print("Adding new executable target \(targetName) to \(outputPath.description)")
@@ -110,13 +110,13 @@ extension BenchmarkTool {
 
             """
 
-        var outputPath = FilePath(baselineStoragePath)  // package
-        var subPath = FilePath()  // subpath rooted in package used for directory creation
+        var outputPath = FilePath(baselineStoragePath) // package
+        var subPath = FilePath() // subpath rooted in package used for directory creation
 
-        subPath.append(benchmarksDirectory)  // package/Benchmarks
-        subPath.append("\(targetName)")  // package/Benchmarks/targetName
+        subPath.append(benchmarksDirectory) // package/Benchmarks
+        subPath.append("\(targetName)") // package/Benchmarks/targetName
 
-        outputPath.createSubPath(subPath)  // Create destination subpath if needed
+        outputPath.createSubPath(subPath) // Create destination subpath if needed
         outputPath.append(subPath.components)
         outputPath.append("\(targetName).swift")
 

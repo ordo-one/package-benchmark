@@ -17,7 +17,7 @@
 public enum BenchmarkCommandRequest: Codable {
     case list
     case run(benchmark: Benchmark)
-    case end  // exit the benchmark
+    case end // exit the benchmark
 }
 
 // Replies from benchmark under measure to benchmark runner
@@ -25,10 +25,10 @@ public enum BenchmarkCommandRequest: Codable {
 public enum BenchmarkCommandReply: Codable {
     case list(benchmark: Benchmark)
     case ready
-    case result(benchmark: Benchmark, results: [BenchmarkResult])  // receives results from built-in metric collectors
+    case result(benchmark: Benchmark, results: [BenchmarkResult]) // receives results from built-in metric collectors
     case run
-    case end  // end of query for list/result
-    case error(_ description: String)  // error while performing operation (e.g. 'run')
+    case end // end of query for list/result
+    case error(_ description: String) // error while performing operation (e.g. 'run')
 }
 
 // swiftlint:enable all

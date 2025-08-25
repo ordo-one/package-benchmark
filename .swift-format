@@ -73,7 +73,7 @@
     "ValidateDocumentationComments" : false
   },
   "spacesAroundRangeFormationOperators" : false,
-  "spacesBeforeEndOfLineComments" : 2,
+  "spacesBeforeEndOfLineComments" : 1,
   "tabWidth" : 8,
   "version" : 1
 }
