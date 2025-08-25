@@ -2,7 +2,9 @@ import PackagePlugin
 
 @main
 struct PluginFactory: BuildToolPlugin {
-    func createBuildCommands(context: PackagePlugin.PluginContext, target: PackagePlugin.Target) async throws
+    func createBuildCommands(
+        context: PackagePlugin.PluginContext, target: PackagePlugin.Target
+    ) async throws
         -> [PackagePlugin.Command]
     {
         guard let target = target as? SwiftSourceModuleTarget else { return [] }

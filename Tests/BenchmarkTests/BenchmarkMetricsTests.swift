@@ -8,8 +8,9 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 ///
 
-@testable import Benchmark
 import XCTest
+
+@testable import Benchmark
 
 final class BenchmarkMetricsTests: XCTestCase {
     private let metrics: [BenchmarkMetric] = [

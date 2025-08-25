@@ -1,7 +1,8 @@
 // swift-tools-version: 5.9
 
-import class Foundation.ProcessInfo
 import PackageDescription
+
+import class Foundation.ProcessInfo
 
 // If the environment variable BENCHMARK_DISABLE_JEMALLOC is set, we'll build the package without Jemalloc support
 let disableJemalloc = ProcessInfo.processInfo.environment["BENCHMARK_DISABLE_JEMALLOC"]

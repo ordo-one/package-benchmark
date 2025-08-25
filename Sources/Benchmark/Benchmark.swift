@@ -10,10 +10,11 @@
 
 import Dispatch
 import Foundation
+
 // swiftlint:disable file_length identifier_name
 
 /// Defines a benchmark
-public final class Benchmark: Codable, Hashable {  // swiftlint:disable:this type_body_length
+public final class Benchmark: Codable, Hashable {
     @_documentation(visibility: internal)
     public typealias BenchmarkClosure = (_ benchmark: Benchmark) -> Void
     @_documentation(visibility: internal)
