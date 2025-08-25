@@ -24,8 +24,10 @@ enum ArgumentParsingError: Error, CustomStringConvertible {
 
 @available(macOS 13.0, *)
 extension ArgumentExtractor {
-    mutating func extractSpecifiedTargets(in package: Package,
-                                          withOption option: String) throws -> [SwiftSourceModuleTarget] {
+    mutating func extractSpecifiedTargets(
+        in package: Package,
+        withOption option: String
+    ) throws -> [SwiftSourceModuleTarget] {
         let specifiedTargets = extractOption(named: option)
         var targets: [SwiftSourceModuleTarget] = []
         var anyMatching = false

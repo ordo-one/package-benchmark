@@ -1,7 +1,8 @@
 // swift-tools-version: 5.9
 
-import class Foundation.ProcessInfo
 import PackageDescription
+
+import class Foundation.ProcessInfo
 
 // If the environment variable BENCHMARK_DISABLE_JEMALLOC is set, we'll build the package without Jemalloc support
 let disableJemalloc = ProcessInfo.processInfo.environment["BENCHMARK_DISABLE_JEMALLOC"]
@@ -10,7 +11,7 @@ let package = Package(
     name: "Benchmark",
     platforms: [
         .macOS(.v13),
-        .iOS(.v16)
+        .iOS(.v16),
     ],
     products: [
         .plugin(name: "BenchmarkCommandPlugin", targets: ["BenchmarkCommandPlugin"]),
@@ -18,14 +19,14 @@ let package = Package(
         .library(
             name: "Benchmark",
             targets: ["Benchmark"]
-        )
+        ),
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-system.git", .upToNextMajor(from: "1.1.0")),
         .package(url: "https://github.com/apple/swift-argument-parser.git", .upToNextMajor(from: "1.1.0")),
         .package(url: "https://github.com/ordo-one/TextTable.git", .upToNextMajor(from: "0.0.1")),
         .package(url: "https://github.com/HdrHistogram/hdrhistogram-swift.git", .upToNextMajor(from: "0.1.0")),
-        .package(url: "https://github.com/apple/swift-atomics.git", .upToNextMajor(from: "1.0.0"))
+        .package(url: "https://github.com/apple/swift-atomics.git", .upToNextMajor(from: "1.0.0")),
     ],
     targets: [
         // Plugins used by users of the package
@@ -63,7 +64,7 @@ let package = Package(
                 .product(name: "SystemPackage", package: "swift-system"),
                 .product(name: "TextTable", package: "TextTable"),
                 "Benchmark",
-                "BenchmarkShared"
+                "BenchmarkShared",
             ],
             path: "Plugins/BenchmarkTool"
         ),
@@ -73,7 +74,7 @@ let package = Package(
             name: "BenchmarkBoilerplateGenerator",
             dependencies: [
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
-                .product(name: "SystemPackage", package: "swift-system")
+                .product(name: "SystemPackage", package: "swift-system"),
             ],
             path: "Plugins/BenchmarkBoilerplateGenerator"
         ),
@@ -83,7 +84,7 @@ let package = Package(
             name: "BenchmarkHelpGenerator",
             dependencies: [
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
-                "BenchmarkShared"
+                "BenchmarkShared",
             ],
             path: "Plugins/BenchmarkHelpGenerator"
         ),
@@ -91,16 +92,14 @@ let package = Package(
         // Getting OS specific information
         .target(
             name: "CDarwinOperatingSystemStats",
-            dependencies: [
-            ],
+            dependencies: [],
             path: "Platform/CDarwinOperatingSystemStats"
         ),
 
         // Getting OS specific information
         .target(
             name: "CLinuxOperatingSystemStats",
-            dependencies: [
-            ],
+            dependencies: [],
             path: "Platform/CLinuxOperatingSystemStats"
         ),
 
@@ -121,14 +120,14 @@ let package = Package(
 let macOSSPIBuild: Bool // Disables jemalloc for macOS SPI builds as the infrastructure doesn't have jemalloc there
 
 #if canImport(Darwin)
-    if let spiBuildEnvironment = ProcessInfo.processInfo.environment["SPI_BUILD"], spiBuildEnvironment == "1" {
-        macOSSPIBuild = true
-        print("Building for SPI@macOS, disabling Jemalloc")
-    } else {
-        macOSSPIBuild = false
-    }
-#else
+if let spiBuildEnvironment = ProcessInfo.processInfo.environment["SPI_BUILD"], spiBuildEnvironment == "1" {
+    macOSSPIBuild = true
+    print("Building for SPI@macOS, disabling Jemalloc")
+} else {
     macOSSPIBuild = false
+}
+#else
+macOSSPIBuild = false
 #endif
 
 // Add Benchmark target dynamically
@@ -149,8 +148,12 @@ if macOSSPIBuild == false { // jemalloc always disable for macOSSPIBuild
     if let disableJemalloc, disableJemalloc != "false", disableJemalloc != "0" {
         print("Jemalloc disabled through environment variable.")
     } else {
-        package.dependencies += [.package(url: "https://github.com/ordo-one/package-jemalloc.git", .upToNextMajor(from: "1.0.0"))]
-        dependencies += [.product(name: "jemalloc", package: "package-jemalloc", condition: .when(platforms: [.macOS, .linux]))]
+        package.dependencies += [
+            .package(url: "https://github.com/ordo-one/package-jemalloc.git", .upToNextMajor(from: "1.0.0"))
+        ]
+        dependencies += [
+            .product(name: "jemalloc", package: "package-jemalloc", condition: .when(platforms: [.macOS, .linux]))
+        ]
     }
 }
 

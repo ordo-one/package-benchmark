@@ -8,8 +8,9 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 //
 
-@testable import Benchmark
 import XCTest
+
+@testable import Benchmark
 
 final class BenchmarkTests: XCTestCase {
     func testBenchmarkRun() throws {
@@ -29,9 +30,11 @@ final class BenchmarkTests: XCTestCase {
     }
 
     func testBenchmarkRunCustomMetric() throws {
-        let benchmark = Benchmark("testBenchmarkRunCustomMetric benchmark",
-                                  configuration: .init(metrics: [.custom("customMetric")])) { benchmark in
-            for measurement in 1 ... 100 {
+        let benchmark = Benchmark(
+            "testBenchmarkRunCustomMetric benchmark",
+            configuration: .init(metrics: [.custom("customMetric")])
+        ) { benchmark in
+            for measurement in 1...100 {
                 benchmark.measurement(.custom("customMetric"), measurement)
             }
         }
@@ -48,8 +51,10 @@ final class BenchmarkTests: XCTestCase {
     }
 
     func testBenchmarkRunFailure() throws {
-        let benchmark = Benchmark("testBenchmarkRunFailure benchmark",
-                                  configuration: .init(metrics: [.custom("customMetric")])) { benchmark in
+        let benchmark = Benchmark(
+            "testBenchmarkRunFailure benchmark",
+            configuration: .init(metrics: [.custom("customMetric")])
+        ) { benchmark in
             benchmark.error("Benchmark failed")
         }
         XCTAssertNotNil(benchmark)
@@ -59,13 +64,15 @@ final class BenchmarkTests: XCTestCase {
     }
 
     func testBenchmarkRunMoreParameters() throws {
-        let benchmark = Benchmark("testBenchmarkRunMoreParameters benchmark",
-                                  configuration: .init(
-                                      metrics: .all,
-                                      timeUnits: .milliseconds,
-                                      warmupIterations: 0,
-                                      scalingFactor: .mega
-                                  )) { benchmark in
+        let benchmark = Benchmark(
+            "testBenchmarkRunMoreParameters benchmark",
+            configuration: .init(
+                metrics: .all,
+                timeUnits: .milliseconds,
+                warmupIterations: 0,
+                scalingFactor: .mega
+            )
+        ) { benchmark in
             for outerloop in benchmark.scaledIterations {
                 blackHole(outerloop)
             }
@@ -75,14 +82,16 @@ final class BenchmarkTests: XCTestCase {
     }
 
     func testBenchmarkParameterizedDescription() throws {
-        let benchmark = Benchmark("testBenchmarkParameterizedDescription benchmark",
-                                  configuration: .init(
-                                    tags: [
-                                        "foo": "bar",
-                                        "bin": String(42),
-                                        "pi": String(3.14)
-                                    ]
-                                  )) { _ in }
+        let benchmark = Benchmark(
+            "testBenchmarkParameterizedDescription benchmark",
+            configuration: .init(
+                tags: [
+                    "foo": "bar",
+                    "bin": String(42),
+                    "pi": String(3.14),
+                ]
+            )
+        ) { _ in }
         XCTAssertNotNil(benchmark)
         XCTAssertEqual(benchmark?.name, "testBenchmarkParameterizedDescription benchmark (bin: 42, foo: bar, pi: 3.14)")
     }

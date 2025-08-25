@@ -13,11 +13,11 @@
 import Benchmark
 
 #if canImport(Darwin)
-    import Darwin
+import Darwin
 #elseif canImport(Glibc)
-    import Glibc
+import Glibc
 #else
-    #error("Unsupported Platform")
+#error("Unsupported Platform")
 #endif
 
 extension BenchmarkTool {
@@ -48,7 +48,7 @@ extension BenchmarkTool {
                  String(cString: $0)
              }
          }
-
+        
          let releaseSize = MemoryLayout.size(ofValue: uuname.release)
          let release = withUnsafePointer(to: &uuname.release) {
              $0.withMemoryRebound(to: UInt8.self, capacity: releaseSize) {
@@ -64,10 +64,12 @@ extension BenchmarkTool {
             }
         }
 
-        return BenchmarkMachine(hostname: nodeName,
-                                processors: processors,
-                                processorType: machine,
-                                memory: memory,
-                                kernelVersion: version)
+        return BenchmarkMachine(
+            hostname: nodeName,
+            processors: processors,
+            processorType: machine,
+            memory: memory,
+            kernelVersion: version
+        )
     }
 }

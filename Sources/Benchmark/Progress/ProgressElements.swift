@@ -26,12 +26,10 @@
 //  SOFTWARE.
 //
 
-
 @_documentation(visibility: internal)
 public protocol ProgressElementType {
     func value(_ progressBar: ProgressBar) -> String
 }
-
 
 /// the progress bar element e.g. "[----------------------        ]"
 @_documentation(visibility: internal)
@@ -56,7 +54,6 @@ public struct ProgressBarLine: ProgressElementType {
     }
 }
 
-
 /// the index element e.g. "2 of 3"
 @_documentation(visibility: internal)
 public struct ProgressIndex: ProgressElementType {
@@ -66,7 +63,6 @@ public struct ProgressIndex: ProgressElementType {
         return "\(progressBar.index) of \(progressBar.count)"
     }
 }
-
 
 /// the percentage element e.g. "90.0%"
 @_documentation(visibility: internal)
@@ -90,7 +86,6 @@ public struct ProgressPercent: ProgressElementType {
         return padded // "\(percentDone.format(decimalPlaces))%"
     }
 }
-
 
 /// the time estimates e.g. "ETA: 00:00:02 (at 1.00 it/s)"
 @_documentation(visibility: internal)
@@ -121,10 +116,10 @@ public struct ProgressTimeEstimates: ProgressElementType {
         let seconds = Double(duration % 60)
         let minutes = Double((duration / 60) % 60)
         let hours = Double(duration / 3600)
-        return "\(hours.format(0, minimumIntegerPartLength: 2)):\(minutes.format(0, minimumIntegerPartLength: 2)):\(seconds.format(0, minimumIntegerPartLength: 2))"
+        return
+            "\(hours.format(0, minimumIntegerPartLength: 2)):\(minutes.format(0, minimumIntegerPartLength: 2)):\(seconds.format(0, minimumIntegerPartLength: 2))"
     }
 }
-
 
 /// an arbitrary string that can be added to the progress bar.
 @_documentation(visibility: internal)

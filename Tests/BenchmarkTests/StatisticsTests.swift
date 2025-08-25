@@ -8,8 +8,9 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 //
 
-@testable import Benchmark
 import XCTest
+
+@testable import Benchmark
 
 final class StatisticsTests: XCTestCase {
     func testStatisticsResults() throws {
@@ -17,11 +18,11 @@ final class StatisticsTests: XCTestCase {
         let measurementCount = 8_340
 
         // Add 2*measurementCount measurements, one 0, one max
-        for measurement in (0 ..< measurementCount).reversed() {
+        for measurement in (0..<measurementCount).reversed() {
             stats.add(measurement)
         }
 
-        for measurement in 1 ... measurementCount {
+        for measurement in 1...measurementCount {
             stats.add(measurement)
         }
 
@@ -44,7 +45,7 @@ final class StatisticsTests: XCTestCase {
     func testOnlyZeroMeasurements() throws {
         let stats = Statistics()
         let measurementCount = 100
-        let range = 0 ..< measurementCount
+        let range = 0..<measurementCount
 
         for _ in range {
             stats.add(0)
@@ -71,7 +72,7 @@ final class StatisticsTests: XCTestCase {
     func testFewerMeasurementsThanPercentiles() throws {
         let stats = Statistics()
         let measurementCount = 5
-        let range = 1 ..< measurementCount
+        let range = 1..<measurementCount
         var accumulatedMeasurement = 0
 
         for measurement in range {
@@ -107,7 +108,7 @@ final class StatisticsTests: XCTestCase {
             Case(value: 9_999_999, units: .kilo),
             Case(value: 10_000_000, units: .mega),
             Case(value: 9_999_999_999, units: .mega),
-            Case(value: 10_000_000_000, units: .giga)
+            Case(value: 10_000_000_000, units: .giga),
         ]
 
         for (value, expectedUnits) in cases {
@@ -120,7 +121,7 @@ final class StatisticsTests: XCTestCase {
         let measurementCount = 300
         let stats = Statistics(prefersLarger: true)
 
-        for measurement in 1 ... measurementCount {
+        for measurement in 1...measurementCount {
             stats.add(measurement)
         }
 
