@@ -8,16 +8,16 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 //
 
-#if canImport(Darwin)
-    import Darwin
-#elseif canImport(Glibc)
-    import Glibc
-#else
-    #error("Unsupported Platform")
-#endif
-
 import ArgumentParser
 import BenchmarkShared
+
+#if canImport(Darwin)
+import Darwin
+#elseif canImport(Glibc)
+import Glibc
+#else
+#error("Unsupported Platform")
+#endif
 
 @_documentation(visibility: internal)
 extension TimeUnits: ExpressibleByArgument {}
@@ -59,16 +59,19 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
     @Option(name: .long, help: "Specifies that time related metrics output should be specified units")
     var timeUnits: TimeUnits?
 
-    @Flag(name: .long, help:
-        """
-        Set to true if thresholds should be checked against an absolute reference point rather than delta between baselines.
-        This is used for CI workflows when you want to validate the thresholds vs. a persisted benchmark baseline
-        rather than comparing PR vs main or vs a current run. This is useful to cut down the build matrix needed
-        for those wanting to validate performance of e.g. toolchains or OS:s as well (or have other reasons for wanting
-        a specific check against a given absolute reference.).
-        If this is enabled, zero or one baselines should be specified for the check operation.
-        By default, thresholds are checked comparing two baselines, or a baseline and a benchmark run.
-        """)
+    @Flag(
+        name: .long,
+        help:
+            """
+            Set to true if thresholds should be checked against an absolute reference point rather than delta between baselines.
+            This is used for CI workflows when you want to validate the thresholds vs. a persisted benchmark baseline
+            rather than comparing PR vs main or vs a current run. This is useful to cut down the build matrix needed
+            for those wanting to validate performance of e.g. toolchains or OS:s as well (or have other reasons for wanting
+            a specific check against a given absolute reference.).
+            If this is enabled, zero or one baselines should be specified for the check operation.
+            By default, thresholds are checked comparing two baselines, or a baseline and a benchmark run.
+            """
+    )
     var checkAbsolute = false
 
     @Flag(name: .shortAndLong, help: "True if we should run the benchmarks for all metrics.")
@@ -122,13 +125,12 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
 
                 while true {
                     benchmark = debugIterator.next()
-                    if let benchmark {
-                        if try shouldRunBenchmark(benchmark.name) {
-                            benchmarkCommand = BenchmarkCommandRequest.run(benchmark: benchmark)
-                            break
-                        }
-                    } else {
+                    guard let benchmark else {
                         return
+                    }
+                    if try shouldRunBenchmark(benchmark.name) {
+                        benchmarkCommand = BenchmarkCommandRequest.run(benchmark: benchmark)
+                        break
                     }
                 }
                 if benchmark == nil {
@@ -151,11 +153,14 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
                 if let benchmark {
                     // Pick up some settings overridden by BenchmarkTool
                     if benchmarkToRun.configuration.metrics.isEmpty == false {
-                        for metricIndex in 0 ..< benchmarkToRun.configuration.metrics.count {
+                        for metricIndex in 0..<benchmarkToRun.configuration.metrics.count {
                             let metric = benchmarkToRun.configuration.metrics[metricIndex]
                             if metric == .custom(metric.description) {
                                 if let existingMetric =
-                                    benchmark.configuration.metrics.first(where: { $0.description == metric.description }) {
+                                    benchmark.configuration.metrics.first(where: {
+                                        $0.description == metric.description
+                                    })
+                                {
                                     benchmarkToRun.configuration.metrics[metricIndex] = existingMetric
                                 }
                             }
@@ -170,27 +175,30 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
                     benchmark.target = benchmarkToRun.target
 
                     if let timeUnits,
-                       let units = BenchmarkTimeUnits(rawValue: timeUnits.rawValue) {
+                        let units = BenchmarkTimeUnits(rawValue: timeUnits.rawValue)
+                    {
                         benchmark.configuration.timeUnits = units
                     }
 
                     do {
-                        for hook in [Benchmark.startupHook, Benchmark.setup, benchmark.configuration.setup, benchmark.setup] {
+                        for hook in [
+                            Benchmark.startupHook, Benchmark.setup, benchmark.configuration.setup, benchmark.setup,
+                        ] {
                             try await hook?()
                         }
                     } catch {
                         let description = """
-                        Benchmark.setup or local benchmark setup failed:
+                            Benchmark.setup or local benchmark setup failed:
 
-                        \(error)
+                            \(error)
 
-                        If it is a filesystem permissioning error or if the benchmark uses networking, you may need
-                        to give permissions or even disable SwiftPM's sandbox environment and run the benchmark using:
+                            If it is a filesystem permissioning error or if the benchmark uses networking, you may need
+                            to give permissions or even disable SwiftPM's sandbox environment and run the benchmark using:
 
-                        swift package --allow-writing-to-package-directory benchmark
-                        or
-                        swift package --disable-sandbox benchmark
-                        """
+                            swift package --allow-writing-to-package-directory benchmark
+                            or
+                            swift package --disable-sandbox benchmark
+                            """
 
                         try channel.write(.error(description))
                         return
@@ -208,15 +216,24 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
                         }
                     } catch {
                         print("Error: \(error.localizedDescription)")
-                        try channel.write(.error("OutputSuppressor failed: \(String(reflecting: error.localizedDescription))"))
+                        try channel.write(
+                            .error("OutputSuppressor failed: \(String(reflecting: error.localizedDescription))")
+                        )
                     }
 
                     do {
-                        for hook in [benchmark.teardown, benchmark.configuration.teardown, Benchmark.shutdownHook, Benchmark.teardown] {
+                        for hook in [
+                            benchmark.teardown, benchmark.configuration.teardown, Benchmark.shutdownHook,
+                            Benchmark.teardown,
+                        ] {
                             try await hook?()
                         }
                     } catch {
-                        try channel.write(.error("Benchmark.teardown or local benchmark teardown failed: \(String(reflecting: error))"))
+                        try channel.write(
+                            .error(
+                                "Benchmark.teardown or local benchmark teardown failed: \(String(reflecting: error))"
+                            )
+                        )
                         return
                     }
 

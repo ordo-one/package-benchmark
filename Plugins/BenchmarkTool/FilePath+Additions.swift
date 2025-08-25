@@ -11,11 +11,11 @@
 import SystemPackage
 
 #if canImport(Darwin)
-    import Darwin
+import Darwin
 #elseif canImport(Glibc)
-    import Glibc
+import Glibc
 #else
-    #error("Unsupported Platform")
+#error("Unsupported Platform")
 #endif
 
 public extension FilePath {
@@ -27,7 +27,10 @@ public extension FilePath {
 
             do {
                 let fd = try FileDescriptor.open(
-                    creationPath, .readOnly, options: [.directory], permissions: .ownerReadWrite
+                    creationPath,
+                    .readOnly,
+                    options: [.directory],
+                    permissions: .ownerReadWrite
                 )
 
                 do {

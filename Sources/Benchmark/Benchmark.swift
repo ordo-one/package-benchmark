@@ -10,6 +10,7 @@
 
 import Dispatch
 import Foundation
+
 // swiftlint:disable file_length identifier_name
 
 /// Defines a benchmark
@@ -49,60 +50,64 @@ public final class Benchmark: Codable, Hashable { // swiftlint:disable:this type
     @ThreadSafeProperty(wrappedValue: nil, lock: setupTeardownLock)
     public static var _teardown: BenchmarkTeardownHook?
 
-#if swift(<5.10)
+    #if swift(<5.10)
     @_documentation(visibility: internal)
     public static var startupHook: BenchmarkSetupHook? {
-        get { _startupHook  }
+        get { _startupHook }
         set { _startupHook = newValue }
     }
 
     @_documentation(visibility: internal)
     public static var shutdownHook: BenchmarkTeardownHook? {
-        get { _shutdownHook  }
+        get { _shutdownHook }
         set { _shutdownHook = newValue }
     }
 
     /// This closure if set, will be run before a targets benchmarks are run, but after they are registered
     public static var setup: BenchmarkSetupHook? {
-        get { _setup  }
+        get { _setup }
         set { _setup = newValue }
     }
 
     /// This closure if set, will be run after a targets benchmarks run, but after they are registered
     public static var teardown: BenchmarkTeardownHook? {
-        get { _teardown  }
+        get { _teardown }
         set { _teardown = newValue }
     }
-#elseif swift(>=5.10)
+    #elseif swift(>=5.10)
     @_documentation(visibility: internal)
     nonisolated(unsafe) public static var startupHook: BenchmarkSetupHook? {
-        get { _startupHook  }
+        get { _startupHook }
         set { _startupHook = newValue }
     }
 
     @_documentation(visibility: internal)
     nonisolated(unsafe) public static var shutdownHook: BenchmarkTeardownHook? {
-        get { _shutdownHook  }
+        get { _shutdownHook }
         set { _shutdownHook = newValue }
     }
 
     /// This closure if set, will be run before a targets benchmarks are run, but after they are registered
     nonisolated(unsafe) public static var setup: BenchmarkSetupHook? {
-        get { _setup  }
+        get { _setup }
         set { _setup = newValue }
     }
 
     /// This closure if set, will be run after a targets benchmarks run, but after they are registered
     nonisolated(unsafe) public static var teardown: BenchmarkTeardownHook? {
-        get { _teardown  }
+        get { _teardown }
         set { _teardown = newValue }
     }
-#endif
+    #endif
 
     /// Set to true if this benchmark results should be compared with an absolute threshold when `--check-absolute` is
     /// specified on the command line. An implementation can then choose to configure thresholds differently for
     /// such comparisons by e.g. reading them in from external storage.
-    @available(*, deprecated, message: "The checking of absolute thresholds should now be done using `swift package benchmark thresholds`")
+    @available(
+        *,
+        deprecated,
+        message: "The checking of absolute thresholds should now be done using `swift package benchmark thresholds`"
+    )
     public static var checkAbsoluteThresholds = false
 
     @_documentation(visibility: internal)
@@ -114,17 +119,16 @@ public final class Benchmark: Codable, Hashable { // swiftlint:disable:this type
     /// The name used for display purposes of the benchmark (also used for matching when comparing to baselines)
     public var name: String {
         get {
-            if configuration.tags.isEmpty {
-                return baseName
-            } else {
+            guard configuration.tags.isEmpty else {
                 return baseName
                     + " ("
                     + configuration.tags
-                        .sorted(by: { $0.key < $1.key })
-                        .map({ "\($0.key): \($0.value)" })
-                        .joined(separator: ", ")
+                    .sorted(by: { $0.key < $1.key })
+                    .map({ "\($0.key): \($0.value)" })
+                    .joined(separator: ", ")
                     + ")"
             }
+            return baseName
         }
         set {
             baseName = newValue
@@ -138,7 +142,7 @@ public final class Benchmark: Codable, Hashable { // swiftlint:disable:this type
     public var currentIteration: Int = 0
 
     /// Convenience range to iterate over for benchmarks
-    public var scaledIterations: Range<Int> { 0 ..< configuration.scalingFactor.rawValue }
+    public var scaledIterations: Range<Int> { 0..<configuration.scalingFactor.rawValue }
 
     /// Some internal state for display purposes of the benchmark by the BenchmarkTool
     @_documentation(visibility: internal)
@@ -170,30 +174,36 @@ public final class Benchmark: Codable, Hashable { // swiftlint:disable:this type
 
     /// Hook for setting defaults for a whole benchmark suite
     private static let configurationLock = NSLock()
-    @ThreadSafeProperty(wrappedValue: .init(metrics: BenchmarkMetric.default,
-                                            tags: [:],
-                                            timeUnits: .automatic,
-                                            units: [:],
-                                            warmupIterations: 1,
-                                            scalingFactor: .one,
-                                            maxDuration: .seconds(1),
-                                            maxIterations: 10_000,
-                                            skip: false,
-                                            thresholds: nil), lock: configurationLock)
+    @ThreadSafeProperty(
+        wrappedValue: .init(
+            metrics: BenchmarkMetric.default,
+            tags: [:],
+            timeUnits: .automatic,
+            units: [:],
+            warmupIterations: 1,
+            scalingFactor: .one,
+            maxDuration: .seconds(1),
+            maxIterations: 10_000,
+            skip: false,
+            thresholds: nil
+        ),
+        lock: configurationLock
+    )
     private static var _defaultConfiguration: Configuration
 
-#if swift(<5.10)
+    #if swift(<5.10)
     public static var defaultConfiguration: Configuration {
-        get { _defaultConfiguration  }
+        get { _defaultConfiguration }
         set { _defaultConfiguration = newValue }
     }
-#elseif swift(>=5.10)
+    #elseif swift(>=5.10)
     nonisolated(unsafe)
-    public static var defaultConfiguration: Configuration {
-        get { _defaultConfiguration  }
+        public static var defaultConfiguration: Configuration
+    {
+        get { _defaultConfiguration }
         set { _defaultConfiguration = newValue }
     }
-#endif
+    #endif
 
     static var testSkipBenchmarkRegistrations = false // true in test to avoid bench registration fail
     var measurementCompleted = false // Keep track so we skip multiple 'end of measurement'
@@ -225,11 +235,13 @@ public final class Benchmark: Codable, Hashable { // swiftlint:disable:this type
     ///   - setup: A closure that will be run once before the benchmark iterations are run
     ///   - teardown: A closure that will be run once after the benchmark iterations are done
     @discardableResult
-    public init?(_ name: String,
-                 configuration: Benchmark.Configuration = Benchmark.defaultConfiguration,
-                 closure: @escaping BenchmarkClosure,
-                 setup: BenchmarkSetupHook? = nil,
-                 teardown: BenchmarkTeardownHook? = nil) {
+    public init?(
+        _ name: String,
+        configuration: Benchmark.Configuration = Benchmark.defaultConfiguration,
+        closure: @escaping BenchmarkClosure,
+        setup: BenchmarkSetupHook? = nil,
+        teardown: BenchmarkTeardownHook? = nil
+    ) {
         if configuration.skip {
             return nil
         }
@@ -252,11 +264,13 @@ public final class Benchmark: Codable, Hashable { // swiftlint:disable:this type
     ///   - setup: A closure that will be run once before the benchmark iterations are run
     ///   - teardown: A closure that will be run once after the benchmark iterations are done
     @discardableResult
-    public init?(_ name: String,
-                 configuration: Benchmark.Configuration = Benchmark.defaultConfiguration,
-                 closure: @escaping BenchmarkAsyncClosure,
-                 setup: BenchmarkSetupHook? = nil,
-                 teardown: BenchmarkTeardownHook? = nil) {
+    public init?(
+        _ name: String,
+        configuration: Benchmark.Configuration = Benchmark.defaultConfiguration,
+        closure: @escaping BenchmarkAsyncClosure,
+        setup: BenchmarkSetupHook? = nil,
+        teardown: BenchmarkTeardownHook? = nil
+    ) {
         if configuration.skip {
             return nil
         }
@@ -279,18 +293,26 @@ public final class Benchmark: Codable, Hashable { // swiftlint:disable:this type
     ///   - setup: A closure that will be run once before the benchmark iterations are run
     ///   - teardown: A closure that will be run once after the benchmark iterations are done
     @discardableResult
-    public convenience init?(_ name: String,
-                             configuration: Benchmark.Configuration = Benchmark.defaultConfiguration,
-                             closure: @escaping BenchmarkThrowingClosure,
-                             setup: BenchmarkSetupHook? = nil,
-                             teardown: BenchmarkTeardownHook? = nil) {
-        self.init(name, configuration: configuration, closure: { benchmark in
-            do {
-                try closure(benchmark)
-            } catch {
-                benchmark.error("Benchmark \(name) failed with \(String(reflecting: error))")
-            }
-        }, setup: setup, teardown: teardown)
+    public convenience init?(
+        _ name: String,
+        configuration: Benchmark.Configuration = Benchmark.defaultConfiguration,
+        closure: @escaping BenchmarkThrowingClosure,
+        setup: BenchmarkSetupHook? = nil,
+        teardown: BenchmarkTeardownHook? = nil
+    ) {
+        self.init(
+            name,
+            configuration: configuration,
+            closure: { benchmark in
+                do {
+                    try closure(benchmark)
+                } catch {
+                    benchmark.error("Benchmark \(name) failed with \(String(reflecting: error))")
+                }
+            },
+            setup: setup,
+            teardown: teardown
+        )
     }
 
     /// Definition of an async throwing Benchmark
@@ -302,18 +324,26 @@ public final class Benchmark: Codable, Hashable { // swiftlint:disable:this type
     ///   - setup: A closure that will be run once before the benchmark iterations are run
     ///   - teardown: A closure that will be run once after the benchmark iterations are done
     @discardableResult
-    public convenience init?(_ name: String,
-                             configuration: Benchmark.Configuration = Benchmark.defaultConfiguration,
-                             closure: @escaping BenchmarkAsyncThrowingClosure,
-                             setup: BenchmarkSetupHook? = nil,
-                             teardown: BenchmarkTeardownHook? = nil) {
-        self.init(name, configuration: configuration, closure: { benchmark in
-            do {
-                try await closure(benchmark)
-            } catch {
-                benchmark.error("Benchmark \(name) failed with \(String(reflecting: error))")
-            }
-        }, setup: setup, teardown: teardown)
+    public convenience init?(
+        _ name: String,
+        configuration: Benchmark.Configuration = Benchmark.defaultConfiguration,
+        closure: @escaping BenchmarkAsyncThrowingClosure,
+        setup: BenchmarkSetupHook? = nil,
+        teardown: BenchmarkTeardownHook? = nil
+    ) {
+        self.init(
+            name,
+            configuration: configuration,
+            closure: { benchmark in
+                do {
+                    try await closure(benchmark)
+                } catch {
+                    benchmark.error("Benchmark \(name) failed with \(String(reflecting: error))")
+                }
+            },
+            setup: setup,
+            teardown: teardown
+        )
     }
 
     // Shared between sync/async actual benchmark registration
@@ -326,12 +356,15 @@ public final class Benchmark: Codable, Hashable { // swiftlint:disable:this type
             Self.benchmarks.append(self)
         }
 
-        configuration.thresholds?.forEach { thresholdMetric, _ in
-            if self.configuration.metrics.contains(thresholdMetric) == false {
-                print("Warning: Custom threshold tolerance defined for metric `\(thresholdMetric)` " +
-                    "which isn't used by benchmark `\(name)`")
+        configuration.thresholds?
+            .forEach { thresholdMetric, _ in
+                if self.configuration.metrics.contains(thresholdMetric) == false {
+                    print(
+                        "Warning: Custom threshold tolerance defined for metric `\(thresholdMetric)` "
+                            + "which isn't used by benchmark `\(name)`"
+                    )
+                }
             }
-        }
     }
 
     /// `measurement` registers custom metric measurements
@@ -402,15 +435,16 @@ public final class Benchmark: Codable, Hashable { // swiftlint:disable:this type
         let semaphore = DispatchSemaphore(value: 0)
 
         // Must do this in a separate thread, otherwise we block the concurrent thread pool
-        DispatchQueue.global(qos: .userInitiated).async {
-            Task {
-                self._startMeasurement(false)
-                await asyncClosure(self)
-                self._stopMeasurement(false)
+        DispatchQueue.global(qos: .userInitiated)
+            .async {
+                Task {
+                    self._startMeasurement(false)
+                    await asyncClosure(self)
+                    self._stopMeasurement(false)
 
-                semaphore.signal()
+                    semaphore.signal()
+                }
             }
-        }
         semaphore.wait()
     }
 
@@ -459,19 +493,21 @@ public extension Benchmark {
         /// Optional per-benchmark specific teardown done after final run is done
         public var teardown: BenchmarkTeardownHook?
 
-        public init(metrics: [BenchmarkMetric] = defaultConfiguration.metrics,
-                    tags: [String: String] = defaultConfiguration.tags,
-                    timeUnits: BenchmarkTimeUnits = defaultConfiguration.timeUnits,
-                    units: [BenchmarkMetric: BenchmarkUnits] = defaultConfiguration.units,
-                    warmupIterations: Int = defaultConfiguration.warmupIterations,
-                    scalingFactor: BenchmarkScalingFactor = defaultConfiguration.scalingFactor,
-                    maxDuration: Duration = defaultConfiguration.maxDuration,
-                    maxIterations: Int = defaultConfiguration.maxIterations,
-                    skip: Bool = defaultConfiguration.skip,
-                    thresholds: [BenchmarkMetric: BenchmarkThresholds]? =
-                        defaultConfiguration.thresholds,
-                    setup: BenchmarkSetupHook? = nil,
-                    teardown: BenchmarkTeardownHook? = nil) {
+        public init(
+            metrics: [BenchmarkMetric] = defaultConfiguration.metrics,
+            tags: [String: String] = defaultConfiguration.tags,
+            timeUnits: BenchmarkTimeUnits = defaultConfiguration.timeUnits,
+            units: [BenchmarkMetric: BenchmarkUnits] = defaultConfiguration.units,
+            warmupIterations: Int = defaultConfiguration.warmupIterations,
+            scalingFactor: BenchmarkScalingFactor = defaultConfiguration.scalingFactor,
+            maxDuration: Duration = defaultConfiguration.maxDuration,
+            maxIterations: Int = defaultConfiguration.maxIterations,
+            skip: Bool = defaultConfiguration.skip,
+            thresholds: [BenchmarkMetric: BenchmarkThresholds]? =
+                defaultConfiguration.thresholds,
+            setup: BenchmarkSetupHook? = nil,
+            teardown: BenchmarkTeardownHook? = nil
+        ) {
             self.metrics = metrics
             self.tags = tags
             self.timeUnits = timeUnits

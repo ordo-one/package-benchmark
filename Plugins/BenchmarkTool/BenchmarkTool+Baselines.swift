@@ -15,11 +15,11 @@ import Foundation
 import SystemPackage
 
 #if canImport(Darwin)
-    import Darwin
+import Darwin
 #elseif canImport(Glibc)
-    import Glibc
+import Glibc
 #else
-    #error("Unsupported Platform")
+#error("Unsupported Platform")
 #endif
 
 struct BenchmarkMachine: Codable, Equatable {
@@ -38,9 +38,7 @@ struct BenchmarkMachine: Codable, Equatable {
     var kernelVersion: String
 
     public static func == (lhs: BenchmarkMachine, rhs: BenchmarkMachine) -> Bool {
-        lhs.processors == rhs.processors &&
-            lhs.processorType == rhs.processorType &&
-            lhs.memory == rhs.memory
+        lhs.processors == rhs.processors && lhs.processorType == rhs.processorType && lhs.memory == rhs.memory
     }
 }
 
@@ -183,7 +181,8 @@ extension BenchmarkTool {
         storagePath.append(baselinesDirectory) // package/.benchmarkBaselines
         for file in storagePath.directoryEntries {
             if file.ends(with: ".") == false,
-               file.ends(with: "..") == false {
+                file.ends(with: "..") == false
+            {
                 var subDirectory = storagePath
                 if let directoryName = file.lastComponent {
                     subDirectory.append(directoryName)
@@ -191,7 +190,8 @@ extension BenchmarkTool {
                     for file in subDirectory.directoryEntries {
                         if let subdirectoryName = file.lastComponent {
                             if file.ends(with: ".") == false,
-                               file.ends(with: "..") == false {
+                                file.ends(with: "..") == false
+                            {
                                 print("\(subdirectoryName.description)")
                             }
                         }
@@ -209,7 +209,8 @@ extension BenchmarkTool {
         storagePath.append(baselinesDirectory) // package/.benchmarkBaselines
         for file in storagePath.directoryEntries {
             if file.ends(with: ".") == false,
-               file.ends(with: "..") == false {
+                file.ends(with: "..") == false
+            {
                 if target == file.lastComponent!.description {
                     var subDirectory = storagePath
                     if let directoryName = file.lastComponent {
@@ -217,16 +218,21 @@ extension BenchmarkTool {
                         for file in subDirectory.directoryEntries {
                             if let subdirectoryName = file.lastComponent {
                                 if file.ends(with: ".") == false,
-                                   file.ends(with: "..") == false {
+                                    file.ends(with: "..") == false
+                                {
                                     if subdirectoryName.description == baselineName {
                                         do {
                                             print("Removing baseline '\(baselineName)' for \(target)")
                                             try filemanager.removeItem(atPath: file.description)
                                         } catch {
                                             print("Failed to remove file \(file), error \(String(reflecting: error))")
-                                            print("Give benchmark plugin permissions to delete files by running with e.g.:")
+                                            print(
+                                                "Give benchmark plugin permissions to delete files by running with e.g.:"
+                                            )
                                             print("")
-                                            print("swift package --allow-writing-to-package-directory benchmark baseline delete")
+                                            print(
+                                                "swift package --allow-writing-to-package-directory benchmark baseline delete"
+                                            )
                                             print("")
                                         }
                                     }
@@ -239,23 +245,25 @@ extension BenchmarkTool {
         }
     }
 
-    func write(baseline: BenchmarkBaseline,
-               baselineName: String,
-               target: String,
-               hostIdentifier: String? = nil) throws {
+    func write(
+        baseline: BenchmarkBaseline,
+        baselineName: String,
+        target: String,
+        hostIdentifier: String? = nil
+    ) throws {
         // Set up desired output path and create any intermediate directories for structure as required:
 
         /*
          We store the baselines in a .benchmarkBaselines directory, by default in the package root path
          unless otherwise specified.
-
+        
          The 'default' folder is used when no specific named baseline have been specified with the
          command line. Specified 'named' baselines is useful for convenient A/B/C testing and comparisons.
          Unless a host identifier have been specified on the command line (or in an environment variable),
          we by default store results in 'results.json', otherwise we will use the environment variable
          or command line to optionally specify a 'hostIdentifier' that allow for separation between
          different hosts if checking in baselines in repos.
-
+        
          .benchmarkBaselines
          ├── target1
          │   ├── default
@@ -296,7 +304,10 @@ extension BenchmarkTool {
         // Write out benchmark baselines
         do {
             let fd = try FileDescriptor.open(
-                outputPath, .writeOnly, options: [.truncate, .create], permissions: .ownerReadWrite
+                outputPath,
+                .writeOnly,
+                options: [.truncate, .create],
+                permissions: .ownerReadWrite
             )
 
             do {
@@ -331,9 +342,11 @@ extension BenchmarkTool {
         }
     }
 
-    func read(hostIdentifier: String? = nil,
-              target: String,
-              baselineIdentifier: String? = nil) throws -> BenchmarkBaseline? {
+    func read(
+        hostIdentifier: String? = nil,
+        target: String,
+        baselineIdentifier: String? = nil
+    ) throws -> BenchmarkBaseline? {
         var path = FilePath(baselineStoragePath)
         path.append(baselinesDirectory) // package/.benchmarkBaselines
         path.append(FilePath.Component(target)!) // package/.benchmarkBaselines/myTarget1
@@ -418,8 +431,10 @@ extension BenchmarkBaseline {
 }
 
 extension BenchmarkBaseline: Equatable {
-    public func deviationsComparedToBaseline(_ rhs: BenchmarkBaseline,
-                                             benchmarks: [Benchmark]) -> BenchmarkResult.ThresholdDeviations {
+    public func deviationsComparedToBaseline(
+        _ rhs: BenchmarkBaseline,
+        benchmarks: [Benchmark]
+    ) -> BenchmarkResult.ThresholdDeviations {
         let lhs = self
         var warningPrintedForMetric: Set<BenchmarkMetric> = []
         var warningPrinted = false
@@ -428,16 +443,21 @@ extension BenchmarkBaseline: Equatable {
         for (lhsBenchmarkIdentifier, lhsBenchmarkResults) in lhs.results {
             for lhsBenchmarkResult in lhsBenchmarkResults {
                 if let rhsResults = rhs.results.first(where: { $0.key == lhsBenchmarkIdentifier }) {
-                    if let rhsBenchmarkResult = rhsResults.value.first(where: { $0.metric == lhsBenchmarkResult.metric }) {
-                        let thresholds = thresholdsForBenchmarks(benchmarks,
-                                                                 name: lhsBenchmarkIdentifier.name,
-                                                                 target: lhsBenchmarkIdentifier.target,
-                                                                 metric: lhsBenchmarkResult.metric)
+                    if let rhsBenchmarkResult = rhsResults.value.first(where: { $0.metric == lhsBenchmarkResult.metric }
+                    ) {
+                        let thresholds = thresholdsForBenchmarks(
+                            benchmarks,
+                            name: lhsBenchmarkIdentifier.name,
+                            target: lhsBenchmarkIdentifier.target,
+                            metric: lhsBenchmarkResult.metric
+                        )
 
-                        let deviationResults = lhsBenchmarkResult.deviationsComparedWith(rhsBenchmarkResult,
-                                                                                         thresholds: thresholds,
-                                                                                         name: lhsBenchmarkIdentifier.name,
-                                                                                         target: lhsBenchmarkIdentifier.target)
+                        let deviationResults = lhsBenchmarkResult.deviationsComparedWith(
+                            rhsBenchmarkResult,
+                            thresholds: thresholds,
+                            name: lhsBenchmarkIdentifier.name,
+                            target: lhsBenchmarkIdentifier.target
+                        )
                         allDeviationResults.append(deviationResults)
                     } else {
                         if warningPrintedForMetric.contains(lhsBenchmarkResult.metric) == false {
@@ -447,7 +467,9 @@ extension BenchmarkBaseline: Equatable {
                     }
                 } else {
                     if warningPrinted == false {
-                        print("One or more benchmarks, including `\(lhsBenchmarkIdentifier.target):\(lhsBenchmarkIdentifier.name)` was not found in one of the baselines.")
+                        print(
+                            "One or more benchmarks, including `\(lhsBenchmarkIdentifier.target):\(lhsBenchmarkIdentifier.name)` was not found in one of the baselines."
+                        )
                         warningPrinted = true
                     }
                 }
@@ -457,25 +479,31 @@ extension BenchmarkBaseline: Equatable {
         return allDeviationResults
     }
 
-    public func failsAbsoluteThresholdChecks(benchmarks: [Benchmark],
-                                             p90Thresholds: [BenchmarkIdentifier : 
-                                                                [BenchmarkMetric: BenchmarkThresholds.AbsoluteThreshold]]) -> BenchmarkResult.ThresholdDeviations {
+    public func failsAbsoluteThresholdChecks(
+        benchmarks: [Benchmark],
+        p90Thresholds: [BenchmarkIdentifier:
+            [BenchmarkMetric: BenchmarkThresholds.AbsoluteThreshold]]
+    ) -> BenchmarkResult.ThresholdDeviations {
         var allDeviationResults = BenchmarkResult.ThresholdDeviations()
 
         for (lhsBenchmarkIdentifier, lhsBenchmarkResults) in results {
             for lhsBenchmarkResult in lhsBenchmarkResults {
-                let thresholds = thresholdsForBenchmarks(benchmarks,
-                                                         name: lhsBenchmarkIdentifier.name,
-                                                         target: lhsBenchmarkIdentifier.target,
-                                                         metric: lhsBenchmarkResult.metric,
-                                                         defaultThresholds: BenchmarkThresholds.strict)
+                let thresholds = thresholdsForBenchmarks(
+                    benchmarks,
+                    name: lhsBenchmarkIdentifier.name,
+                    target: lhsBenchmarkIdentifier.target,
+                    metric: lhsBenchmarkResult.metric,
+                    defaultThresholds: BenchmarkThresholds.strict
+                )
 
                 if let p90Thresholds = p90Thresholds[lhsBenchmarkIdentifier] {
                     if let p90Thresholds = p90Thresholds[lhsBenchmarkResult.metric] {
-                        let deviationResults = lhsBenchmarkResult.deviationsAgainstAbsoluteThresholds(thresholds: thresholds,
-                                                                                                      p90Threshold: p90Thresholds,
-                                                                                                      name: lhsBenchmarkIdentifier.name,
-                                                                                                      target: lhsBenchmarkIdentifier.target)
+                        let deviationResults = lhsBenchmarkResult.deviationsAgainstAbsoluteThresholds(
+                            thresholds: thresholds,
+                            p90Threshold: p90Thresholds,
+                            name: lhsBenchmarkIdentifier.name,
+                            target: lhsBenchmarkIdentifier.target
+                        )
                         allDeviationResults.append(deviationResults)
                     }
                 }
@@ -486,23 +514,22 @@ extension BenchmarkBaseline: Equatable {
     }
 
     static func == (lhs: BenchmarkBaseline, rhs: BenchmarkBaseline) -> Bool {
-        if lhs.machine.memory != rhs.machine.memory ||
-            lhs.machine.processors != rhs.machine.processors ||
-            lhs.machine.processorType != rhs.machine.processorType {
+        if lhs.machine.memory != rhs.machine.memory || lhs.machine.processors != rhs.machine.processors
+            || lhs.machine.processorType != rhs.machine.processorType
+        {
             return false
         }
 
         for (lhsBenchmarkIdentifier, lhsBenchmarkResults) in lhs.results {
             for lhsBenchmarkResult in lhsBenchmarkResults {
-                if let rhsResults = rhs.results.first(where: { $0.key == lhsBenchmarkIdentifier }) {
-                    if let rhsBenchmarkResult = rhsResults.value.first(where: { $0.metric == lhsBenchmarkResult.metric }) {
-                        if lhsBenchmarkResult != rhsBenchmarkResult {
-                            return false
-                        }
-                    } else { // We couldn't find the specific metric
-                        return false
-                    }
-                } else { // We couldn't find a result for one of the tests
+                guard let rhsResults = rhs.results.first(where: { $0.key == lhsBenchmarkIdentifier }) else { // We couldn't find a result for one of the tests
+                    return false
+                }
+                guard let rhsBenchmarkResult = rhsResults.value.first(where: { $0.metric == lhsBenchmarkResult.metric })
+                else { // We couldn't find the specific metric
+                    return false
+                }
+                if lhsBenchmarkResult != rhsBenchmarkResult {
                     return false
                 }
             }

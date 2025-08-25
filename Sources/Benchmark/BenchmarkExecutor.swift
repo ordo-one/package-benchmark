@@ -9,7 +9,7 @@
 //
 
 #if canImport(OSLog)
-    import OSLog
+import OSLog
 #endif
 
 // swiftlint:disable file_length
@@ -39,26 +39,26 @@ struct BenchmarkExecutor { // swiftlint:disable:this type_body_length
         // optionally run a few warmup iterations by default to clean out outliers due to cacheing etc.
 
         #if canImport(OSLog)
-            let logHandler = OSLog(subsystem: "one.ordo.benchmark", category: .pointsOfInterest)
-            let signPost = OSSignposter(logHandle: logHandler)
-            let signpostID = OSSignpostID(log: logHandler)
-            var warmupInterval: OSSignpostIntervalState?
-            var explicitStartStopInterval: OSSignpostIntervalState?
+        let logHandler = OSLog(subsystem: "one.ordo.benchmark", category: .pointsOfInterest)
+        let signPost = OSSignposter(logHandle: logHandler)
+        let signpostID = OSSignpostID(log: logHandler)
+        var warmupInterval: OSSignpostIntervalState?
+        var explicitStartStopInterval: OSSignpostIntervalState?
 
-            if benchmark.configuration.warmupIterations > 0 {
-                warmupInterval = signPost.beginInterval("Benchmark", id: signpostID, "\(benchmark.name) warmup")
-            }
+        if benchmark.configuration.warmupIterations > 0 {
+            warmupInterval = signPost.beginInterval("Benchmark", id: signpostID, "\(benchmark.name) warmup")
+        }
         #endif
 
-        for iterations in 0 ..< benchmark.configuration.warmupIterations {
+        for iterations in 0..<benchmark.configuration.warmupIterations {
             benchmark.currentIteration = iterations
             benchmark.run()
         }
 
         #if canImport(OSLog)
-            if let warmupInterval {
-                signPost.endInterval("Benchmark", warmupInterval, "\(benchmark.configuration.warmupIterations)")
-            }
+        if let warmupInterval {
+            signPost.endInterval("Benchmark", warmupInterval, "\(benchmark.configuration.warmupIterations)")
+        }
         #endif
 
         var statistics: [Statistics] = .init(repeating: Statistics(), count: BenchmarkMetric.maxIndex + 1)
@@ -145,7 +145,11 @@ struct BenchmarkExecutor { // swiftlint:disable:this type_body_length
         benchmark.measurementPreSynchronization = { explicitStartStop in
             #if canImport(OSLog)
             if explicitStartStop {
-                explicitStartStopInterval = signPost.beginInterval("Benchmark", id: signpostID, "\(benchmark.name) startMeasurement()")
+                explicitStartStopInterval = signPost.beginInterval(
+                    "Benchmark",
+                    id: signpostID,
+                    "\(benchmark.name) startMeasurement()"
+                )
             }
             #endif
 
@@ -190,11 +194,11 @@ struct BenchmarkExecutor { // swiftlint:disable:this type_body_length
                 stopMallocStats = MallocStatsProducer.makeMallocStats()
             }
 
-#if canImport(OSLog)
+            #if canImport(OSLog)
             if let explicitStartStopInterval {
                 signPost.endInterval("Benchmark", explicitStartStopInterval, "\(benchmark.name) stopMeasurement()")
             }
-#endif
+            #endif
 
             var delta = 0
             let runningTime: Duration = startTime.duration(to: stopTime)
@@ -230,7 +234,8 @@ struct BenchmarkExecutor { // swiftlint:disable:this type_body_length
                     let releaseDelta = stopARCStats.releaseCount - startARCStats.releaseCount - 1 // due to some ARC traffic in the path
                     statistics[BenchmarkMetric.releaseCount.index].add(Int(releaseDelta))
 
-                    statistics[BenchmarkMetric.retainReleaseDelta.index].add(Int(abs(objectAllocDelta + retainDelta - releaseDelta)))
+                    statistics[BenchmarkMetric.retainReleaseDelta.index]
+                        .add(Int(abs(objectAllocDelta + retainDelta - releaseDelta)))
                 }
 
                 if mallocStatsRequested {
@@ -247,7 +252,8 @@ struct BenchmarkExecutor { // swiftlint:disable:this type_body_length
                     statistics[BenchmarkMetric.memoryLeaked.index].add(Int(delta))
 
                     //                delta = stopMallocStats.allocatedResidentMemory - baselineMallocStats.allocatedResidentMemory // baselineMallocStats!
-                    statistics[BenchmarkMetric.allocatedResidentMemory.index].add(Int(stopMallocStats.allocatedResidentMemory))
+                    statistics[BenchmarkMetric.allocatedResidentMemory.index]
+                        .add(Int(stopMallocStats.allocatedResidentMemory))
                 }
 
                 if operatingSystemStatsRequested {
@@ -257,8 +263,7 @@ struct BenchmarkExecutor { // swiftlint:disable:this type_body_length
                     delta = stopOperatingSystemStats.cpuSystem - startOperatingSystemStats.cpuSystem
                     statistics[BenchmarkMetric.cpuSystem.index].add(Int(delta))
 
-                    delta = stopOperatingSystemStats.cpuTotal -
-                        startOperatingSystemStats.cpuTotal
+                    delta = stopOperatingSystemStats.cpuTotal - startOperatingSystemStats.cpuTotal
                     statistics[BenchmarkMetric.cpuTotal.index].add(Int(delta))
 
                     delta = stopOperatingSystemStats.peakMemoryResident
@@ -270,12 +275,12 @@ struct BenchmarkExecutor { // swiftlint:disable:this type_body_length
                     delta = stopOperatingSystemStats.peakMemoryVirtual
                     statistics[BenchmarkMetric.peakMemoryVirtual.index].add(Int(delta))
 
-                    delta = stopOperatingSystemStats.syscalls -
-                        startOperatingSystemStats.syscalls - operatingSystemStatsOverhead.syscalls
+                    delta =
+                        stopOperatingSystemStats.syscalls - startOperatingSystemStats.syscalls
+                        - operatingSystemStatsOverhead.syscalls
                     statistics[BenchmarkMetric.syscalls.index].add(Int(max(0, delta)))
 
-                    delta = stopOperatingSystemStats.contextSwitches -
-                        startOperatingSystemStats.contextSwitches
+                    delta = stopOperatingSystemStats.contextSwitches - startOperatingSystemStats.contextSwitches
                     statistics[BenchmarkMetric.contextSwitches.index].add(Int(delta))
 
                     delta = stopOperatingSystemStats.threads
@@ -284,34 +289,33 @@ struct BenchmarkExecutor { // swiftlint:disable:this type_body_length
                     delta = stopOperatingSystemStats.threadsRunning
                     statistics[BenchmarkMetric.threadsRunning.index].add(Int(delta))
 
-                    delta = stopOperatingSystemStats.readSyscalls -
-                        startOperatingSystemStats.readSyscalls - operatingSystemStatsOverhead.readSyscalls
+                    delta =
+                        stopOperatingSystemStats.readSyscalls - startOperatingSystemStats.readSyscalls
+                        - operatingSystemStatsOverhead.readSyscalls
                     statistics[BenchmarkMetric.readSyscalls.index].add(Int(max(0, delta)))
 
-                    delta = stopOperatingSystemStats.writeSyscalls -
-                        startOperatingSystemStats.writeSyscalls
+                    delta = stopOperatingSystemStats.writeSyscalls - startOperatingSystemStats.writeSyscalls
                     statistics[BenchmarkMetric.writeSyscalls.index].add(Int(delta))
 
-                    delta = stopOperatingSystemStats.readBytesLogical -
-                        startOperatingSystemStats.readBytesLogical - operatingSystemStatsOverhead.readBytesLogical
+                    delta =
+                        stopOperatingSystemStats.readBytesLogical - startOperatingSystemStats.readBytesLogical
+                        - operatingSystemStatsOverhead.readBytesLogical
                     statistics[BenchmarkMetric.readBytesLogical.index].add(Int(max(0, delta)))
 
-                    delta = stopOperatingSystemStats.writeBytesLogical -
-                        startOperatingSystemStats.writeBytesLogical
+                    delta = stopOperatingSystemStats.writeBytesLogical - startOperatingSystemStats.writeBytesLogical
                     statistics[BenchmarkMetric.writeBytesLogical.index].add(Int(delta))
 
-                    delta = stopOperatingSystemStats.readBytesPhysical -
-                        startOperatingSystemStats.readBytesPhysical - operatingSystemStatsOverhead.readBytesPhysical
+                    delta =
+                        stopOperatingSystemStats.readBytesPhysical - startOperatingSystemStats.readBytesPhysical
+                        - operatingSystemStatsOverhead.readBytesPhysical
                     statistics[BenchmarkMetric.readBytesPhysical.index].add(Int(max(0, delta)))
 
-                    delta = stopOperatingSystemStats.writeBytesPhysical -
-                        startOperatingSystemStats.writeBytesPhysical
+                    delta = stopOperatingSystemStats.writeBytesPhysical - startOperatingSystemStats.writeBytesPhysical
                     statistics[BenchmarkMetric.writeBytesPhysical.index].add(Int(delta))
                 }
 
                 if performanceCountersRequested {
-                    delta = Int(stopPerformanceCounters.instructions -
-                        startPerformanceCounters.instructions)
+                    delta = Int(stopPerformanceCounters.instructions - startPerformanceCounters.instructions)
                     // remove overhead of startTime = BenchmarkClock.now, later we should measure dummy void benchmark
                     if delta > timingOverheadInInstructions {
                         delta -= Int(timingOverheadInInstructions)
@@ -331,15 +335,17 @@ struct BenchmarkExecutor { // swiftlint:disable:this type_body_length
             ARCStatsProducer.hook()
         }
 
-        if benchmark.configuration.metrics.contains(.threads) ||
-            benchmark.configuration.metrics.contains(.threadsRunning) ||
-            benchmark.configuration.metrics.contains(.peakMemoryResident) ||
-            benchmark.configuration.metrics.contains(.peakMemoryResidentDelta) ||
-            benchmark.configuration.metrics.contains(.peakMemoryVirtual) {
+        if benchmark.configuration.metrics.contains(.threads)
+            || benchmark.configuration.metrics.contains(.threadsRunning)
+            || benchmark.configuration.metrics.contains(.peakMemoryResident)
+            || benchmark.configuration.metrics.contains(.peakMemoryResidentDelta)
+            || benchmark.configuration.metrics.contains(.peakMemoryVirtual)
+        {
             operatingSystemStatsProducer.startSampling(5_000) // ~5 ms
 
             if benchmark.configuration.metrics.contains(.peakMemoryResidentDelta) {
-                baselinePeakMemoryResidentDelta = operatingSystemStatsProducer.makeOperatingSystemStats().peakMemoryResident
+                baselinePeakMemoryResidentDelta =
+                    operatingSystemStatsProducer.makeOperatingSystemStats().peakMemoryResident
             }
         }
 
@@ -348,11 +354,15 @@ struct BenchmarkExecutor { // swiftlint:disable:this type_body_length
         if quiet == false {
             let progressString = "| \(benchmark.target):\(benchmark.name)"
 
-            progressBar = ProgressBar(count: 100,
-                                      configuration: [ProgressPercent(),
-                                                      ProgressBarLine(barLength: 60),
-                                                      ProgressTimeEstimates(),
-                                                      ProgressString(string: progressString)])
+            progressBar = ProgressBar(
+                count: 100,
+                configuration: [
+                    ProgressPercent(),
+                    ProgressBarLine(barLength: 60),
+                    ProgressTimeEstimates(),
+                    ProgressString(string: progressString),
+                ]
+            )
             if var progressBar {
                 progressBar.setValue(0)
             }
@@ -361,7 +371,7 @@ struct BenchmarkExecutor { // swiftlint:disable:this type_body_length
         var nextPercentageToUpdateProgressBar = 0
 
         #if canImport(OSLog)
-            let benchmarkInterval = signPost.beginInterval("Benchmark", id: signpostID, "\(benchmark.name)")
+        let benchmarkInterval = signPost.beginInterval("Benchmark", id: signpostID, "\(benchmark.name)")
         #endif
 
         if performanceCountersRequested {
@@ -369,11 +379,12 @@ struct BenchmarkExecutor { // swiftlint:disable:this type_body_length
         }
 
         // Run the benchmark at a minimum the desired iterations/runtime --
-        while iterations <= benchmark.configuration.maxIterations ||
-            wallClockDuration <= benchmark.configuration.maxDuration {
+        while iterations <= benchmark.configuration.maxIterations
+            || wallClockDuration <= benchmark.configuration.maxDuration
+        {
             // and at a maximum the same...
             guard wallClockDuration < benchmark.configuration.maxDuration,
-                  iterations < benchmark.configuration.maxIterations
+                iterations < benchmark.configuration.maxIterations
             else {
                 break
             }
@@ -390,18 +401,17 @@ struct BenchmarkExecutor { // swiftlint:disable:this type_body_length
 
             if iterations < 1_000 || iterations.isMultiple(of: 500) { // only update for low iteration count benchmarks, else 1/500
                 if var progressBar {
-                    let iterationsPercentage = 100.0 * Double(iterations) /
-                        Double(benchmark.configuration.maxIterations)
+                    let iterationsPercentage =
+                        100.0 * Double(iterations) / Double(benchmark.configuration.maxIterations)
 
-                    let timePercentage = 100.0 * (wallClockDuration /
-                        benchmark.configuration.maxDuration)
+                    let timePercentage = 100.0 * (wallClockDuration / benchmark.configuration.maxDuration)
 
                     let maxPercentage = max(iterationsPercentage, timePercentage)
 
                     // Small optimization to not update every single percentage point
                     if Int(maxPercentage) > nextPercentageToUpdateProgressBar {
                         progressBar.setValue(Int(maxPercentage))
-                        nextPercentageToUpdateProgressBar = Int(maxPercentage) + Int.random(in: 3 ... 9)
+                        nextPercentageToUpdateProgressBar = Int(maxPercentage) + Int.random(in: 3...9)
                     }
                 }
             }
@@ -416,18 +426,19 @@ struct BenchmarkExecutor { // swiftlint:disable:this type_body_length
         }
 
         #if canImport(OSLog)
-            signPost.endInterval("Benchmark", benchmarkInterval, "\(iterations)")
+        signPost.endInterval("Benchmark", benchmarkInterval, "\(iterations)")
         #endif
 
         if var progressBar {
             progressBar.setValue(100)
         }
 
-        if benchmark.configuration.metrics.contains(.threads) ||
-            benchmark.configuration.metrics.contains(.threadsRunning) ||
-            benchmark.configuration.metrics.contains(.peakMemoryResident) ||
-            benchmark.configuration.metrics.contains(.peakMemoryResidentDelta) ||
-            benchmark.configuration.metrics.contains(.peakMemoryVirtual) {
+        if benchmark.configuration.metrics.contains(.threads)
+            || benchmark.configuration.metrics.contains(.threadsRunning)
+            || benchmark.configuration.metrics.contains(.peakMemoryResident)
+            || benchmark.configuration.metrics.contains(.peakMemoryResidentDelta)
+            || benchmark.configuration.metrics.contains(.peakMemoryVirtual)
+        {
             operatingSystemStatsProducer.stopSampling()
         }
 
@@ -445,18 +456,22 @@ struct BenchmarkExecutor { // swiftlint:disable:this type_body_length
                             units = .init(overriddenUnits)
                         }
 
-                        let result = BenchmarkResult(metric: metric,
-                                                     timeUnits: units,
-                                                     scalingFactor: benchmark.configuration.scalingFactor,
-                                                     warmupIterations: benchmark.configuration.warmupIterations,
-                                                     thresholds: benchmark.configuration.thresholds?[metric],
-                                                     tags: benchmark.configuration.tags,
-                                                     statistics: value)
+                        let result = BenchmarkResult(
+                            metric: metric,
+                            timeUnits: units,
+                            scalingFactor: benchmark.configuration.scalingFactor,
+                            warmupIterations: benchmark.configuration.warmupIterations,
+                            thresholds: benchmark.configuration.thresholds?[metric],
+                            tags: benchmark.configuration.tags,
+                            statistics: value
+                        )
                         results.append(result)
                     }
                 }
             default:
-                if operatingSystemsStatsProducerNeeded(metric) == false || operatingSystemStatsProducer.metricSupported(metric) {
+                if operatingSystemsStatsProducerNeeded(metric) == false
+                    || operatingSystemStatsProducer.metricSupported(metric)
+                {
                     let value = statistics[metric.index]
                     if value.measurementCount > 0 {
                         var units = BenchmarkTimeUnits(value.timeUnits)
@@ -465,13 +480,15 @@ struct BenchmarkExecutor { // swiftlint:disable:this type_body_length
                             units = BenchmarkTimeUnits(overriddenUnits)
                         }
 
-                        let result = BenchmarkResult(metric: metric,
-                                                     timeUnits: units,
-                                                     scalingFactor: benchmark.configuration.scalingFactor,
-                                                     warmupIterations: benchmark.configuration.warmupIterations,
-                                                     thresholds: benchmark.configuration.thresholds?[metric],
-                                                     tags: benchmark.configuration.tags,
-                                                     statistics: value)
+                        let result = BenchmarkResult(
+                            metric: metric,
+                            timeUnits: units,
+                            scalingFactor: benchmark.configuration.scalingFactor,
+                            warmupIterations: benchmark.configuration.warmupIterations,
+                            thresholds: benchmark.configuration.thresholds?[metric],
+                            tags: benchmark.configuration.tags,
+                            statistics: value
+                        )
                         results.append(result)
                     }
                 }

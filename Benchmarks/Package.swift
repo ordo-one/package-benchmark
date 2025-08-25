@@ -1,7 +1,8 @@
 // swift-tools-version: 6.0
 
-import class Foundation.ProcessInfo
 import PackageDescription
+
+import class Foundation.ProcessInfo
 
 // If the environment variable BENCHMARK_DISABLE_JEMALLOC is set, we'll build the package without Jemalloc support
 let disableJemalloc = ProcessInfo.processInfo.environment["BENCHMARK_DISABLE_JEMALLOC"]
@@ -12,7 +13,7 @@ let package = Package(
     dependencies: [
         .package(path: "../"),
         .package(url: "https://github.com/ordo-one/package-datetime", .upToNextMajor(from: "1.0.1")),
-        .package(url: "https://github.com/HdrHistogram/hdrhistogram-swift", .upToNextMajor(from: "0.1.0"))
+        .package(url: "https://github.com/HdrHistogram/hdrhistogram-swift", .upToNextMajor(from: "0.1.0")),
     ],
     targets: []
 )
@@ -25,7 +26,7 @@ package.targets += [
         name: "BenchmarkDateTime",
         dependencies: [
             .product(name: "Benchmark", package: "package-benchmark"),
-            .product(name: "DateTime", package: "package-datetime")
+            .product(name: "DateTime", package: "package-datetime"),
         ],
         path: "Benchmarks/DateTime",
         plugins: [
@@ -54,7 +55,7 @@ package.targets += [
         name: "HistogramBenchmark",
         dependencies: [
             .product(name: "Benchmark", package: "package-benchmark"),
-            .product(name: "Histogram", package: "hdrhistogram-swift")
+            .product(name: "Histogram", package: "hdrhistogram-swift"),
         ],
         path: "Benchmarks/Histogram",
         plugins: [

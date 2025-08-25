@@ -16,11 +16,11 @@ import BenchmarkShared
 import SystemPackage
 
 #if canImport(Darwin)
-    import Darwin
+import Darwin
 #elseif canImport(Glibc)
-    import Glibc
+import Glibc
 #else
-    #error("Unsupported Platform")
+#error("Unsupported Platform")
 #endif
 
 enum BenchmarkOperation: String, ExpressibleByArgument {
@@ -40,7 +40,7 @@ extension BenchmarkMetric: ExpressibleByArgument {}
 
 typealias BenchmarkResults = [BenchmarkIdentifier: [BenchmarkResult]]
 
-fileprivate var failedBenchmarkRuns = 0
+private var failedBenchmarkRuns = 0
 
 @main
 struct BenchmarkTool: AsyncParsableCommand {
@@ -83,23 +83,29 @@ struct BenchmarkTool: AsyncParsableCommand {
     @Option(name: .long, help: "Specifies that time related metrics output should be specified units")
     var timeUnits: TimeUnits?
 
-    @Flag(name: .long, help:
-        """
-        Set to true if thresholds should be checked against an absolute reference point rather than delta between baselines.
-        This is used for CI workflows when you want to validate the thresholds vs. a persisted benchmark baseline
-        rather than comparing PR vs main or vs a current run. This is useful to cut down the build matrix needed
-        for those wanting to validate performance of e.g. toolchains or OS:s as well (or have other reasons for wanting
-        a specific check against a given absolute reference.).
-        If this is enabled, zero or one baselines should be specified for the check operation.
-        By default, thresholds are checked comparing two baselines, or a baseline and a benchmark run.
-        """)
+    @Flag(
+        name: .long,
+        help:
+            """
+            Set to true if thresholds should be checked against an absolute reference point rather than delta between baselines.
+            This is used for CI workflows when you want to validate the thresholds vs. a persisted benchmark baseline
+            rather than comparing PR vs main or vs a current run. This is useful to cut down the build matrix needed
+            for those wanting to validate performance of e.g. toolchains or OS:s as well (or have other reasons for wanting
+            a specific check against a given absolute reference.).
+            If this is enabled, zero or one baselines should be specified for the check operation.
+            By default, thresholds are checked comparing two baselines, or a baseline and a benchmark run.
+            """
+    )
     var checkAbsolute = false
 
-    @Option(name: .long, help:
-        """
-        The path from which p90 thresholds will be loaded for absolute threshold checks.
-        This implicitly sets --check-absolute to true as well.
-        """)
+    @Option(
+        name: .long,
+        help:
+            """
+            The path from which p90 thresholds will be loaded for absolute threshold checks.
+            This implicitly sets --check-absolute to true as well.
+            """
+    )
     var checkAbsolutePath: String?
 
     @Option(name: .long, help: "The named baseline(s) we should display, update, delete or compare with")
@@ -131,7 +137,11 @@ struct BenchmarkTool: AsyncParsableCommand {
         path ?? "Thresholds"
     }
 
-    mutating func failBenchmark(_ reason: String? = nil, exitCode: BenchmarkShared.ExitCode = .genericFailure, _ failedBenchmark: String? = nil) {
+    mutating func failBenchmark(
+        _ reason: String? = nil,
+        exitCode: BenchmarkShared.ExitCode = .genericFailure,
+        _ failedBenchmark: String? = nil
+    ) {
         if let reason {
             print(reason)
             print("")
@@ -154,9 +164,9 @@ struct BenchmarkTool: AsyncParsableCommand {
 
     func exitBenchmark(exitCode: BenchmarkShared.ExitCode) {
         #if canImport(Darwin)
-            Darwin.exit(exitCode.rawValue)
+        Darwin.exit(exitCode.rawValue)
         #elseif canImport(Glibc)
-            Glibc.exit(exitCode.rawValue)
+        Glibc.exit(exitCode.rawValue)
         #endif
     }
 
@@ -195,7 +205,7 @@ struct BenchmarkTool: AsyncParsableCommand {
             // Merge baselines read
             if readBaselines.isEmpty == false {
                 var aggregatedBaseline = readBaselines.first!
-                for baseline in 1 ..< readBaselines.count {
+                for baseline in 1..<readBaselines.count {
                     aggregatedBaseline = aggregatedBaseline.merge(readBaselines[baseline])
                 }
                 return aggregatedBaseline
@@ -238,8 +248,10 @@ struct BenchmarkTool: AsyncParsableCommand {
 
         // First get a list of all benchmarks
         try benchmarkExecutablePaths.forEach { benchmarkExecutablePath in
-            try runChild(benchmarkPath: benchmarkExecutablePath,
-                         benchmarkCommand: .query) { [self] result in
+            try runChild(
+                benchmarkPath: benchmarkExecutablePath,
+                benchmarkCommand: .query
+            ) { [self] result in
                 if result != 0 {
                     printChildRunError(error: result, benchmarkExecutablePath: benchmarkExecutablePath)
                 }
@@ -257,7 +269,9 @@ struct BenchmarkTool: AsyncParsableCommand {
             return
         }
 
-        if let operation = thresholdsOperation, [.update].contains(operation), let baselineName = benchmarkBaselines.first?.baselineName {
+        if let operation = thresholdsOperation, [.update].contains(operation),
+            let baselineName = benchmarkBaselines.first?.baselineName
+        {
             print("Updating thresholds at \"\(thresholdsPath)\" from baseline \"\(baselineName)\"")
             try postProcessBenchmarkResults()
             return
@@ -302,9 +316,11 @@ struct BenchmarkTool: AsyncParsableCommand {
         // run each benchmark for the target as a separate process
         try benchmarks.forEach { benchmark in
             if try shouldIncludeBenchmark(benchmark.baseName) {
-                let results = try runChild(benchmarkPath: benchmark.executablePath!,
-                                           benchmarkCommand: command,
-                                           benchmark: benchmark) { [self] result in
+                let results = try runChild(
+                    benchmarkPath: benchmark.executablePath!,
+                    benchmarkCommand: command,
+                    benchmark: benchmark
+                ) { [self] result in
                     if result != 0 {
                         printChildRunError(error: result, benchmarkExecutablePath: benchmark.executablePath!)
                     }
@@ -316,9 +332,13 @@ struct BenchmarkTool: AsyncParsableCommand {
 
         // Insert benchmark run at first position of baselines
         baseline.append("Current_run")
-        benchmarkBaselines.append(BenchmarkBaseline(baselineName: "Current_run",
-                                                    machine: benchmarkMachine(),
-                                                    results: benchmarkResults))
+        benchmarkBaselines.append(
+            BenchmarkBaseline(
+                baselineName: "Current_run",
+                machine: benchmarkMachine(),
+                results: benchmarkResults
+            )
+        )
 
         try postProcessBenchmarkResults()
 
@@ -339,20 +359,24 @@ struct BenchmarkTool: AsyncParsableCommand {
     }
 
     @discardableResult
-    mutating func runChild(benchmarkPath: String,
-                           benchmarkCommand: BenchmarkOperation,
-                           benchmark: Benchmark? = nil,
-                           completion: ((Int32) -> Void)? = nil) throws -> BenchmarkResults {
+    mutating func runChild(
+        benchmarkPath: String,
+        benchmarkCommand: BenchmarkOperation,
+        benchmark: Benchmark? = nil,
+        completion: ((Int32) -> Void)? = nil
+    ) throws -> BenchmarkResults {
         var pid: pid_t = 0
 
         var benchmarkResults: BenchmarkResults = [:]
         let fromChild = try FileDescriptor.pipe()
         let toChild = try FileDescriptor.pipe()
         let path = FilePath(benchmarkPath)
-        var args: [String] = [path.lastComponent!.description,
-                              "--input-fd", toChild.readEnd.rawValue.description,
-                              "--output-fd", fromChild.writeEnd.rawValue.description,
-                              "--quiet", noProgress.description]
+        var args: [String] = [
+            path.lastComponent!.description,
+            "--input-fd", toChild.readEnd.rawValue.description,
+            "--output-fd", fromChild.writeEnd.rawValue.description,
+            "--quiet", noProgress.description,
+        ]
 
         if checkAbsolute {
             args.append("--check-absolute")
@@ -380,11 +404,7 @@ struct BenchmarkTool: AsyncParsableCommand {
                     try queryBenchmarks(benchmarkPath) // Get all available benchmarks first
                 case .list:
                     try listBenchmarks()
-                case .baseline:
-                    fallthrough
-                case .thresholds:
-                    fallthrough
-                case .run:
+                case .baseline, .thresholds, .run:
                     guard let benchmark else {
                         fatalError("No benchmark specified for update/export/run/compare operation")
                     }
@@ -396,16 +416,14 @@ struct BenchmarkTool: AsyncParsableCommand {
                 print("Process failed: \(String(reflecting: error))")
             }
 
-            if status == 0 {
-                if waitpid(pid, &status, 0) != -1 {
-                    completion?(status)
-                } else {
-                    print("waitpiderror")
-                    throw RunCommandError.WaitPIDError
-                }
-            } else {
+            guard status == 0 else {
                 throw RunCommandError.POSIXSpawnError(status)
             }
+            guard waitpid(pid, &status, 0) != -1 else {
+                print("waitpiderror")
+                throw RunCommandError.WaitPIDError
+            }
+            completion?(status)
         }
 
         return benchmarkResults

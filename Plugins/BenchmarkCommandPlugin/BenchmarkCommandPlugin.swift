@@ -14,11 +14,11 @@
 import PackagePlugin
 
 #if canImport(Darwin)
-    import Darwin
+import Darwin
 #elseif canImport(Glibc)
-    import Glibc
+import Glibc
 #else
-    #error("Unsupported Platform")
+#error("Unsupported Platform")
 #endif
 
 @available(macOS 13.0, *)
@@ -41,7 +41,8 @@ import PackagePlugin
         let quietRunning = argumentExtractor.extractFlag(named: "quiet")
         let noProgress = argumentExtractor.extractFlag(named: "no-progress")
         let checkAbsoluteThresholdsPath = argumentExtractor.extractOption(named: "check-absolute-path")
-        let checkAbsoluteThresholds = checkAbsoluteThresholdsPath.count > 0 ? 1 : argumentExtractor.extractFlag(named: "check-absolute")
+        let checkAbsoluteThresholds =
+            checkAbsoluteThresholdsPath.count > 0 ? 1 : argumentExtractor.extractFlag(named: "check-absolute")
         let groupingToUse = argumentExtractor.extractOption(named: "grouping")
         let metricsToUse = argumentExtractor.extractOption(named: "metric")
         let timeUnits = argumentExtractor.extractOption(named: "time-units")
@@ -98,24 +99,24 @@ import PackagePlugin
         }
 
         if outputFormats.count > 0 {
-            if let format = OutputFormat(rawValue: outputFormats.first!) {
-                outputFormat = format
-            } else {
+            guard let format = OutputFormat(rawValue: outputFormats.first!) else {
                 print("Unknown output format '\(outputFormats.first!)'")
                 throw MyError.invalidArgument
             }
+            outputFormat = format
             if outputFormats.count > 1 {
-                print("Only a single output format may be specified, will use the first one specified '\(outputFormat)'")
+                print(
+                    "Only a single output format may be specified, will use the first one specified '\(outputFormat)'"
+                )
             }
         }
 
         if groupingToUse.count > 0 {
-            if let group = Grouping(rawValue: groupingToUse.first!) {
-                grouping = group.rawValue
-            } else {
+            guard let group = Grouping(rawValue: groupingToUse.first!) else {
                 print("Unknown grouping '\(groupingToUse.first!)', valid groupings are 'metric' and 'benchmark'")
                 throw MyError.invalidArgument
             }
+            grouping = group.rawValue
             if groupingToUse.count > 1 {
                 print("Only a single grouping may be specified, will use the first one specified '\(grouping)'")
             }
@@ -133,7 +134,9 @@ import PackagePlugin
             do {
                 let targets = try context.package.targets(named: [targetName])
                 if targets.isEmpty == false {
-                    print("Can't create benchmark executable target named \(targetName), a target with that name already exists.")
+                    print(
+                        "Can't create benchmark executable target named \(targetName), a target with that name already exists."
+                    )
                     throw MyError.invalidArgument
                 }
             } catch { // We will throw if we can use the target name (it's unused!)
@@ -147,25 +150,28 @@ import PackagePlugin
         let benchmarkToolName = "BenchmarkTool"
         let benchmarkTool: PackagePlugin.Path // = try context.tool(named: benchmarkToolName)
 
-        var args: [String] = [benchmarkToolName,
-                              "--command", commandToPerform.rawValue,
-                              "--baseline-storage-path", context.package.directory.string,
-                              "--format", outputFormat.rawValue,
-                              "--grouping", grouping]
+        var args: [String] = [
+            benchmarkToolName,
+            "--command", commandToPerform.rawValue,
+            "--baseline-storage-path", context.package.directory.string,
+            "--format", outputFormat.rawValue,
+            "--grouping", grouping,
+        ]
 
         metricsToUse.forEach { metric in
             args.append(contentsOf: ["--metrics", metric.description])
         }
 
         if let firstValue = timeUnits.first {
-            if let unit = TimeUnits(rawValue: firstValue) {
-                args.append(contentsOf: ["--time-units", unit.rawValue])
-                if timeUnits.count > 1 {
-                    print("Only a single time unit may be specified, will use the first one specified '\(unit.rawValue)'")
-                }
-            } else {
-                print("Unknown time unit specified '\(firstValue)', valid units are: \(TimeUnits.allCases.map {$0.rawValue}.joined(separator: ", "))")
+            guard let unit = TimeUnits(rawValue: firstValue) else {
+                print(
+                    "Unknown time unit specified '\(firstValue)', valid units are: \(TimeUnits.allCases.map {$0.rawValue}.joined(separator: ", "))"
+                )
                 throw MyError.invalidArgument
+            }
+            args.append(contentsOf: ["--time-units", unit.rawValue])
+            if timeUnits.count > 1 {
+                print("Only a single time unit may be specified, will use the first one specified '\(unit.rawValue)'")
             }
         }
 
@@ -184,11 +190,15 @@ import PackagePlugin
         }
 
         if checkAbsoluteThresholds > 0 {
-            print("Using --check-absolute is deprecated. Please use swift package benchmark threshold and related operations instead.")
+            print(
+                "Using --check-absolute is deprecated. Please use swift package benchmark threshold and related operations instead."
+            )
             print("This option will be removed in a future release.")
 
             if checkAbsoluteThresholdsPath.count > 1 {
-                print("Only a single path for static thresholds can be specified, got \(checkAbsoluteThresholdsPath.count).")
+                print(
+                    "Only a single path for static thresholds can be specified, got \(checkAbsoluteThresholdsPath.count)."
+                )
                 throw MyError.invalidArgument
             }
             args.append(contentsOf: ["--check-absolute"])
@@ -225,9 +235,12 @@ import PackagePlugin
 
         if commandToPerform == .thresholds {
             guard positionalArguments.count > 0,
-                  let thresholdsOperation = ThresholdsOperation(rawValue: positionalArguments.removeFirst()) else {
+                let thresholdsOperation = ThresholdsOperation(rawValue: positionalArguments.removeFirst())
+            else {
                 print("")
-                print("A valid threshold command must be specified, one of: '\(ThresholdsOperation.allCases.description)'.")
+                print(
+                    "A valid threshold command must be specified, one of: '\(ThresholdsOperation.allCases.description)'."
+                )
                 print("")
                 print(help)
                 print("")
@@ -242,9 +255,11 @@ import PackagePlugin
             case .read:
                 break
             case .update:
-                let validRange = 0 ... 1
+                let validRange = 0...1
                 guard validRange.contains(positionalArguments.count) else {
-                    print("Must specify exactly zero or one baselines for update of absolute thresholds, got: \(positionalArguments)")
+                    print(
+                        "Must specify exactly zero or one baselines for update of absolute thresholds, got: \(positionalArguments)"
+                    )
                     throw MyError.invalidArgument
                 }
                 if positionalArguments.count > 0 {
@@ -252,9 +267,11 @@ import PackagePlugin
                 }
                 break
             case .check:
-                let validRange = 0 ... 1
+                let validRange = 0...1
                 guard validRange.contains(positionalArguments.count) else {
-                    print("Must specify exactly zero or one baseline for check against absolute thresholds, got: \(positionalArguments)")
+                    print(
+                        "Must specify exactly zero or one baseline for check against absolute thresholds, got: \(positionalArguments)"
+                    )
                     throw MyError.invalidArgument
                 }
             }
@@ -266,9 +283,12 @@ import PackagePlugin
 
         if commandToPerform == .baseline {
             guard positionalArguments.count > 0,
-                  let baselineOperation = BaselineOperation(rawValue: positionalArguments.removeFirst()) else {
+                let baselineOperation = BaselineOperation(rawValue: positionalArguments.removeFirst())
+            else {
                 print("")
-                print("A valid baseline command must be specified, one of: '\(BaselineOperation.allCases.description)'.")
+                print(
+                    "A valid baseline command must be specified, one of: '\(BaselineOperation.allCases.description)'."
+                )
                 print("")
                 print(help)
                 print("")
@@ -286,19 +306,21 @@ import PackagePlugin
                     print("A single baseline must be specified for update operations, got: \(positionalArguments)")
                     throw MyError.invalidArgument
                 }
-            case .compare:
-                fallthrough
-            case .check:
+            case .compare, .check:
                 if checkAbsoluteThresholds > 0 {
-                    let validRange = 0 ... 1
+                    let validRange = 0...1
                     guard validRange.contains(positionalArguments.count) else {
-                        print("Must specify exactly zero or one baseline for check against absolute thresholds, got: \(positionalArguments)")
+                        print(
+                            "Must specify exactly zero or one baseline for check against absolute thresholds, got: \(positionalArguments)"
+                        )
                         throw MyError.invalidArgument
                     }
                 } else {
-                    let validRange = 1 ... 2
+                    let validRange = 1...2
                     guard validRange.contains(positionalArguments.count) else {
-                        print("Must specify exactly one or two baselines for comparisons or threshold violation checks, got: \(positionalArguments)")
+                        print(
+                            "Must specify exactly one or two baselines for comparisons or threshold violation checks, got: \(positionalArguments)"
+                        )
                         throw MyError.invalidArgument
                     }
                 }
@@ -326,50 +348,59 @@ import PackagePlugin
         if context.package.id == packageBenchmarkIdentifier {
             benchmarkToolModuleTargets = context.package.targets(ofType: SwiftSourceModuleTarget.self)
         } else {
-            if let benchmarkPackage = context.package.dependencies.first (where: { $0.package.id == packageBenchmarkIdentifier}) {
-                benchmarkToolModuleTargets = benchmarkPackage.package.targets(ofType: SwiftSourceModuleTarget.self)
-            } else {
+            guard
+                let benchmarkPackage = context.package.dependencies.first(where: {
+                    $0.package.id == packageBenchmarkIdentifier
+                })
+            else {
                 print("Benchmark failed to find the package-benchmark module.")
                 throw MyError.buildFailed
             }
+            benchmarkToolModuleTargets = benchmarkPackage.package.targets(ofType: SwiftSourceModuleTarget.self)
         }
 
         // Build the BenchmarkTool manually in release mode to work around https://github.com/apple/swift-package-manager/issues/7210
-        if let benchmarkToolModule = benchmarkToolModuleTargets.first(where: { $0.kind == .executable && $0.name == benchmarkToolName}) {
-            if outputFormat == .text {
-                if quietRunning == 0 {
-                    print("Building \(benchmarkToolModule.name) in release mode...")
-                }
-            }
-
-            var buildParameters = PackageManager.BuildParameters(configuration: .release)
-
-            buildParameters.otherSwiftcFlags.append(contentsOf: otherSwiftFlagsSpecified.map { "-\($0)" })
-
-            let buildResult = try packageManager.build(
-                .product(benchmarkToolModule.name),
-                parameters: buildParameters
-            )
-
-            guard buildResult.succeeded else {
-                print(buildResult.logText)
-                print("Benchmark failed to build the BenchmarkTool in release mode.")
-                throw MyError.buildFailed
-            }
-
-            let tool = buildResult.builtArtifacts.first(where: {$0.kind == .executable && $0.path.lastComponent == benchmarkToolName })
-
-            guard let tool else {
-                throw MyError.buildFailed
-            }
-
-            benchmarkTool = tool.path
-        } else {
+        guard
+            let benchmarkToolModule = benchmarkToolModuleTargets.first(where: {
+                $0.kind == .executable && $0.name == benchmarkToolName
+            })
+        else {
             print("Benchmark failed to find the BenchmarkTool target.")
             throw MyError.buildFailed
         }
+        if outputFormat == .text {
+            if quietRunning == 0 {
+                print("Building \(benchmarkToolModule.name) in release mode...")
+            }
+        }
 
-        let filteredTargets = swiftSourceModuleTargets
+        var buildParameters = PackageManager.BuildParameters(configuration: .release)
+
+        buildParameters.otherSwiftcFlags.append(contentsOf: otherSwiftFlagsSpecified.map { "-\($0)" })
+
+        let buildResult = try packageManager.build(
+            .product(benchmarkToolModule.name),
+            parameters: buildParameters
+        )
+
+        guard buildResult.succeeded else {
+            print(buildResult.logText)
+            print("Benchmark failed to build the BenchmarkTool in release mode.")
+            throw MyError.buildFailed
+        }
+
+        let tool = buildResult.builtArtifacts.first(where: {
+            $0.kind == .executable && $0.path.lastComponent == benchmarkToolName
+        })
+
+        guard let tool else {
+            throw MyError.buildFailed
+        }
+
+        benchmarkTool = tool.path
+
+        let filteredTargets =
+            swiftSourceModuleTargets
             .filter { $0.kind == .executable }
             .filter { benchmark in
                 let path = benchmark.directory.removingLastComponent()
@@ -449,27 +480,26 @@ import PackagePlugin
                     // the way the status is extracted portably is with macros - so we just need to
                     // reimplement the logic here in Swift according to the waitpid man page to
                     // get some nicer feedback on failure reason.
-                    if let waitStatus = ExitCode(rawValue: (status & 0xFF00) >> 8) {
-                        switch waitStatus {
-                        case .success:
-                            break
-                        case .baselineNotFound:
-                            throw MyError.baselineNotFound
-                        case .genericFailure:
-                            print("One or more benchmark suites crashed during runtime.")
-                            throw MyError.benchmarkCrashed
-                        case .thresholdRegression:
-                            throw MyError.benchmarkThresholdRegression
-                        case .thresholdImprovement:
-                            throw MyError.benchmarkThresholdImprovement
-                        case .benchmarkJobFailed:
-                            failedBenchmarkCount += 1
-                        case .noPermissions:
-                            throw MyError.noPermissions
-                        }
-                    } else {
+                    guard let waitStatus = ExitCode(rawValue: (status & 0xFF00) >> 8) else {
                         print("One or more benchmarks returned an unexpected return code \(status)")
                         throw MyError.benchmarkUnexpectedReturnCode
+                    }
+                    switch waitStatus {
+                    case .success:
+                        break
+                    case .baselineNotFound:
+                        throw MyError.baselineNotFound
+                    case .genericFailure:
+                        print("One or more benchmark suites crashed during runtime.")
+                        throw MyError.benchmarkCrashed
+                    case .thresholdRegression:
+                        throw MyError.benchmarkThresholdRegression
+                    case .thresholdImprovement:
+                        throw MyError.benchmarkThresholdImprovement
+                    case .benchmarkJobFailed:
+                        failedBenchmarkCount += 1
+                    case .noPermissions:
+                        throw MyError.noPermissions
                     }
                 } else {
                     print("waitpid() for pid \(pid) returned a non-zero exit code \(status), errno = \(errno)")

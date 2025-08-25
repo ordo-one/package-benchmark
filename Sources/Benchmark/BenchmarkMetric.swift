@@ -284,7 +284,7 @@ public extension BenchmarkMetric {
     }
 
     @_documentation(visibility: internal)
-    static var maxIndex: Int { 28} //
+    static var maxIndex: Int { 28 } //
 
     // Used by the Benchmark Executor for efficient indexing into results
     @_documentation(visibility: internal)

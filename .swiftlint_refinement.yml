@@ -1,3 +1,7 @@
+disabled_rules:
+  - opening_brace
+  - trailing_comma
+  - prefer_self_in_static_references
 excluded:
   - Sources/Benchmark/Progress
   - Sources/Benchmark/NIOConcurrencyHelpers

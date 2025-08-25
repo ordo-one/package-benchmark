@@ -8,9 +8,10 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 //
 
-@testable import Benchmark
 import Foundation
 import XCTest
+
+@testable import Benchmark
 
 final class AdditionalTests: XCTestCase {
     // Disabled for now as it breaks when run on the public CI

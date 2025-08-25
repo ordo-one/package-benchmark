@@ -8,8 +8,9 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 ///
 
-@testable import Benchmark
 import XCTest
+
+@testable import Benchmark
 
 final class BenchmarkRunnerTests: XCTestCase, BenchmarkRunnerReadWrite {
     private var readMessage: Int = 0
@@ -18,7 +19,7 @@ final class BenchmarkRunnerTests: XCTestCase, BenchmarkRunnerReadWrite {
     // swiftlint:disable test_case_accessibility
     func write(_: BenchmarkCommandReply) throws {
         writeCount += 1
-//        print("write \(reply)")
+        //        print("write \(reply)")
     }
 
     func read() throws -> BenchmarkCommandRequest {
@@ -30,10 +31,12 @@ final class BenchmarkRunnerTests: XCTestCase, BenchmarkRunnerReadWrite {
         }
         let benchmark3 = Benchmark("Minimal benchmark 3") { _ in
         }
-        let returnValues: [BenchmarkCommandRequest] = [.run(benchmark: benchmark!),
-                                                       .run(benchmark: benchmark2!),
-                                                       .run(benchmark: benchmark3!),
-                                                       .end]
+        let returnValues: [BenchmarkCommandRequest] = [
+            .run(benchmark: benchmark!),
+            .run(benchmark: benchmark2!),
+            .run(benchmark: benchmark3!),
+            .end,
+        ]
 
         readMessage += 1
         return returnValues[readMessage - 1]

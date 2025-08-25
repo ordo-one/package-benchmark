@@ -18,7 +18,7 @@ public final class Statistics: Codable {
     public static let defaultMaximumMeasurement = 1_000_000_000 // 1 second in nanoseconds
     public static let defaultPercentilesToCalculate = [0.0, 25.0, 50.0, 75.0, 90.0, 99.0, 100.0]
     public static let defaultPercentilesToCalculateP90Index = 4
-    
+
     public enum Units: Int, Codable, CaseIterable {
         case count = 1 // e.g. nanoseconds
         case kilo = 1_000 // microseconds
@@ -71,13 +71,13 @@ public final class Statistics: Codable {
             switch magnitude {
             case ..<4.0:
                 self = .count
-            case 4.0 ..< 7.0:
+            case 4.0..<7.0:
                 self = .kilo
-            case 7.0 ..< 10.0:
+            case 7.0..<10.0:
                 self = .mega
-            case 10.0 ..< 13.0:
+            case 10.0..<13.0:
                 self = .giga
-            case 13.0 ..< 16.0:
+            case 13.0..<16.0:
                 self = .tera
             case 16.0...:
                 self = .peta
@@ -151,15 +151,19 @@ public final class Statistics: Codable {
         histogram.mean
     }
 
-    public init(maximumMeasurement: Int = defaultMaximumMeasurement,
-                numberOfSignificantDigits: SignificantDigits = .three,
-                units: Statistics.Units = .automatic,
-                prefersLarger: Bool = false) {
+    public init(
+        maximumMeasurement: Int = defaultMaximumMeasurement,
+        numberOfSignificantDigits: SignificantDigits = .three,
+        units: Statistics.Units = .automatic,
+        prefersLarger: Bool = false
+    ) {
         self.prefersLarger = prefersLarger
         timeUnits = units
         _cacheUnits = timeUnits
-        histogram = Histogram(highestTrackableValue: UInt64(maximumMeasurement),
-                              numberOfSignificantValueDigits: numberOfSignificantDigits)
+        histogram = Histogram(
+            highestTrackableValue: UInt64(maximumMeasurement),
+            numberOfSignificantValueDigits: numberOfSignificantDigits
+        )
         histogram.autoResize = true
     }
 
@@ -170,7 +174,7 @@ public final class Statistics: Codable {
     public func add(_ measurement: Int) {
         guard measurement >= 0 else {
             return // We sometimes got a <0 measurement, should run with fatalError and try to see how that could occur
-                //            fatalError()
+            //            fatalError()
         }
 
         histogram.record(UInt64(measurement))
