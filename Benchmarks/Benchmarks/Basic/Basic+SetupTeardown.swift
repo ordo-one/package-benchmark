@@ -5,6 +5,8 @@
 //  Created by Joakim Hassila on 2023-04-21.
 //
 
+// swiftlint:disable vertical_parameter_alignment_on_call
+
 import Benchmark
 
 func sharedSetup() {}
@@ -68,3 +70,5 @@ func testSetUpTearDown() {
         [1, 2, 3]
     }
 }
+
+// swiftlint:enable vertical_parameter_alignment_on_call
