@@ -170,7 +170,7 @@ final class OperatingSystemStatsProducer {
         self.metrics = metrics
     }
 
-    func makeOperatingSystemStats() -> OperatingSystemStats {  // swiftlint:disable:this function_body_length
+    func makeOperatingSystemStats() -> OperatingSystemStats {
         #if os(macOS)
         guard let metrics else {
             return .init()

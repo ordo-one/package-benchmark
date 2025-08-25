@@ -8,6 +8,11 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 //
 
+import Benchmark
+import Foundation
+import SystemPackage
+import TextTable
+
 // run/list benchmarks by talking to controlled process
 #if canImport(Darwin)
 import Darwin
@@ -16,11 +21,6 @@ import Glibc
 #else
 #error("Unsupported Platform")
 #endif
-
-import Benchmark
-import Foundation
-import SystemPackage
-import TextTable
 
 extension BenchmarkTool {
     mutating func queryBenchmarks(_ benchmarkPath: String) throws {

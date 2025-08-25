@@ -8,6 +8,9 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 //
 
+import ArgumentParser
+import BenchmarkShared
+
 #if canImport(Darwin)
 import Darwin
 #elseif canImport(Glibc)
@@ -15,9 +18,6 @@ import Glibc
 #else
 #error("Unsupported Platform")
 #endif
-
-import ArgumentParser
-import BenchmarkShared
 
 @_documentation(visibility: internal)
 extension TimeUnits: ExpressibleByArgument {}

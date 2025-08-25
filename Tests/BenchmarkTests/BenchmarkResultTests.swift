@@ -8,8 +8,9 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 //
 
-@testable import Benchmark
 import XCTest
+
+@testable import Benchmark
 
 // swiftlint:disable function_body_length type_body_length file_length
 final class BenchmarkResultTests: XCTestCase {
