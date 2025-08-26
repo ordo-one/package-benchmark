@@ -125,7 +125,7 @@ let benchmarks: @Sendable () -> Void = {
         }
     }
 
-    let parameterization = (0...5).map { 1 << $0 }  // 1, 2, 4, ...
+    let parameterization = (0...5).map { 1 << $0 } // 1, 2, 4, ...
 
     parameterization.forEach { count in
         Benchmark("Parameterized", configuration: .init(tags: ["count": count.description])) { benchmark in

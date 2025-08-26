@@ -14,7 +14,7 @@ import OSLog
 
 // swiftlint:disable file_length
 
-struct BenchmarkExecutor {  // swiftlint:disable:this type_body_length
+struct BenchmarkExecutor { // swiftlint:disable:this type_body_length
     init(quiet: Bool = false) {
         self.quiet = quiet
     }
@@ -107,7 +107,7 @@ struct BenchmarkExecutor {  // swiftlint:disable:this type_body_length
         let initialStartTime = BenchmarkClock.now
 
         // 'Warmup' to remove initial mallocs from stats in p100
-        _ = MallocStatsProducer.makeMallocStats()  // baselineMallocStats
+        _ = MallocStatsProducer.makeMallocStats() // baselineMallocStats
 
         // Calculate typical sys call check overhead and deduct that to get 'clean' stats for the actual benchmark
         var operatingSystemStatsOverhead = OperatingSystemStats()
@@ -129,7 +129,7 @@ struct BenchmarkExecutor {  // swiftlint:disable:this type_body_length
             for _ in 0..<numberOfMeasurements {
                 blackHole(BenchmarkClock.now)
                 let statsOne = operatingSystemStatsProducer.makePerformanceCounters()
-                blackHole(BenchmarkClock.now)  // must be as close to last in closure as possible
+                blackHole(BenchmarkClock.now) // must be as close to last in closure as possible
                 let statsTwo = operatingSystemStatsProducer.makePerformanceCounters()
                 timingOverheadInInstructions += max((statsTwo.instructions - statsOne.instructions), 0)
             }
@@ -170,7 +170,7 @@ struct BenchmarkExecutor {  // swiftlint:disable:this type_body_length
                 startPerformanceCounters = operatingSystemStatsProducer.makePerformanceCounters()
             }
 
-            startTime = BenchmarkClock.now  // must be as close to last in closure as possible
+            startTime = BenchmarkClock.now // must be as close to last in closure as possible
         }
 
         // And corresponding hook for then the benchmark has finished and capture finishing metrics here
@@ -180,7 +180,7 @@ struct BenchmarkExecutor {  // swiftlint:disable:this type_body_length
                 stopPerformanceCounters = operatingSystemStatsProducer.makePerformanceCounters()
             }
 
-            stopTime = BenchmarkClock.now  // must be as close to first in closure as possible (perf events only before)
+            stopTime = BenchmarkClock.now // must be as close to first in closure as possible (perf events only before)
 
             if operatingSystemStatsRequested {
                 stopOperatingSystemStats = operatingSystemStatsProducer.makeOperatingSystemStats()
@@ -206,7 +206,7 @@ struct BenchmarkExecutor {  // swiftlint:disable:this type_body_length
             wallClockDuration = initialStartTime.duration(to: stopTime)
 
             statistics.withUnsafeMutableBufferPointer { statistics in
-                if runningTime > .zero {  // macOS sometimes gives us identical timestamps so let's skip those.
+                if runningTime > .zero { // macOS sometimes gives us identical timestamps so let's skip those.
                     let nanoSeconds = runningTime.nanoseconds()
                     statistics[BenchmarkMetric.wallClock.index].add(Int(nanoSeconds))
 
@@ -228,10 +228,10 @@ struct BenchmarkExecutor {  // swiftlint:disable:this type_body_length
                     let objectAllocDelta = stopARCStats.objectAllocCount - startARCStats.objectAllocCount
                     statistics[BenchmarkMetric.objectAllocCount.index].add(Int(objectAllocDelta))
 
-                    let retainDelta = stopARCStats.retainCount - startARCStats.retainCount - 1  // due to some ARC traffic in the path
+                    let retainDelta = stopARCStats.retainCount - startARCStats.retainCount - 1 // due to some ARC traffic in the path
                     statistics[BenchmarkMetric.retainCount.index].add(Int(retainDelta))
 
-                    let releaseDelta = stopARCStats.releaseCount - startARCStats.releaseCount - 1  // due to some ARC traffic in the path
+                    let releaseDelta = stopARCStats.releaseCount - startARCStats.releaseCount - 1 // due to some ARC traffic in the path
                     statistics[BenchmarkMetric.releaseCount.index].add(Int(releaseDelta))
 
                     statistics[BenchmarkMetric.retainReleaseDelta.index]
@@ -399,7 +399,7 @@ struct BenchmarkExecutor {  // swiftlint:disable:this type_body_length
 
             iterations += 1
 
-            if iterations < 1_000 || iterations.isMultiple(of: 500) {  // only update for low iteration count benchmarks, else 1/500
+            if iterations < 1_000 || iterations.isMultiple(of: 500) { // only update for low iteration count benchmarks, else 1/500
                 if var progressBar {
                     let iterationsPercentage =
                         100.0 * Double(iterations) / Double(benchmark.configuration.maxIterations)

@@ -14,7 +14,7 @@ import Foundation
 // swiftlint:disable file_length identifier_name
 
 /// Defines a benchmark
-public final class Benchmark: Codable, Hashable {  // swiftlint:disable:this type_body_length
+public final class Benchmark: Codable, Hashable { // swiftlint:disable:this type_body_length
     @_documentation(visibility: internal)
     public typealias BenchmarkClosure = (_ benchmark: Benchmark) -> Void
     @_documentation(visibility: internal)
@@ -36,11 +36,11 @@ public final class Benchmark: Codable, Hashable {  // swiftlint:disable:this typ
 
     @_documentation(visibility: internal)
     @ThreadSafeProperty(wrappedValue: nil, lock: setupTeardownLock)
-    public static var _startupHook: BenchmarkSetupHook?  // Should be removed when going to 2.0, just kept for API compatiblity
+    public static var _startupHook: BenchmarkSetupHook? // Should be removed when going to 2.0, just kept for API compatiblity
 
     @_documentation(visibility: internal)
     @ThreadSafeProperty(wrappedValue: nil, lock: setupTeardownLock)
-    public static var _shutdownHook: BenchmarkTeardownHook?  // Should be removed when going to 2.0, just kept for API compatiblity
+    public static var _shutdownHook: BenchmarkTeardownHook? // Should be removed when going to 2.0, just kept for API compatiblity
 
     @_documentation(visibility: internal)
     @ThreadSafeProperty(wrappedValue: nil, lock: setupTeardownLock)
@@ -111,7 +111,7 @@ public final class Benchmark: Codable, Hashable {  // swiftlint:disable:this typ
     public static var checkAbsoluteThresholds = false
 
     @_documentation(visibility: internal)
-    public static var benchmarks: [Benchmark] = []  // Bookkeeping of all registered benchmarks
+    public static var benchmarks: [Benchmark] = [] // Bookkeeping of all registered benchmarks
 
     /// The name of the benchmark without any of the tags appended
     public var baseName: String
@@ -150,9 +150,9 @@ public final class Benchmark: Codable, Hashable {  // swiftlint:disable:this typ
     @_documentation(visibility: internal)
     public var executablePath: String?
     /// closure: The actual benchmark closure that will be measured
-    var closure: BenchmarkClosure?  // The actual benchmark to run
+    var closure: BenchmarkClosure? // The actual benchmark to run
     /// asyncClosure: The actual benchmark (async) closure that will be measured
-    var asyncClosure: BenchmarkAsyncClosure?  // The actual benchmark to run
+    var asyncClosure: BenchmarkAsyncClosure? // The actual benchmark to run
     // setup/teardown hooks for the instance
     var setup: BenchmarkSetupHook?
     var teardown: BenchmarkTeardownHook?
@@ -205,8 +205,8 @@ public final class Benchmark: Codable, Hashable {  // swiftlint:disable:this typ
     }
     #endif
 
-    static var testSkipBenchmarkRegistrations = false  // true in test to avoid bench registration fail
-    var measurementCompleted = false  // Keep track so we skip multiple 'end of measurement'
+    static var testSkipBenchmarkRegistrations = false // true in test to avoid bench registration fail
+    var measurementCompleted = false // Keep track so we skip multiple 'end of measurement'
 
     enum CodingKeys: String, CodingKey {
         case baseName = "name"
@@ -406,7 +406,7 @@ public final class Benchmark: Codable, Hashable {  // swiftlint:disable:this typ
     }
 
     private func _stopMeasurement(_ explicitStartStop: Bool) {
-        guard measurementCompleted == false else {  // This is to skip the implicit stop if we did an explicit before
+        guard measurementCompleted == false else { // This is to skip the implicit stop if we did an explicit before
             return
         }
 
@@ -560,7 +560,7 @@ public extension Benchmark {
     ///     }
     /// }
     /// ```
-    @_optimize(none)  // Used after tip here: https://forums.swift.org/t/compiler-swallows-blackhole/64305/10 - see also https://github.com/apple/swift/commit/1fceeab71e79dc96f1b6f560bf745b016d7fcdcf
+    @_optimize(none) // Used after tip here: https://forums.swift.org/t/compiler-swallows-blackhole/64305/10 - see also https://github.com/apple/swift/commit/1fceeab71e79dc96f1b6f560bf745b016d7fcdcf
     static func blackHole(_: some Any) {}
 }
 
