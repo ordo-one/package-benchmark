@@ -12,6 +12,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <pthread.h>
 
 #include <interposer.h>
 
@@ -285,5 +286,27 @@ int replacement_posix_memalign(void **memptr, size_t alignment, size_t size) {
     } else {
         return 1;
     }
+}
+
+void free(void *ptr) {
+    replacement_free(ptr);
+}
+void *malloc(size_t size) {
+    return replacement_malloc(size);
+}
+void *calloc(size_t nmemb, size_t size) {
+    return replacement_calloc(nmemb, size);
+}
+void *realloc(void *ptr, size_t size) {
+    return replacement_realloc(ptr, size);
+}
+void *reallocf(void *ptr, size_t size) {
+    return replacement_reallocf(ptr, size);
+}
+void *valloc(size_t size) {
+    return replacement_valloc(size);
+}
+int posix_memalign(void **memptr, size_t alignment, size_t size) {
+    return replacement_posix_memalign(memptr, alignment, size);
 }
 #endif

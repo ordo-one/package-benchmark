@@ -1,5 +1,5 @@
-#ifndef HOOKED_FREE
-#define HOOKED_FREE
+#ifndef INTERPOSER_H
+#define INTERPOSER_H
 
 #include <stdlib.h>
 #include <sys/socket.h>
@@ -24,7 +24,6 @@ typedef void (*malloc_zone_memalign_hook_t)(malloc_zone_t *zone, size_t alignmen
 typedef void (*malloc_zone_valloc_hook_t)(malloc_zone_t *zone, size_t size);
 typedef void (*malloc_zone_free_hook_t)(malloc_zone_t *zone, void *ptr);
 #endif
-
 
 // Hook management functions
 void set_malloc_hook(malloc_hook_t hook);
@@ -63,6 +62,18 @@ void *replacement_realloc(void *ptr, size_t size);
 void *replacement_reallocf(void *ptr, size_t size);
 void *replacement_valloc(size_t size);
 int replacement_posix_memalign(void **memptr, size_t alignment, size_t size);
+
+// On Linux we use LD_PRELOAD to interpose the standard malloc functions
+// and we have to declare them ourselves
+#if !__APPLE__
+void free(void *ptr);
+void *malloc(size_t size);
+void *calloc(size_t nmemb, size_t size);
+void *realloc(void *ptr, size_t size);
+void *reallocf(void *ptr, size_t size);
+void *valloc(size_t size);
+int posix_memalign(void **memptr, size_t alignment, size_t size);
+#endif
 
 
 #if __APPLE__
