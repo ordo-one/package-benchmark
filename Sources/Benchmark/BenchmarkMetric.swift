@@ -37,6 +37,10 @@ public enum BenchmarkMetric: Hashable, Equatable, Codable, CustomStringConvertib
     case mallocCountLarge
     /// Number of small+large mallocs
     case mallocCountTotal
+    /// Number of totatl free calls
+    case freeCountTotal
+    /// The amount of memory allocated in bytes through malloc calls
+    case mallocBytesCount
     /// The amount of allocated resident memory according to the memory allocator
     /// by the application (does not include metadata overhead etc)
     case allocatedResidentMemory
@@ -175,6 +179,8 @@ public extension BenchmarkMetric {
             return "Malloc (large)"
         case .mallocCountTotal:
             return "Malloc (total)"
+        case .mallocBytesCount:
+            return "Malloc (bytes total)"
         case .allocatedResidentMemory:
             return "Memory (allocated resident)"
         case .memoryLeaked:
@@ -215,6 +221,8 @@ public extension BenchmarkMetric {
             return "Δ %"
         case let .custom(name, _, _):
             return name
+        case .freeCountTotal:
+            return "Free (total)"
         }
     }
 
@@ -244,47 +252,51 @@ public extension BenchmarkMetric {
             return 10
         case .mallocCountTotal:
             return 11
-        case .allocatedResidentMemory:
+        case .mallocBytesCount:
             return 12
-        case .memoryLeaked:
+        case .allocatedResidentMemory:
             return 13
-        case .syscalls:
+        case .memoryLeaked:
             return 14
-        case .contextSwitches:
+        case .syscalls:
             return 15
-        case .threads:
+        case .contextSwitches:
             return 16
-        case .threadsRunning:
+        case .threads:
             return 17
-        case .readSyscalls:
+        case .threadsRunning:
             return 18
-        case .writeSyscalls:
+        case .readSyscalls:
             return 19
-        case .readBytesLogical:
+        case .writeSyscalls:
             return 20
-        case .writeBytesLogical:
+        case .readBytesLogical:
             return 21
-        case .readBytesPhysical:
+        case .writeBytesLogical:
             return 22
-        case .writeBytesPhysical:
+        case .readBytesPhysical:
             return 23
-        case .objectAllocCount:
+        case .writeBytesPhysical:
             return 24
-        case .retainCount:
+        case .objectAllocCount:
             return 25
-        case .releaseCount:
+        case .retainCount:
             return 26
-        case .retainReleaseDelta:
+        case .releaseCount:
             return 27
-        case .instructions:
+        case .retainReleaseDelta:
             return 28
+        case .instructions:
+            return 29
+        case .freeCountTotal:
+            return 30
         default:
             return 0 // custom payloads must be stored in dictionary
         }
     }
 
     @_documentation(visibility: internal)
-    static var maxIndex: Int { 28 } //
+    static var maxIndex: Int { 30 } //
 
     // Used by the Benchmark Executor for efficient indexing into results
     @_documentation(visibility: internal)
@@ -313,39 +325,43 @@ public extension BenchmarkMetric {
         case 11:
             return .mallocCountTotal
         case 12:
-            return .allocatedResidentMemory
+            return .mallocBytesCount
         case 13:
-            return .memoryLeaked
+            return .allocatedResidentMemory
         case 14:
-            return .syscalls
+            return .memoryLeaked
         case 15:
-            return .contextSwitches
+            return .syscalls
         case 16:
-            return .threads
+            return .contextSwitches
         case 17:
-            return .threadsRunning
+            return .threads
         case 18:
-            return .readSyscalls
+            return .threadsRunning
         case 19:
-            return .writeSyscalls
+            return .readSyscalls
         case 20:
-            return .readBytesLogical
+            return .writeSyscalls
         case 21:
-            return .writeBytesLogical
+            return .readBytesLogical
         case 22:
-            return .readBytesPhysical
+            return .writeBytesLogical
         case 23:
-            return .writeBytesPhysical
+            return .readBytesPhysical
         case 24:
-            return .objectAllocCount
+            return .writeBytesPhysical
         case 25:
-            return .retainCount
+            return .objectAllocCount
         case 26:
-            return .releaseCount
+            return .retainCount
         case 27:
-            return .retainReleaseDelta
+            return .releaseCount
         case 28:
+            return .retainReleaseDelta
+        case 29:
             return .instructions
+        case 30:
+            return .freeCountTotal
         default:
             break
         }
@@ -379,6 +395,8 @@ public extension BenchmarkMetric {
             return "mallocCountLarge"
         case .mallocCountTotal:
             return "mallocCountTotal"
+        case .mallocBytesCount:
+            return "mallocBytesCount"
         case .allocatedResidentMemory:
             return "allocatedResidentMemory"
         case .memoryLeaked:
@@ -419,6 +437,8 @@ public extension BenchmarkMetric {
             return "Δ %"
         case let .custom(name, _, _):
             return name
+        case .freeCountTotal:
+            return "freeCountTotal"
         }
     }
 }
@@ -451,6 +471,8 @@ public extension BenchmarkMetric {
             self = BenchmarkMetric.mallocCountLarge
         case "mallocCountTotal":
             self = BenchmarkMetric.mallocCountTotal
+        case "mallocBytesCount":
+            self = BenchmarkMetric.mallocBytesCount
         case "allocatedResidentMemory":
             self = BenchmarkMetric.allocatedResidentMemory
         case "memoryLeaked":
@@ -485,6 +507,8 @@ public extension BenchmarkMetric {
             self = BenchmarkMetric.releaseCount
         case "retainReleaseDelta":
             self = BenchmarkMetric.retainReleaseDelta
+        case "freeCountTotal":
+            self = BenchmarkMetric.freeCountTotal
         default:
             self = BenchmarkMetric.custom(argument)
         }

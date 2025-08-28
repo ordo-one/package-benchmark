@@ -30,43 +30,42 @@ public extension BenchmarkMetric {
     /// There is also an convenience extension on Array defined such that you can write just `.default` rather than `BenchmarkMetric.default`
     ///
     static var `default`: [BenchmarkMetric] {
-        [
-            .wallClock,
-            .cpuTotal,
-            .mallocCountTotal,
-            .throughput,
-            .instructions,
-            .peakMemoryResident,
-        ]
+        [.wallClock,
+         .cpuTotal,
+         .mallocCountTotal,
+         .freeCountTotal,
+         .mallocBytesCount,
+         .throughput,
+         .instructions,
+         .peakMemoryResident]
     }
 
     /// A collection of extended system benchmarks.
     static var extended: [BenchmarkMetric] {
-        [
-            .wallClock,
-            .cpuUser,
-            .cpuTotal,
-            .mallocCountTotal,
-            .throughput,
-            .peakMemoryResident,
-            .memoryLeaked,
-            .syscalls,
-            .instructions,
-        ]
+        [.wallClock,
+         .cpuUser,
+         .cpuTotal,
+         .mallocCountTotal,
+         .freeCountTotal,
+         .mallocBytesCount,
+         .throughput,
+         .peakMemoryResident,
+         .memoryLeaked,
+         .syscalls,
+         .instructions]
     }
 
     /// A collection of memory benchmarks.
     static var memory: [BenchmarkMetric] {
-        [
-            .peakMemoryResident,
-            .peakMemoryResidentDelta,
-            .peakMemoryVirtual,
-            .mallocCountSmall,
-            .mallocCountLarge,
-            .mallocCountTotal,
-            .memoryLeaked,
-            .allocatedResidentMemory,
-        ]
+        [.peakMemoryResident,
+         .peakMemoryResidentDelta,
+         .peakMemoryVirtual,
+         .mallocCountSmall,
+         .mallocCountLarge,
+         .mallocCountTotal,
+         .mallocBytesCount,
+         .memoryLeaked,
+         .allocatedResidentMemory]
     }
 
     /// A collection of ARC metrics
@@ -105,36 +104,36 @@ public extension BenchmarkMetric {
 
     /// A collection of all benchmarks supported by this library.
     static var all: [BenchmarkMetric] {
-        [
-            .cpuUser,
-            .cpuSystem,
-            .cpuTotal,
-            .wallClock,
-            .throughput,
-            .peakMemoryResident,
-            .peakMemoryResidentDelta,
-            .peakMemoryVirtual,
-            .mallocCountSmall,
-            .mallocCountLarge,
-            .mallocCountTotal,
-            .memoryLeaked,
-            .syscalls,
-            .contextSwitches,
-            .threads,
-            .threadsRunning,
-            .readSyscalls,
-            .writeSyscalls,
-            .readBytesLogical,
-            .writeBytesLogical,
-            .readBytesPhysical,
-            .writeBytesPhysical,
-            .instructions,
-            .allocatedResidentMemory,
-            .objectAllocCount,
-            .retainCount,
-            .releaseCount,
-            .retainReleaseDelta,
-        ]
+        [.cpuUser,
+         .cpuSystem,
+         .cpuTotal,
+         .wallClock,
+         .throughput,
+         .peakMemoryResident,
+         .peakMemoryResidentDelta,
+         .peakMemoryVirtual,
+         .mallocCountSmall,
+         .mallocCountLarge,
+         .mallocCountTotal,
+         .freeCountTotal,
+         .mallocBytesCount,
+         .memoryLeaked,
+         .syscalls,
+         .contextSwitches,
+         .threads,
+         .threadsRunning,
+         .readSyscalls,
+         .writeSyscalls,
+         .readBytesLogical,
+         .writeBytesLogical,
+         .readBytesPhysical,
+         .writeBytesPhysical,
+         .instructions,
+         .allocatedResidentMemory,
+         .objectAllocCount,
+         .retainCount,
+         .releaseCount,
+         .retainReleaseDelta]
     }
 }
 

@@ -60,6 +60,7 @@ final class OperatingSystemAndMallocTests: XCTestCase {
         blackHole(operatingSystemStatsProducer.metricSupported(.throughput))
     }
 
+<<<<<<< HEAD
     #if canImport(jemalloc)
     func testMallocProducerLeaks() throws {
         let startMallocStats = MallocStatsProducer.makeMallocStats()
@@ -78,6 +79,8 @@ final class OperatingSystemAndMallocTests: XCTestCase {
     }
     #endif
 
+=======
+>>>>>>> 66b6a42 (feat(major): [sc-23696] replace jemalloc with custom malloc interposer)
     func testARCStatsProducer() throws {
         let array = [3]
         ARCStatsProducer.hook()
