@@ -39,7 +39,7 @@ extension BenchmarkTool {
     }
 
     private func formatLargeNumber(_ value: Int) -> String {
-        if abs(value) >= 10_000_000 { // 8 digits or more
+        if abs(value) >= 10_000_000 {  // 8 digits or more
             let doubleValue = Double(value)
             return String(format: "%.2e", doubleValue)
         }
@@ -193,7 +193,7 @@ extension BenchmarkTool {
 
     func prettyPrint(
         _ baseline: BenchmarkBaseline,
-        header: String, // = "Benchmark results",
+        header: String,  // = "Benchmark results",
         hostIdentifier _: String? = nil
     ) {
         guard quiet == false else { return }

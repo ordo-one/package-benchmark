@@ -33,8 +33,8 @@ struct BenchmarkMachine: Codable, Equatable {
 
     var hostname: String
     var processors: Int
-    var processorType: String // e.g. arm64e
-    var memory: Int // in GB
+    var processorType: String  // e.g. arm64e
+    var memory: Int  // in GB
     var kernelVersion: String
 
     public static func == (lhs: BenchmarkMachine, rhs: BenchmarkMachine) -> Bool {
@@ -48,8 +48,8 @@ struct BenchmarkIdentifier: Codable, Hashable {
         self.name = name
     }
 
-    var target: String // The name of the executable benchmark target id
-    var name: String // The name of the benchmark
+    var target: String  // The name of the executable benchmark target id
+    var name: String  // The name of the benchmark
 
     public func hash(into hasher: inout Hasher) {
         hasher.combine(target)
@@ -178,7 +178,7 @@ let baselinesDirectory: String = ".benchmarkBaselines"
 extension BenchmarkTool {
     func printAllBaselines() {
         var storagePath = FilePath(baselineStoragePath)
-        storagePath.append(baselinesDirectory) // package/.benchmarkBaselines
+        storagePath.append(baselinesDirectory)  // package/.benchmarkBaselines
         for file in storagePath.directoryEntries {
             if file.ends(with: ".") == false,
                 file.ends(with: "..") == false
@@ -206,7 +206,7 @@ extension BenchmarkTool {
         var storagePath = FilePath(baselineStoragePath)
         let filemanager = FileManager.default
 
-        storagePath.append(baselinesDirectory) // package/.benchmarkBaselines
+        storagePath.append(baselinesDirectory)  // package/.benchmarkBaselines
         for file in storagePath.directoryEntries {
             if file.ends(with: ".") == false,
                 file.ends(with: "..") == false
@@ -256,14 +256,14 @@ extension BenchmarkTool {
         /*
          We store the baselines in a .benchmarkBaselines directory, by default in the package root path
          unless otherwise specified.
-        
+
          The 'default' folder is used when no specific named baseline have been specified with the
          command line. Specified 'named' baselines is useful for convenient A/B/C testing and comparisons.
          Unless a host identifier have been specified on the command line (or in an environment variable),
          we by default store results in 'results.json', otherwise we will use the environment variable
          or command line to optionally specify a 'hostIdentifier' that allow for separation between
          different hosts if checking in baselines in repos.
-        
+
          .benchmarkBaselines
          ├── target1
          │   ├── default
@@ -284,14 +284,14 @@ extension BenchmarkTool {
          │       └── ...
          └── ...
          */
-        var outputPath = FilePath(baselineStoragePath) // package
-        var subPath = FilePath() // subpath rooted in package used for directory creation
+        var outputPath = FilePath(baselineStoragePath)  // package
+        var subPath = FilePath()  // subpath rooted in package used for directory creation
 
-        subPath.append(baselinesDirectory) // package/.benchmarkBaselines
-        subPath.append("\(target)") // package/.benchmarkBaselines/myTarget1
-        subPath.append(baselineName) // package/.benchmarkBaselines/myTarget1/named1
+        subPath.append(baselinesDirectory)  // package/.benchmarkBaselines
+        subPath.append("\(target)")  // package/.benchmarkBaselines/myTarget1
+        subPath.append(baselineName)  // package/.benchmarkBaselines/myTarget1/named1
 
-        outputPath.createSubPath(subPath) // Create destination subpath if needed
+        outputPath.createSubPath(subPath)  // Create destination subpath if needed
 
         outputPath.append(subPath.components)
 
@@ -348,13 +348,13 @@ extension BenchmarkTool {
         baselineIdentifier: String? = nil
     ) throws -> BenchmarkBaseline? {
         var path = FilePath(baselineStoragePath)
-        path.append(baselinesDirectory) // package/.benchmarkBaselines
-        path.append(FilePath.Component(target)!) // package/.benchmarkBaselines/myTarget1
+        path.append(baselinesDirectory)  // package/.benchmarkBaselines
+        path.append(FilePath.Component(target)!)  // package/.benchmarkBaselines/myTarget1
 
         if let baselineIdentifier {
-            path.append(baselineIdentifier) // package/.benchmarkBaselines/myTarget1/named1
+            path.append(baselineIdentifier)  // package/.benchmarkBaselines/myTarget1/named1
         } else {
-            path.append("default") // // package/.benchmarkBaselines/myTarget1/default
+            path.append("default")  // // package/.benchmarkBaselines/myTarget1/default
         }
 
         if let hostIdentifier {
@@ -376,7 +376,7 @@ extension BenchmarkTool {
                         let bufferSize = 16 * 1_024 * 1_024
                         var done = false
 
-                        while done == false { // readBytes.count < bufferLength {
+                        while done == false {  // readBytes.count < bufferLength {
                             let nextBytes = try [UInt8](unsafeUninitializedCapacity: bufferSize) { buf, count in
                                 count = try fd.read(into: UnsafeMutableRawBufferPointer(buf))
                                 if count == 0 {
@@ -396,7 +396,7 @@ extension BenchmarkTool {
                 print("Failed to close fd for \(path) after reading.")
             }
         } catch {
-            if errno != ENOENT { // file not found is ok, e.g. when no baselines exist
+            if errno != ENOENT {  // file not found is ok, e.g. when no baselines exist
                 print("Failed to open file \(path), errno = [\(errno)]")
             }
         }
@@ -522,11 +522,11 @@ extension BenchmarkBaseline: Equatable {
 
         for (lhsBenchmarkIdentifier, lhsBenchmarkResults) in lhs.results {
             for lhsBenchmarkResult in lhsBenchmarkResults {
-                guard let rhsResults = rhs.results.first(where: { $0.key == lhsBenchmarkIdentifier }) else { // We couldn't find a result for one of the tests
+                guard let rhsResults = rhs.results.first(where: { $0.key == lhsBenchmarkIdentifier }) else {  // We couldn't find a result for one of the tests
                     return false
                 }
                 guard let rhsBenchmarkResult = rhsResults.value.first(where: { $0.metric == lhsBenchmarkResult.metric })
-                else { // We couldn't find the specific metric
+                else {  // We couldn't find the specific metric
                     return false
                 }
                 if lhsBenchmarkResult != rhsBenchmarkResult {

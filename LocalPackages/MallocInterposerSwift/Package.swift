@@ -10,11 +10,11 @@ let package = Package(
         .library(
             name: "MallocInterposerSwift",
             type: .dynamic,
-            targets: ["MallocInterposerSwift"]),
+            targets: ["MallocInterposerSwift"])
     ],
     dependencies: [
         .package(path: "../MallocInterposerC"),
-        .package(url: "https://github.com/apple/swift-atomics.git", from: "1.3.0")
+        .package(url: "https://github.com/apple/swift-atomics.git", from: "1.3.0"),
     ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
@@ -23,7 +23,7 @@ let package = Package(
             name: "MallocInterposerSwift",
             dependencies: [
                 .product(name: "MallocInterposerC", package: "MallocInterposerC"),
-                .product(name: "Atomics", package: "swift-atomics")
+                .product(name: "Atomics", package: "swift-atomics"),
             ]),
         .executableTarget(
             name: "SwiftTestClient",

@@ -35,7 +35,7 @@ let benchmarks: @Sendable () -> Void = {
 
         var histogram = Histogram<UInt64>(highestTrackableValue: maxValue, numberOfSignificantValueDigits: .three)
 
-        let numValues = 1_024 // so compiler can optimize modulo below
+        let numValues = 1_024  // so compiler can optimize modulo below
         let values = [UInt64]((0..<numValues).map { _ in UInt64.random(in: 100...1_000) })
 
         benchmark.startMeasurement()
@@ -51,7 +51,7 @@ let benchmarks: @Sendable () -> Void = {
         benchmark.startMeasurement()
         var histogram = Histogram<UInt64>(numberOfSignificantValueDigits: .three)
 
-        let numValues = 1_024 // so compiler can optimize modulo below
+        let numValues = 1_024  // so compiler can optimize modulo below
         let values = [UInt64]((0..<numValues).map { _ in UInt64.random(in: 100...10_000) })
 
         for i in benchmark.scaledIterations {

@@ -96,7 +96,7 @@ public extension BenchmarkMetric {
 
 public extension BenchmarkMetric {
     /// A constant that states whether larger or smaller measurements, relative to a set baseline, indicate better performance.
-    enum Polarity: Codable, Sendable { // same naming as XCTest uses, polarity is known for all metrics except custom
+    enum Polarity: Codable, Sendable {  // same naming as XCTest uses, polarity is known for all metrics except custom
         /// A performance measurement where a larger value, relative to a set baseline, indicates better performance.
         case prefersLarger
         /// A performance measurement where a smaller value, relative to a set baseline, indicates better performance.
@@ -279,16 +279,16 @@ public extension BenchmarkMetric {
         case .instructions:
             return 28
         default:
-            return 0 // custom payloads must be stored in dictionary
+            return 0  // custom payloads must be stored in dictionary
         }
     }
 
     @_documentation(visibility: internal)
-    static var maxIndex: Int { 28 } //
+    static var maxIndex: Int { 28 }  //
 
     // Used by the Benchmark Executor for efficient indexing into results
     @_documentation(visibility: internal)
-    func metricFor(index: Int) -> BenchmarkMetric { // swiftlint:disable:this cyclomatic_complexity function_body_length
+    func metricFor(index: Int) -> BenchmarkMetric {  // swiftlint:disable:this cyclomatic_complexity function_body_length
         switch index {
         case 1:
             return .cpuUser
@@ -355,7 +355,7 @@ public extension BenchmarkMetric {
 
 @_documentation(visibility: internal)
 public extension BenchmarkMetric {
-    var rawDescription: String { // As we can't have raw values due to custom support, we do this...
+    var rawDescription: String {  // As we can't have raw values due to custom support, we do this...
         switch self {
         case .cpuUser:
             return "cpuUser"

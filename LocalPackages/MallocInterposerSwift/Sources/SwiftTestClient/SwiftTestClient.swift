@@ -1,12 +1,12 @@
 import Foundation
-import MallocInterposerSwift
 import MallocInterposerC
+import MallocInterposerSwift
 
 @main
 enum TestClient {
     @_optimize(none)
     static func main() {
-        print("=== MallocInterposerSwift Test ===" )
+        print("=== MallocInterposerSwift Test ===")
         // Reset statistics to start clean
         MallocInterposerSwift.hook()
 

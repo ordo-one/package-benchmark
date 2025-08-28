@@ -1,5 +1,5 @@
-import Foundation
 import Atomics
+import Foundation
 import MallocInterposerC
 
 /// Swift-friendly hook types
@@ -48,13 +48,13 @@ public class MallocInterposerSwift: @unchecked Sendable {
         }
 
         let callocHook: CallocHook = { num, size in
-                    MallocInterposerSwift.mallocCount.wrappingIncrement(ordering: .relaxed)
+            MallocInterposerSwift.mallocCount.wrappingIncrement(ordering: .relaxed)
             MallocInterposerSwift.mallocBytesCount.wrappingIncrement(by: size, ordering: .relaxed)
         }
 
         let reallocHook: ReallocHook = { pointer, size in
             MallocInterposerSwift.freeCount.wrappingIncrement(ordering: .relaxed)
-                    MallocInterposerSwift.mallocCount.wrappingIncrement(ordering: .relaxed)
+            MallocInterposerSwift.mallocCount.wrappingIncrement(ordering: .relaxed)
             MallocInterposerSwift.mallocBytesCount.wrappingIncrement(by: size, ordering: .relaxed)
         }
 

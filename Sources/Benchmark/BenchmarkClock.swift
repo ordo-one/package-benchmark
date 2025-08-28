@@ -78,7 +78,7 @@ extension BenchmarkClock: Clock {
     /// The current continuous instant.
     public static var now: BenchmarkClock.Instant {
         #if canImport(Darwin)
-        let nanos = clock_gettime_nsec_np(CLOCK_UPTIME_RAW) // to get ns resolution on macOS
+        let nanos = clock_gettime_nsec_np(CLOCK_UPTIME_RAW)  // to get ns resolution on macOS
 
         let seconds: UInt64 = nanos / 1_000_000_000
         let attoseconds: UInt64 = (nanos % 1_000_000_000) * 1_000_000_000
