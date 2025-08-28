@@ -12,6 +12,7 @@
 // Running the `BenchmarkTool` for each benchmark target.
 
 import PackagePlugin
+import Foundation
 
 #if canImport(Darwin)
 import Darwin
@@ -149,6 +150,7 @@ import Glibc
         let packageBenchmarkIdentifier = "package-benchmark"
         let benchmarkToolName = "BenchmarkTool"
         let benchmarkTool: PackagePlugin.Path // = try context.tool(named: benchmarkToolName)
+        let interposerLib: PackagePlugin.Path
 
         var args: [String] = [
             benchmarkToolName,
@@ -360,11 +362,38 @@ import Glibc
         }
 
         // Build the BenchmarkTool manually in release mode to work around https://github.com/apple/swift-package-manager/issues/7210
-        guard
-            let benchmarkToolModule = benchmarkToolModuleTargets.first(where: {
-                $0.kind == .executable && $0.name == benchmarkToolName
-            })
-        else {
+        if let benchmarkToolModule = benchmarkToolModuleTargets.first(where: { $0.kind == .executable && $0.name == benchmarkToolName}) {
+            if outputFormat == .text {
+                if quietRunning == 0 {
+                    print("Building \(benchmarkToolModule.name) in release mode...")
+                }
+            }
+
+            var buildParameters = PackageManager.BuildParameters(configuration: .release)
+
+            buildParameters.otherSwiftcFlags.append(contentsOf: otherSwiftFlagsSpecified.map { "-\($0)" })
+
+            let buildResult = try packageManager.build(
+                .product(benchmarkToolModule.name),
+                parameters: buildParameters
+            )
+
+            guard buildResult.succeeded else {
+                print(buildResult.logText)
+                print("Benchmark failed to build the BenchmarkTool in release mode.")
+                throw MyError.buildFailed
+            }
+
+            let tool = buildResult.builtArtifacts.first(where: {$0.kind == .executable && $0.path.lastComponent == benchmarkToolName })
+            let lib = buildResult.builtArtifacts.first(where: { $0.kind == .dynamicLibrary && $0.path.lastComponent.contains("libMallocInterposerC") })
+
+            guard let tool, let lib else {
+                throw MyError.buildFailed
+            }
+
+            benchmarkTool = tool.path
+            interposerLib = lib.path
+        } else {
             print("Benchmark failed to find the BenchmarkTool target.")
             throw MyError.buildFailed
         }
@@ -471,8 +500,25 @@ import Glibc
                 return
             }
 
+            #if os(Linux)
+            var environment = ProcessInfo.processInfo.environment
+            environment["LD_PRELOAD"] = interposerLib.string
+
+            let envp = environment.map { "\($0.key)=\($0.value)" }.map { $0.withCString(strdup) } + [nil]
+            defer {
+                for i in 0..<envp.count - 1 {
+                    if let ptr = envp[i] {
+                        free(ptr)
+                    }
+                }
+            }
+
+            var pid: pid_t = 0
+            var status = posix_spawn(&pid, benchmarkTool.string, nil, nil, cArgs, envp)
+            #else
             var pid: pid_t = 0
             var status = posix_spawn(&pid, benchmarkTool.string, nil, nil, cArgs, environ)
+            #endif
 
             if status == 0 {
                 if waitpid(pid, &status, 0) != -1 {
