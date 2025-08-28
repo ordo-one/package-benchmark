@@ -499,6 +499,8 @@ import Glibc
                 return
             }
 
+            // On Linux we need to set LD_PRELOAD to get the malloc interposer working
+            // while on Darwin this is done with DYLD interpose mechanism
             #if os(Linux)
             var environment = ProcessInfo.processInfo.environment
             environment["LD_PRELOAD"] = interposerLib
