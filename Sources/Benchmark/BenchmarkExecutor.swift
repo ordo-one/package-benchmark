@@ -245,9 +245,8 @@ struct BenchmarkExecutor { // swiftlint:disable:this type_body_length
 
                     statistics[BenchmarkMetric.freeCountTotal.index].add(Int(_mallocStats.freeCount))
 
-                    // TODO: figure out how to get resident memory
-//                    delta = stopMallocStats.allocatedResidentMemory - startMallocStats.allocatedResidentMemory
-//                    statistics[BenchmarkMetric.memoryLeaked.index].add(Int(delta))
+                    delta = _mallocStats.mallocCount - _mallocStats.freeCount
+                    statistics[BenchmarkMetric.memoryLeaked.index].add(Int(delta))
 
                     statistics[BenchmarkMetric.mallocBytesCount.index].add(Int(_mallocStats.mallocBytesCount))
                 }

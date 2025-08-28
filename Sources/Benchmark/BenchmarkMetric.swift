@@ -31,11 +31,7 @@ public enum BenchmarkMetric: Hashable, Equatable, Codable, CustomStringConvertib
     case peakMemoryResidentDelta
     /// Measure virtual memory usage - sampled during runtime
     case peakMemoryVirtual
-    /// Number of small malloc calls
-    case mallocCountSmall
-    /// Number of large malloc calls
-    case mallocCountLarge
-    /// Number of small+large mallocs
+    /// Number of total mallocs
     case mallocCountTotal
     /// Number of totatl free calls
     case freeCountTotal
@@ -124,7 +120,7 @@ public extension BenchmarkMetric {
         switch self {
         case .cpuSystem, .cpuTotal, .cpuUser, .wallClock:
             return true
-        case .mallocCountLarge, .mallocCountSmall, .mallocCountTotal, .memoryLeaked:
+        case .mallocCountTotal, .memoryLeaked:
             return true
         case .syscalls:
             return true
@@ -173,10 +169,6 @@ public extension BenchmarkMetric {
             return "Memory Δ (resident peak)"
         case .peakMemoryVirtual:
             return "Memory (virtual peak)"
-        case .mallocCountSmall:
-            return "Malloc (small)"
-        case .mallocCountLarge:
-            return "Malloc (large)"
         case .mallocCountTotal:
             return "Malloc (total)"
         case .mallocBytesCount:
@@ -246,57 +238,53 @@ public extension BenchmarkMetric {
             return 7
         case .peakMemoryVirtual:
             return 8
-        case .mallocCountSmall:
-            return 9
-        case .mallocCountLarge:
-            return 10
         case .mallocCountTotal:
-            return 11
-        case .mallocBytesCount:
-            return 12
-        case .allocatedResidentMemory:
-            return 13
-        case .memoryLeaked:
-            return 14
-        case .syscalls:
-            return 15
-        case .contextSwitches:
-            return 16
-        case .threads:
-            return 17
-        case .threadsRunning:
-            return 18
-        case .readSyscalls:
-            return 19
-        case .writeSyscalls:
-            return 20
-        case .readBytesLogical:
-            return 21
-        case .writeBytesLogical:
-            return 22
-        case .readBytesPhysical:
-            return 23
-        case .writeBytesPhysical:
-            return 24
-        case .objectAllocCount:
-            return 25
-        case .retainCount:
-            return 26
-        case .releaseCount:
-            return 27
-        case .retainReleaseDelta:
-            return 28
-        case .instructions:
-            return 29
+            return 9
         case .freeCountTotal:
-            return 30
+            return 10
+        case .mallocBytesCount:
+            return 11
+        case .allocatedResidentMemory:
+            return 12
+        case .memoryLeaked:
+            return 13
+        case .syscalls:
+            return 14
+        case .contextSwitches:
+            return 15
+        case .threads:
+            return 16
+        case .threadsRunning:
+            return 17
+        case .readSyscalls:
+            return 18
+        case .writeSyscalls:
+            return 19
+        case .readBytesLogical:
+            return 20
+        case .writeBytesLogical:
+            return 21
+        case .readBytesPhysical:
+            return 22
+        case .writeBytesPhysical:
+            return 23
+        case .objectAllocCount:
+            return 24
+        case .retainCount:
+            return 25
+        case .releaseCount:
+            return 26
+        case .retainReleaseDelta:
+            return 27
+        case .instructions:
+            return 28
         default:
             return 0 // custom payloads must be stored in dictionary
         }
     }
 
     @_documentation(visibility: internal)
-    static var maxIndex: Int { 30 } //
+    static var maxIndex: Int { 28 } //
 
     // Used by the Benchmark Executor for efficient indexing into results
     @_documentation(visibility: internal)
@@ -319,49 +307,45 @@ public extension BenchmarkMetric {
         case 8:
             return .peakMemoryVirtual
         case 9:
-            return .mallocCountSmall
-        case 10:
-            return .mallocCountLarge
-        case 11:
             return .mallocCountTotal
-        case 12:
-            return .mallocBytesCount
-        case 13:
-            return .allocatedResidentMemory
-        case 14:
-            return .memoryLeaked
-        case 15:
-            return .syscalls
-        case 16:
-            return .contextSwitches
-        case 17:
-            return .threads
-        case 18:
-            return .threadsRunning
-        case 19:
-            return .readSyscalls
-        case 20:
-            return .writeSyscalls
-        case 21:
-            return .readBytesLogical
-        case 22:
-            return .writeBytesLogical
-        case 23:
-            return .readBytesPhysical
-        case 24:
-            return .writeBytesPhysical
-        case 25:
-            return .objectAllocCount
-        case 26:
-            return .retainCount
-        case 27:
-            return .releaseCount
-        case 28:
-            return .retainReleaseDelta
-        case 29:
-            return .instructions
-        case 30:
+        case 10:
             return .freeCountTotal
+        case 11:
+            return .mallocBytesCount
+        case 12:
+            return .allocatedResidentMemory
+        case 13:
+            return .memoryLeaked
+        case 14:
+            return .syscalls
+        case 15:
+            return .contextSwitches
+        case 16:
+            return .threads
+        case 17:
+            return .threadsRunning
+        case 18:
+            return .readSyscalls
+        case 19:
+            return .writeSyscalls
+        case 20:
+            return .readBytesLogical
+        case 21:
+            return .writeBytesLogical
+        case 22:
+            return .readBytesPhysical
+        case 23:
+            return .writeBytesPhysical
+        case 24:
+            return .objectAllocCount
+        case 25:
+            return .retainCount
+        case 26:
+            return .releaseCount
+        case 27:
+            return .retainReleaseDelta
+        case 28:
+            return .instructions
         default:
             break
         }
@@ -389,10 +373,6 @@ public extension BenchmarkMetric {
             return "peakMemoryResidentDelta"
         case .peakMemoryVirtual:
             return "peakMemoryVirtual"
-        case .mallocCountSmall:
-            return "mallocCountSmall"
-        case .mallocCountLarge:
-            return "mallocCountLarge"
         case .mallocCountTotal:
             return "mallocCountTotal"
         case .mallocBytesCount:
@@ -465,10 +445,6 @@ public extension BenchmarkMetric {
             self = BenchmarkMetric.peakMemoryResidentDelta
         case "peakMemoryVirtual":
             self = BenchmarkMetric.peakMemoryVirtual
-        case "mallocCountSmall":
-            self = BenchmarkMetric.mallocCountSmall
-        case "mallocCountLarge":
-            self = BenchmarkMetric.mallocCountLarge
         case "mallocCountTotal":
             self = BenchmarkMetric.mallocCountTotal
         case "mallocBytesCount":
