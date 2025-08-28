@@ -362,37 +362,7 @@ import Glibc
         }
 
         // Build the BenchmarkTool manually in release mode to work around https://github.com/apple/swift-package-manager/issues/7210
-        if let benchmarkToolModule = benchmarkToolModuleTargets.first(where: { $0.kind == .executable && $0.name == benchmarkToolName}) {
-            if outputFormat == .text {
-                if quietRunning == 0 {
-                    print("Building \(benchmarkToolModule.name) in release mode...")
-                }
-            }
-
-            var buildParameters = PackageManager.BuildParameters(configuration: .release)
-
-            buildParameters.otherSwiftcFlags.append(contentsOf: otherSwiftFlagsSpecified.map { "-\($0)" })
-
-            let buildResult = try packageManager.build(
-                .product(benchmarkToolModule.name),
-                parameters: buildParameters
-            )
-
-            guard buildResult.succeeded else {
-                print(buildResult.logText)
-                print("Benchmark failed to build the BenchmarkTool in release mode.")
-                throw MyError.buildFailed
-            }
-
-            let tool = buildResult.builtArtifacts.first(where: {$0.kind == .executable && $0.path.lastComponent == benchmarkToolName })
-
-            guard let tool else {
-                throw MyError.buildFailed
-            }
-
-            benchmarkTool = tool.path
-            interposerLib = tool.path.removingLastComponent().appending(subpath: "libMallocInterposerC.so").string
-        } else {
+        guard let benchmarkToolModule = benchmarkToolModuleTargets.first(where: { $0.kind == .executable && $0.name == benchmarkToolName}) else {
             print("Benchmark failed to find the BenchmarkTool target.")
             throw MyError.buildFailed
         }
@@ -426,6 +396,7 @@ import Glibc
         }
 
         benchmarkTool = tool.path
+        interposerLib = tool.path.removingLastComponent().appending(subpath: "libMallocInterposerC.so").string
 
         let filteredTargets =
             swiftSourceModuleTargets
