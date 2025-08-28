@@ -150,7 +150,7 @@ import Glibc
         let packageBenchmarkIdentifier = "package-benchmark"
         let benchmarkToolName = "BenchmarkTool"
         let benchmarkTool: PackagePlugin.Path // = try context.tool(named: benchmarkToolName)
-        let interposerLib: PackagePlugin.Path
+        let interposerLib: String 
 
         var args: [String] = [
             benchmarkToolName,
@@ -385,14 +385,13 @@ import Glibc
             }
 
             let tool = buildResult.builtArtifacts.first(where: {$0.kind == .executable && $0.path.lastComponent == benchmarkToolName })
-            let lib = buildResult.builtArtifacts.first(where: { $0.kind == .dynamicLibrary && $0.path.lastComponent.contains("libMallocInterposerC") })
 
-            guard let tool, let lib else {
+            guard let tool else {
                 throw MyError.buildFailed
             }
 
             benchmarkTool = tool.path
-            interposerLib = lib.path
+            interposerLib = tool.path.removingLastComponent().appending(subpath: "libMallocInterposerC.so").string
         } else {
             print("Benchmark failed to find the BenchmarkTool target.")
             throw MyError.buildFailed
@@ -502,7 +501,7 @@ import Glibc
 
             #if os(Linux)
             var environment = ProcessInfo.processInfo.environment
-            environment["LD_PRELOAD"] = interposerLib.string
+            environment["LD_PRELOAD"] = interposerLib
 
             let envp = environment.map { "\($0.key)=\($0.value)" }.map { $0.withCString(strdup) } + [nil]
             defer {
