@@ -27,7 +27,7 @@ struct BenchmarkExecutor {  // swiftlint:disable:this type_body_length
     // swiftlint:disable cyclomatic_complexity function_body_length
     func run(_ benchmark: Benchmark) -> [BenchmarkResult] {
         var wallClockDuration: Duration = .zero
-        var _mallocStats = MallocInterposerSwift.Statistics(
+        var mallocStats = MallocInterposerSwift.Statistics(
             mallocCount: 0,
             mallocBytesCount: 0,
             freeCount: 0
@@ -194,7 +194,7 @@ struct BenchmarkExecutor {  // swiftlint:disable:this type_body_length
 
             if mallocStatsRequested {
                 MallocInterposerSwift.unhook()
-                _mallocStats = MallocInterposerSwift.getStatistics()
+                mallocStats = MallocInterposerSwift.getStatistics()
             }
 
             #if canImport(OSLog)
@@ -242,14 +242,14 @@ struct BenchmarkExecutor {  // swiftlint:disable:this type_body_length
                 }
 
                 if mallocStatsRequested {
-                    statistics[BenchmarkMetric.mallocCountTotal.index].add(Int(_mallocStats.mallocCount))
+                    statistics[BenchmarkMetric.mallocCountTotal.index].add(Int(mallocStats.mallocCount))
 
-                    statistics[BenchmarkMetric.freeCountTotal.index].add(Int(_mallocStats.freeCount))
+                    statistics[BenchmarkMetric.freeCountTotal.index].add(Int(mallocStats.freeCount))
 
-                    delta = _mallocStats.mallocCount - _mallocStats.freeCount
+                    delta = mallocStats.mallocCount - mallocStats.freeCount
                     statistics[BenchmarkMetric.memoryLeaked.index].add(Int(delta))
 
-                    statistics[BenchmarkMetric.mallocBytesCount.index].add(Int(_mallocStats.mallocBytesCount))
+                    statistics[BenchmarkMetric.mallocBytesCount.index].add(Int(mallocStats.mallocBytesCount))
                 }
 
                 if operatingSystemStatsRequested {
