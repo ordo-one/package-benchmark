@@ -31,12 +31,12 @@ public enum BenchmarkMetric: Hashable, Equatable, Codable, CustomStringConvertib
     case peakMemoryResidentDelta
     /// Measure virtual memory usage - sampled during runtime
     case peakMemoryVirtual
-    /// Number of small malloc calls
-    case mallocCountSmall
-    /// Number of large malloc calls
-    case mallocCountLarge
-    /// Number of small+large mallocs
+    /// Number of total mallocs
     case mallocCountTotal
+    /// Number of totatl free calls
+    case freeCountTotal
+    /// The amount of memory allocated in bytes through malloc calls
+    case mallocBytesCount
     /// The amount of allocated resident memory according to the memory allocator
     /// by the application (does not include metadata overhead etc)
     case allocatedResidentMemory
@@ -96,7 +96,7 @@ public extension BenchmarkMetric {
 
 public extension BenchmarkMetric {
     /// A constant that states whether larger or smaller measurements, relative to a set baseline, indicate better performance.
-    enum Polarity: Codable, Sendable { // same naming as XCTest uses, polarity is known for all metrics except custom
+    enum Polarity: Codable, Sendable {  // same naming as XCTest uses, polarity is known for all metrics except custom
         /// A performance measurement where a larger value, relative to a set baseline, indicates better performance.
         case prefersLarger
         /// A performance measurement where a smaller value, relative to a set baseline, indicates better performance.
@@ -120,7 +120,7 @@ public extension BenchmarkMetric {
         switch self {
         case .cpuSystem, .cpuTotal, .cpuUser, .wallClock:
             return true
-        case .mallocCountLarge, .mallocCountSmall, .mallocCountTotal, .memoryLeaked:
+        case .mallocCountTotal, .memoryLeaked:
             return true
         case .syscalls:
             return true
@@ -169,12 +169,10 @@ public extension BenchmarkMetric {
             return "Memory Δ (resident peak)"
         case .peakMemoryVirtual:
             return "Memory (virtual peak)"
-        case .mallocCountSmall:
-            return "Malloc (small)"
-        case .mallocCountLarge:
-            return "Malloc (large)"
         case .mallocCountTotal:
             return "Malloc (total)"
+        case .mallocBytesCount:
+            return "Malloc (bytes total)"
         case .allocatedResidentMemory:
             return "Memory (allocated resident)"
         case .memoryLeaked:
@@ -215,6 +213,8 @@ public extension BenchmarkMetric {
             return "Δ %"
         case let .custom(name, _, _):
             return name
+        case .freeCountTotal:
+            return "Free (total)"
         }
     }
 
@@ -238,11 +238,11 @@ public extension BenchmarkMetric {
             return 7
         case .peakMemoryVirtual:
             return 8
-        case .mallocCountSmall:
-            return 9
-        case .mallocCountLarge:
-            return 10
         case .mallocCountTotal:
+            return 9
+        case .freeCountTotal:
+            return 10
+        case .mallocBytesCount:
             return 11
         case .allocatedResidentMemory:
             return 12
@@ -279,16 +279,16 @@ public extension BenchmarkMetric {
         case .instructions:
             return 28
         default:
-            return 0 // custom payloads must be stored in dictionary
+            return 0  // custom payloads must be stored in dictionary
         }
     }
 
     @_documentation(visibility: internal)
-    static var maxIndex: Int { 28 } //
+    static var maxIndex: Int { 28 }  //
 
     // Used by the Benchmark Executor for efficient indexing into results
     @_documentation(visibility: internal)
-    func metricFor(index: Int) -> BenchmarkMetric { // swiftlint:disable:this cyclomatic_complexity function_body_length
+    func metricFor(index: Int) -> BenchmarkMetric {  // swiftlint:disable:this cyclomatic_complexity function_body_length
         switch index {
         case 1:
             return .cpuUser
@@ -307,11 +307,11 @@ public extension BenchmarkMetric {
         case 8:
             return .peakMemoryVirtual
         case 9:
-            return .mallocCountSmall
-        case 10:
-            return .mallocCountLarge
-        case 11:
             return .mallocCountTotal
+        case 10:
+            return .freeCountTotal
+        case 11:
+            return .mallocBytesCount
         case 12:
             return .allocatedResidentMemory
         case 13:
@@ -355,7 +355,7 @@ public extension BenchmarkMetric {
 
 @_documentation(visibility: internal)
 public extension BenchmarkMetric {
-    var rawDescription: String { // As we can't have raw values due to custom support, we do this...
+    var rawDescription: String {  // As we can't have raw values due to custom support, we do this...
         switch self {
         case .cpuUser:
             return "cpuUser"
@@ -373,12 +373,10 @@ public extension BenchmarkMetric {
             return "peakMemoryResidentDelta"
         case .peakMemoryVirtual:
             return "peakMemoryVirtual"
-        case .mallocCountSmall:
-            return "mallocCountSmall"
-        case .mallocCountLarge:
-            return "mallocCountLarge"
         case .mallocCountTotal:
             return "mallocCountTotal"
+        case .mallocBytesCount:
+            return "mallocBytesCount"
         case .allocatedResidentMemory:
             return "allocatedResidentMemory"
         case .memoryLeaked:
@@ -419,6 +417,8 @@ public extension BenchmarkMetric {
             return "Δ %"
         case let .custom(name, _, _):
             return name
+        case .freeCountTotal:
+            return "freeCountTotal"
         }
     }
 }
@@ -445,12 +445,10 @@ public extension BenchmarkMetric {
             self = BenchmarkMetric.peakMemoryResidentDelta
         case "peakMemoryVirtual":
             self = BenchmarkMetric.peakMemoryVirtual
-        case "mallocCountSmall":
-            self = BenchmarkMetric.mallocCountSmall
-        case "mallocCountLarge":
-            self = BenchmarkMetric.mallocCountLarge
         case "mallocCountTotal":
             self = BenchmarkMetric.mallocCountTotal
+        case "mallocBytesCount":
+            self = BenchmarkMetric.mallocBytesCount
         case "allocatedResidentMemory":
             self = BenchmarkMetric.allocatedResidentMemory
         case "memoryLeaked":
@@ -485,6 +483,8 @@ public extension BenchmarkMetric {
             self = BenchmarkMetric.releaseCount
         case "retainReleaseDelta":
             self = BenchmarkMetric.retainReleaseDelta
+        case "freeCountTotal":
+            self = BenchmarkMetric.freeCountTotal
         default:
             self = BenchmarkMetric.custom(argument)
         }
