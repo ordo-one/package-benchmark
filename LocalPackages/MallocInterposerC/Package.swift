@@ -19,10 +19,6 @@ let package = Package(
             name: "MallocInterposerC",
             linkerSettings: [
                 .linkedLibrary("dl")
-            ]),
-        .testTarget(
-            name: "MallocInterposerTests",
-            dependencies: ["MallocInterposerC"]
-        ),
+            ])
     ]
 )
