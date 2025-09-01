@@ -1,6 +1,19 @@
+//
+// Copyright (c) 2022 Ordo One AB.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+//
+// You may obtain a copy of the License at
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+
 import Atomics
 import Foundation
 import MallocInterposerC
+#if canImport(Glibc)
+import Glibc
+#endif
 
 /// Swift-friendly hook types
 public typealias MallocHook = @convention(c) (Int) -> Void
@@ -20,68 +33,118 @@ public typealias MallocZoneMemalignHook = @convention(c) (UnsafeMutablePointer<m
 /// Main class for managing malloc interposition
 public class MallocInterposerSwift: @unchecked Sendable {
     /// We use `UnsafeAtomic` in order to avoid malloc calls during interposition
-    nonisolated(unsafe) private static var mallocCountStorage = UnsafeAtomic<Int>.Storage.init(0)
-    static let mallocCount = UnsafeAtomic<Int>.init(at: &mallocCountStorage)
-    nonisolated(unsafe) private static var mallocBytesCountStorage = UnsafeAtomic<Int>.Storage.init(0)
-    static let mallocBytesCount = UnsafeAtomic<Int>.init(at: &mallocBytesCountStorage)
-    nonisolated(unsafe) private static var freeCountStorage = UnsafeAtomic<Int>.Storage(0)
-    static let freeCount = UnsafeAtomic<Int>.init(at: &freeCountStorage)
-    /// Clear all counters
-    private static func clearAllCounters() {
-        mallocCount.store(0, ordering: .relaxed)
-        mallocBytesCount.store(0, ordering: .relaxed)
-        freeCount.store(0, ordering: .relaxed)
-    }
+    static let mallocCount = UnsafeAtomic<Int>.create(0)
+    static let mallocBytesCount = UnsafeAtomic<Int>.create(0)
+    static let freeCount = UnsafeAtomic<Int>.create(0)
+    static let freeBytesCount = UnsafeAtomic<Int>.create(0)
+    static let mallocSmallCount = UnsafeAtomic<Int>.create(0)
+    static let mallocLargeCount = UnsafeAtomic<Int>.create(0)
+    static let pageSize = getpagesize()
 
     private init() {}
 
     public static func hook() {
-        clearAllCounters()
 
         let mallocHook: MallocHook = { size in
             MallocInterposerSwift.mallocCount.wrappingIncrement(ordering: .relaxed)
             MallocInterposerSwift.mallocBytesCount.wrappingIncrement(by: size, ordering: .relaxed)
+
+            if size > MallocInterposerSwift.pageSize {
+                MallocInterposerSwift.mallocLargeCount.wrappingIncrement(ordering: .relaxed)
+            } else {
+                MallocInterposerSwift.mallocSmallCount.wrappingIncrement(ordering: .relaxed)
+            }
         }
 
         let freeHook: FreeHook = { pointer in
             MallocInterposerSwift.freeCount.wrappingIncrement(ordering: .relaxed)
+            #if canImport(Darwin)
+            let size = malloc_size(pointer)
+            #else
+            let size = malloc_usable_size(pointer)
+            #endif
+            MallocInterposerSwift.freeBytesCount.wrappingIncrement(by: size, ordering: .relaxed)
         }
 
         let callocHook: CallocHook = { num, size in
             MallocInterposerSwift.mallocCount.wrappingIncrement(ordering: .relaxed)
-            MallocInterposerSwift.mallocBytesCount.wrappingIncrement(by: size, ordering: .relaxed)
+            let total = num * size
+            MallocInterposerSwift.mallocBytesCount.wrappingIncrement(by: total, ordering: .relaxed)
+
+            if total > MallocInterposerSwift.pageSize {
+                MallocInterposerSwift.mallocLargeCount.wrappingIncrement(ordering: .relaxed)
+            } else {
+                MallocInterposerSwift.mallocSmallCount.wrappingIncrement(ordering: .relaxed)
+            }
         }
 
         let reallocHook: ReallocHook = { pointer, size in
             MallocInterposerSwift.freeCount.wrappingIncrement(ordering: .relaxed)
             MallocInterposerSwift.mallocCount.wrappingIncrement(ordering: .relaxed)
             MallocInterposerSwift.mallocBytesCount.wrappingIncrement(by: size, ordering: .relaxed)
+
+            if size > MallocInterposerSwift.pageSize {
+                MallocInterposerSwift.mallocLargeCount.wrappingIncrement(ordering: .relaxed)
+            } else {
+                MallocInterposerSwift.mallocSmallCount.wrappingIncrement(ordering: .relaxed)
+            }
         }
 
         #if canImport(Darwin)
         let mallocZoneHook: MallocZoneHook = { zone, size in
             MallocInterposerSwift.mallocCount.wrappingIncrement(ordering: .relaxed)
             MallocInterposerSwift.mallocBytesCount.wrappingIncrement(by: size, ordering: .relaxed)
+
+            if size > MallocInterposerSwift.pageSize {
+                MallocInterposerSwift.mallocLargeCount.wrappingIncrement(ordering: .relaxed)
+            } else {
+                MallocInterposerSwift.mallocSmallCount.wrappingIncrement(ordering: .relaxed)
+            }
         }
         let mallocZoneFreeHook: MallocZoneFreeHook = { zone, pointer in
             MallocInterposerSwift.freeCount.wrappingIncrement(ordering: .relaxed)
         }
         let mallocZoneCallocHook: MallocZoneCallocHook = { zone, num, size in
             MallocInterposerSwift.mallocCount.wrappingIncrement(ordering: .relaxed)
-            MallocInterposerSwift.mallocBytesCount.wrappingIncrement(by: num * size, ordering: .relaxed)
+            let total = num * size
+            MallocInterposerSwift.mallocBytesCount.wrappingIncrement(by: total, ordering: .relaxed)
+
+            if total > MallocInterposerSwift.pageSize {
+                MallocInterposerSwift.mallocLargeCount.wrappingIncrement(ordering: .relaxed)
+            } else {
+                MallocInterposerSwift.mallocSmallCount.wrappingIncrement(ordering: .relaxed)
+            }
         }
         let mallocZoneReallocHook: MallocZoneReallocHook = { zone, pointer, size in
             MallocInterposerSwift.freeCount.wrappingIncrement(ordering: .relaxed)
             MallocInterposerSwift.mallocCount.wrappingIncrement(ordering: .relaxed)
             MallocInterposerSwift.mallocBytesCount.wrappingIncrement(by: size, ordering: .relaxed)
+
+            if size > MallocInterposerSwift.pageSize {
+                MallocInterposerSwift.mallocLargeCount.wrappingIncrement(ordering: .relaxed)
+            } else {
+                MallocInterposerSwift.mallocSmallCount.wrappingIncrement(ordering: .relaxed)
+            }
         }
         let mallocZoneVallocHook: MallocZoneVallocHook = { zone, size in
             MallocInterposerSwift.mallocCount.wrappingIncrement(ordering: .relaxed)
             MallocInterposerSwift.mallocBytesCount.wrappingIncrement(by: size, ordering: .relaxed)
+
+            if size > MallocInterposerSwift.pageSize {
+                MallocInterposerSwift.mallocLargeCount.wrappingIncrement(ordering: .relaxed)
+            } else {
+                MallocInterposerSwift.mallocSmallCount.wrappingIncrement(ordering: .relaxed)
+            }
         }
         let mallocZoneMemalignHook: MallocZoneMemalignHook = { zone, alignment, size in
             MallocInterposerSwift.mallocCount.wrappingIncrement(ordering: .relaxed)
             MallocInterposerSwift.mallocBytesCount.wrappingIncrement(by: size, ordering: .relaxed)
+
+            if size > MallocInterposerSwift.pageSize {
+                MallocInterposerSwift.mallocLargeCount.wrappingIncrement(ordering: .relaxed)
+            } else {
+                MallocInterposerSwift.mallocSmallCount.wrappingIncrement(ordering: .relaxed)
+            }
         }
 
         set_malloc_zone_hook(mallocZoneHook)
@@ -114,6 +177,12 @@ public class MallocInterposerSwift: @unchecked Sendable {
         #endif
     }
 
+    public static func reset() {
+        mallocCount.store(0, ordering: .relaxed)
+        mallocBytesCount.store(0, ordering: .relaxed)
+        freeCount.store(0, ordering: .relaxed)
+    }
+
     public static func getStatistics() -> Statistics {
         let stats = Statistics(
             mallocCount: mallocCount.load(ordering: .relaxed),
@@ -129,12 +198,25 @@ public extension MallocInterposerSwift {
     struct Statistics {
         public let mallocCount: Int
         public let mallocBytesCount: Int
+        public let mallocSmallCount: Int
+        public let mallocLargeCount: Int
         public let freeCount: Int
+        public let freeBytesCount: Int
 
-        public init(mallocCount: Int, mallocBytesCount: Int, freeCount: Int) {
+        public init(
+            mallocCount: Int = 0,
+            mallocBytesCount: Int = 0,
+            mallocSmallCount: Int = 0,
+            mallocLargeCount: Int = 0,
+            freeCount: Int = 0,
+            freeBytesCount: Int = 0
+        ) {
             self.mallocCount = mallocCount
             self.mallocBytesCount = mallocBytesCount
+            self.mallocSmallCount = mallocSmallCount
+            self.mallocLargeCount = mallocLargeCount
             self.freeCount = freeCount
+            self.freeBytesCount = freeBytesCount
         }
     }
 }

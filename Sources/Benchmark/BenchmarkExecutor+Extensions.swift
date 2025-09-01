@@ -25,6 +25,8 @@ extension BenchmarkExecutor {
         switch metric {
         case .memoryLeaked:
             return true
+        case .memoryLeakedBytes:
+            return true
         case .mallocCountTotal:
             return true
         case .allocatedResidentMemory:
