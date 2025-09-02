@@ -13,6 +13,9 @@ import Foundation
 import MallocInterposerC
 #if canImport(Glibc)
 import Glibc
+// We need to expose malloc_usable_size manually since it's not exposed through Glibc
+@_silgen_name("malloc_usable_size")
+func malloc_usable_size(_ ptr: UnsafeMutableRawPointer?) -> Int
 #endif
 
 /// Swift-friendly hook types
