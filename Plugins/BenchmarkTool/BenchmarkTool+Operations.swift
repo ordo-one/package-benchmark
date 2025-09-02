@@ -129,7 +129,7 @@ extension BenchmarkTool {
                     return
                 }
 
-                if benchmarks.isEmpty { // if we read from baseline and didn't run them, we put in some fake entries for the compare
+                if benchmarks.isEmpty {  // if we read from baseline and didn't run them, we put in some fake entries for the compare
                     currentBaseline.results.keys.forEach { baselineKey in
                         if let benchmark: Benchmark = .init(baselineKey.name, closure: { _ in }) {
                             benchmark.target = baselineKey.target
@@ -282,7 +282,7 @@ extension BenchmarkTool {
                         return
                     }
 
-                    if benchmarks.isEmpty { // if we read from baseline and didn't run them, we put in some fake entries for the compare
+                    if benchmarks.isEmpty {  // if we read from baseline and didn't run them, we put in some fake entries for the compare
                         currentBaseline.results.keys.forEach { baselineKey in
                             if let benchmark: Benchmark = .init(baselineKey.name, closure: { _ in }) {
                                 benchmark.target = baselineKey.target
@@ -302,7 +302,7 @@ extension BenchmarkTool {
                     var p90Thresholds: [BenchmarkIdentifier: [BenchmarkMetric: BenchmarkThresholds.AbsoluteThreshold]] =
                         [:]
 
-                    if let benchmarkPath = checkAbsolutePath { // load statically defined thresholds for .p90
+                    if let benchmarkPath = checkAbsolutePath {  // load statically defined thresholds for .p90
                         benchmarks.forEach { benchmark in
                             if let thresholds = BenchmarkTool.makeBenchmarkThresholds(
                                 path: benchmarkPath,
