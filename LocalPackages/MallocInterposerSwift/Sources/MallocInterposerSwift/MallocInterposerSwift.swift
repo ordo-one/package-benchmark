@@ -20,6 +20,7 @@ public typealias MallocHook = @convention(c) (Int) -> Void
 public typealias FreeHook = @convention(c) (UnsafeMutableRawPointer?) -> Void
 public typealias CallocHook = @convention(c) (Int, Int) -> Void
 public typealias ReallocHook = @convention(c) (UnsafeMutableRawPointer?, Int) -> Void
+public typealias PosixMemalignHook = @convention(c) (UnsafeMutablePointer<UnsafeMutableRawPointer?>?, Int, Int) -> Void
 
 #if canImport(Darwin)
 public typealias MallocZoneHook = @convention(c) (UnsafeMutablePointer<malloc_zone_t>?, Int) -> Void
@@ -33,15 +34,27 @@ public typealias MallocZoneMemalignHook = @convention(c) (UnsafeMutablePointer<m
 /// Main class for managing malloc interposition
 public class MallocInterposerSwift: @unchecked Sendable {
     /// We use `UnsafeAtomic` in order to avoid malloc calls during interposition
-    static let mallocCount = UnsafeAtomic<Int>.create(0)
-    static let mallocBytesCount = UnsafeAtomic<Int>.create(0)
-    static let freeCount = UnsafeAtomic<Int>.create(0)
-    static let freeBytesCount = UnsafeAtomic<Int>.create(0)
-    static let mallocSmallCount = UnsafeAtomic<Int>.create(0)
-    static let mallocLargeCount = UnsafeAtomic<Int>.create(0)
+    nonisolated(unsafe) private static var mallocCount: ManagedAtomic<Int>!
+    nonisolated(unsafe) private static var mallocBytesCount: ManagedAtomic<Int>!
+    nonisolated(unsafe) private static var freeCount: ManagedAtomic<Int>!
+    nonisolated(unsafe) private static var freeBytesCount: ManagedAtomic<Int>!
+    nonisolated(unsafe) private static var mallocSmallCount: ManagedAtomic<Int>!
+    nonisolated(unsafe) private static var mallocLargeCount: ManagedAtomic<Int>!
     static let pageSize = getpagesize()
 
     private init() {}
+    
+
+    // Initialize the atomic counters before hooking
+    // because ManagedAtomic calls into malloc
+    public static func initialize() {
+        mallocCount = ManagedAtomic(0)
+        mallocBytesCount = ManagedAtomic(0)
+        freeCount = ManagedAtomic(0)
+        freeBytesCount = ManagedAtomic(0)
+        mallocSmallCount = ManagedAtomic(0)
+        mallocLargeCount = ManagedAtomic(0)
+    }
 
     public static func hook() {
 
@@ -80,6 +93,17 @@ public class MallocInterposerSwift: @unchecked Sendable {
 
         let reallocHook: ReallocHook = { pointer, size in
             MallocInterposerSwift.freeCount.wrappingIncrement(ordering: .relaxed)
+            MallocInterposerSwift.mallocCount.wrappingIncrement(ordering: .relaxed)
+            MallocInterposerSwift.mallocBytesCount.wrappingIncrement(by: size, ordering: .relaxed)
+
+            if size > MallocInterposerSwift.pageSize {
+                MallocInterposerSwift.mallocLargeCount.wrappingIncrement(ordering: .relaxed)
+            } else {
+                MallocInterposerSwift.mallocSmallCount.wrappingIncrement(ordering: .relaxed)
+            }
+        }
+
+        let posixMemalignHook: PosixMemalignHook = { pointer, alignment, size in
             MallocInterposerSwift.mallocCount.wrappingIncrement(ordering: .relaxed)
             MallocInterposerSwift.mallocBytesCount.wrappingIncrement(by: size, ordering: .relaxed)
 
@@ -159,6 +183,7 @@ public class MallocInterposerSwift: @unchecked Sendable {
         set_free_hook(freeHook)
         set_calloc_hook(callocHook)
         set_realloc_hook(reallocHook)
+        set_posix_memalign_hook(posixMemalignHook)
     }
 
     public static func unhook() {
@@ -166,6 +191,7 @@ public class MallocInterposerSwift: @unchecked Sendable {
         set_free_hook(nil)
         set_calloc_hook(nil)
         set_realloc_hook(nil)
+        set_posix_memalign_hook(nil)
 
         #if canImport(Darwin)
         set_malloc_zone_hook(nil)
@@ -181,13 +207,19 @@ public class MallocInterposerSwift: @unchecked Sendable {
         mallocCount.store(0, ordering: .relaxed)
         mallocBytesCount.store(0, ordering: .relaxed)
         freeCount.store(0, ordering: .relaxed)
+        freeBytesCount.store(0, ordering: .relaxed)
+        mallocSmallCount.store(0, ordering: .relaxed)
+        mallocLargeCount.store(0, ordering: .relaxed)
     }
 
     public static func getStatistics() -> Statistics {
         let stats = Statistics(
             mallocCount: mallocCount.load(ordering: .relaxed),
             mallocBytesCount: mallocBytesCount.load(ordering: .relaxed),
-            freeCount: freeCount.load(ordering: .relaxed)
+            mallocSmallCount: mallocSmallCount.load(ordering: .relaxed),
+            mallocLargeCount: mallocLargeCount.load(ordering: .relaxed),
+            freeCount: freeCount.load(ordering: .relaxed),
+            freeBytesCount: freeBytesCount.load(ordering: .relaxed)
         )
 
         return stats

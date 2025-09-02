@@ -40,6 +40,7 @@ void set_malloc_hook(malloc_hook_t hook);
 void set_free_hook(free_hook_t hook);
 void set_calloc_hook(calloc_hook_t hook);
 void set_realloc_hook(realloc_hook_t hook);
+void set_posix_memalign_hook(posix_memalign_hook_t hook);
 
 #if __APPLE__
 void set_malloc_zone_hook(malloc_zone_hook_t hook);

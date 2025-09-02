@@ -76,6 +76,7 @@ public extension BenchmarkMetric {
             .mallocCountLarge,
             .mallocCountTotal,
             .mallocBytesCount,
+            .freeCountTotal,
             .memoryLeaked,
             .memoryLeakedBytes,
             .allocatedResidentMemory,
