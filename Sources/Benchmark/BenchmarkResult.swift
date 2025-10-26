@@ -31,7 +31,7 @@ public enum BenchmarkTimeUnits: String, Codable, CustomStringConvertible, CaseIt
     case seconds
     case kiloseconds
     case megaseconds
-    case automatic // will pick time unit above automatically
+    case automatic  // will pick time unit above automatically
     public var factor: Int {
         switch self {
         case .nanoseconds:
@@ -43,7 +43,7 @@ public enum BenchmarkTimeUnits: String, Codable, CustomStringConvertible, CaseIt
         case .seconds:
             return 1
         case .kiloseconds:
-            return 2 // Yeah, not right but we need to refactor to get rid of this, works for now
+            return 2  // Yeah, not right but we need to refactor to get rid of this, works for now
         case .megaseconds:
             return 3
         case .automatic:
@@ -98,7 +98,7 @@ public enum BenchmarkUnits: Int, Codable, CustomStringConvertible, CaseIterable 
     case giga = 1_000_000_000
     case tera = 1_000_000_000_000
     case peta = 1_000_000_000_000_000
-    case automatic // will pick unit above automatically
+    case automatic  // will pick unit above automatically
 
     public var description: String {
         switch self {
@@ -169,17 +169,17 @@ public extension BenchmarkTimeUnits {
 /// Use a scaling factor when running your short benchmarks to provide greater numerical stability to the results.
 public enum BenchmarkScalingFactor: Int, Codable {
     /// No scaling factor, the raw count of iterations.
-    case one = 1 // e.g. nanoseconds, or count
+    case one = 1  // e.g. nanoseconds, or count
     /// Scaling factor of 1e03.
-    case kilo = 1_000 // microseconds
+    case kilo = 1_000  // microseconds
     /// Scaling factor of 1e06.
-    case mega = 1_000_000 // milliseconds
+    case mega = 1_000_000  // milliseconds
     /// Scaling factor of 1e09.
-    case giga = 1_000_000_000 // seconds
+    case giga = 1_000_000_000  // seconds
     /// Scaling factor of 1e12.
-    case tera = 1_000_000_000_000 // 1K seconds
+    case tera = 1_000_000_000_000  // 1K seconds
     /// Scaling factor of 1e15.
-    case peta = 1_000_000_000_000_000 // 1M
+    case peta = 1_000_000_000_000_000  // 1M
 
     public var description: String {
         switch self {
@@ -279,7 +279,7 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
                 return .microseconds
             case .giga:
                 return .nanoseconds
-            case .tera, .peta: // shouldn't be possible as tera is only used internally to present scaled up throughput
+            case .tera, .peta:  // shouldn't be possible as tera is only used internally to present scaled up throughput
                 break
             }
         default:
@@ -312,7 +312,7 @@ public struct BenchmarkResult: Codable, Comparable, Equatable {
                 return y * x
             } else if n.isMultiple(of: 2) {
                 return expBySq(y, x * x, n / 2)
-            } else { // n is odd
+            } else {  // n is odd
                 return expBySq(y * x, x * x, (n - 1) / 2)
             }
         }

@@ -11,6 +11,7 @@
 // 'Benchmark' plugin that is responsible for gathering command line arguments and then
 // Running the `BenchmarkTool` for each benchmark target.
 
+import Foundation
 import PackagePlugin
 
 #if canImport(Darwin)
@@ -37,7 +38,7 @@ import Glibc
         let specifiedTargets = try argumentExtractor.extractSpecifiedTargets(in: context.package, withOption: "target")
         let skipTargets = try argumentExtractor.extractSpecifiedTargets(in: context.package, withOption: "skip-target")
         let outputFormats = argumentExtractor.extractOption(named: "format")
-        let pathSpecified = argumentExtractor.extractOption(named: "path") // export path
+        let pathSpecified = argumentExtractor.extractOption(named: "path")  // export path
         let quietRunning = argumentExtractor.extractFlag(named: "quiet")
         let noProgress = argumentExtractor.extractFlag(named: "no-progress")
         let checkAbsoluteThresholdsPath = argumentExtractor.extractOption(named: "check-absolute-path")
@@ -139,16 +140,17 @@ import Glibc
                     )
                     throw MyError.invalidArgument
                 }
-            } catch { // We will throw if we can use the target name (it's unused!)
+            } catch {  // We will throw if we can use the target name (it's unused!)
             }
         }
 
         let swiftSourceModuleTargets: [SwiftSourceModuleTarget]
-        var shouldBuildTargets = true // We don't rebuild the targets when we dont need to execute them, e.g. baseline read/compare
+        var shouldBuildTargets = true  // We don't rebuild the targets when we dont need to execute them, e.g. baseline read/compare
 
         let packageBenchmarkIdentifier = "package-benchmark"
         let benchmarkToolName = "BenchmarkTool"
-        let benchmarkTool: PackagePlugin.Path // = try context.tool(named: benchmarkToolName)
+        let benchmarkTool: PackagePlugin.Path  // = try context.tool(named: benchmarkToolName)
+        let interposerLib: String
 
         var args: [String] = [
             benchmarkToolName,
@@ -363,10 +365,7 @@ import Glibc
         }
 
         // Build the BenchmarkTool manually in release mode to work around https://github.com/apple/swift-package-manager/issues/7210
-        guard
-            let benchmarkToolModule = benchmarkToolModuleTargets.first(where: {
-                $0.kind == .executable && $0.name == benchmarkToolName
-            })
+        guard let benchmarkToolModule = benchmarkToolModuleTargets.first(where: { $0.kind == .executable && $0.name == benchmarkToolName })
         else {
             print("Benchmark failed to find the BenchmarkTool target.")
             throw MyError.buildFailed
@@ -401,6 +400,7 @@ import Glibc
         }
 
         benchmarkTool = tool.path
+        interposerLib = tool.path.removingLastComponent().appending(subpath: "libMallocInterposerC.so").string
 
         let filteredTargets =
             swiftSourceModuleTargets
@@ -435,7 +435,7 @@ import Glibc
                 }
 
                 let buildResult = try packageManager.build(
-                    .product(target.name), // .all(includingTests: false),
+                    .product(target.name),  // .all(includingTests: false),
                     parameters: .init(configuration: .release)
                 )
 
@@ -474,8 +474,27 @@ import Glibc
                 return
             }
 
+            // On Linux we need to set LD_PRELOAD to get the malloc interposer working
+            // while on Darwin this is done with DYLD interpose mechanism
+            #if os(Linux)
+            var environment = ProcessInfo.processInfo.environment
+            environment["LD_PRELOAD"] = interposerLib
+
+            let envp = environment.map { "\($0.key)=\($0.value)" }.map { $0.withCString(strdup) } + [nil]
+            defer {
+                for i in 0..<envp.count - 1 {
+                    if let ptr = envp[i] {
+                        free(ptr)
+                    }
+                }
+            }
+
+            var pid: pid_t = 0
+            var status = posix_spawn(&pid, benchmarkTool.string, nil, nil, cArgs, envp)
+            #else
             var pid: pid_t = 0
             var status = posix_spawn(&pid, benchmarkTool.string, nil, nil, cArgs, environ)
+            #endif
 
             if status == 0 {
                 if waitpid(pid, &status, 0) != -1 {

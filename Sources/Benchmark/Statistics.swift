@@ -15,18 +15,18 @@ import Numerics
 // A type that provides distribution / percentile calculations of latency measurements
 @_documentation(visibility: internal)
 public final class Statistics: Codable {
-    public static let defaultMaximumMeasurement = 1_000_000_000 // 1 second in nanoseconds
+    public static let defaultMaximumMeasurement = 1_000_000_000  // 1 second in nanoseconds
     public static let defaultPercentilesToCalculate = [0.0, 25.0, 50.0, 75.0, 90.0, 99.0, 100.0]
     public static let defaultPercentilesToCalculateP90Index = 4
 
     public enum Units: Int, Codable, CaseIterable {
-        case count = 1 // e.g. nanoseconds
-        case kilo = 1_000 // microseconds
-        case mega = 1_000_000 // milliseconds
-        case giga = 1_000_000_000 // seconds
-        case tera = 1_000_000_000_000 // 1K seconds
-        case peta = 1_000_000_000_000_000 // 1M seconds
-        case automatic = 0 // will pick time unit above automatically
+        case count = 1  // e.g. nanoseconds
+        case kilo = 1_000  // microseconds
+        case mega = 1_000_000  // milliseconds
+        case giga = 1_000_000_000  // seconds
+        case tera = 1_000_000_000_000  // 1K seconds
+        case peta = 1_000_000_000_000_000  // 1M seconds
+        case automatic = 0  // will pick time unit above automatically
 
         public var description: String {
             switch self {
@@ -173,7 +173,7 @@ public final class Statistics: Codable {
     @inline(__always)
     public func add(_ measurement: Int) {
         guard measurement >= 0 else {
-            return // We sometimes got a <0 measurement, should run with fatalError and try to see how that could occur
+            return  // We sometimes got a <0 measurement, should run with fatalError and try to see how that could occur
             //            fatalError()
         }
 

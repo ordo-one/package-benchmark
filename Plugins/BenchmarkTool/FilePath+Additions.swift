@@ -38,7 +38,7 @@ public extension FilePath {
                 } catch { print("failed close directory") }
             } catch {
                 switch errno {
-                case ENOENT: // doesn't exist, let's create it
+                case ENOENT:  // doesn't exist, let's create it
                     if mkdir(creationPath.string, S_IRWXU | S_IRWXG | S_IRWXO) == -1 {
                         if errno == EPERM {
                             print("Lacking permissions to write to \(creationPath)")

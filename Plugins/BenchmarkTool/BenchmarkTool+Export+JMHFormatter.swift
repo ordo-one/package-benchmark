@@ -56,7 +56,7 @@ extension JMHPrimaryMetric {
         if result.metric.countable {
             scoreUnit = result.metric == .throughput ? "# / s" : "#"
         } else {
-            scoreUnit = "μs" // result.timeUnits.description
+            scoreUnit = "μs"  // result.timeUnits.description
         }
         rawData = [recordedValues]
     }
@@ -66,7 +66,7 @@ extension BenchmarkTool {
     func convertToJMH(_ baseline: BenchmarkBaseline) throws -> String {
         var resultString = ""
         var jmhElements: [JMHElement] = []
-        var secondaryMetrics: [String: JMHPrimaryMetric] = [:] // could move to OrderedDictionary for consistent output
+        var secondaryMetrics: [String: JMHPrimaryMetric] = [:]  // could move to OrderedDictionary for consistent output
 
         baseline.targets.forEach { benchmarkTarget in
 
