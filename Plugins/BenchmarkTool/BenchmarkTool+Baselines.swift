@@ -256,14 +256,14 @@ extension BenchmarkTool {
         /*
          We store the baselines in a .benchmarkBaselines directory, by default in the package root path
          unless otherwise specified.
-        
+
          The 'default' folder is used when no specific named baseline have been specified with the
          command line. Specified 'named' baselines is useful for convenient A/B/C testing and comparisons.
          Unless a host identifier have been specified on the command line (or in an environment variable),
          we by default store results in 'results.json', otherwise we will use the environment variable
          or command line to optionally specify a 'hostIdentifier' that allow for separation between
          different hosts if checking in baselines in repos.
-        
+
          .benchmarkBaselines
          ├── target1
          │   ├── default
@@ -445,7 +445,7 @@ extension BenchmarkBaseline: Equatable {
                 if let rhsResults = rhs.results.first(where: { $0.key == lhsBenchmarkIdentifier }) {
                     if let rhsBenchmarkResult = rhsResults.value.first(where: { $0.metric == lhsBenchmarkResult.metric }
                     ) {
-                        let thresholds = thresholdsForBenchmarks(
+                        let thresholds = lhsBenchmarkResult.thresholds ?? thresholdsForBenchmarks(
                             benchmarks,
                             name: lhsBenchmarkIdentifier.name,
                             target: lhsBenchmarkIdentifier.target,
