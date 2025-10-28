@@ -449,7 +449,8 @@ extension BenchmarkBaseline: Equatable {
                             benchmarks,
                             name: lhsBenchmarkIdentifier.name,
                             target: lhsBenchmarkIdentifier.target,
-                            metric: lhsBenchmarkResult.metric
+                            metric: lhsBenchmarkResult.metric,
+                            defaultThresholds: lhsBenchmarkResult.thresholds ?? BenchmarkThresholds.default
                         )
 
                         let deviationResults = lhsBenchmarkResult.deviationsComparedWith(
