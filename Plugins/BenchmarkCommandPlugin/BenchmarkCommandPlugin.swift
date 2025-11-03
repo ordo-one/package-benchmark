@@ -326,6 +326,9 @@ import Glibc
                         throw MyError.invalidArgument
                     }
                 }
+                if positionalArguments.count == 2 {
+                    shouldBuildTargets = false
+                }
             case .read, .list, .delete:
                 shouldBuildTargets = false
             }
