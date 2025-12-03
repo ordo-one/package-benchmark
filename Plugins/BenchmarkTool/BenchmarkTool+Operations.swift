@@ -29,7 +29,7 @@ extension BenchmarkTool {
             let benchmarkReply = try read()
 
             switch benchmarkReply {
-            case let .list(benchmark):
+            case .list(let benchmark):
                 benchmark.executablePath = benchmarkPath
                 benchmark.target = FilePath(benchmarkPath).lastComponent!.description
                 if metrics.isEmpty == false {
@@ -38,7 +38,7 @@ extension BenchmarkTool {
                 benchmarks.append(benchmark)
             case .end:
                 break outerloop
-            case let .error(description):
+            case .error(let description):
                 failBenchmark(description)
                 break outerloop
             default:
@@ -55,12 +55,12 @@ extension BenchmarkTool {
             let benchmarkReply = try read()
 
             switch benchmarkReply {
-            case let .result(benchmark: benchmark, results: results):
+            case .result(benchmark: let benchmark, results: let results):
                 let filteredResults = results.filter { benchmark.configuration.metrics.contains($0.metric) }
                 benchmarkResults[BenchmarkIdentifier(target: target, name: benchmark.name)] = filteredResults
             case .end:
                 break outerloop
-            case let .error(description):
+            case .error(let description):
                 failBenchmark(description, exitCode: .benchmarkJobFailed, "\(target)/\(benchmark.name)")
 
                 benchmarkResults[BenchmarkIdentifier(target: target, name: benchmark.name)] = []
@@ -134,7 +134,7 @@ extension BenchmarkTool {
                     return
                 }
 
-                if benchmarks.isEmpty {  // if we read from baseline and didn't run them, we put in some fake entries for the compare
+                if benchmarks.isEmpty { // if we read from baseline and didn't run them, we put in some fake entries for the compare
                     currentBaseline.results.keys.forEach { baselineKey in
                         if let benchmark: Benchmark = .init(baselineKey.name, closure: { _ in }) {
                             benchmark.target = baselineKey.target
@@ -287,7 +287,7 @@ extension BenchmarkTool {
                         return
                     }
 
-                    if benchmarks.isEmpty {  // if we read from baseline and didn't run them, we put in some fake entries for the compare
+                    if benchmarks.isEmpty { // if we read from baseline and didn't run them, we put in some fake entries for the compare
                         currentBaseline.results.keys.forEach { baselineKey in
                             if let benchmark: Benchmark = .init(baselineKey.name, closure: { _ in }) {
                                 benchmark.target = baselineKey.target
@@ -307,7 +307,7 @@ extension BenchmarkTool {
                     var p90Thresholds: [BenchmarkIdentifier: [BenchmarkMetric: BenchmarkThreshold]] =
                         [:]
 
-                    if let benchmarkPath = checkAbsolutePath {  // load statically defined thresholds for .p90
+                    if let benchmarkPath = checkAbsolutePath { // load statically defined thresholds for .p90
                         benchmarks.forEach { benchmark in
                             if let thresholds = BenchmarkTool.makeBenchmarkThresholds(
                                 path: benchmarkPath,
