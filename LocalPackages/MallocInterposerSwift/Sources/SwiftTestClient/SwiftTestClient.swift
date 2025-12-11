@@ -31,7 +31,6 @@ enum TestClient {
         } while index < count
     }
 
-
     @_optimize(none)
     static func main() {
         print("=== MallocInterposerSwift Test ===")
@@ -39,17 +38,16 @@ enum TestClient {
         MallocInterposerSwift.initialize()
         MallocInterposerSwift.hook()
 
-//        let ptr = malloc(1000)
-//        let ptr2 = malloc(500)
-//
-//        free(ptr)
-//        free(ptr2)
+        //        let ptr = malloc(1000)
+        //        let ptr2 = malloc(500)
+        //
+        //        free(ptr)
+        //        free(ptr2)
 
-      //  let x: UnsafeMutablePointer<Int> = UnsafeMutablePointer.allocate(capacity: 5000)
+        //  let x: UnsafeMutablePointer<Int> = UnsafeMutablePointer.allocate(capacity: 5000)
 
         performAllocations(count: 1, size: 11 * 1024 * 1024)
         //performAllocations(count: 1, size: 32 * 1024 * 1024, shouldFree: false)
-
 
         MallocInterposerSwift.unhook()
 

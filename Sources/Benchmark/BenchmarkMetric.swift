@@ -104,7 +104,7 @@ public extension BenchmarkMetric {
 
 public extension BenchmarkMetric {
     /// A constant that states whether larger or smaller measurements, relative to a set baseline, indicate better performance.
-    enum Polarity: Codable, Sendable {  // same naming as XCTest uses, polarity is known for all metrics except custom
+    enum Polarity: Codable, Sendable { // same naming as XCTest uses, polarity is known for all metrics except custom
         /// A performance measurement where a larger value, relative to a set baseline, indicates better performance.
         case prefersLarger
         /// A performance measurement where a smaller value, relative to a set baseline, indicates better performance.
@@ -140,7 +140,7 @@ public extension BenchmarkMetric {
             return true
         case .objectAllocCount, .retainCount, .releaseCount, .retainReleaseDelta:
             return true
-        case let .custom(_, _, useScaleFactor):
+        case .custom(_, _, let useScaleFactor):
             return useScaleFactor
         default:
             return false
@@ -152,7 +152,7 @@ public extension BenchmarkMetric {
         switch self {
         case .throughput:
             return .prefersLarger
-        case let .custom(_, polarity, _):
+        case .custom(_, let polarity, _):
             return polarity
         default:
             return .prefersSmaller
@@ -225,7 +225,7 @@ public extension BenchmarkMetric {
             return "Δ"
         case .deltaPercentage:
             return "Δ %"
-        case let .custom(name, _, _):
+        case .custom(let name, _, _):
             return name
         case .freeCountTotal:
             return "Free (total)"
@@ -250,7 +250,7 @@ public extension BenchmarkMetric {
             return 6
         case .peakMemoryResidentDelta:
             return 7
-        case .peakMemoryVirtual: 
+        case .peakMemoryVirtual:
             return 8
         case .mallocCountSmall:
             return 9
@@ -299,16 +299,16 @@ public extension BenchmarkMetric {
         case .instructions:
             return 31
         default:
-            return 0  // custom payloads must be stored in dictionary
+            return 0 // custom payloads must be stored in dictionary
         }
     }
 
     @_documentation(visibility: internal)
-    static var maxIndex: Int { 31 }  //
+    static var maxIndex: Int { 31 } //
 
     // Used by the Benchmark Executor for efficient indexing into results
     @_documentation(visibility: internal)
-    func metricFor(index: Int) -> BenchmarkMetric {  // swiftlint:disable:this cyclomatic_complexity function_body_length
+    func metricFor(index: Int) -> BenchmarkMetric { // swiftlint:disable:this cyclomatic_complexity function_body_length
         switch index {
         case 1:
             return .cpuUser
@@ -381,7 +381,7 @@ public extension BenchmarkMetric {
 
 @_documentation(visibility: internal)
 public extension BenchmarkMetric {
-    var rawDescription: String {  // As we can't have raw values due to custom support, we do this...
+    var rawDescription: String { // As we can't have raw values due to custom support, we do this...
         switch self {
         case .cpuUser:
             return "cpuUser"
@@ -449,7 +449,7 @@ public extension BenchmarkMetric {
             return "Δ"
         case .deltaPercentage:
             return "Δ %"
-        case let .custom(name, _, _):
+        case .custom(let name, _, _):
             return name
         }
     }

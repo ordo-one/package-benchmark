@@ -28,7 +28,7 @@ enum BenchmarkOperation: String, ExpressibleByArgument {
     case thresholds
     case list
     case run
-    case query  // query all benchmarks from target, used internally in tool
+    case query // query all benchmarks from target, used internally in tool
     case `init`
 }
 
@@ -127,7 +127,7 @@ struct BenchmarkTool: AsyncParsableCommand {
     var outputFD: CInt = 0
 
     var benchmarks: [Benchmark] = []
-    var benchmarkBaselines: [BenchmarkBaseline] = []  // The baselines read from disk, merged + current run if needed
+    var benchmarkBaselines: [BenchmarkBaseline] = [] // The baselines read from disk, merged + current run if needed
     var comparisonBaseline: BenchmarkBaseline?
     var checkBaseline: BenchmarkBaseline?
 
@@ -192,9 +192,9 @@ struct BenchmarkTool: AsyncParsableCommand {
     mutating func readBaselines() throws {
         func readBaseline(_ baselineName: String) throws -> BenchmarkBaseline? {
             // read all specified baselines
-            var readBaselines: [BenchmarkBaseline] = []  // The baselines read from disk
+            var readBaselines: [BenchmarkBaseline] = [] // The baselines read from disk
 
-            try targets.forEach { target in  // read from all the targets (baselines are stored separately)
+            try targets.forEach { target in // read from all the targets (baselines are stored separately)
                 let currentBaseline = try read(target: target, baselineIdentifier: baselineName)
 
                 if let currentBaseline {
@@ -214,7 +214,7 @@ struct BenchmarkTool: AsyncParsableCommand {
             return nil
         }
 
-        try baseline.forEach { baselineName in  // for all specified baselines at command line
+        try baseline.forEach { baselineName in // for all specified baselines at command line
             if let baseline = try readBaseline(baselineName) {
                 benchmarkBaselines.append(baseline)
             } else {
@@ -401,7 +401,7 @@ struct BenchmarkTool: AsyncParsableCommand {
                 case .`init`:
                     fatalError("Should never come here")
                 case .query:
-                    try queryBenchmarks(benchmarkPath)  // Get all available benchmarks first
+                    try queryBenchmarks(benchmarkPath) // Get all available benchmarks first
                 case .list:
                     try listBenchmarks()
                 case .baseline, .thresholds, .run:

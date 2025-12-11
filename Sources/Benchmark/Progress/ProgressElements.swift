@@ -83,7 +83,7 @@ public struct ProgressPercent: ProgressElementType {
         while padded.count < 4 {
             padded = " " + padded
         }
-        return padded  // "\(percentDone.format(decimalPlaces))%"
+        return padded // "\(percentDone.format(decimalPlaces))%"
     }
 }
 

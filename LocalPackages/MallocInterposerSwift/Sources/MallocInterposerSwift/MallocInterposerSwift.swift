@@ -11,6 +11,7 @@
 import Atomics
 import Foundation
 import MallocInterposerC
+
 #if canImport(Glibc)
 import Glibc
 // We need to expose malloc_usable_size manually since it's not exposed through Glibc
@@ -46,7 +47,6 @@ public class MallocInterposerSwift: @unchecked Sendable {
     static let pageSize = getpagesize()
 
     private init() {}
-    
 
     // Initialize the atomic counters before hooking
     // because ManagedAtomic calls into malloc

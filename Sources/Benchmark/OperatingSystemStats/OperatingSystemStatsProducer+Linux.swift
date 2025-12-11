@@ -75,7 +75,7 @@ final class OperatingSystemStatsProducer {
                 print("Failed to close fileDescriptor for \(path) after reading.")
             }
         } catch {
-            if errno != ENOENT {  // file not found is ok, e.g. when no baselines exist
+            if errno != ENOENT { // file not found is ok, e.g. when no baselines exist
                 print("Failed to open file \(path), errno = [\(errno)]")
             }
         }
@@ -140,7 +140,7 @@ final class OperatingSystemStatsProducer {
             syscalls: 0,
             contextSwitches: 0,
             threads: threads,
-            threadsRunning: threadsRunning,  // we can go dig in /proc/self/task/ later if want this
+            threadsRunning: threadsRunning, // we can go dig in /proc/self/task/ later if want this
             readSyscalls: Int(ioStats.readSyscalls),
             writeSyscalls: Int(ioStats.writeSyscalls),
             readBytesLogical: Int(ioStats.readBytesLogical),
@@ -163,7 +163,7 @@ final class OperatingSystemStatsProducer {
         }
     }
 
-    func startSampling(_: Int = 10_000) {  // sample rate in microseconds
+    func startSampling(_: Int = 10_000) { // sample rate in microseconds
         let sampleSemaphore = DispatchSemaphore(value: 0)
 
         DispatchQueue.global(qos: .userInitiated)
@@ -205,7 +205,7 @@ final class OperatingSystemStatsProducer {
 
                     self.lock.unlock()
 
-                    if firstEventSampled == false {  // allow calling thread to continue when we have captured a sample
+                    if firstEventSampled == false { // allow calling thread to continue when we have captured a sample
                         firstEventSampled = true
                         sampleSemaphore.signal()
                     }

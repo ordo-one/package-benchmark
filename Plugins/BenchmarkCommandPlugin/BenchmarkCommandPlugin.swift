@@ -38,7 +38,7 @@ import Glibc
         let specifiedTargets = try argumentExtractor.extractSpecifiedTargets(in: context.package, withOption: "target")
         let skipTargets = try argumentExtractor.extractSpecifiedTargets(in: context.package, withOption: "skip-target")
         let outputFormats = argumentExtractor.extractOption(named: "format")
-        let pathSpecified = argumentExtractor.extractOption(named: "path")  // export path
+        let pathSpecified = argumentExtractor.extractOption(named: "path") // export path
         let quietRunning = argumentExtractor.extractFlag(named: "quiet")
         let noProgress = argumentExtractor.extractFlag(named: "no-progress")
         let checkAbsoluteThresholdsPath = argumentExtractor.extractOption(named: "check-absolute-path")
@@ -140,16 +140,16 @@ import Glibc
                     )
                     throw MyError.invalidArgument
                 }
-            } catch {  // We will throw if we can use the target name (it's unused!)
+            } catch { // We will throw if we can use the target name (it's unused!)
             }
         }
 
         let swiftSourceModuleTargets: [SwiftSourceModuleTarget]
-        var shouldBuildTargets = true  // We don't rebuild the targets when we dont need to execute them, e.g. baseline read/compare
+        var shouldBuildTargets = true // We don't rebuild the targets when we dont need to execute them, e.g. baseline read/compare
 
         let packageBenchmarkIdentifier = "package-benchmark"
         let benchmarkToolName = "BenchmarkTool"
-        let benchmarkTool: PackagePlugin.Path  // = try context.tool(named: benchmarkToolName)
+        let benchmarkTool: PackagePlugin.Path // = try context.tool(named: benchmarkToolName)
         let interposerLib: String
 
         var args: [String] = [
@@ -435,7 +435,7 @@ import Glibc
                 }
 
                 let buildResult = try packageManager.build(
-                    .product(target.name),  // .all(includingTests: false),
+                    .product(target.name), // .all(includingTests: false),
                     parameters: .init(configuration: .release)
                 )
 
