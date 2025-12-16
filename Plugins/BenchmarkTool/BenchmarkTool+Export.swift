@@ -276,6 +276,16 @@ extension BenchmarkTool {
                     print("Failed to encode json for \(outputResults)")
                 }
             }
+        case .jsonSmallerIsBetter:
+            try write(
+                exportData: "\(convertToJSON(baseline, polarity: .prefersSmaller))",
+                fileName: cleanupStringForShellSafety("\(baselineName).json")
+            )
+        case .jsonBiggerIsBetter:
+            try write(
+                exportData: "\(convertToJSON(baseline, polarity: .prefersLarger))",
+                fileName: cleanupStringForShellSafety("\(baselineName)-bigger-is-better.json")
+            )
         }
     }
 

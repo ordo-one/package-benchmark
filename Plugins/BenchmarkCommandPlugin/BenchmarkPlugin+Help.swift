@@ -51,7 +51,7 @@ let help =
     --target <target>       Benchmark targets matching the regexp filter that should be run
     --skip-target <skip-target>
                           Benchmark targets matching the regexp filter that should be skipped
-    --format <format>       The output format to use, default is 'text' (values: text, markdown, influx, jmh, histogramEncoded, histogram, histogramSamples, histogramPercentiles, metricP90AbsoluteThresholds)
+    --format <format>       The output format to use, default is 'text' (values: text, markdown, influx, jmh, jsonSmallerIsBetter, jsonBiggerIsBetter, histogramEncoded, histogram, histogramSamples, histogramPercentiles, metricP90AbsoluteThresholds)
     --metric <metric>       Specifies that the benchmark run should use one or more specific metrics instead of the ones defined by the benchmarks. (values: cpuUser, cpuSystem, cpuTotal, wallClock, throughput,
                           peakMemoryResident, peakMemoryResidentDelta, peakMemoryVirtual, mallocCountSmall, mallocCountLarge, mallocCountTotal, allocatedResidentMemory, memoryLeaked, syscalls, contextSwitches, threads,
                           threadsRunning, readSyscalls, writeSyscalls, readBytesLogical, writeBytesLogical, readBytesPhysical, writeBytesPhysical, instructions, retainCount, releaseCount, retainReleaseDelta, custom)
