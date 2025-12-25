@@ -12,6 +12,7 @@
 // Running the `BenchmarkTool` for each benchmark target.
 
 import PackagePlugin
+import Foundation
 
 #if canImport(Darwin)
 import Darwin
@@ -27,6 +28,29 @@ import Glibc
         let cStrings = strings.map { strdup($0) }
         try scoped(cStrings + [nil])
         cStrings.forEach { free($0) }
+    }
+
+    /// Build an environment array for posix_spawn that includes extra environment variables.
+    /// Swift Package Manager plugins run in a sandboxed environment that strips DYLD_* variables,
+    /// so we need to pass them explicitly via --env arguments.
+    func withEnvironment(extraEnv: [String], scoped: ([UnsafeMutablePointer<CChar>?]) throws -> Void) rethrows {
+        var envStrings: [UnsafeMutablePointer<CChar>?] = []
+        var index = 0
+        while let envVar = environ[index] {
+            envStrings.append(strdup(envVar))
+            index += 1
+        }
+        // Add extra environment variables passed via --env
+        for envVar in extraEnv {
+            envStrings.append(strdup(envVar))
+        }
+        envStrings.append(nil)
+        defer {
+            for envVar in envStrings {
+                free(envVar)
+            }
+        }
+        try scoped(envStrings)
     }
 
     func performCommand(context: PluginContext, arguments: [String]) throws {
@@ -50,6 +74,11 @@ import Glibc
         let scale = argumentExtractor.extractFlag(named: "scale")
         let helpRequested = argumentExtractor.extractFlag(named: "help")
         let otherSwiftFlagsSpecified = argumentExtractor.extractOption(named: "Xswiftc")
+
+        // Extract environment variables to pass through (--env NAME=VALUE)
+        // This is needed because Swift Package Manager plugins run in a sandboxed environment
+        // that strips DYLD_* and other environment variables
+        let extraEnvironment = argumentExtractor.extractOption(named: "env")
         var outputFormat: OutputFormat = .text
         var grouping = "benchmark"
         var exportPath = "."
@@ -217,6 +246,11 @@ import Glibc
 
         skipSpecified.forEach { skip in
             args.append(contentsOf: ["--skip", skip])
+        }
+
+        // Pass through environment variables to BenchmarkTool
+        extraEnvironment.forEach { envVar in
+            args.append(contentsOf: ["--env", envVar])
         }
 
         if pathSpecified.count > 0 {
@@ -474,42 +508,44 @@ import Glibc
                 return
             }
 
-            var pid: pid_t = 0
-            var status = posix_spawn(&pid, benchmarkTool.string, nil, nil, cArgs, environ)
+            try withEnvironment(extraEnv: extraEnvironment) { cEnv in
+                var pid: pid_t = 0
+                var status = posix_spawn(&pid, benchmarkTool.string, nil, nil, cArgs, cEnv)
 
-            if status == 0 {
-                if waitpid(pid, &status, 0) != -1 {
-                    // Ok, this sucks, but there is no way to get a C support target for plugins and
-                    // the way the status is extracted portably is with macros - so we just need to
-                    // reimplement the logic here in Swift according to the waitpid man page to
-                    // get some nicer feedback on failure reason.
-                    guard let waitStatus = ExitCode(rawValue: (status & 0xFF00) >> 8) else {
-                        print("One or more benchmarks returned an unexpected return code \(status)")
-                        throw MyError.benchmarkUnexpectedReturnCode
-                    }
-                    switch waitStatus {
-                    case .success:
-                        break
-                    case .baselineNotFound:
-                        throw MyError.baselineNotFound
-                    case .genericFailure:
-                        print("One or more benchmark suites crashed during runtime.")
-                        throw MyError.benchmarkCrashed
-                    case .thresholdRegression:
-                        throw MyError.benchmarkThresholdRegression
-                    case .thresholdImprovement:
-                        throw MyError.benchmarkThresholdImprovement
-                    case .benchmarkJobFailed:
-                        failedBenchmarkCount += 1
-                    case .noPermissions:
-                        throw MyError.noPermissions
+                if status == 0 {
+                    if waitpid(pid, &status, 0) != -1 {
+                        // Ok, this sucks, but there is no way to get a C support target for plugins and
+                        // the way the status is extracted portably is with macros - so we just need to
+                        // reimplement the logic here in Swift according to the waitpid man page to
+                        // get some nicer feedback on failure reason.
+                        guard let waitStatus = ExitCode(rawValue: (status & 0xFF00) >> 8) else {
+                            print("One or more benchmarks returned an unexpected return code \(status)")
+                            throw MyError.benchmarkUnexpectedReturnCode
+                        }
+                        switch waitStatus {
+                        case .success:
+                            break
+                        case .baselineNotFound:
+                            throw MyError.baselineNotFound
+                        case .genericFailure:
+                            print("One or more benchmark suites crashed during runtime.")
+                            throw MyError.benchmarkCrashed
+                        case .thresholdRegression:
+                            throw MyError.benchmarkThresholdRegression
+                        case .thresholdImprovement:
+                            throw MyError.benchmarkThresholdImprovement
+                        case .benchmarkJobFailed:
+                            failedBenchmarkCount += 1
+                        case .noPermissions:
+                            throw MyError.noPermissions
+                        }
+                    } else {
+                        print("waitpid() for pid \(pid) returned a non-zero exit code \(status), errno = \(errno)")
+                        exit(errno)
                     }
                 } else {
-                    print("waitpid() for pid \(pid) returned a non-zero exit code \(status), errno = \(errno)")
-                    exit(errno)
+                    print("Failed to run BenchmarkTool, posix_spawn() returned [\(status)]")
                 }
-            } else {
-                print("Failed to run BenchmarkTool, posix_spawn() returned [\(status)]")
             }
         }
 
