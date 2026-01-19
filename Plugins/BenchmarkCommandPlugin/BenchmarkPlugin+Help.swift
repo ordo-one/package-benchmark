@@ -55,7 +55,7 @@ let help =
     --metric <metric>       Specifies that the benchmark run should use one or more specific metrics instead of the ones defined by the benchmarks. (values: cpuUser, cpuSystem, cpuTotal, wallClock, throughput,
                           peakMemoryResident, peakMemoryResidentDelta, peakMemoryVirtual, mallocCountSmall, mallocCountLarge, mallocCountTotal, allocatedResidentMemory, memoryLeaked, syscalls, contextSwitches, threads,
                           threadsRunning, readSyscalls, writeSyscalls, readBytesLogical, writeBytesLogical, readBytesPhysical, writeBytesPhysical, instructions, retainCount, releaseCount, retainReleaseDelta, custom)
-    --path <path>           The path to operate on for data export or threshold operations, default is the current directory (".") for exports and the ("./Thresholds") directory for thresholds. 
+    --path <path>           The path to operate on for data export or threshold operations, default is the current directory (".") for exports and the ("./Thresholds") directory for thresholds.
     --quiet                 Specifies that output should be suppressed (useful for if you just want to check return code)
     --scale                 Specifies that some of the text output should be scaled using the scalingFactor (denoted by '*' in output)
     --time-units <time-units>
@@ -73,6 +73,7 @@ let help =
                           This implicitly sets --check-absolute to true as well.
     --no-progress           Specifies that benchmark progress information should not be displayed
     --grouping <grouping>   The grouping to use, one of: ["metric", "benchmark"]. default is 'benchmark' (values: metric, benchmark)
+    --debug-mode            Whether to run the benchmarks in debug mode. By default they run in release mode.
     --xswiftc <xswiftc>     Pass an argument to the Swift compiler when building the benchmark
     -h, --help              Show help information.
     """

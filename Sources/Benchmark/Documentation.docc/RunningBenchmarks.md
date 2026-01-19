@@ -41,6 +41,7 @@ swift package benchmark <command verb> [<options>]
 - term `--no-progress`: Specifies that benchmark progress information should not be displayed
 - term `--check-absolute`: Set to true if thresholds should be checked against an absolute reference point rather than delta between baselines.
 - term `--grouping <grouping>`: The grouping to use, one of: ["metric", "benchmark"]. default is 'benchmark'
+- term `--debug-mode`: Whether to run the benchmarks in debug mode. By default they run in release mode.
 
 ## Usage
 
