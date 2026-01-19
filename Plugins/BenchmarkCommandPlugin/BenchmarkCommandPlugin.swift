@@ -416,12 +416,13 @@ import Glibc
             .filter { benchmark in
                 skipTargets.first(where: { $0.name == benchmark.name }) == nil ? true : false
             }
-        
-        
+
+
 
         let mode: PackageManager.BuildConfiguration = switch configuration.first {
         case "debug": .debug
-        default: .release
+        case "release", nil: .release
+        default: throw MyError.invalidArgument
         }
 
         // Build the targets
