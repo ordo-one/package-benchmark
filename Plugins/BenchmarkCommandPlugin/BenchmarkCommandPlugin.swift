@@ -46,7 +46,7 @@ import Glibc
         let groupingToUse = argumentExtractor.extractOption(named: "grouping")
         let metricsToUse = argumentExtractor.extractOption(named: "metric")
         let timeUnits = argumentExtractor.extractOption(named: "time-units")
-        let debugMode = argumentExtractor.extractFlag(named: "debug-mode")
+        let configuration = argumentExtractor.extractOption(named: "configuration")
         let debug = argumentExtractor.extractFlag(named: "debug")
         let scale = argumentExtractor.extractFlag(named: "scale")
         let helpRequested = argumentExtractor.extractFlag(named: "help")
@@ -416,11 +416,12 @@ import Glibc
             .filter { benchmark in
                 skipTargets.first(where: { $0.name == benchmark.name }) == nil ? true : false
             }
+        
+        
 
-        let mode: PackageManager.BuildConfiguration = if debugMode > 0 {
-            .debug
-        } else {
-            .release
+        let mode: PackageManager.BuildConfiguration = switch configuration.first {
+        case "debug": .debug
+        default: .release
         }
 
         // Build the targets
