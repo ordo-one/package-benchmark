@@ -46,7 +46,7 @@ import Glibc
         let groupingToUse = argumentExtractor.extractOption(named: "grouping")
         let metricsToUse = argumentExtractor.extractOption(named: "metric")
         let timeUnits = argumentExtractor.extractOption(named: "time-units")
-        let configuration = argumentExtractor.extractOption(named: "configuration")
+        let benchmarkBuildConfiguration = argumentExtractor.extractOption(named: "benchmark-build-configuration")
         let debug = argumentExtractor.extractFlag(named: "debug")
         let scale = argumentExtractor.extractFlag(named: "scale")
         let helpRequested = argumentExtractor.extractFlag(named: "help")
@@ -419,7 +419,7 @@ import Glibc
 
 
 
-        let mode: PackageManager.BuildConfiguration = switch configuration.first {
+        let mode: PackageManager.BuildConfiguration = switch benchmarkBuildConfiguration.first {
         case "debug": .debug
         case "release", nil: .release
         default: throw MyError.invalidArgument
