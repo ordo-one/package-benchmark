@@ -46,6 +46,7 @@ import Glibc
         let groupingToUse = argumentExtractor.extractOption(named: "grouping")
         let metricsToUse = argumentExtractor.extractOption(named: "metric")
         let timeUnits = argumentExtractor.extractOption(named: "time-units")
+        let benchmarkBuildConfiguration = argumentExtractor.extractOption(named: "benchmark-build-configuration")
         let debug = argumentExtractor.extractFlag(named: "debug")
         let scale = argumentExtractor.extractFlag(named: "scale")
         let helpRequested = argumentExtractor.extractFlag(named: "help")
@@ -416,14 +417,22 @@ import Glibc
                 skipTargets.first(where: { $0.name == benchmark.name }) == nil ? true : false
             }
 
+
+
+        let mode: PackageManager.BuildConfiguration = switch benchmarkBuildConfiguration.first {
+        case "debug": .debug
+        case "release", nil: .release
+        default: throw MyError.invalidArgument
+        }
+
         // Build the targets
         if outputFormat == .text {
             if quietRunning == 0 && shouldBuildTargets {
-                print("Building benchmark targets in release mode for benchmark run...")
+                print("Building benchmark targets in \(mode) mode for benchmark run...")
             }
         }
 
-        // Build targets in release mode
+        // Build targets
         try filteredTargets.forEach { target in
             args.append(contentsOf: ["--targets", target.name])
 
@@ -436,7 +445,7 @@ import Glibc
 
                 let buildResult = try packageManager.build(
                     .product(target.name), // .all(includingTests: false),
-                    parameters: .init(configuration: .release)
+                    parameters: .init(configuration: mode)
                 )
 
                 guard buildResult.succeeded else {
