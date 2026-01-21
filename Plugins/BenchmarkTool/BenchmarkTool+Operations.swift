@@ -29,7 +29,7 @@ extension BenchmarkTool {
             let benchmarkReply = try read()
 
             switch benchmarkReply {
-            case let .list(benchmark):
+            case .list(let benchmark):
                 benchmark.executablePath = benchmarkPath
                 benchmark.target = FilePath(benchmarkPath).lastComponent!.description
                 if metrics.isEmpty == false {
@@ -38,7 +38,7 @@ extension BenchmarkTool {
                 benchmarks.append(benchmark)
             case .end:
                 break outerloop
-            case let .error(description):
+            case .error(let description):
                 failBenchmark(description)
                 break outerloop
             default:
@@ -55,12 +55,12 @@ extension BenchmarkTool {
             let benchmarkReply = try read()
 
             switch benchmarkReply {
-            case let .result(benchmark: benchmark, results: results):
+            case .result(let benchmark, let results):
                 let filteredResults = results.filter { benchmark.configuration.metrics.contains($0.metric) }
                 benchmarkResults[BenchmarkIdentifier(target: target, name: benchmark.name)] = filteredResults
             case .end:
                 break outerloop
-            case let .error(description):
+            case .error(let description):
                 failBenchmark(description, exitCode: .benchmarkJobFailed, "\(target)/\(benchmark.name)")
 
                 benchmarkResults[BenchmarkIdentifier(target: target, name: benchmark.name)] = []
@@ -100,7 +100,7 @@ extension BenchmarkTool {
             case .read:
                 print("Reading thresholds from \"\(thresholdsPath)\"")
 
-                var p90Thresholds: [BenchmarkIdentifier: [BenchmarkMetric: BenchmarkThresholds.AbsoluteThreshold]] = [:]
+                var p90Thresholds: [BenchmarkIdentifier: [BenchmarkMetric: BenchmarkThreshold]] = [:]
                 try benchmarks.forEach { benchmark in
                     if try shouldIncludeBenchmark(benchmark.baseName) {
                         if let thresholds = BenchmarkTool.makeBenchmarkThresholds(
@@ -146,7 +146,7 @@ extension BenchmarkTool {
                     }
                 }
 
-                var p90Thresholds: [BenchmarkIdentifier: [BenchmarkMetric: BenchmarkThresholds.AbsoluteThreshold]] = [:]
+                var p90Thresholds: [BenchmarkIdentifier: [BenchmarkMetric: BenchmarkThreshold]] = [:]
 
                 if noProgress == false {
                     print("")
@@ -299,7 +299,7 @@ extension BenchmarkTool {
                         }
                     }
 
-                    var p90Thresholds: [BenchmarkIdentifier: [BenchmarkMetric: BenchmarkThresholds.AbsoluteThreshold]] =
+                    var p90Thresholds: [BenchmarkIdentifier: [BenchmarkMetric: BenchmarkThreshold]] =
                         [:]
 
                     if let benchmarkPath = checkAbsolutePath { // load statically defined thresholds for .p90
