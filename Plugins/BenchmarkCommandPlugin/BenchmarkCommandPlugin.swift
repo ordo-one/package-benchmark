@@ -11,6 +11,7 @@
 // 'Benchmark' plugin that is responsible for gathering command line arguments and then
 // Running the `BenchmarkTool` for each benchmark target.
 
+import Foundation
 import PackagePlugin
 
 #if canImport(Darwin)
@@ -152,6 +153,7 @@ import Musl
         let packageBenchmarkIdentifier = "package-benchmark"
         let benchmarkToolName = "BenchmarkTool"
         let benchmarkTool: PackagePlugin.Path // = try context.tool(named: benchmarkToolName)
+        let interposerLib: String
 
         var args: [String] = [
             benchmarkToolName,
@@ -366,10 +368,7 @@ import Musl
         }
 
         // Build the BenchmarkTool manually in release mode to work around https://github.com/apple/swift-package-manager/issues/7210
-        guard
-            let benchmarkToolModule = benchmarkToolModuleTargets.first(where: {
-                $0.kind == .executable && $0.name == benchmarkToolName
-            })
+        guard let benchmarkToolModule = benchmarkToolModuleTargets.first(where: { $0.kind == .executable && $0.name == benchmarkToolName })
         else {
             print("Benchmark failed to find the BenchmarkTool target.")
             throw MyError.buildFailed
@@ -404,6 +403,7 @@ import Musl
         }
 
         benchmarkTool = tool.path
+        interposerLib = tool.path.removingLastComponent().appending(subpath: "libMallocInterposerC.so").string
 
         let filteredTargets =
             swiftSourceModuleTargets
@@ -485,8 +485,27 @@ import Musl
                 return
             }
 
+            // On Linux we need to set LD_PRELOAD to get the malloc interposer working
+            // while on Darwin this is done with DYLD interpose mechanism
+            #if os(Linux)
+            var environment = ProcessInfo.processInfo.environment
+            environment["LD_PRELOAD"] = interposerLib
+
+            let envp = environment.map { "\($0.key)=\($0.value)" }.map { $0.withCString(strdup) } + [nil]
+            defer {
+                for i in 0..<envp.count - 1 {
+                    if let ptr = envp[i] {
+                        free(ptr)
+                    }
+                }
+            }
+
+            var pid: pid_t = 0
+            var status = posix_spawn(&pid, benchmarkTool.string, nil, nil, cArgs, envp)
+            #else
             var pid: pid_t = 0
             var status = posix_spawn(&pid, benchmarkTool.string, nil, nil, cArgs, environ)
+            #endif
 
             if status == 0 {
                 if waitpid(pid, &status, 0) != -1 {
