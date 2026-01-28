@@ -15,6 +15,8 @@ import BenchmarkShared
 import Darwin
 #elseif canImport(Glibc)
 import Glibc
+#elseif canImport(Musl)
+import Musl
 #else
 #error("Unsupported Platform")
 #endif
