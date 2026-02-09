@@ -10,7 +10,7 @@
 
 import Foundation
 
-#if canImport(jemalloc)
+#if EnableJemalloc
 import jemalloc
 
 // We currently register a number of MIB:s that aren't in use that
