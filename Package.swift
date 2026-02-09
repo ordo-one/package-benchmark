@@ -1,4 +1,4 @@
-// swift-tools-version: 5.9
+// swift-tools-version: 6.1
 
 import PackageDescription
 
@@ -66,7 +66,8 @@ let package = Package(
                 "Benchmark",
                 "BenchmarkShared",
             ],
-            path: "Plugins/BenchmarkTool"
+            path: "Plugins/BenchmarkTool",
+            swiftSettings: [.swiftLanguageMode(.v5)]
         ),
 
         // Tool that generates the boilerplate
@@ -111,7 +112,8 @@ let package = Package(
 
         .testTarget(
             name: "BenchmarkTests",
-            dependencies: ["Benchmark"]
+            dependencies: ["Benchmark"],
+            swiftSettings: [.swiftLanguageMode(.v5)]
         ),
     ]
 )
@@ -157,4 +159,4 @@ if macOSSPIBuild == false { // jemalloc always disable for macOSSPIBuild
     }
 }
 
-package.targets += [.target(name: "Benchmark", dependencies: dependencies)]
+package.targets += [.target(name: "Benchmark", dependencies: dependencies, swiftSettings: [.swiftLanguageMode(.v5)])]
