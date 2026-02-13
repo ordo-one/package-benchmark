@@ -18,6 +18,7 @@ let package = Package(
     ],
     traits: [
         .trait(name: "Jemalloc"),
+        .default(enabledTraits: ["Jemalloc"]),
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-system.git", .upToNextMajor(from: "1.1.0")),
