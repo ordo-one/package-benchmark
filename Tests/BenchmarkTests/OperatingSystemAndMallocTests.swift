@@ -62,7 +62,7 @@ final class OperatingSystemAndMallocTests: XCTestCase {
         blackHole(operatingSystemStatsProducer.metricSupported(.throughput))
     }
 
-    #if EnableJemalloc
+    #if Jemalloc
     func testMallocProducerLeaks() throws {
         let startMallocStats = MallocStatsProducer.makeMallocStats()
 

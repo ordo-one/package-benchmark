@@ -17,7 +17,7 @@ let package = Package(
         ),
     ],
     traits: [
-        .trait(name: "EnableJemalloc"),
+        .trait(name: "Jemalloc"),
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-system.git", .upToNextMajor(from: "1.1.0")),
@@ -39,7 +39,7 @@ let package = Package(
                 .product(name: "Atomics", package: "swift-atomics"),
                 "SwiftRuntimeHooks",
                 "BenchmarkShared",
-                .product(name: "jemalloc", package: "package-jemalloc", condition: .when(platforms: [.macOS, .linux], traits: ["EnableJemalloc"])),
+                .product(name: "jemalloc", package: "package-jemalloc", condition: .when(platforms: [.macOS, .linux], traits: ["Jemalloc"])),
             ],
             swiftSettings: [.swiftLanguageMode(.v5)]
         ),
