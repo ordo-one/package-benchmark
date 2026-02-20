@@ -14,11 +14,11 @@
 import PackagePlugin
 
 #if canImport(Darwin)
-import Darwin
+@preconcurrency import Darwin
 #elseif canImport(Glibc)
-import Glibc
+@preconcurrency import Glibc
 #elseif canImport(Musl)
-import Musl
+@preconcurrency import Musl
 #else
 #error("Unsupported Platform")
 #endif
