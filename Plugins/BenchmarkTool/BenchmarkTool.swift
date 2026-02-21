@@ -125,6 +125,9 @@ struct BenchmarkTool: AsyncParsableCommand {
     @Option(name: .long, help: "Benchmarks matching the regexp filter that should be skipped")
     var skip: [String] = []
 
+    @Option(name: .long, help: "Environment variables to pass to benchmark subprocesses (NAME=VALUE)")
+    var env: [String] = []
+
     var inputFD: CInt = 0
     var outputFD: CInt = 0
 
@@ -355,6 +358,29 @@ struct BenchmarkTool: AsyncParsableCommand {
         cStrings.forEach { free($0) }
     }
 
+    /// Build an environment array for posix_spawn that includes extra environment variables.
+    /// Swift Package Manager plugins run in a sandboxed environment that strips DYLD_* variables,
+    /// so we need to pass them explicitly via --env arguments.
+    func withEnvironment(scoped: ([UnsafeMutablePointer<CChar>?]) throws -> Void) rethrows {
+        var envStrings: [UnsafeMutablePointer<CChar>?] = []
+        var index = 0
+        while let envVar = environ[index] {
+            envStrings.append(strdup(envVar))
+            index += 1
+        }
+        // Add extra environment variables passed via --env
+        for envVar in env {
+            envStrings.append(strdup(envVar))
+        }
+        envStrings.append(nil)
+        defer {
+            for envVar in envStrings {
+                free(envVar)
+            }
+        }
+        try scoped(envStrings)
+    }
+
     enum RunCommandError: Error {
         case WaitPIDError
         case POSIXSpawnError(Int32)
@@ -392,40 +418,42 @@ struct BenchmarkTool: AsyncParsableCommand {
         outputFD = toChild.writeEnd.rawValue
 
         try withCStrings(args) { cArgs in
-            var status = posix_spawn(&pid, path.string, nil, nil, cArgs, environ)
+            try withEnvironment { cEnv in
+                var status = posix_spawn(&pid, path.string, nil, nil, cArgs, cEnv)
 
-            // Close child ends of the pipes
-            try toChild.readEnd.close()
-            try fromChild.writeEnd.close()
+                // Close child ends of the pipes
+                try toChild.readEnd.close()
+                try fromChild.writeEnd.close()
 
-            do {
-                switch benchmarkCommand {
-                case .`init`:
-                    fatalError("Should never come here")
-                case .query:
-                    try queryBenchmarks(benchmarkPath) // Get all available benchmarks first
-                case .list:
-                    try listBenchmarks()
-                case .baseline, .thresholds, .run:
-                    guard let benchmark else {
-                        fatalError("No benchmark specified for update/export/run/compare operation")
+                do {
+                    switch benchmarkCommand {
+                    case .`init`:
+                        fatalError("Should never come here")
+                    case .query:
+                        try queryBenchmarks(benchmarkPath) // Get all available benchmarks first
+                    case .list:
+                        try listBenchmarks()
+                    case .baseline, .thresholds, .run:
+                        guard let benchmark else {
+                            fatalError("No benchmark specified for update/export/run/compare operation")
+                        }
+                        benchmarkResults = try runBenchmark(target: path.lastComponent!.description, benchmark: benchmark)
                     }
-                    benchmarkResults = try runBenchmark(target: path.lastComponent!.description, benchmark: benchmark)
+
+                    try write(.end)
+                } catch {
+                    print("Process failed: \(String(reflecting: error))")
                 }
 
-                try write(.end)
-            } catch {
-                print("Process failed: \(String(reflecting: error))")
+                guard status == 0 else {
+                    throw RunCommandError.POSIXSpawnError(status)
+                }
+                guard waitpid(pid, &status, 0) != -1 else {
+                    print("waitpiderror")
+                    throw RunCommandError.WaitPIDError
+                }
+                completion?(status)
             }
-
-            guard status == 0 else {
-                throw RunCommandError.POSIXSpawnError(status)
-            }
-            guard waitpid(pid, &status, 0) != -1 else {
-                print("waitpiderror")
-                throw RunCommandError.WaitPIDError
-            }
-            completion?(status)
         }
 
         return benchmarkResults
