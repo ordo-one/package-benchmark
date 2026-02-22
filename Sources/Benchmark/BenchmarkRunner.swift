@@ -149,7 +149,7 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
                 }
 
                 try channel.write(.end)
-            case let .run(benchmarkToRun):
+            case .run(let benchmarkToRun):
                 benchmark = Benchmark.benchmarks.first { $0.name == benchmarkToRun.name }
 
                 if let benchmark {
