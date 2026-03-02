@@ -54,4 +54,4 @@ jobs:
       env:
         BENCHMARK_DISABLE_JEMALLOC: 1
       run: |
-        swift build --swift-sdks-path /tmp/swiftsdks --swift-sdk x86_64-swift-linux-musl
+        swift build --swift-sdks-path /tmp/swiftsdks --swift-sdk x86_64-swift-linux-musl --disable-default-traits
