@@ -49,10 +49,10 @@ jobs:
     - name: Run tests
       run: |
         if [ -d Tests ]; then
-          swift test --parallel
+          swift test --parallel --disable-default-traits
         fi
     - name: Run tests (release)
       run: |
         if [ -d Tests ]; then
-          swift test -c release --parallel
+          swift test -c release --parallel --disable-default-traits
         fi
