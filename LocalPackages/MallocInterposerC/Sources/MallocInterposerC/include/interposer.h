@@ -11,6 +11,7 @@
 #ifndef INTERPOSER_H
 #define INTERPOSER_H
 
+#include <stdint.h>
 #include <stdlib.h>
 #include <sys/socket.h>
 #include <sys/types.h>
@@ -18,54 +19,15 @@
 #  include <malloc/malloc.h>
 #endif
 
-// Hook function types
-typedef void (*malloc_hook_t)(size_t size);
-typedef void (*free_hook_t)(void* ptr);
-typedef void (*calloc_hook_t)(size_t nmemb, size_t size);
-typedef void (*realloc_hook_t)(void* ptr, size_t size);
-typedef void (*valloc_hook_t)(size_t size);
-typedef void (*posix_memalign_hook_t)(void **memptr, size_t alignment, size_t size);
+// Enable/disable counting and reset/read stats
+void malloc_interposer_enable(void);
+void malloc_interposer_disable(void);
+void malloc_interposer_reset(void);
+void malloc_interposer_get_stats(int64_t *malloc_count, int64_t *malloc_bytes,
+                                 int64_t *malloc_small, int64_t *malloc_large,
+                                 int64_t *free_count, int64_t *free_bytes);
 
-#if __APPLE__
-typedef void (*malloc_zone_hook_t)(malloc_zone_t *zone, size_t size);
-typedef void (*malloc_zone_calloc_hook_t)(malloc_zone_t *zone, size_t num_items, size_t size);
-typedef void (*malloc_zone_realloc_hook_t)(malloc_zone_t *zone, void *ptr, size_t size);
-typedef void (*malloc_zone_memalign_hook_t)(malloc_zone_t *zone, size_t alignment, size_t size);
-typedef void (*malloc_zone_valloc_hook_t)(malloc_zone_t *zone, size_t size);
-typedef void (*malloc_zone_free_hook_t)(malloc_zone_t *zone, void *ptr);
-#endif
-
-// Hook management functions
-void set_malloc_hook(malloc_hook_t hook);
-void set_free_hook(free_hook_t hook);
-void set_calloc_hook(calloc_hook_t hook);
-void set_realloc_hook(realloc_hook_t hook);
-void set_posix_memalign_hook(posix_memalign_hook_t hook);
-
-#if __APPLE__
-void set_malloc_zone_hook(malloc_zone_hook_t hook);
-void set_malloc_zone_calloc_hook(malloc_zone_calloc_hook_t hook);
-void set_malloc_zone_realloc_hook(malloc_zone_realloc_hook_t hook);
-void set_malloc_zone_memalign_hook(malloc_zone_memalign_hook_t hook);
-void set_malloc_zone_valloc_hook(malloc_zone_valloc_hook_t hook);
-void set_malloc_zone_free_hook(malloc_zone_free_hook_t hook);
-#endif
-
-void clear_malloc_hook(void);
-void clear_free_hook(void);
-void clear_calloc_hook(void);
-void clear_realloc_hook(void);
-
-#if __APPLE__
-void clear_malloc_zone_hook(void);
-void clear_malloc_zone_calloc_hook(void);
-void clear_malloc_zone_realloc_hook(void);
-void clear_malloc_zone_memalign_hook(void);
-void clear_malloc_zone_valloc_hook(void);
-void clear_malloc_zone_free_hook(void);
-#endif
-
-// Replacement functions
+// Replacement functions (used internally for DYLD_INTERPOSE and Linux overrides)
 void *replacement_malloc(size_t size);
 void replacement_free(void *ptr);
 void *replacement_calloc(size_t nmemb, size_t size);
@@ -85,7 +47,6 @@ void *reallocf(void *ptr, size_t size);
 void *valloc(size_t size);
 int posix_memalign(void **memptr, size_t alignment, size_t size);
 #endif
-
 
 #if __APPLE__
 void *replacement_malloc_zone_malloc(malloc_zone_t *zone, size_t size);

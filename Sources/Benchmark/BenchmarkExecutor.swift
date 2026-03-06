@@ -8,7 +8,9 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 //
 
+#if canImport(MallocInterposerSwift)
 import MallocInterposerSwift
+#endif
 
 #if canImport(OSLog)
 import OSLog
@@ -27,8 +29,13 @@ struct BenchmarkExecutor { // swiftlint:disable:this type_body_length
     // swiftlint:disable cyclomatic_complexity function_body_length
     func run(_ benchmark: Benchmark) -> [BenchmarkResult] {
         var wallClockDuration: Duration = .zero
+        #if canImport(MallocInterposerSwift)
         var startMallocStats = MallocInterposerSwift.Statistics()
         var stopMallocStats = MallocInterposerSwift.Statistics()
+        #else
+        var startMallocStats = MallocStats()
+        var stopMallocStats = MallocStats()
+        #endif
         var startOperatingSystemStats = OperatingSystemStats()
         var stopOperatingSystemStats = OperatingSystemStats()
         var startPerformanceCounters = PerformanceCounters()
@@ -153,7 +160,11 @@ struct BenchmarkExecutor { // swiftlint:disable:this type_body_length
             #endif
 
             if mallocStatsRequested {
+                #if canImport(MallocInterposerSwift)
                 startMallocStats = MallocInterposerSwift.getStatistics()
+                #else
+                startMallocStats = MallocStatsProducer.makeMallocStats()
+                #endif
             }
 
             if arcStatsRequested {
@@ -190,7 +201,11 @@ struct BenchmarkExecutor { // swiftlint:disable:this type_body_length
             }
 
             if mallocStatsRequested {
+                #if canImport(MallocInterposerSwift)
                 stopMallocStats = MallocInterposerSwift.getStatistics()
+                #else
+                stopMallocStats = MallocStatsProducer.makeMallocStats()
+                #endif
             }
 
             #if canImport(OSLog)
@@ -238,6 +253,7 @@ struct BenchmarkExecutor { // swiftlint:disable:this type_body_length
                 }
 
                 if mallocStatsRequested {
+                    #if canImport(MallocInterposerSwift)
                     let mallocCount = stopMallocStats.mallocCount - startMallocStats.mallocCount
                     statistics[BenchmarkMetric.mallocCountTotal.index].add(mallocCount)
 
@@ -262,6 +278,19 @@ struct BenchmarkExecutor { // swiftlint:disable:this type_body_length
                     let freeBytes = stopMallocStats.freeBytesCount - startMallocStats.freeBytesCount
                     let memoryLeakedBytes = mallocBytesCount - freeBytes
                     statistics[BenchmarkMetric.memoryLeakedBytes.index].add(Int(memoryLeakedBytes))
+                    #else
+                    let mallocCountTotal = stopMallocStats.mallocCountTotal - startMallocStats.mallocCountTotal
+                    statistics[BenchmarkMetric.mallocCountTotal.index].add(mallocCountTotal)
+
+                    let allocatedResidentMemory = stopMallocStats.allocatedResidentMemory - startMallocStats.allocatedResidentMemory
+                    statistics[BenchmarkMetric.allocatedResidentMemory.index].add(allocatedResidentMemory)
+
+                    let mallocSmallCount = stopMallocStats.mallocCountSmall - startMallocStats.mallocCountSmall
+                    statistics[BenchmarkMetric.mallocCountSmall.index].add(mallocSmallCount)
+
+                    let mallocLargeCount = stopMallocStats.mallocCountLarge - startMallocStats.mallocCountLarge
+                    statistics[BenchmarkMetric.mallocCountLarge.index].add(mallocLargeCount)
+                    #endif
                 }
 
                 if operatingSystemStatsRequested {
@@ -344,7 +373,9 @@ struct BenchmarkExecutor { // swiftlint:disable:this type_body_length
         }
 
         if mallocStatsRequested {
+            #if canImport(MallocInterposerSwift)
             MallocInterposerSwift.hook()
+            #endif
         }
 
         if benchmark.configuration.metrics.contains(.threads)
@@ -438,7 +469,9 @@ struct BenchmarkExecutor { // swiftlint:disable:this type_body_length
         }
 
         if mallocStatsRequested {
+            #if canImport(MallocInterposerSwift)
             MallocInterposerSwift.unhook()
+            #endif
         }
 
         #if canImport(OSLog)

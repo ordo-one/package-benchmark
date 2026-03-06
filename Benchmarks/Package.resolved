@@ -6,8 +6,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/HdrHistogram/hdrhistogram-swift",
       "state" : {
-        "revision" : "a69fa24d7b70421870cafa86340ece900489e17e",
-        "version" : "0.1.2"
+        "revision" : "de0b9b8a27956b9bfc9b4dce7d1c38ad7c579f19",
+        "version" : "0.1.4"
       }
     },
     {

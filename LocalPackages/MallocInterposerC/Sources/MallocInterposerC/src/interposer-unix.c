@@ -22,6 +22,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <malloc.h>
 #include <pthread.h>
 
 #include <interposer.h>
@@ -60,61 +61,57 @@ _Atomic type_libc_accept g_libc_accept;
 _Atomic type_libc_accept4 g_libc_accept4;
 _Atomic type_libc_close g_libc_close;
 
-// Global hooks
-static malloc_hook_t g_malloc_hook = NULL;
-static free_hook_t g_free_hook = NULL;
-static calloc_hook_t g_calloc_hook = NULL;
-static realloc_hook_t g_realloc_hook = NULL;
-static valloc_hook_t g_valloc_hook = NULL;
-static posix_memalign_hook_t g_posix_memalign_hook = NULL;
+// Counting state — all updated on the malloc hot path, so use relaxed atomics.
+static _Atomic bool     g_counting_enabled = false;
+static _Atomic int64_t  g_malloc_count  = 0;
+static _Atomic int64_t  g_malloc_bytes  = 0;
+static _Atomic int64_t  g_malloc_small  = 0;
+static _Atomic int64_t  g_malloc_large  = 0;
+static _Atomic int64_t  g_free_count    = 0;
+static _Atomic int64_t  g_free_bytes    = 0;
 
-// Statistics
-static pthread_mutex_t hook_mutex = PTHREAD_MUTEX_INITIALIZER;
+// Cached page size for small/large classification
+static int g_page_size = 0;
 
-// Hook management functions
-void set_malloc_hook(malloc_hook_t hook) {
-    pthread_mutex_lock(&hook_mutex);
-    g_malloc_hook = hook;
-    pthread_mutex_unlock(&hook_mutex);
+static int get_page_size(void) {
+    if (__builtin_expect(g_page_size == 0, 0)) {
+        g_page_size = (int)getpagesize();
+    }
+    return g_page_size;
 }
 
-void set_free_hook(free_hook_t hook) {
-    pthread_mutex_lock(&hook_mutex);
-    g_free_hook = hook;
-    pthread_mutex_unlock(&hook_mutex);
+// Public API ----------------------------------------------------------------
+
+void malloc_interposer_enable(void) {
+    atomic_store_explicit(&g_counting_enabled, true, memory_order_release);
 }
 
-void set_calloc_hook(calloc_hook_t hook) {
-    pthread_mutex_lock(&hook_mutex);
-    g_calloc_hook = hook;
-    pthread_mutex_unlock(&hook_mutex);
+void malloc_interposer_disable(void) {
+    atomic_store_explicit(&g_counting_enabled, false, memory_order_release);
 }
 
-void set_realloc_hook(realloc_hook_t hook) {
-    pthread_mutex_lock(&hook_mutex);
-    g_realloc_hook = hook;
-    pthread_mutex_unlock(&hook_mutex);
+void malloc_interposer_reset(void) {
+    atomic_store_explicit(&g_malloc_count, 0, memory_order_relaxed);
+    atomic_store_explicit(&g_malloc_bytes, 0, memory_order_relaxed);
+    atomic_store_explicit(&g_malloc_small, 0, memory_order_relaxed);
+    atomic_store_explicit(&g_malloc_large, 0, memory_order_relaxed);
+    atomic_store_explicit(&g_free_count,   0, memory_order_relaxed);
+    atomic_store_explicit(&g_free_bytes,   0, memory_order_relaxed);
+    atomic_thread_fence(memory_order_release);
 }
 
-void set_valloc_hook(valloc_hook_t hook) {
-    pthread_mutex_lock(&hook_mutex);
-    g_valloc_hook = hook;
-    pthread_mutex_unlock(&hook_mutex);
+void malloc_interposer_get_stats(int64_t *malloc_count, int64_t *malloc_bytes,
+                                 int64_t *malloc_small, int64_t *malloc_large,
+                                 int64_t *free_count, int64_t *free_bytes) {
+    *malloc_count = atomic_load_explicit(&g_malloc_count, memory_order_relaxed);
+    *malloc_bytes = atomic_load_explicit(&g_malloc_bytes, memory_order_relaxed);
+    *malloc_small = atomic_load_explicit(&g_malloc_small, memory_order_relaxed);
+    *malloc_large = atomic_load_explicit(&g_malloc_large, memory_order_relaxed);
+    *free_count   = atomic_load_explicit(&g_free_count,   memory_order_relaxed);
+    *free_bytes   = atomic_load_explicit(&g_free_bytes,   memory_order_relaxed);
 }
 
-void set_posix_memalign_hook(posix_memalign_hook_t hook) {
-    pthread_mutex_lock(&hook_mutex);
-    g_posix_memalign_hook = hook;
-    pthread_mutex_unlock(&hook_mutex);
-}
-
-// Clear hooks
-void clear_malloc_hook(void) { set_malloc_hook(NULL); }
-void clear_free_hook(void) { set_free_hook(NULL); }
-void clear_calloc_hook(void) { set_calloc_hook(NULL); }
-void clear_realloc_hook(void) { set_realloc_hook(NULL); }
-void clear_valloc_hook(void) { set_valloc_hook(NULL); }
-void clear_posix_memalign_hook(void) { set_posix_memalign_hook(NULL); }
+// ---------------------------------------------------------------------------
 
 // this is called if malloc is called whilst trying to resolve libc's realloc.
 // we just vend out pointers to a large block in the BSS (which we never free).
@@ -219,13 +216,31 @@ static int recursive_close(int fildes) {
 */     return local_fun(__VA_ARGS__); /* \
 */ } while(0)
 
+// Inline counting helpers ---------------------------------------------------
+
+static __attribute__((always_inline)) void count_malloc(size_t size) {
+    atomic_fetch_add_explicit(&g_malloc_count, 1, memory_order_relaxed);
+    atomic_fetch_add_explicit(&g_malloc_bytes, (int64_t)size, memory_order_relaxed);
+    if ((int)size > get_page_size()) {
+        atomic_fetch_add_explicit(&g_malloc_large, 1, memory_order_relaxed);
+    } else {
+        atomic_fetch_add_explicit(&g_malloc_small, 1, memory_order_relaxed);
+    }
+}
+
+static __attribute__((always_inline)) void count_free(void *ptr) {
+    size_t size = malloc_usable_size(ptr);
+    atomic_fetch_add_explicit(&g_free_count, 1, memory_order_relaxed);
+    atomic_fetch_add_explicit(&g_free_bytes, (int64_t)size, memory_order_relaxed);
+}
+
+// Replacement functions -----------------------------------------------------
+
 void replacement_free(void *ptr) {
     if (ptr) {
-
-        if (g_free_hook) {
-            g_free_hook(ptr);
+        if (atomic_load_explicit(&g_counting_enabled, memory_order_relaxed)) {
+            count_free(ptr);
         }
-
         if (!is_recursive_malloc_block(ptr)) {
             JUMP_INTO_LIBC_FUN(free, ptr);
         }
@@ -233,10 +248,9 @@ void replacement_free(void *ptr) {
 }
 
 void *replacement_malloc(size_t size) {
-    if (g_malloc_hook) {
-        g_malloc_hook(size);
+    if (atomic_load_explicit(&g_counting_enabled, memory_order_relaxed)) {
+        count_malloc(size);
     }
-
     JUMP_INTO_LIBC_FUN(malloc, size);
 }
 
@@ -248,22 +262,16 @@ void *replacement_realloc(void *ptr, size_t size) {
     if (!ptr) {
         return replacement_malloc(size);
     }
-
-    if (g_realloc_hook) {
-        g_realloc_hook(ptr, size);
+    if (atomic_load_explicit(&g_counting_enabled, memory_order_relaxed)) {
+        count_free(ptr);
+        count_malloc(size);
     }
-
     JUMP_INTO_LIBC_FUN(realloc, ptr, size);
 }
 
 void *replacement_calloc(size_t count, size_t size) {
     void *ptr = replacement_malloc(count * size);
     memset(ptr, 0, count * size);
-
-    if (g_calloc_hook) {
-        g_calloc_hook(count, size);
-    }
-
     return ptr;
 }
 
@@ -276,18 +284,11 @@ void *replacement_reallocf(void *ptr, size_t size) {
 }
 
 void *replacement_valloc(size_t size) {
-    if (g_valloc_hook) {
-        g_valloc_hook(size);
-    }
     // not aligning correctly (should be PAGE_SIZE) but good enough
     return replacement_malloc(size);
 }
 
 int replacement_posix_memalign(void **memptr, size_t alignment, size_t size) {
-    if (g_posix_memalign_hook) {
-        g_posix_memalign_hook(memptr, alignment, size);
-    }
-
     // not aligning correctly (should be `alignment`) but good enough
     void *ptr = replacement_malloc(size);
     if (ptr && memptr) {
