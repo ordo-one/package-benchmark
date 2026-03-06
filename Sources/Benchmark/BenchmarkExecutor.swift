@@ -8,6 +8,10 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 //
 
+#if canImport(MallocInterposerSwift)
+import MallocInterposerSwift
+#endif
+
 #if canImport(OSLog)
 import OSLog
 #endif
@@ -25,8 +29,13 @@ struct BenchmarkExecutor { // swiftlint:disable:this type_body_length
     // swiftlint:disable cyclomatic_complexity function_body_length
     func run(_ benchmark: Benchmark) -> [BenchmarkResult] {
         var wallClockDuration: Duration = .zero
+        #if canImport(MallocInterposerSwift)
+        var startMallocStats = MallocInterposerSwift.Statistics()
+        var stopMallocStats = MallocInterposerSwift.Statistics()
+        #else
         var startMallocStats = MallocStats()
         var stopMallocStats = MallocStats()
+        #endif
         var startOperatingSystemStats = OperatingSystemStats()
         var stopOperatingSystemStats = OperatingSystemStats()
         var startPerformanceCounters = PerformanceCounters()
@@ -106,9 +115,6 @@ struct BenchmarkExecutor { // swiftlint:disable:this type_body_length
         var iterations = 0
         let initialStartTime = BenchmarkClock.now
 
-        // 'Warmup' to remove initial mallocs from stats in p100
-        _ = MallocStatsProducer.makeMallocStats() // baselineMallocStats
-
         // Calculate typical sys call check overhead and deduct that to get 'clean' stats for the actual benchmark
         var operatingSystemStatsOverhead = OperatingSystemStats()
         var baselinePeakMemoryResidentDelta = 0
@@ -154,7 +160,11 @@ struct BenchmarkExecutor { // swiftlint:disable:this type_body_length
             #endif
 
             if mallocStatsRequested {
+                #if canImport(MallocInterposerSwift)
+                startMallocStats = MallocInterposerSwift.getStatistics()
+                #else
                 startMallocStats = MallocStatsProducer.makeMallocStats()
+                #endif
             }
 
             if arcStatsRequested {
@@ -191,7 +201,11 @@ struct BenchmarkExecutor { // swiftlint:disable:this type_body_length
             }
 
             if mallocStatsRequested {
+                #if canImport(MallocInterposerSwift)
+                stopMallocStats = MallocInterposerSwift.getStatistics()
+                #else
                 stopMallocStats = MallocStatsProducer.makeMallocStats()
+                #endif
             }
 
             #if canImport(OSLog)
@@ -239,21 +253,44 @@ struct BenchmarkExecutor { // swiftlint:disable:this type_body_length
                 }
 
                 if mallocStatsRequested {
-                    delta = stopMallocStats.mallocCountTotal - startMallocStats.mallocCountTotal
-                    statistics[BenchmarkMetric.mallocCountTotal.index].add(Int(delta))
+                    #if canImport(MallocInterposerSwift)
+                    let mallocCount = stopMallocStats.mallocCount - startMallocStats.mallocCount
+                    statistics[BenchmarkMetric.mallocCountTotal.index].add(mallocCount)
 
-                    delta = stopMallocStats.mallocCountSmall - startMallocStats.mallocCountSmall
-                    statistics[BenchmarkMetric.mallocCountSmall.index].add(Int(delta))
+                    let mallocBytesCount = stopMallocStats.mallocBytesCount - startMallocStats.mallocBytesCount
+                    statistics[BenchmarkMetric.mallocBytesCount.index].add(mallocBytesCount)
 
-                    delta = stopMallocStats.mallocCountLarge - startMallocStats.mallocCountLarge
-                    statistics[BenchmarkMetric.mallocCountLarge.index].add(Int(delta))
+                    // For backwards compatibility we keep allocatedResidentMemory as the total malloc bytes
+                    statistics[BenchmarkMetric.allocatedResidentMemory.index].add(mallocBytesCount)
 
-                    delta = stopMallocStats.allocatedResidentMemory - startMallocStats.allocatedResidentMemory
-                    statistics[BenchmarkMetric.memoryLeaked.index].add(Int(delta))
+                    let mallocSmallCount = stopMallocStats.mallocSmallCount - startMallocStats.mallocSmallCount
+                    statistics[BenchmarkMetric.mallocCountSmall.index].add(mallocSmallCount)
 
-                    //                delta = stopMallocStats.allocatedResidentMemory - baselineMallocStats.allocatedResidentMemory // baselineMallocStats!
-                    statistics[BenchmarkMetric.allocatedResidentMemory.index]
-                        .add(Int(stopMallocStats.allocatedResidentMemory))
+                    let mallocLargeCount = stopMallocStats.mallocLargeCount - startMallocStats.mallocLargeCount
+                    statistics[BenchmarkMetric.mallocCountLarge.index].add(mallocLargeCount)
+
+                    let freeCount = stopMallocStats.freeCount - startMallocStats.freeCount
+                    statistics[BenchmarkMetric.freeCountTotal.index].add(freeCount)
+
+                    let memoryLeakedCount = mallocCount - freeCount
+                    statistics[BenchmarkMetric.memoryLeaked.index].add(Int(memoryLeakedCount))
+
+                    let freeBytes = stopMallocStats.freeBytesCount - startMallocStats.freeBytesCount
+                    let memoryLeakedBytes = mallocBytesCount - freeBytes
+                    statistics[BenchmarkMetric.memoryLeakedBytes.index].add(Int(memoryLeakedBytes))
+                    #else
+                    let mallocCountTotal = stopMallocStats.mallocCountTotal - startMallocStats.mallocCountTotal
+                    statistics[BenchmarkMetric.mallocCountTotal.index].add(mallocCountTotal)
+
+                    let allocatedResidentMemory = stopMallocStats.allocatedResidentMemory - startMallocStats.allocatedResidentMemory
+                    statistics[BenchmarkMetric.allocatedResidentMemory.index].add(allocatedResidentMemory)
+
+                    let mallocSmallCount = stopMallocStats.mallocCountSmall - startMallocStats.mallocCountSmall
+                    statistics[BenchmarkMetric.mallocCountSmall.index].add(mallocSmallCount)
+
+                    let mallocLargeCount = stopMallocStats.mallocCountLarge - startMallocStats.mallocCountLarge
+                    statistics[BenchmarkMetric.mallocCountLarge.index].add(mallocLargeCount)
+                    #endif
                 }
 
                 if operatingSystemStatsRequested {
@@ -333,6 +370,12 @@ struct BenchmarkExecutor { // swiftlint:disable:this type_body_length
 
         if arcStatsRequested {
             ARCStatsProducer.hook()
+        }
+
+        if mallocStatsRequested {
+            #if canImport(MallocInterposerSwift)
+            MallocInterposerSwift.hook()
+            #endif
         }
 
         if benchmark.configuration.metrics.contains(.threads)
@@ -423,6 +466,12 @@ struct BenchmarkExecutor { // swiftlint:disable:this type_body_length
 
         if arcStatsRequested {
             ARCStatsProducer.unhook()
+        }
+
+        if mallocStatsRequested {
+            #if canImport(MallocInterposerSwift)
+            MallocInterposerSwift.unhook()
+            #endif
         }
 
         #if canImport(OSLog)

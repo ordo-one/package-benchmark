@@ -10,6 +10,9 @@
 
 import ArgumentParser
 import BenchmarkShared
+#if canImport(MallocInterposerSwift)
+import MallocInterposerSwift
+#endif
 
 #if canImport(Darwin)
 import Darwin
@@ -114,6 +117,9 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
 
         var debugIterator = Benchmark.benchmarks.makeIterator()
         var benchmarkCommand: BenchmarkCommandRequest
+        #if canImport(MallocInterposerSwift)
+        MallocInterposerSwift.initialize()
+        #endif
         let benchmarkExecutor = BenchmarkExecutor(quiet: quiet)
         var benchmark: Benchmark?
         var results: [BenchmarkResult] = []
@@ -149,7 +155,7 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
                 }
 
                 try channel.write(.end)
-            case let .run(benchmarkToRun):
+            case .run(let benchmarkToRun):
                 benchmark = Benchmark.benchmarks.first { $0.name == benchmarkToRun.name }
 
                 if let benchmark {
