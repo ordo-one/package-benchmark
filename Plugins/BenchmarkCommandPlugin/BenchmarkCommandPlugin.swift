@@ -11,7 +11,7 @@
 // 'Benchmark' plugin that is responsible for gathering command line arguments and then
 // Running the `BenchmarkTool` for each benchmark target.
 
-import Foundation
+@preconcurrency import Foundation
 import PackagePlugin
 
 #if canImport(Darwin)
