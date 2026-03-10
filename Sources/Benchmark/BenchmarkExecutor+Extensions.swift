@@ -29,6 +29,12 @@ extension BenchmarkExecutor {
             return true
         case .mallocCountTotal:
             return true
+        case .mallocCountSmall:
+            return true
+        case .mallocCountLarge:
+            return true
+        case .mallocBytesCount:
+            return true
         case .allocatedResidentMemory:
             return true
         case .freeCountTotal:
