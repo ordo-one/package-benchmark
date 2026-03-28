@@ -23,15 +23,21 @@ extension BenchmarkExecutor {
 extension BenchmarkExecutor {
     func mallocStatsProducerNeeded(_ metric: BenchmarkMetric) -> Bool {
         switch metric {
-        case .mallocCountLarge:
-            return true
         case .memoryLeaked:
             return true
-        case .mallocCountSmall:
+        case .memoryLeakedBytes:
             return true
         case .mallocCountTotal:
             return true
+        case .mallocCountSmall:
+            return true
+        case .mallocCountLarge:
+            return true
+        case .mallocBytesCount:
+            return true
         case .allocatedResidentMemory:
+            return true
+        case .freeCountTotal:
             return true
         default:
             return false
