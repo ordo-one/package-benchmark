@@ -33,8 +33,8 @@ extension ArgumentExtractor {
         var anyMatching = false
 
         try package.targets.forEach { target in
-            let path = target.directory.removingLastComponent()
-            if path.lastComponent == "Benchmarks" {
+            let path = target.directoryURL.deletingLastPathComponent()
+            if path.lastPathComponent == "Benchmarks" {
                 for specifiedTarget in specifiedTargets {
                     let regex = try Regex(specifiedTarget)
 

@@ -11,6 +11,7 @@
 // 'Benchmark' plugin that is responsible for gathering command line arguments and then
 // Running the `BenchmarkTool` for each benchmark target.
 
+import Foundation
 import PackagePlugin
 
 #if canImport(Darwin)
@@ -151,12 +152,12 @@ import PackagePlugin
 
         let packageBenchmarkIdentifier = "package-benchmark"
         let benchmarkToolName = "BenchmarkTool"
-        let benchmarkTool: PackagePlugin.Path // = try context.tool(named: benchmarkToolName)
+        let benchmarkTool: URL // = try context.tool(named: benchmarkToolName)
 
         var args: [String] = [
             benchmarkToolName,
             "--command", commandToPerform.rawValue,
-            "--baseline-storage-path", context.package.directory.string,
+            "--baseline-storage-path", context.package.directoryURL.path(),
             "--format", outputFormat.rawValue,
             "--grouping", grouping,
         ]
@@ -396,21 +397,21 @@ import PackagePlugin
         }
 
         let tool = buildResult.builtArtifacts.first(where: {
-            $0.kind == .executable && $0.path.lastComponent == benchmarkToolName
+            $0.kind == .executable && $0.url.lastPathComponent == benchmarkToolName
         })
 
         guard let tool else {
             throw MyError.buildFailed
         }
 
-        benchmarkTool = tool.path
+        benchmarkTool = tool.url
 
         let filteredTargets =
             swiftSourceModuleTargets
             .filter { $0.kind == .executable }
             .filter { benchmark in
-                let path = benchmark.directory.removingLastComponent()
-                return path.lastComponent == "Benchmarks" ? true : false
+                let path = benchmark.directoryURL.deletingLastPathComponent()
+                return path.lastPathComponent == "Benchmarks" ? true : false
             }
             .filter { benchmark in
                 swiftSourceModuleTargets.first(where: { $0.name == benchmark.name }) != nil ? true : false
@@ -459,7 +460,7 @@ import PackagePlugin
                 // Filter out all executable products which are Benchmarks we should run
                 let benchmarks = buildResult.builtArtifacts
                     .filter { benchmark in
-                        filteredTargets.first(where: { $0.name == benchmark.path.lastComponent }) != nil ? true : false
+                        filteredTargets.first(where: { $0.name == benchmark.url.lastPathComponent }) != nil ? true : false
                     }
 
                 if benchmarks.isEmpty {
@@ -467,7 +468,7 @@ import PackagePlugin
                 }
 
                 benchmarks.forEach { benchmark in
-                    args.append(contentsOf: ["--benchmark-executable-paths", benchmark.path.string])
+                    args.append(contentsOf: ["--benchmark-executable-paths", benchmark.url.path()])
                 }
             }
         }
@@ -477,7 +478,7 @@ import PackagePlugin
         try withCStrings(args) { cArgs in
             if debug > 0 {
                 print("To debug, start \(benchmarkToolName) in LLDB using:")
-                print("lldb \(benchmarkTool.string)")
+                print("lldb \(benchmarkTool.path())")
                 print("")
                 print("Then launch \(benchmarkToolName) with:")
                 print("run \(args.dropFirst().joined(separator: " "))")
@@ -486,7 +487,7 @@ import PackagePlugin
             }
 
             var pid: pid_t = 0
-            var status = posix_spawn(&pid, benchmarkTool.string, nil, nil, cArgs, environ)
+            var status = posix_spawn(&pid, benchmarkTool.path(), nil, nil, cArgs, environ)
 
             if status == 0 {
                 if waitpid(pid, &status, 0) != -1 {
