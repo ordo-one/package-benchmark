@@ -158,14 +158,14 @@ reported values will cluster around quantized steps (e.g. 42, 83, 125 ns) rather
 than reflecting real differences between benchmarks.
 
 Setting a higher `scalingFactor` (e.g. `.kilo`) amortizes this overhead: the
-framework runs 1,000 inner iterations per sample, divides the measured time by
-1,000, and reports the per-operation result. This gives sub-nanosecond effective
+benchmark closure performs 1,000 inner iterations per sample, the framework
+divides the measured time by 1,000, and reports the per-operation result. This gives sub-nanosecond effective
 resolution while keeping the timer overhead negligible.
 
 **Choosing a value:** pick the smallest factor that makes timer overhead
 insignificant relative to the operation under test. `.kilo` is a good default for
-operations in the 1–500 ns range; `.mega` suits sub-nanosecond work like
-`Date()` creation.
+operations in the 1–500 ns range; `.mega` suits even faster operations or
+cases where extreme precision is desired, such as `Date()` creation.
 
 #### Stateful benchmarks and memory growth
 
@@ -176,8 +176,8 @@ benchmark run. For example, `.kilo` with the default `maxIterations` of 10,000
 means 10 million total mutations — enough to exhaust memory if each mutation adds
 data.
 
-To avoid this, either cap `maxIterations` for mutation benchmarks, or periodically
-reset the state inside the closure:
+To avoid this, you can cap `maxIterations` to limit total growth, or (preferably)
+periodically reset the state inside the closure to ensure consistent measurements:
 
 ```swift
 let box = MyMutableBox(initialData)
