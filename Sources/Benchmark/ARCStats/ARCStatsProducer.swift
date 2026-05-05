@@ -8,53 +8,29 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 //
 
-import Atomics
-import SwiftRuntimeHooks
+import SwiftRuntimeInterposerSwift
 
 // swiftlint:disable prefer_self_in_static_references
 
 final class ARCStatsProducer {
-    typealias SwiftRuntimeHook = @convention(c) (UnsafeRawPointer?, UnsafeMutableRawPointer?) -> Void
-
-    static var allocCount: UnsafeAtomic<Int> = .create(0)
-    static var retainCount: UnsafeAtomic<Int> = .create(0)
-    static var releaseCount: UnsafeAtomic<Int> = .create(0)
-
     static func hook() {
-        let allocObjectHook: SwiftRuntimeHook = { _, _ in
-            ARCStatsProducer.allocCount.wrappingIncrement(ordering: .relaxed)
-        }
-
-        let retainHook: SwiftRuntimeHook = { _, _ in
-            ARCStatsProducer.retainCount.wrappingIncrement(ordering: .relaxed)
-        }
-
-        let releaseHook: SwiftRuntimeHook = { _, _ in
-            ARCStatsProducer.releaseCount.wrappingIncrement(ordering: .relaxed)
-        }
-
-        swift_runtime_set_alloc_object_hook(allocObjectHook, nil)
-        swift_runtime_set_retain_hook(retainHook, nil)
-        swift_runtime_set_release_hook(releaseHook, nil)
+        SwiftRuntimeInterposerSwift.hook()
     }
 
     static func unhook() {
-        swift_runtime_set_release_hook(nil, nil)
-        swift_runtime_set_retain_hook(nil, nil)
-        swift_runtime_set_alloc_object_hook(nil, nil)
+        SwiftRuntimeInterposerSwift.unhook()
     }
 
     static func reset() {
-        allocCount.store(0, ordering: .relaxed)
-        retainCount.store(0, ordering: .relaxed)
-        releaseCount.store(0, ordering: .relaxed)
+        SwiftRuntimeInterposerSwift.reset()
     }
 
     static func makeARCStats() -> ARCStats {
-        ARCStats(
-            objectAllocCount: allocCount.load(ordering: .relaxed),
-            retainCount: retainCount.load(ordering: .relaxed),
-            releaseCount: releaseCount.load(ordering: .relaxed)
+        let statistics = SwiftRuntimeInterposerSwift.getStatistics()
+        return ARCStats(
+            objectAllocCount: statistics.objectAllocCount,
+            retainCount: statistics.retainCount,
+            releaseCount: statistics.releaseCount
         )
     }
 }

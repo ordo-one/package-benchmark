@@ -13,6 +13,9 @@ import BenchmarkShared
 #if canImport(MallocInterposerSwift)
 import MallocInterposerSwift
 #endif
+#if canImport(SwiftRuntimeInterposerSwift)
+import SwiftRuntimeInterposerSwift
+#endif
 
 #if canImport(Darwin)
 import Darwin
@@ -119,6 +122,9 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
         var benchmarkCommand: BenchmarkCommandRequest
         #if canImport(MallocInterposerSwift)
         MallocInterposerSwift.initialize()
+        #endif
+        #if canImport(SwiftRuntimeInterposerSwift)
+        SwiftRuntimeInterposerSwift.initialize()
         #endif
         let benchmarkExecutor = BenchmarkExecutor(quiet: quiet)
         var benchmark: Benchmark?

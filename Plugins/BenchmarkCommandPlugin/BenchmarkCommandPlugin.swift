@@ -153,7 +153,8 @@ import PackagePlugin
         let packageBenchmarkIdentifier = "package-benchmark"
         let benchmarkToolName = "BenchmarkTool"
         let benchmarkTool: PackagePlugin.Path // = try context.tool(named: benchmarkToolName)
-        let interposerLib: String
+        let mallocInterposerLib: String
+        let swiftRuntimeInterposerLib: String
 
         var args: [String] = [
             benchmarkToolName,
@@ -403,7 +404,15 @@ import PackagePlugin
         }
 
         benchmarkTool = tool.path
-        interposerLib = tool.path.removingLastComponent().appending(subpath: "libMallocInterposerC.so").string
+        #if os(Linux)
+        mallocInterposerLib = tool.path.removingLastComponent().appending(subpath: "libMallocInterposerC.so").string
+        swiftRuntimeInterposerLib = tool.path.removingLastComponent()
+            .appending(subpath: "libSwiftRuntimeInterposerC.so").string
+        #else
+        mallocInterposerLib = tool.path.removingLastComponent().appending(subpath: "libMallocInterposerC.dylib").string
+        swiftRuntimeInterposerLib = tool.path.removingLastComponent()
+            .appending(subpath: "libSwiftRuntimeInterposerC.dylib").string
+        #endif
 
         let filteredTargets =
             swiftSourceModuleTargets
@@ -485,11 +494,14 @@ import PackagePlugin
                 return
             }
 
-            // On Linux we need to set LD_PRELOAD to get the malloc interposer working
-            // while on Darwin this is done with DYLD interpose mechanism
+            let preloadLibraries = [mallocInterposerLib, swiftRuntimeInterposerLib]
             #if os(Linux)
             var environment = ProcessInfo.processInfo.environment
-            environment["LD_PRELOAD"] = interposerLib
+            if let existingPreload = environment["LD_PRELOAD"], existingPreload.isEmpty == false {
+                environment["LD_PRELOAD"] = preloadLibraries.joined(separator: ":") + ":\(existingPreload)"
+            } else {
+                environment["LD_PRELOAD"] = preloadLibraries.joined(separator: ":")
+            }
 
             let envp = environment.map { "\($0.key)=\($0.value)" }.map { $0.withCString(strdup) } + [nil]
             defer {
@@ -503,8 +515,24 @@ import PackagePlugin
             var pid: pid_t = 0
             var status = posix_spawn(&pid, benchmarkTool.string, nil, nil, cArgs, envp)
             #else
+            var environment = ProcessInfo.processInfo.environment
+            if let existingLibraries = environment["DYLD_INSERT_LIBRARIES"], existingLibraries.isEmpty == false {
+                environment["DYLD_INSERT_LIBRARIES"] = preloadLibraries.joined(separator: ":") + ":\(existingLibraries)"
+            } else {
+                environment["DYLD_INSERT_LIBRARIES"] = preloadLibraries.joined(separator: ":")
+            }
+
+            let envp = environment.map { "\($0.key)=\($0.value)" }.map { $0.withCString(strdup) } + [nil]
+            defer {
+                for i in 0..<envp.count - 1 {
+                    if let ptr = envp[i] {
+                        free(ptr)
+                    }
+                }
+            }
+
             var pid: pid_t = 0
-            var status = posix_spawn(&pid, benchmarkTool.string, nil, nil, cArgs, environ)
+            var status = posix_spawn(&pid, benchmarkTool.string, nil, nil, cArgs, envp)
             #endif
 
             if status == 0 {

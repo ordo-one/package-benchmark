@@ -28,6 +28,8 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-atomics.git", .upToNextMajor(from: "1.0.0")),
         .package(path: "LocalPackages/MallocInterposerC"),
         .package(path: "LocalPackages/MallocInterposerSwift"),
+        .package(path: "LocalPackages/SwiftRuntimeInterposerC"),
+        .package(path: "LocalPackages/SwiftRuntimeInterposerSwift"),
     ],
     targets: [
         // Plugins used by users of the package
@@ -128,10 +130,11 @@ var dependencies: [PackageDescription.Target.Dependency] = [
     .byNameItem(name: "CDarwinOperatingSystemStats", condition: .when(platforms: [.macOS, .iOS])),
     .byNameItem(name: "CLinuxOperatingSystemStats", condition: .when(platforms: [.linux])),
     .product(name: "Atomics", package: "swift-atomics"),
-    "SwiftRuntimeHooks",
     "BenchmarkShared",
     .product(name: "MallocInterposerC", package: "MallocInterposerC"),
     "MallocInterposerSwift",
+    .product(name: "SwiftRuntimeInterposerC", package: "SwiftRuntimeInterposerC"),
+    "SwiftRuntimeInterposerSwift",
 ]
 
 package.targets += [
