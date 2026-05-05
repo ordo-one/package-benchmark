@@ -18,6 +18,8 @@ import SystemPackage
 import Darwin
 #elseif canImport(Glibc)
 import Glibc
+#elseif canImport(Musl)
+import Musl
 #else
 #error("Unsupported Platform")
 #endif
@@ -449,7 +451,8 @@ extension BenchmarkBaseline: Equatable {
                             benchmarks,
                             name: lhsBenchmarkIdentifier.name,
                             target: lhsBenchmarkIdentifier.target,
-                            metric: lhsBenchmarkResult.metric
+                            metric: lhsBenchmarkResult.metric,
+                            defaultThresholds: lhsBenchmarkResult.thresholds ?? BenchmarkThresholds.default
                         )
 
                         let deviationResults = lhsBenchmarkResult.deviationsComparedWith(

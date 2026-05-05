@@ -16,6 +16,8 @@ import SystemPackage
 import Darwin
 #elseif canImport(Glibc)
 import Glibc
+#elseif canImport(Musl)
+import Musl
 #else
 #error("Unsupported Platform")
 #endif
@@ -235,12 +237,12 @@ extension BenchmarkTool {
                 try results.forEach { values in
                     let histogram = values.statistics.histogram
 
-                    outputString += "Percentile\t" + "\(values.metric.description) \(values.unitDescriptionPretty)\n"
+                    outputString += "Percentile\t" + "\(values.metric.description) \(values.scaledUnitDescriptionPretty)\n"
 
                     for percentile in 0...100 {
                         outputString +=
                             "\(percentile)\t"
-                            + "\(values.normalize(Int(histogram.valueAtPercentile(Double(percentile)))))\n"
+                            + "\(values.scale(Int(histogram.valueAtPercentile(Double(percentile)))))\n"
                     }
 
                     let description = values.metric.rawDescription
@@ -276,6 +278,16 @@ extension BenchmarkTool {
                     print("Failed to encode json for \(outputResults)")
                 }
             }
+        case .jsonSmallerIsBetter:
+            try write(
+                exportData: "\(convertToJSON(baseline, polarity: .prefersSmaller))",
+                fileName: cleanupStringForShellSafety("\(baselineName).json")
+            )
+        case .jsonBiggerIsBetter:
+            try write(
+                exportData: "\(convertToJSON(baseline, polarity: .prefersLarger))",
+                fileName: cleanupStringForShellSafety("\(baselineName)-bigger-is-better.json")
+            )
         }
     }
 
