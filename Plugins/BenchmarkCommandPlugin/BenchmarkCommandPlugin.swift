@@ -38,6 +38,19 @@ import PackagePlugin
         cStrings.forEach { free($0) }
     }
 
+    func shouldEmitRuntimeInterposerWarning(outputFormat: OutputFormat, exportPath: String) -> Bool {
+        guard exportPath == "stdout" else {
+            return true
+        }
+
+        switch outputFormat {
+        case .text, .markdown:
+            return true
+        default:
+            return false
+        }
+    }
+
     func performCommand(context: PluginContext, arguments: [String]) throws {
         // Get specific target(s) to run benchmarks for if specified on command line
         var argumentExtractor = ArgumentExtractor(arguments)
@@ -497,9 +510,11 @@ import PackagePlugin
             }
 
             #if os(Linux) && compiler(>=6.3)
-            writeToStderr(
-                "\u{001B}[33mWarning: running with the Swift runtime interposer on Linux to avoid the Swift 6.3 runtime hook crash. See https://github.com/ordo-one/package-benchmark/issues/349\u{001B}[0m\n"
-            )
+            if shouldEmitRuntimeInterposerWarning(outputFormat: outputFormat, exportPath: exportPath) {
+                writeToStderr(
+                    "\u{001B}[33mWarning: running with the Swift runtime interposer on Linux to avoid the Swift 6.3 runtime hook crash. See https://github.com/ordo-one/package-benchmark/issues/349\u{001B}[0m\n"
+                )
+            }
 
             var environment = ProcessInfo.processInfo.environment
             if let existingPreload = environment["LD_PRELOAD"], existingPreload.isEmpty == false {
