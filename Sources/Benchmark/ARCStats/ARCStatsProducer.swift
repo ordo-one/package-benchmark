@@ -23,7 +23,17 @@ final class ARCStatsProducer {
 
     static func hook() {
         #if os(Linux) && compiler(>=6.3)
+        let retainHook: SwiftRuntimeHook = { _, _ in
+            ARCStatsProducer.retainCount.wrappingIncrement(ordering: .relaxed)
+        }
+
+        let releaseHook: SwiftRuntimeHook = { _, _ in
+            ARCStatsProducer.releaseCount.wrappingIncrement(ordering: .relaxed)
+        }
+
         swift_runtime_set_swizzling_enabled(1)
+        swift_runtime_set_retain_hook(retainHook, nil)
+        swift_runtime_set_release_hook(releaseHook, nil)
         #else
         let allocObjectHook: SwiftRuntimeHook = { _, _ in
             ARCStatsProducer.allocCount.wrappingIncrement(ordering: .relaxed)
@@ -45,6 +55,8 @@ final class ARCStatsProducer {
 
     static func unhook() {
         #if os(Linux) && compiler(>=6.3)
+        swift_runtime_set_retain_hook(nil, nil)
+        swift_runtime_set_release_hook(nil, nil)
         swift_runtime_set_swizzling_enabled(0)
         #else
         swift_runtime_set_alloc_object_hook(nil, nil)

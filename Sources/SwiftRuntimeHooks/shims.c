@@ -3,6 +3,8 @@
 #if defined(__linux__)
 #include <stdatomic.h>
 #include <stdbool.h>
+#include <sys/mman.h>
+#include <unistd.h>
 #endif
 
 #include "SwiftRuntimeHooks.h"
@@ -80,7 +82,34 @@ void swift_runtime_set_alloc_object_hook(swift_runtime_hook_t hook, void * conte
 
 static struct hook_data_s _swift_retain_hook_data = {NULL, NULL, NULL, NULL, NULL};
 
+#if defined(__linux__) && defined(__x86_64__)
+static bool _swift_pointer_looks_mapped(const void *ptr) {
+    if (ptr == NULL) {
+        return false;
+    }
+
+    long pageSize = sysconf(_SC_PAGESIZE);
+    if (pageSize <= 0) {
+        return true;
+    }
+
+    uintptr_t raw = (uintptr_t)ptr;
+    uintptr_t pageBase = raw & ~((uintptr_t)pageSize - 1);
+    unsigned char vec = 0;
+    return mincore((void *)pageBase, (size_t)pageSize, &vec) == 0;
+}
+#endif
+
 static HeapObject * _swift_retain_hook(HeapObject * heapObject) {
+#if defined(__linux__) && defined(__x86_64__)
+    // Swift 6.3 Linux can route some non-native values through the native
+    // swizzled retain path. Avoid forwarding obviously unmapped addresses into
+    // __swift_retain_ while we diagnose the runtime behavior.
+    if (!_swift_pointer_looks_mapped(heapObject)) {
+        return heapObject;
+    }
+#endif
+
     HeapObject * ret = (*_swift_retain_hook_data.orig)(heapObject);
     (*_swift_retain_hook_data.hook)(heapObject, _swift_retain_hook_data.context);
     return ret;
@@ -88,6 +117,12 @@ static HeapObject * _swift_retain_hook(HeapObject * heapObject) {
 
 // This doesn't seem to be called for Apple Silicon at least, but keeping it here
 static HeapObject * _swift_tryRetain_hook(HeapObject * heapObject) {
+#if defined(__linux__) && defined(__x86_64__)
+    if (!_swift_pointer_looks_mapped(heapObject)) {
+        return NULL;
+    }
+#endif
+
     HeapObject * ret = (*_swift_retain_hook_data.origTry)(heapObject);
     if (ret != NULL) {
         (*_swift_retain_hook_data.hook)(heapObject, _swift_retain_hook_data.context);
@@ -98,6 +133,12 @@ static HeapObject * _swift_tryRetain_hook(HeapObject * heapObject) {
 // This doesn't seem to be called for Apple Silicon at least, but keeping it here
 static HeapObject * _swift_retain_n_hook(HeapObject * heapObject, uint32_t n) {
     int i;
+#if defined(__linux__) && defined(__x86_64__)
+    if (!_swift_pointer_looks_mapped(heapObject)) {
+        return heapObject;
+    }
+#endif
+
     HeapObject * ret = (*_swift_retain_hook_data.orig_n)(heapObject, n);
     for (i = 0; i < n; i++) {
         (*_swift_retain_hook_data.hook)(heapObject, _swift_retain_hook_data.context);
@@ -126,6 +167,12 @@ void swift_runtime_set_retain_hook(swift_runtime_hook_t hook, void * context) {
 static struct hook_data_s _swift_release_hook_data = {NULL, NULL, NULL, NULL, NULL};
 
 static HeapObject * _swift_release_hook(HeapObject * heapObject) {
+#if defined(__linux__) && defined(__x86_64__)
+    if (!_swift_pointer_looks_mapped(heapObject)) {
+        return heapObject;
+    }
+#endif
+
     HeapObject * ret = (*_swift_release_hook_data.orig)(heapObject);
     (*_swift_release_hook_data.hook)(heapObject, _swift_release_hook_data.context);
     return ret;
@@ -134,6 +181,12 @@ static HeapObject * _swift_release_hook(HeapObject * heapObject) {
 // This doesn't seem to be called for Apple Silicon at least, but keeping it here
 static HeapObject * _swift_release_n_hook(HeapObject * heapObject, uint32_t n) {
     int i;
+#if defined(__linux__) && defined(__x86_64__)
+    if (!_swift_pointer_looks_mapped(heapObject)) {
+        return heapObject;
+    }
+#endif
+
     HeapObject * ret = (*_swift_release_hook_data.orig_n)(heapObject, n);
     for (i = 0; i < n; i++) {
         (*_swift_release_hook_data.hook)(heapObject, _swift_release_hook_data.context);
