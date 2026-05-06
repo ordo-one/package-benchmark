@@ -491,6 +491,10 @@ import Foundation
             }
 
             #if os(Linux) && compiler(>=6.3)
+            print(
+                "\u{001B}[33mWarning: running with the Swift runtime interposer on Linux to avoid the Swift 6.3 runtime hook crash. See https://github.com/ordo-one/package-benchmark/tree/bug/sc-31651/package-benchmark-crash-on-linux-swift-6-3\u{001B}[0m"
+            )
+
             var environment = ProcessInfo.processInfo.environment
             if let existingPreload = environment["LD_PRELOAD"], existingPreload.isEmpty == false {
                 environment["LD_PRELOAD"] = "\(swiftRuntimeInterposerLib):\(existingPreload)"
