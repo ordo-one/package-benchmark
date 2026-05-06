@@ -7,7 +7,7 @@ import class Foundation.ProcessInfo
 // If the environment variable BENCHMARK_DISABLE_JEMALLOC is set disable Jemalloc trait (backward compatibility)
 let disableJemalloc = ProcessInfo.processInfo.environment["BENCHMARK_DISABLE_JEMALLOC"] != nil
 
-let defaultTraits: [Trait]
+let defaultTraits: Set<String>
 
 if disableJemalloc {
     defaultTraits = []
