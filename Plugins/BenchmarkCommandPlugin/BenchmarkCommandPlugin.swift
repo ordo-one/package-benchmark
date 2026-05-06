@@ -510,17 +510,21 @@ import PackagePlugin
             }
 
             #if os(Linux) && compiler(>=6.3)
-            if shouldEmitRuntimeInterposerWarning(outputFormat: outputFormat, exportPath: exportPath) {
-                writeToStderr(
-                    "\u{001B}[33mWarning: running with the Swift runtime interposer on Linux to avoid the Swift 6.3 runtime hook crash. See https://github.com/ordo-one/package-benchmark/issues/349\u{001B}[0m\n"
-                )
-            }
-
             var environment = ProcessInfo.processInfo.environment
-            if let existingPreload = environment["LD_PRELOAD"], existingPreload.isEmpty == false {
-                environment["LD_PRELOAD"] = "\(swiftRuntimeInterposerLib):\(existingPreload)"
-            } else {
-                environment["LD_PRELOAD"] = swiftRuntimeInterposerLib
+            let usesExperimentalPrivateHooks = environment["BENCHMARK_EXPERIMENTAL_SWIFT_RUNTIME_HOOKS"] != nil
+
+            if usesExperimentalPrivateHooks == false {
+                if shouldEmitRuntimeInterposerWarning(outputFormat: outputFormat, exportPath: exportPath) {
+                    writeToStderr(
+                        "\u{001B}[33mWarning: running with the Swift runtime interposer on Linux to avoid the Swift 6.3 runtime hook crash. See https://github.com/ordo-one/package-benchmark/issues/349\u{001B}[0m\n"
+                    )
+                }
+
+                if let existingPreload = environment["LD_PRELOAD"], existingPreload.isEmpty == false {
+                    environment["LD_PRELOAD"] = "\(swiftRuntimeInterposerLib):\(existingPreload)"
+                } else {
+                    environment["LD_PRELOAD"] = swiftRuntimeInterposerLib
+                }
             }
 
             let envp = environment.map { "\($0.key)=\($0.value)" }.compactMap { $0.withCString(strdup) } + [nil]

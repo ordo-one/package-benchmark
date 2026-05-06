@@ -1,5 +1,9 @@
 #include <stdint.h>
 #include <stddef.h>
+#if defined(__linux__)
+#include <stdatomic.h>
+#include <stdbool.h>
+#endif
 
 #include "SwiftRuntimeHooks.h"
 
@@ -19,6 +23,10 @@ extern HeapObject * (*_swift_tryRetain)(HeapObject*);
 extern HeapObject * (*_swift_retain_n)(HeapObject *object, uint32_t n);
 extern HeapObject * (*_swift_release_n)(HeapObject *object, uint32_t n);
 
+#if defined(__linux__)
+extern _Atomic bool _swift_enableSwizzlingOfAllocationAndRefCountingFunctions_forInstrumentsOnly;
+#endif
+
 struct hook_data_s {
     HeapObject * (*orig)(HeapObject*);
     HeapObject * (*origTry)(HeapObject*);
@@ -36,6 +44,18 @@ struct hook_data_alloc_s {
 /*===========================================================================*/
 
 static struct hook_data_alloc_s _swift_alloc_object_hook_data = {NULL, NULL, NULL};
+
+void swift_runtime_set_swizzling_enabled(int enabled) {
+#if defined(__linux__)
+    atomic_store_explicit(
+        &_swift_enableSwizzlingOfAllocationAndRefCountingFunctions_forInstrumentsOnly,
+        enabled != 0,
+        memory_order_relaxed
+    );
+#else
+    (void)enabled;
+#endif
+}
 
 static HeapObject * _swift_alloc_object_hook(HeapMetadata const *metadata,
                                              size_t requiredSize,

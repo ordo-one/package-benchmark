@@ -9,6 +9,9 @@
 //
 
 #if os(Linux) && compiler(>=6.3) && canImport(SwiftRuntimeInterposerSwift)
+import Atomics
+import Glibc
+import SwiftRuntimeHooks
 import SwiftRuntimeInterposerSwift
 #else
 import Atomics
@@ -18,31 +21,77 @@ import SwiftRuntimeHooks
 // swiftlint:disable prefer_self_in_static_references
 
 final class ARCStatsProducer {
+    typealias SwiftRuntimeHook = @convention(c) (UnsafeRawPointer?, UnsafeMutableRawPointer?) -> Void
+
     #if os(Linux) && compiler(>=6.3) && canImport(SwiftRuntimeInterposerSwift)
-    static let usesPreloadedInterposer = true
+    static let usesExperimentalPrivateHooks = getenv("BENCHMARK_EXPERIMENTAL_SWIFT_RUNTIME_HOOKS") != nil
+    static let usesPreloadedInterposer = !usesExperimentalPrivateHooks
+
+    static var allocCount: UnsafeAtomic<Int> = .create(0)
+    static var retainCount: UnsafeAtomic<Int> = .create(0)
+    static var releaseCount: UnsafeAtomic<Int> = .create(0)
 
     static func hook() {
-        SwiftRuntimeInterposerSwift.hook()
+        if usesExperimentalPrivateHooks {
+            let allocObjectHook: SwiftRuntimeHook = { _, _ in
+                ARCStatsProducer.allocCount.wrappingIncrement(ordering: .relaxed)
+            }
+
+            let retainHook: SwiftRuntimeHook = { _, _ in
+                ARCStatsProducer.retainCount.wrappingIncrement(ordering: .relaxed)
+            }
+
+            let releaseHook: SwiftRuntimeHook = { _, _ in
+                ARCStatsProducer.releaseCount.wrappingIncrement(ordering: .relaxed)
+            }
+
+            swift_runtime_set_alloc_object_hook(allocObjectHook, nil)
+            swift_runtime_set_retain_hook(retainHook, nil)
+            swift_runtime_set_release_hook(releaseHook, nil)
+            swift_runtime_set_swizzling_enabled(1)
+        } else {
+            SwiftRuntimeInterposerSwift.hook()
+        }
     }
 
     static func unhook() {
-        SwiftRuntimeInterposerSwift.unhook()
+        if usesExperimentalPrivateHooks {
+            swift_runtime_set_swizzling_enabled(0)
+            swift_runtime_set_release_hook(nil, nil)
+            swift_runtime_set_retain_hook(nil, nil)
+            swift_runtime_set_alloc_object_hook(nil, nil)
+        } else {
+            SwiftRuntimeInterposerSwift.unhook()
+        }
     }
 
     static func reset() {
-        SwiftRuntimeInterposerSwift.reset()
+        if usesExperimentalPrivateHooks {
+            allocCount.store(0, ordering: .relaxed)
+            retainCount.store(0, ordering: .relaxed)
+            releaseCount.store(0, ordering: .relaxed)
+        } else {
+            SwiftRuntimeInterposerSwift.reset()
+        }
     }
 
     static func makeARCStats() -> ARCStats {
-        let statistics = SwiftRuntimeInterposerSwift.getStatistics()
-        return ARCStats(
-            objectAllocCount: statistics.objectAllocCount,
-            retainCount: statistics.retainCount,
-            releaseCount: statistics.releaseCount
-        )
+        if usesExperimentalPrivateHooks {
+            return ARCStats(
+                objectAllocCount: allocCount.load(ordering: .relaxed),
+                retainCount: retainCount.load(ordering: .relaxed),
+                releaseCount: releaseCount.load(ordering: .relaxed)
+            )
+        } else {
+            let statistics = SwiftRuntimeInterposerSwift.getStatistics()
+            return ARCStats(
+                objectAllocCount: statistics.objectAllocCount,
+                retainCount: statistics.retainCount,
+                releaseCount: statistics.releaseCount
+            )
+        }
     }
     #else
-    typealias SwiftRuntimeHook = @convention(c) (UnsafeRawPointer?, UnsafeMutableRawPointer?) -> Void
     static let usesPreloadedInterposer = false
 
     static var allocCount: UnsafeAtomic<Int> = .create(0)
