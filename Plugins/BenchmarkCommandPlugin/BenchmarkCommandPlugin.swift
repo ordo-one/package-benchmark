@@ -12,6 +12,7 @@
 // Running the `BenchmarkTool` for each benchmark target.
 
 import PackagePlugin
+import Foundation
 
 #if canImport(Darwin)
 @preconcurrency import Darwin
