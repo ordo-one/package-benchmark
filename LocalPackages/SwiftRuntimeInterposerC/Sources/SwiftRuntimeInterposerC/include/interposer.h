@@ -29,5 +29,7 @@ void swift_release(void *object);
 void swift_nonatomic_release(void *object);
 void swift_release_n(void *object, uint32_t n);
 void swift_nonatomic_release_n(void *object, uint32_t n);
+void swift_bridgeObjectRelease(void *object);
+void swift_bridgeObjectRelease_n(void *object, uint32_t n);
 
 #endif
