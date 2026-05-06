@@ -15,6 +15,13 @@ import Foundation
 import SystemPackage
 
 extension BenchmarkTool {
+    private func writeCorruptedPayloadDiagnostic(_ data: Data, prefix: String) {
+        let timestamp = ISO8601DateFormatter().string(from: Date()).replacingOccurrences(of: ":", with: "-")
+        let path = "/tmp/package-benchmark-\(prefix)-\(timestamp).bin"
+        try? data.write(to: URL(fileURLWithPath: path))
+        fputs("BenchmarkTool received invalid JSON payload; saved raw bytes to \(path)\n", stderr)
+    }
+
     func write(_ reply: BenchmarkCommandRequest) throws {
         let bytesArray = try JSONEncoder().encode(reply)
         let count: Int = bytesArray.count
@@ -51,7 +58,14 @@ extension BenchmarkTool {
             readBytes.append(contentsOf: nextBytes)
         }
 
-        let request = try JSONDecoder().decode(BenchmarkCommandReply.self, from: Data(readBytes))
+        let data = Data(readBytes)
+        let request: BenchmarkCommandReply
+        do {
+            request = try JSONDecoder().decode(BenchmarkCommandReply.self, from: data)
+        } catch let error as DecodingError {
+            writeCorruptedPayloadDiagnostic(data, prefix: "reply")
+            throw error
+        }
 
         return request
     }

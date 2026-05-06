@@ -20,6 +20,13 @@ protocol BenchmarkRunnerReadWrite {
 }
 
 extension BenchmarkRunner {
+    private func writeCorruptedPayloadDiagnostic(_ data: Data, prefix: String) {
+        let timestamp = ISO8601DateFormatter().string(from: Date()).replacingOccurrences(of: ":", with: "-")
+        let path = "/tmp/package-benchmark-\(prefix)-\(timestamp).bin"
+        try? data.write(to: URL(fileURLWithPath: path))
+        fputs("BenchmarkRunner received invalid JSON payload; saved raw bytes to \(path)\n", stderr)
+    }
+
     func write(_ reply: BenchmarkCommandReply) throws {
         guard outputFD != nil else {
             return
@@ -64,7 +71,14 @@ extension BenchmarkRunner {
             readBytes.append(contentsOf: nextBytes)
         }
 
-        let request = try JSONDecoder().decode(BenchmarkCommandRequest.self, from: Data(readBytes))
+        let data = Data(readBytes)
+        let request: BenchmarkCommandRequest
+        do {
+            request = try JSONDecoder().decode(BenchmarkCommandRequest.self, from: data)
+        } catch let error as DecodingError {
+            writeCorruptedPayloadDiagnostic(data, prefix: "request")
+            throw error
+        }
 
         return request
     }
