@@ -24,13 +24,6 @@ var packageDependencies: [Package.Dependency] = [
     .package(url: "https://github.com/ordo-one/package-jemalloc.git", .upToNextMajor(from: "1.0.0")),
 ]
 
-#if os(Linux) && compiler(>=6.3)
-packageDependencies += [
-    .package(path: "LocalPackages/SwiftRuntimeInterposerC"),
-    .package(path: "LocalPackages/SwiftRuntimeInterposerSwift"),
-]
-#endif
-
 var benchmarkDependencies: [Target.Dependency] = [
     .product(name: "Histogram", package: "hdrhistogram-swift"),
     .product(name: "ArgumentParser", package: "swift-argument-parser"),
@@ -42,13 +35,6 @@ var benchmarkDependencies: [Target.Dependency] = [
     "BenchmarkShared",
     .product(name: "jemalloc", package: "package-jemalloc", condition: .when(platforms: [.macOS, .linux], traits: ["Jemalloc"])),
 ]
-
-#if os(Linux) && compiler(>=6.3)
-benchmarkDependencies += [
-    .product(name: "SwiftRuntimeInterposerC", package: "SwiftRuntimeInterposerC", condition: .when(platforms: [.linux])),
-    .byNameItem(name: "SwiftRuntimeInterposerSwift", condition: .when(platforms: [.linux])),
-]
-#endif
 
 let package = Package(
     name: "Benchmark",

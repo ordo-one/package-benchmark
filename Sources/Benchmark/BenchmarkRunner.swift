@@ -10,9 +10,6 @@
 
 import ArgumentParser
 import BenchmarkShared
-#if os(Linux) && compiler(>=6.3) && canImport(SwiftRuntimeInterposerSwift)
-import SwiftRuntimeInterposerSwift
-#endif
 
 #if canImport(Darwin)
 import Darwin
@@ -117,11 +114,6 @@ public struct BenchmarkRunner: AsyncParsableCommand, BenchmarkRunnerReadWrite {
 
         var debugIterator = Benchmark.benchmarks.makeIterator()
         var benchmarkCommand: BenchmarkCommandRequest
-        #if os(Linux) && compiler(>=6.3) && canImport(SwiftRuntimeInterposerSwift)
-        if getenv("BENCHMARK_EXPERIMENTAL_SWIFT_RUNTIME_HOOKS") == nil {
-            SwiftRuntimeInterposerSwift.initialize()
-        }
-        #endif
         let benchmarkExecutor = BenchmarkExecutor(quiet: quiet)
         var benchmark: Benchmark?
         var results: [BenchmarkResult] = []
