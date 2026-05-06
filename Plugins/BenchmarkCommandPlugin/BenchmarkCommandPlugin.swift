@@ -502,7 +502,7 @@ import Foundation
                 environment["LD_PRELOAD"] = swiftRuntimeInterposerLib
             }
 
-            let envp = environment.map { "\($0.key)=\($0.value)" }.map { $0.withCString(strdup) } + [nil]
+            let envp = environment.map { "\($0.key)=\($0.value)" }.compactMap { $0.withCString(strdup) } + [nil]
             defer {
                 for i in 0..<envp.count - 1 {
                     if let ptr = envp[i] {

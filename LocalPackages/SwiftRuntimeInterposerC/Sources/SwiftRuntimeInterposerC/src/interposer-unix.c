@@ -61,45 +61,39 @@ void swift_runtime_interposer_get_stats(
 }
 
 static type_swift_allocObject resolve_swift_allocObject(void) {
-    type_swift_allocObject local_fun = atomic_load(&g_swift_allocObject);
+    type_swift_allocObject local_fun = atomic_load_explicit(&g_swift_allocObject, memory_order_relaxed);
     if (!local_fun && !g_in_swift_allocObject) {
         g_in_swift_allocObject = true;
         type_swift_allocObject desired = dlsym(RTLD_NEXT, "swift_allocObject");
         g_in_swift_allocObject = false;
         if (atomic_compare_exchange_strong(&g_swift_allocObject, &local_fun, desired)) {
             local_fun = desired;
-        } else {
-            local_fun = atomic_load(&g_swift_allocObject);
         }
     }
     return local_fun;
 }
 
 static type_swift_retain resolve_swift_retain(void) {
-    type_swift_retain local_fun = atomic_load(&g_swift_retain);
+    type_swift_retain local_fun = atomic_load_explicit(&g_swift_retain, memory_order_relaxed);
     if (!local_fun && !g_in_swift_retain) {
         g_in_swift_retain = true;
         type_swift_retain desired = dlsym(RTLD_NEXT, "swift_retain");
         g_in_swift_retain = false;
         if (atomic_compare_exchange_strong(&g_swift_retain, &local_fun, desired)) {
             local_fun = desired;
-        } else {
-            local_fun = atomic_load(&g_swift_retain);
         }
     }
     return local_fun;
 }
 
 static type_swift_release resolve_swift_release(void) {
-    type_swift_release local_fun = atomic_load(&g_swift_release);
+    type_swift_release local_fun = atomic_load_explicit(&g_swift_release, memory_order_relaxed);
     if (!local_fun && !g_in_swift_release) {
         g_in_swift_release = true;
         type_swift_release desired = dlsym(RTLD_NEXT, "swift_release");
         g_in_swift_release = false;
         if (atomic_compare_exchange_strong(&g_swift_release, &local_fun, desired)) {
             local_fun = desired;
-        } else {
-            local_fun = atomic_load(&g_swift_release);
         }
     }
     return local_fun;
