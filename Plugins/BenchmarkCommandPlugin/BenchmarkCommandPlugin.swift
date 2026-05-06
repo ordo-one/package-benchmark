@@ -26,6 +26,12 @@ import PackagePlugin
 
 @available(macOS 13.0, *)
 @main struct BenchmarkCommandPlugin: CommandPlugin {
+    func writeToStderr(_ message: String) {
+        message.withCString { pointer in
+            _ = write(STDERR_FILENO, pointer, strlen(pointer))
+        }
+    }
+
     func withCStrings(_ strings: [String], scoped: ([UnsafeMutablePointer<CChar>?]) throws -> Void) rethrows {
         let cStrings = strings.map { strdup($0) }
         try scoped(cStrings + [nil])
@@ -491,7 +497,7 @@ import PackagePlugin
             }
 
             #if os(Linux) && compiler(>=6.3)
-            print(
+            writeToStderr(
                 "\u{001B}[33mWarning: running with the Swift runtime interposer on Linux to avoid the Swift 6.3 runtime hook crash. See https://github.com/ordo-one/package-benchmark/issues/349\u{001B}[0m\n"
             )
 
