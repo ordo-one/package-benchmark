@@ -2,6 +2,41 @@
 
 import PackageDescription
 
+var packageDependencies: [Package.Dependency] = [
+    .package(url: "https://github.com/apple/swift-system.git", .upToNextMajor(from: "1.1.0")),
+    .package(url: "https://github.com/apple/swift-argument-parser.git", "1.1.0" ..< "1.6.0"),
+    .package(url: "https://github.com/ordo-one/TextTable.git", .upToNextMajor(from: "0.0.1")),
+    .package(url: "https://github.com/HdrHistogram/hdrhistogram-swift.git", .upToNextMajor(from: "0.1.4")),
+    .package(url: "https://github.com/apple/swift-atomics.git", .upToNextMajor(from: "1.0.0")),
+    .package(url: "https://github.com/ordo-one/package-jemalloc.git", .upToNextMajor(from: "1.0.0")),
+]
+
+#if os(Linux) && compiler(>=6.3)
+packageDependencies += [
+    .package(path: "LocalPackages/SwiftRuntimeInterposerC"),
+    .package(path: "LocalPackages/SwiftRuntimeInterposerSwift"),
+]
+#endif
+
+var benchmarkDependencies: [Target.Dependency] = [
+    .product(name: "Histogram", package: "hdrhistogram-swift"),
+    .product(name: "ArgumentParser", package: "swift-argument-parser"),
+    .product(name: "SystemPackage", package: "swift-system"),
+    .byNameItem(name: "CDarwinOperatingSystemStats", condition: .when(platforms: [.macOS, .iOS])),
+    .byNameItem(name: "CLinuxOperatingSystemStats", condition: .when(platforms: [.linux])),
+    .product(name: "Atomics", package: "swift-atomics"),
+    "SwiftRuntimeHooks",
+    "BenchmarkShared",
+    .product(name: "jemalloc", package: "package-jemalloc", condition: .when(platforms: [.macOS, .linux], traits: ["Jemalloc"])),
+]
+
+#if os(Linux) && compiler(>=6.3)
+benchmarkDependencies += [
+    .product(name: "SwiftRuntimeInterposerC", package: "SwiftRuntimeInterposerC", condition: .when(platforms: [.linux])),
+    .byNameItem(name: "SwiftRuntimeInterposerSwift", condition: .when(platforms: [.linux])),
+]
+#endif
+
 let package = Package(
     name: "Benchmark",
     platforms: [
@@ -20,28 +55,11 @@ let package = Package(
         .trait(name: "Jemalloc"),
         .default(enabledTraits: ["Jemalloc"]),
     ],
-    dependencies: [
-        .package(url: "https://github.com/apple/swift-system.git", .upToNextMajor(from: "1.1.0")),
-        .package(url: "https://github.com/apple/swift-argument-parser.git", "1.1.0" ..< "1.6.0"),
-        .package(url: "https://github.com/ordo-one/TextTable.git", .upToNextMajor(from: "0.0.1")),
-        .package(url: "https://github.com/HdrHistogram/hdrhistogram-swift.git", .upToNextMajor(from: "0.1.4")),
-        .package(url: "https://github.com/apple/swift-atomics.git", .upToNextMajor(from: "1.0.0")),
-        .package(url: "https://github.com/ordo-one/package-jemalloc.git", .upToNextMajor(from: "1.0.0")),
-    ],
+    dependencies: packageDependencies,
     targets: [
         .target(
             name: "Benchmark",
-            dependencies: [
-                .product(name: "Histogram", package: "hdrhistogram-swift"),
-                .product(name: "ArgumentParser", package: "swift-argument-parser"),
-                .product(name: "SystemPackage", package: "swift-system"),
-                .byNameItem(name: "CDarwinOperatingSystemStats", condition: .when(platforms: [.macOS, .iOS])),
-                .byNameItem(name: "CLinuxOperatingSystemStats", condition: .when(platforms: [.linux])),
-                .product(name: "Atomics", package: "swift-atomics"),
-                "SwiftRuntimeHooks",
-                "BenchmarkShared",
-                .product(name: "jemalloc", package: "package-jemalloc", condition: .when(platforms: [.macOS, .linux], traits: ["Jemalloc"])),
-            ],
+            dependencies: benchmarkDependencies,
             swiftSettings: [.swiftLanguageMode(.v5)]
         ),
         // Plugins used by users of the package

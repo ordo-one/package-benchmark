@@ -404,6 +404,10 @@ import PackagePlugin
         }
 
         benchmarkTool = tool.path
+        #if os(Linux) && compiler(>=6.3)
+        let swiftRuntimeInterposerLib = tool.path.removingLastComponent()
+            .appending(subpath: "libSwiftRuntimeInterposerC.so").string
+        #endif
 
         let filteredTargets =
             swiftSourceModuleTargets
@@ -485,8 +489,29 @@ import PackagePlugin
                 return
             }
 
+            #if os(Linux) && compiler(>=6.3)
+            var environment = ProcessInfo.processInfo.environment
+            if let existingPreload = environment["LD_PRELOAD"], existingPreload.isEmpty == false {
+                environment["LD_PRELOAD"] = "\(swiftRuntimeInterposerLib):\(existingPreload)"
+            } else {
+                environment["LD_PRELOAD"] = swiftRuntimeInterposerLib
+            }
+
+            let envp = environment.map { "\($0.key)=\($0.value)" }.map { $0.withCString(strdup) } + [nil]
+            defer {
+                for i in 0..<envp.count - 1 {
+                    if let ptr = envp[i] {
+                        free(ptr)
+                    }
+                }
+            }
+
+            var pid: pid_t = 0
+            var status = posix_spawn(&pid, benchmarkTool.string, nil, nil, cArgs, envp)
+            #else
             var pid: pid_t = 0
             var status = posix_spawn(&pid, benchmarkTool.string, nil, nil, cArgs, environ)
+            #endif
 
             if status == 0 {
                 if waitpid(pid, &status, 0) != -1 {
