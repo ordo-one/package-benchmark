@@ -92,8 +92,15 @@ from pathlib import Path
 path62 = Path(sys.argv[1])
 path63 = Path(sys.argv[2])
 
-data62 = {item["name"]: item for item in json.loads(path62.read_text())}
-data63 = {item["name"]: item for item in json.loads(path63.read_text())}
+def load_metrics(path: Path):
+    text = path.read_text()
+    start = text.find("[")
+    if start == -1:
+        raise ValueError(f"No JSON payload found in {path}")
+    return {item["name"]: item for item in json.loads(text[start:])}
+
+data62 = load_metrics(path62)
+data63 = load_metrics(path63)
 
 names = sorted(set(data62) | set(data63))
 

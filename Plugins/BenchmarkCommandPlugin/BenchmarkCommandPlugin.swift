@@ -506,8 +506,9 @@ import Foundation
             }
 
             #if os(Linux) && compiler(>=6.3)
-            print(
-                "\u{001B}[33mWarning: running with the Swift runtime interposer on Linux to avoid the Swift 6.3 runtime hook crash. See https://github.com/ordo-one/package-benchmark/issues/349\u{001B}[0m"
+            fputs(
+                "\u{001B}[33mWarning: running with the Swift runtime interposer on Linux to avoid the Swift 6.3 runtime hook crash. See https://github.com/ordo-one/package-benchmark/issues/349\u{001B}[0m\n",
+                stderr
             )
 
             var environment = ProcessInfo.processInfo.environment
