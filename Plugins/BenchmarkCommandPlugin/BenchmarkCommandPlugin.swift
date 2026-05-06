@@ -12,7 +12,7 @@
 // Running the `BenchmarkTool` for each benchmark target.
 
 import PackagePlugin
-import Foundation
+@preconcurrency import Foundation
 
 #if canImport(Darwin)
 @preconcurrency import Darwin
@@ -26,21 +26,6 @@ import Foundation
 
 @available(macOS 13.0, *)
 @main struct BenchmarkCommandPlugin: CommandPlugin {
-    func disableStdoutBuffering() {
-        guard let handle = dlopen(nil, RTLD_NOW),
-              let stdoutSymbol = dlsym(handle, "stdout")
-        else {
-            return
-        }
-
-        let stdoutPointer = stdoutSymbol.assumingMemoryBound(to: UnsafeMutablePointer<FILE>?.self)
-        guard let stdoutFile = stdoutPointer.pointee else {
-            return
-        }
-
-        setbuf(stdoutFile, nil)
-    }
-
     func withCStrings(_ strings: [String], scoped: ([UnsafeMutablePointer<CChar>?]) throws -> Void) rethrows {
         let cStrings = strings.map { strdup($0) }
         try scoped(cStrings + [nil])
@@ -73,8 +58,8 @@ import Foundation
         var grouping = "benchmark"
         var exportPath = "."
 
-        // Keep stdout unbuffered so benchmark failures stream as they happen.
-        disableStdoutBuffering()
+        // Flush stdout so we see any failures clearly
+        setbuf(stdout, nil)
 
         if helpRequested > 0 {
             print("")
@@ -506,9 +491,8 @@ import Foundation
             }
 
             #if os(Linux) && compiler(>=6.3)
-            fputs(
-                "\u{001B}[33mWarning: running with the Swift runtime interposer on Linux to avoid the Swift 6.3 runtime hook crash. See https://github.com/ordo-one/package-benchmark/issues/349\u{001B}[0m\n",
-                stderr
+            print(
+                "\u{001B}[33mWarning: running with the Swift runtime interposer on Linux to avoid the Swift 6.3 runtime hook crash. See https://github.com/ordo-one/package-benchmark/issues/349\u{001B}[0m\n"
             )
 
             var environment = ProcessInfo.processInfo.environment

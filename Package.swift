@@ -2,9 +2,22 @@
 
 import PackageDescription
 
+import class Foundation.ProcessInfo
+
+// If the environment variable BENCHMARK_DISABLE_JEMALLOC is set disable Jemalloc trait (backward compatibility)
+let disableJemalloc = ProcessInfo.processInfo.environment["BENCHMARK_DISABLE_JEMALLOC"] != nil
+
+let defaultTraits: [Trait]
+
+if disableJemalloc {
+    defaultTraits = []
+} else {
+    defaultTraits = ["Jemalloc"]
+}
+
 var packageDependencies: [Package.Dependency] = [
     .package(url: "https://github.com/apple/swift-system.git", .upToNextMajor(from: "1.1.0")),
-    .package(url: "https://github.com/apple/swift-argument-parser.git", "1.1.0" ..< "1.6.0"),
+    .package(url: "https://github.com/apple/swift-argument-parser.git", "1.1.0"..<"1.6.0"),
     .package(url: "https://github.com/ordo-one/TextTable.git", .upToNextMajor(from: "0.0.1")),
     .package(url: "https://github.com/HdrHistogram/hdrhistogram-swift.git", .upToNextMajor(from: "0.1.4")),
     .package(url: "https://github.com/apple/swift-atomics.git", .upToNextMajor(from: "1.0.0")),
@@ -53,7 +66,7 @@ let package = Package(
     ],
     traits: [
         .trait(name: "Jemalloc"),
-        .default(enabledTraits: ["Jemalloc"]),
+        .default(enabledTraits: defaultTraits),
     ],
     dependencies: packageDependencies,
     targets: [
