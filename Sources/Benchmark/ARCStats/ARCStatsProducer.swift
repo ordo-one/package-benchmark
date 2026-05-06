@@ -22,10 +22,6 @@ final class ARCStatsProducer {
     static var releaseCount: UnsafeAtomic<Int> = .create(0)
 
     static func hook() {
-        let releaseHook: SwiftRuntimeHook = { _, _ in
-            ARCStatsProducer.releaseCount.wrappingIncrement(ordering: .relaxed)
-        }
-
         #if os(Linux) && compiler(>=6.3)
         swift_runtime_set_swizzling_enabled(1)
         #else
@@ -37,22 +33,24 @@ final class ARCStatsProducer {
             ARCStatsProducer.retainCount.wrappingIncrement(ordering: .relaxed)
         }
 
+        let releaseHook: SwiftRuntimeHook = { _, _ in
+            ARCStatsProducer.releaseCount.wrappingIncrement(ordering: .relaxed)
+        }
+
         swift_runtime_set_alloc_object_hook(allocObjectHook, nil)
         swift_runtime_set_retain_hook(retainHook, nil)
-        #endif
         swift_runtime_set_release_hook(releaseHook, nil)
+        #endif
     }
 
     static func unhook() {
         #if os(Linux) && compiler(>=6.3)
         swift_runtime_set_swizzling_enabled(0)
         #else
-        swift_runtime_set_release_hook(nil, nil)
-        swift_runtime_set_retain_hook(nil, nil)
         swift_runtime_set_alloc_object_hook(nil, nil)
-        return
-        #endif
+        swift_runtime_set_retain_hook(nil, nil)
         swift_runtime_set_release_hook(nil, nil)
+        #endif
     }
 
     static func reset() {
