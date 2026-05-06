@@ -58,8 +58,8 @@ import Foundation
         var grouping = "benchmark"
         var exportPath = "."
 
-        // Flush stdout so we see any failures clearly
-        setbuf(stdout, nil)
+        // Flush stdio so we see any failures clearly without touching shared stdout state directly.
+        fflush(nil)
 
         if helpRequested > 0 {
             print("")
