@@ -50,6 +50,30 @@ struct hook_data_alloc_s {
     void * context;
 };
 
+#if defined(__linux__)
+static _Atomic long long _swift_alloc_count = 0;
+static _Atomic long long _swift_retain_count = 0;
+static _Atomic long long _swift_release_count = 0;
+
+static void _swift_count_alloc_hook(const void *object, void *context) {
+    (void)object;
+    (void)context;
+    atomic_fetch_add_explicit(&_swift_alloc_count, 1, memory_order_relaxed);
+}
+
+static void _swift_count_retain_hook(const void *object, void *context) {
+    (void)object;
+    (void)context;
+    atomic_fetch_add_explicit(&_swift_retain_count, 1, memory_order_relaxed);
+}
+
+static void _swift_count_release_hook(const void *object, void *context) {
+    (void)object;
+    (void)context;
+    atomic_fetch_add_explicit(&_swift_release_count, 1, memory_order_relaxed);
+}
+#endif
+
 /*===========================================================================*/
 
 static struct hook_data_alloc_s _swift_alloc_object_hook_data = {NULL, NULL, NULL};
@@ -211,4 +235,52 @@ void swift_runtime_set_release_hook(swift_runtime_hook_t hook, void * context) {
         _swift_release = _swift_release_hook;
         _swift_release_n = _swift_release_n_hook;
     }
+}
+
+void swift_runtime_install_counting_hooks(void) {
+#if defined(__linux__)
+    swift_runtime_set_alloc_object_hook(_swift_count_alloc_hook, NULL);
+    swift_runtime_set_retain_hook(_swift_count_retain_hook, NULL);
+    swift_runtime_set_release_hook(_swift_count_release_hook, NULL);
+#endif
+}
+
+void swift_runtime_remove_counting_hooks(void) {
+#if defined(__linux__)
+    swift_runtime_set_alloc_object_hook(NULL, NULL);
+    swift_runtime_set_retain_hook(NULL, NULL);
+    swift_runtime_set_release_hook(NULL, NULL);
+#endif
+}
+
+void swift_runtime_reset_counts(void) {
+#if defined(__linux__)
+    atomic_store_explicit(&_swift_alloc_count, 0, memory_order_relaxed);
+    atomic_store_explicit(&_swift_retain_count, 0, memory_order_relaxed);
+    atomic_store_explicit(&_swift_release_count, 0, memory_order_relaxed);
+#endif
+}
+
+long long swift_runtime_get_alloc_count(void) {
+#if defined(__linux__)
+    return atomic_load_explicit(&_swift_alloc_count, memory_order_relaxed);
+#else
+    return 0;
+#endif
+}
+
+long long swift_runtime_get_retain_count(void) {
+#if defined(__linux__)
+    return atomic_load_explicit(&_swift_retain_count, memory_order_relaxed);
+#else
+    return 0;
+#endif
+}
+
+long long swift_runtime_get_release_count(void) {
+#if defined(__linux__)
+    return atomic_load_explicit(&_swift_release_count, memory_order_relaxed);
+#else
+    return 0;
+#endif
 }

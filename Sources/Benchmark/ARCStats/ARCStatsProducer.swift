@@ -23,12 +23,8 @@ final class ARCStatsProducer {
 
     static func hook() {
         #if os(Linux) && compiler(>=6.3)
-        let retainHook: SwiftRuntimeHook = { _, _ in
-            ARCStatsProducer.retainCount.wrappingIncrement(ordering: .relaxed)
-        }
-
         swift_runtime_set_swizzling_enabled(1)
-        swift_runtime_set_retain_hook(retainHook, nil)
+        swift_runtime_install_counting_hooks()
         #else
         let allocObjectHook: SwiftRuntimeHook = { _, _ in
             ARCStatsProducer.allocCount.wrappingIncrement(ordering: .relaxed)
@@ -50,7 +46,7 @@ final class ARCStatsProducer {
 
     static func unhook() {
         #if os(Linux) && compiler(>=6.3)
-        swift_runtime_set_retain_hook(nil, nil)
+        swift_runtime_remove_counting_hooks()
         swift_runtime_set_swizzling_enabled(0)
         #else
         swift_runtime_set_alloc_object_hook(nil, nil)
@@ -60,17 +56,29 @@ final class ARCStatsProducer {
     }
 
     static func reset() {
+        #if os(Linux) && compiler(>=6.3)
+        swift_runtime_reset_counts()
+        #else
         allocCount.store(0, ordering: .relaxed)
         retainCount.store(0, ordering: .relaxed)
         releaseCount.store(0, ordering: .relaxed)
+        #endif
     }
 
     static func makeARCStats() -> ARCStats {
+        #if os(Linux) && compiler(>=6.3)
+        ARCStats(
+            objectAllocCount: Int(swift_runtime_get_alloc_count()),
+            retainCount: Int(swift_runtime_get_retain_count()),
+            releaseCount: Int(swift_runtime_get_release_count())
+        )
+        #else
         ARCStats(
             objectAllocCount: allocCount.load(ordering: .relaxed),
             retainCount: retainCount.load(ordering: .relaxed),
             releaseCount: releaseCount.load(ordering: .relaxed)
         )
+        #endif
     }
 }
 
