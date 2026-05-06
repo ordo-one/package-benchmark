@@ -100,7 +100,7 @@ final class OperatingSystemAndMallocTests: XCTestCase {
         let allocDelta = stopStats.objectAllocCount - startStats.objectAllocCount
         let releaseDelta = stopStats.releaseCount - startStats.releaseCount
 
-        if ARCStatsProducer.usesOutOfProcessInterposer, allocDelta == 0, releaseDelta == 0 {
+        if ARCStatsProducer.usesPreloadedInterposer, allocDelta == 0, releaseDelta == 0 {
             throw XCTSkip("ARC interposer is inactive in the in-process test harness without loader injection")
         }
 

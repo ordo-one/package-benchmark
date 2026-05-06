@@ -26,6 +26,21 @@ import Foundation
 
 @available(macOS 13.0, *)
 @main struct BenchmarkCommandPlugin: CommandPlugin {
+    func disableStdoutBuffering() {
+        guard let handle = dlopen(nil, RTLD_NOW),
+              let stdoutSymbol = dlsym(handle, "stdout")
+        else {
+            return
+        }
+
+        let stdoutPointer = stdoutSymbol.assumingMemoryBound(to: UnsafeMutablePointer<FILE>?.self)
+        guard let stdoutFile = stdoutPointer.pointee else {
+            return
+        }
+
+        setbuf(stdoutFile, nil)
+    }
+
     func withCStrings(_ strings: [String], scoped: ([UnsafeMutablePointer<CChar>?]) throws -> Void) rethrows {
         let cStrings = strings.map { strdup($0) }
         try scoped(cStrings + [nil])
@@ -58,8 +73,8 @@ import Foundation
         var grouping = "benchmark"
         var exportPath = "."
 
-        // Flush stdio so we see any failures clearly without touching shared stdout state directly.
-        fflush(nil)
+        // Keep stdout unbuffered so benchmark failures stream as they happen.
+        disableStdoutBuffering()
 
         if helpRequested > 0 {
             print("")

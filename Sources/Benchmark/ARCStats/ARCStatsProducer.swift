@@ -19,7 +19,7 @@ import SwiftRuntimeHooks
 
 final class ARCStatsProducer {
     #if os(Linux) && compiler(>=6.3) && canImport(SwiftRuntimeInterposerSwift)
-    static let usesOutOfProcessInterposer = true
+    static let usesPreloadedInterposer = true
 
     static func hook() {
         SwiftRuntimeInterposerSwift.hook()
@@ -43,7 +43,7 @@ final class ARCStatsProducer {
     }
     #else
     typealias SwiftRuntimeHook = @convention(c) (UnsafeRawPointer?, UnsafeMutableRawPointer?) -> Void
-    static let usesOutOfProcessInterposer = false
+    static let usesPreloadedInterposer = false
 
     static var allocCount: UnsafeAtomic<Int> = .create(0)
     static var retainCount: UnsafeAtomic<Int> = .create(0)

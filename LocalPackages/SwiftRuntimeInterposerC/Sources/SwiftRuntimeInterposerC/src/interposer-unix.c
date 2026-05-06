@@ -31,9 +31,29 @@ static _Atomic int64_t g_alloc_count = 0;
 static _Atomic int64_t g_retain_count = 0;
 static _Atomic int64_t g_release_count = 0;
 
-static __thread bool g_in_swift_allocObject = false;
-static __thread bool g_in_swift_retain = false;
-static __thread bool g_in_swift_release = false;
+static void swift_runtime_interposer_initialize(void) __attribute__((constructor));
+
+static void *resolve_symbol(const char *symbol_name) {
+    return dlsym(RTLD_NEXT, symbol_name);
+}
+
+static void swift_runtime_interposer_initialize(void) {
+    atomic_store_explicit(
+        &g_swift_allocObject,
+        (type_swift_allocObject)resolve_symbol("swift_allocObject"),
+        memory_order_relaxed
+    );
+    atomic_store_explicit(
+        &g_swift_retain,
+        (type_swift_retain)resolve_symbol("swift_retain"),
+        memory_order_relaxed
+    );
+    atomic_store_explicit(
+        &g_swift_release,
+        (type_swift_release)resolve_symbol("swift_release"),
+        memory_order_relaxed
+    );
+}
 
 void swift_runtime_interposer_enable(void) {
     atomic_store_explicit(&g_counting_enabled, true, memory_order_release);
@@ -61,42 +81,15 @@ void swift_runtime_interposer_get_stats(
 }
 
 static type_swift_allocObject resolve_swift_allocObject(void) {
-    type_swift_allocObject local_fun = atomic_load_explicit(&g_swift_allocObject, memory_order_relaxed);
-    if (!local_fun && !g_in_swift_allocObject) {
-        g_in_swift_allocObject = true;
-        type_swift_allocObject desired = dlsym(RTLD_NEXT, "swift_allocObject");
-        g_in_swift_allocObject = false;
-        if (atomic_compare_exchange_strong(&g_swift_allocObject, &local_fun, desired)) {
-            local_fun = desired;
-        }
-    }
-    return local_fun;
+    return atomic_load_explicit(&g_swift_allocObject, memory_order_relaxed);
 }
 
 static type_swift_retain resolve_swift_retain(void) {
-    type_swift_retain local_fun = atomic_load_explicit(&g_swift_retain, memory_order_relaxed);
-    if (!local_fun && !g_in_swift_retain) {
-        g_in_swift_retain = true;
-        type_swift_retain desired = dlsym(RTLD_NEXT, "swift_retain");
-        g_in_swift_retain = false;
-        if (atomic_compare_exchange_strong(&g_swift_retain, &local_fun, desired)) {
-            local_fun = desired;
-        }
-    }
-    return local_fun;
+    return atomic_load_explicit(&g_swift_retain, memory_order_relaxed);
 }
 
 static type_swift_release resolve_swift_release(void) {
-    type_swift_release local_fun = atomic_load_explicit(&g_swift_release, memory_order_relaxed);
-    if (!local_fun && !g_in_swift_release) {
-        g_in_swift_release = true;
-        type_swift_release desired = dlsym(RTLD_NEXT, "swift_release");
-        g_in_swift_release = false;
-        if (atomic_compare_exchange_strong(&g_swift_release, &local_fun, desired)) {
-            local_fun = desired;
-        }
-    }
-    return local_fun;
+    return atomic_load_explicit(&g_swift_release, memory_order_relaxed);
 }
 
 void *swift_allocObject(const void *metadata, size_t requiredSize, size_t requiredAlignmentMask) {
