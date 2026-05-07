@@ -20,11 +20,17 @@
 
 typedef void *(*type_swift_allocObject)(const void *, size_t, size_t);
 typedef void *(*type_swift_retain)(void *);
+typedef void *(*type_swift_retain_n)(void *, uint32_t);
 typedef void (*type_swift_release)(void *);
 typedef void (*type_swift_release_n)(void *, uint32_t);
 
 static _Atomic type_swift_allocObject g_swift_allocObject;
 static _Atomic type_swift_retain g_swift_retain;
+static _Atomic type_swift_retain g_swift_nonatomic_retain;
+static _Atomic type_swift_retain g_swift_bridgeObjectRetain;
+static _Atomic type_swift_retain_n g_swift_retain_n;
+static _Atomic type_swift_retain_n g_swift_nonatomic_retain_n;
+static _Atomic type_swift_retain_n g_swift_bridgeObjectRetain_n;
 static _Atomic type_swift_release g_swift_release;
 static _Atomic type_swift_release g_swift_nonatomic_release;
 static _Atomic type_swift_release g_swift_bridgeObjectRelease;
@@ -52,6 +58,31 @@ static void swift_runtime_interposer_initialize(void) {
     atomic_store_explicit(
         &g_swift_retain,
         (type_swift_retain)resolve_symbol("swift_retain"),
+        memory_order_relaxed
+    );
+    atomic_store_explicit(
+        &g_swift_nonatomic_retain,
+        (type_swift_retain)resolve_symbol("swift_nonatomic_retain"),
+        memory_order_relaxed
+    );
+    atomic_store_explicit(
+        &g_swift_bridgeObjectRetain,
+        (type_swift_retain)resolve_symbol("swift_bridgeObjectRetain"),
+        memory_order_relaxed
+    );
+    atomic_store_explicit(
+        &g_swift_retain_n,
+        (type_swift_retain_n)resolve_symbol("swift_retain_n"),
+        memory_order_relaxed
+    );
+    atomic_store_explicit(
+        &g_swift_nonatomic_retain_n,
+        (type_swift_retain_n)resolve_symbol("swift_nonatomic_retain_n"),
+        memory_order_relaxed
+    );
+    atomic_store_explicit(
+        &g_swift_bridgeObjectRetain_n,
+        (type_swift_retain_n)resolve_symbol("swift_bridgeObjectRetain_n"),
         memory_order_relaxed
     );
     atomic_store_explicit(
@@ -119,6 +150,26 @@ static type_swift_retain resolve_swift_retain(void) {
     return atomic_load_explicit(&g_swift_retain, memory_order_relaxed);
 }
 
+static type_swift_retain resolve_swift_nonatomic_retain(void) {
+    return atomic_load_explicit(&g_swift_nonatomic_retain, memory_order_relaxed);
+}
+
+static type_swift_retain resolve_swift_bridgeObjectRetain(void) {
+    return atomic_load_explicit(&g_swift_bridgeObjectRetain, memory_order_relaxed);
+}
+
+static type_swift_retain_n resolve_swift_retain_n(void) {
+    return atomic_load_explicit(&g_swift_retain_n, memory_order_relaxed);
+}
+
+static type_swift_retain_n resolve_swift_nonatomic_retain_n(void) {
+    return atomic_load_explicit(&g_swift_nonatomic_retain_n, memory_order_relaxed);
+}
+
+static type_swift_retain_n resolve_swift_bridgeObjectRetain_n(void) {
+    return atomic_load_explicit(&g_swift_bridgeObjectRetain_n, memory_order_relaxed);
+}
+
 static type_swift_release resolve_swift_release(void) {
     return atomic_load_explicit(&g_swift_release, memory_order_relaxed);
 }
@@ -165,6 +216,71 @@ void *swift_retain(void *object) {
     void *result = original(object);
     if (object && atomic_load_explicit(&g_counting_enabled, memory_order_relaxed)) {
         atomic_fetch_add_explicit(&g_retain_count, 1, memory_order_relaxed);
+    }
+    return result;
+}
+
+void *swift_nonatomic_retain(void *object) {
+    type_swift_retain original = resolve_swift_nonatomic_retain();
+    if (!original) {
+        return object;
+    }
+
+    void *result = original(object);
+    if (object && atomic_load_explicit(&g_counting_enabled, memory_order_relaxed)) {
+        atomic_fetch_add_explicit(&g_retain_count, 1, memory_order_relaxed);
+    }
+    return result;
+}
+
+void *swift_bridgeObjectRetain(void *object) {
+    type_swift_retain original = resolve_swift_bridgeObjectRetain();
+    if (!original) {
+        return object;
+    }
+
+    void *result = original(object);
+    if (object && atomic_load_explicit(&g_counting_enabled, memory_order_relaxed)) {
+        atomic_fetch_add_explicit(&g_retain_count, 1, memory_order_relaxed);
+    }
+    return result;
+}
+
+void *swift_retain_n(void *object, uint32_t n) {
+    type_swift_retain_n original = resolve_swift_retain_n();
+    if (!original) {
+        return object;
+    }
+
+    void *result = original(object, n);
+    if (object && atomic_load_explicit(&g_counting_enabled, memory_order_relaxed)) {
+        atomic_fetch_add_explicit(&g_retain_count, n, memory_order_relaxed);
+    }
+    return result;
+}
+
+void *swift_nonatomic_retain_n(void *object, uint32_t n) {
+    type_swift_retain_n original = resolve_swift_nonatomic_retain_n();
+    if (!original) {
+        return object;
+    }
+
+    void *result = original(object, n);
+    if (object && atomic_load_explicit(&g_counting_enabled, memory_order_relaxed)) {
+        atomic_fetch_add_explicit(&g_retain_count, n, memory_order_relaxed);
+    }
+    return result;
+}
+
+void *swift_bridgeObjectRetain_n(void *object, uint32_t n) {
+    type_swift_retain_n original = resolve_swift_bridgeObjectRetain_n();
+    if (!original) {
+        return object;
+    }
+
+    void *result = original(object, n);
+    if (object && atomic_load_explicit(&g_counting_enabled, memory_order_relaxed)) {
+        atomic_fetch_add_explicit(&g_retain_count, n, memory_order_relaxed);
     }
     return result;
 }

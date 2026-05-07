@@ -25,6 +25,11 @@ void swift_runtime_interposer_get_stats(
 
 void *swift_allocObject(const void *metadata, size_t requiredSize, size_t requiredAlignmentMask);
 void *swift_retain(void *object);
+void *swift_nonatomic_retain(void *object);
+void *swift_bridgeObjectRetain(void *object);
+void *swift_retain_n(void *object, uint32_t n);
+void *swift_nonatomic_retain_n(void *object, uint32_t n);
+void *swift_bridgeObjectRetain_n(void *object, uint32_t n);
 void swift_release(void *object);
 void swift_nonatomic_release(void *object);
 void swift_release_n(void *object, uint32_t n);
