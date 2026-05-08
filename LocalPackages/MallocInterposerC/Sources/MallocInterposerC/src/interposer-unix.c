@@ -12,6 +12,7 @@
 
 #define _GNU_SOURCE
 #include <dlfcn.h>
+#include <errno.h>
 #include <fcntl.h>
 #include <inttypes.h>
 #include <stdatomic.h>
@@ -144,180 +145,232 @@ static bool is_recursive_malloc_block(void *ptr) {
 
 // this is called if realloc is called whilst trying to resolve libc's realloc.
 static void *recursive_realloc(void *ptr, size_t size) {
-    // not implemented yet...
+    (void)ptr; (void)size;
     abort();
 }
 
 // this is called if free is called whilst trying to resolve libc's free.
 static void recursive_free(void *ptr) {
-    // not implemented yet...
+    (void)ptr;
     abort();
 }
 
-// this is called if socket is called whilst trying to resolve libc's socket.
 static int recursive_socket(int domain, int type, int protocol) {
-    // not possible
+    (void)domain; (void)type; (void)protocol;
     abort();
 }
-
-// this is called if accept is called whilst trying to resolve libc's accept.
 static int recursive_accept(int socket, struct sockaddr *restrict address, socklen_t *restrict address_len) {
-    // not possible
+    (void)socket; (void)address; (void)address_len;
     abort();
 }
-
-// this is called if accept4 is called whilst trying to resolve libc's accept4.
 static int recursive_accept4(int sockfd, struct sockaddr *addr, socklen_t *addrlen, int flags) {
-    // not possible
+    (void)sockfd; (void)addr; (void)addrlen; (void)flags;
     abort();
 }
-
-// this is called if close is called whilst trying to resolve libc's close.
 static int recursive_close(int fildes) {
-    // not possible
+    (void)fildes;
     abort();
 }
 
-/* On Apple platforms getting to the original libc function from a hooked
- * function is easy.  On other UNIX systems this is slightly harder because we
- * have to look up the function with the dynamic linker.  Because that isn't
- * super performant we cache the lookup result in an (atomic) global.
- *
- * Calling into the libc function if we have already cached it is easy, we
- * (atomically) load it and call into it.  If have not yet cached it, we need to
- * resolve it which we do by using dlsym and then write it into the (atomic)
- * global.  There's only one slight problem: dlsym might call back into the
- * function we're just trying to resolve (dlsym does call malloc). In that case
- * we need to emulate that function (named recursive_*). But that's all then.
- */
 #define JUMP_INTO_LIBC_FUN(_fun, ...) /* \
 */ do { /* \
-*/     /* Let's see if somebody else already resolved that function for us */ /* \
 */     type_libc_ ## _fun local_fun = atomic_load(&g_libc_ ## _fun); /* \
 */     if (!local_fun) { /* \
-*/         /* No, we're the first ones to use this function. */ /* \
 */         if (!g_in_ ## _fun) { /* \
 */             g_in_ ## _fun = true; /* \
-*/             /* If we're here, we're at least not recursively in ourselves. */ /* \
-*/             /* That means we can use dlsym to resolve the libc function. */ /* \
 */             type_libc_ ## _fun desired = dlsym(RTLD_NEXT, LIBC_SYMBOL(_fun)); /* \
 */             if (atomic_compare_exchange_strong(&g_libc_ ## _fun, &local_fun, desired)) { /* \
-*/                 /* If we're here, we won the race, so let's use our resolved function.  */ /* \
 */                 local_fun = desired; /* \
 */             } else { /* \
-*/                 /* Lost the race, let's load the global again */ /* \
 */                 local_fun = atomic_load(&g_libc_ ## _fun); /* \
 */              } /* \
 */         } else { /* \
-*/             /* Okay, we can't jump into libc here and need to use our own version. */ /* \
 */             return recursive_ ## _fun (__VA_ARGS__); /* \
 */         } /* \
 */     } /* \
 */     return local_fun(__VA_ARGS__); /* \
 */ } while(0)
 
+/* Companion to JUMP_INTO_LIBC_FUN that captures the libc result into _outvar
+ * instead of returning. Used when we need to inspect the result before
+ * returning (e.g. to write the size header). */
+#define CALL_LIBC_FUN_CAPTURE(_outvar, _fun, ...) \
+    do { \
+        type_libc_ ## _fun local_fun = atomic_load(&g_libc_ ## _fun); \
+        if (!local_fun) { \
+            if (!g_in_ ## _fun) { \
+                g_in_ ## _fun = true; \
+                type_libc_ ## _fun desired = dlsym(RTLD_NEXT, LIBC_SYMBOL(_fun)); \
+                if (atomic_compare_exchange_strong(&g_libc_ ## _fun, &local_fun, desired)) { \
+                    local_fun = desired; \
+                } else { \
+                    local_fun = atomic_load(&g_libc_ ## _fun); \
+                } \
+            } else { \
+                (_outvar) = recursive_ ## _fun (__VA_ARGS__); \
+                break; \
+            } \
+        } \
+        (_outvar) = local_fun(__VA_ARGS__); \
+    } while (0)
+
 // Inline counting helpers ---------------------------------------------------
 
 static __attribute__((always_inline)) void count_malloc(size_t size) {
     atomic_fetch_add_explicit(&g_malloc_count, 1, memory_order_relaxed);
     atomic_fetch_add_explicit(&g_malloc_bytes, (int64_t)size, memory_order_relaxed);
-    if ((int)size > get_page_size()) {
+    if (size > (size_t)get_page_size()) {
         atomic_fetch_add_explicit(&g_malloc_large, 1, memory_order_relaxed);
     } else {
         atomic_fetch_add_explicit(&g_malloc_small, 1, memory_order_relaxed);
     }
 }
 
-static __attribute__((always_inline)) void count_free(void *ptr) {
-    size_t size = malloc_usable_size(ptr);
+static __attribute__((always_inline)) void count_free(size_t size) {
     atomic_fetch_add_explicit(&g_free_count, 1, memory_order_relaxed);
     atomic_fetch_add_explicit(&g_free_bytes, (int64_t)size, memory_order_relaxed);
 }
 
+// Header-write helper -------------------------------------------------------
+
+static __attribute__((always_inline)) void *write_header(void *raw, size_t size) {
+    malloc_header_t *hdr = (malloc_header_t *)raw;
+    hdr->requested_size = size;
+    hdr->reserved = 0;
+    hdr->magic = MALLOC_INTERPOSER_MAGIC;
+    return malloc_interposer_user_for(raw);
+}
+
 // Replacement functions -----------------------------------------------------
 
-void replacement_free(void *ptr) {
-    if (ptr) {
-        if (atomic_load_explicit(&g_counting_enabled, memory_order_relaxed)) {
-            count_free(ptr);
-        }
-        if (!is_recursive_malloc_block(ptr)) {
-            JUMP_INTO_LIBC_FUN(free, ptr);
-        }
-    }
-}
-
 void *replacement_malloc(size_t size) {
+    void *raw;
+    CALL_LIBC_FUN_CAPTURE(raw, malloc, size + sizeof(malloc_header_t));
+    if (!raw) return NULL;
     if (atomic_load_explicit(&g_counting_enabled, memory_order_relaxed)) {
         count_malloc(size);
     }
-    JUMP_INTO_LIBC_FUN(malloc, size);
+    return write_header(raw, size);
 }
 
-void *replacement_realloc(void *ptr, size_t size) {
-    if (0 == size) {
-        replacement_free(ptr);
+void replacement_free(void *user_ptr) {
+    if (!user_ptr) return;
+    if (malloc_interposer_is_ours(user_ptr)) {
+        malloc_header_t *hdr = malloc_interposer_header_for(user_ptr);
+        if (atomic_load_explicit(&g_counting_enabled, memory_order_relaxed)) {
+            count_free(hdr->requested_size);
+        }
+        // Recursive-malloc blocks live in our static buffer; never call libc free on them.
+        if (!is_recursive_malloc_block(hdr)) {
+            JUMP_INTO_LIBC_FUN(free, hdr);
+        }
+        return;
+    }
+    // Externally-allocated pointer (no header).
+    if (is_recursive_malloc_block(user_ptr)) return;
+    if (atomic_load_explicit(&g_counting_enabled, memory_order_relaxed)) {
+        count_free(malloc_usable_size(user_ptr));
+    }
+    JUMP_INTO_LIBC_FUN(free, user_ptr);
+}
+
+void *replacement_realloc(void *user_ptr, size_t new_size) {
+    if (!user_ptr) return replacement_malloc(new_size);
+    if (new_size == 0) {
+        replacement_free(user_ptr);
         return NULL;
     }
-    if (!ptr) {
-        return replacement_malloc(size);
-    }
-    if (atomic_load_explicit(&g_counting_enabled, memory_order_relaxed)) {
-        count_free(ptr);
-        count_malloc(size);
-    }
-    JUMP_INTO_LIBC_FUN(realloc, ptr, size);
-}
 
-void *replacement_calloc(size_t count, size_t size) {
-    void *ptr = replacement_malloc(count * size);
-    memset(ptr, 0, count * size);
-    return ptr;
-}
+    bool counting = atomic_load_explicit(&g_counting_enabled, memory_order_relaxed);
 
-void *replacement_reallocf(void *ptr, size_t size) {
-    void *new_ptr = replacement_realloc(ptr, size);
-    if (!new_ptr) {
-        replacement_free(new_ptr);
+    if (malloc_interposer_is_ours(user_ptr)) {
+        malloc_header_t *old_hdr = malloc_interposer_header_for(user_ptr);
+        size_t old_size = old_hdr->requested_size;
+
+        void *new_raw;
+        CALL_LIBC_FUN_CAPTURE(new_raw, realloc, old_hdr, new_size + sizeof(malloc_header_t));
+        if (!new_raw) return NULL;
+
+        if (counting) {
+            count_free(old_size);
+            count_malloc(new_size);
+        }
+        return write_header(new_raw, new_size);
+    }
+
+    // External pointer; use libc bookkeeping.
+    size_t old_size = malloc_usable_size(user_ptr);
+    void *new_ptr;
+    CALL_LIBC_FUN_CAPTURE(new_ptr, realloc, user_ptr, new_size);
+    if (!new_ptr) return NULL;
+    if (counting) {
+        count_free(old_size);
+        count_malloc(malloc_usable_size(new_ptr));
     }
     return new_ptr;
 }
 
+void *replacement_calloc(size_t count, size_t size) {
+    size_t total;
+    if (__builtin_mul_overflow(count, size, &total)) {
+        errno = ENOMEM;
+        return NULL;
+    }
+    void *user_ptr = replacement_malloc(total);
+    if (user_ptr) {
+        memset(user_ptr, 0, total);
+    }
+    return user_ptr;
+}
+
+void *replacement_reallocf(void *user_ptr, size_t new_size) {
+    void *new_ptr = replacement_realloc(user_ptr, new_size);
+    if (!new_ptr && user_ptr && new_size != 0) {
+        replacement_free(user_ptr);
+    }
+    return new_ptr;
+}
+
+// Aligned/legacy paths skip the header (alignment requirements rule it out)
+// and rely on malloc_usable_size for byte accounting.
+
 void *replacement_valloc(size_t size) {
-    // not aligning correctly (should be PAGE_SIZE) but good enough
+    // Note: not aligning correctly (should be PAGE_SIZE) but good enough.
     return replacement_malloc(size);
 }
 
 int replacement_posix_memalign(void **memptr, size_t alignment, size_t size) {
-    // not aligning correctly (should be `alignment`) but good enough
+    (void)alignment;
+    // Note: not aligning correctly (should be `alignment`) but good enough.
     void *ptr = replacement_malloc(size);
     if (ptr && memptr) {
         *memptr = ptr;
         return 0;
-    } else {
-        return 1;
     }
+    return ENOMEM;
 }
 
-void free(void *ptr) {
-    replacement_free(ptr);
+// Size queries --------------------------------------------------------------
+
+size_t replacement_malloc_usable_size(void *user_ptr) {
+    if (!user_ptr) return 0;
+    if (malloc_interposer_is_ours(user_ptr)) {
+        return malloc_interposer_header_for(user_ptr)->requested_size;
+    }
+    return malloc_usable_size(user_ptr);
 }
-void *malloc(size_t size) {
-    return replacement_malloc(size);
-}
-void *calloc(size_t nmemb, size_t size) {
-    return replacement_calloc(nmemb, size);
-}
-void *realloc(void *ptr, size_t size) {
-    return replacement_realloc(ptr, size);
-}
-void *reallocf(void *ptr, size_t size) {
-    return replacement_reallocf(ptr, size);
-}
-void *valloc(size_t size) {
-    return replacement_valloc(size);
-}
+
+// Public symbol overrides ---------------------------------------------------
+
+void free(void *ptr) { replacement_free(ptr); }
+void *malloc(size_t size) { return replacement_malloc(size); }
+void *calloc(size_t nmemb, size_t size) { return replacement_calloc(nmemb, size); }
+void *realloc(void *ptr, size_t size) { return replacement_realloc(ptr, size); }
+void *reallocf(void *ptr, size_t size) { return replacement_reallocf(ptr, size); }
+void *valloc(size_t size) { return replacement_valloc(size); }
 int posix_memalign(void **memptr, size_t alignment, size_t size) {
     return replacement_posix_memalign(memptr, alignment, size);
 }
+size_t malloc_usable_size(void *ptr) { return replacement_malloc_usable_size(ptr); }
+
 #endif
