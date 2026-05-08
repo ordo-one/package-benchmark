@@ -34,7 +34,7 @@ final class ARCStatsProducer {
     }
 
     static func makeARCStats() -> ARCStats {
-        let statistics = SwiftRuntimeInterposerSwift.getStatistics()
+        let statistics = SwiftRuntimeInterposerSwift.statistics()
         return ARCStats(
             objectAllocCount: statistics.objectAllocCount,
             retainCount: statistics.retainCount,

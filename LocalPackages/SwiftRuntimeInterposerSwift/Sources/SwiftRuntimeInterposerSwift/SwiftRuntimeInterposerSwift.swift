@@ -30,7 +30,7 @@ public final class SwiftRuntimeInterposerSwift: @unchecked Sendable {
         swift_runtime_interposer_reset()
     }
 
-    public static func getStatistics() -> Statistics {
+    public static func statistics() -> Statistics {
         var allocCount: Int64 = 0
         var retainCount: Int64 = 0
         var releaseCount: Int64 = 0
