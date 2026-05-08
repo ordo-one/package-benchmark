@@ -39,24 +39,27 @@ static _Atomic ptrdiff_t g_recursive_malloc_next_free_ptr = ATOMIC_VAR_INIT(0);
 static __thread bool g_in_malloc = false;
 static __thread bool g_in_realloc = false;
 static __thread bool g_in_free = false;
+static __thread bool g_in_malloc_usable_size = false;
 static __thread bool g_in_socket = false;
 static __thread bool g_in_accept = false;
 static __thread bool g_in_accept4 = false;
 static __thread bool g_in_close = false;
 
 /* The types of the variables holding the libc function pointers. */
-typedef void *(*type_libc_malloc)(size_t);
-typedef void *(*type_libc_realloc)(void *, size_t);
-typedef void  (*type_libc_free)(void *);
-typedef int   (*type_libc_socket)(int, int, int);
-typedef int   (*type_libc_accept)(int, struct sockaddr*, socklen_t *);
-typedef int   (*type_libc_accept4)(int, struct sockaddr *, socklen_t *, int);
-typedef int   (*type_libc_close)(int);
+typedef void   *(*type_libc_malloc)(size_t);
+typedef void   *(*type_libc_realloc)(void *, size_t);
+typedef void    (*type_libc_free)(void *);
+typedef size_t  (*type_libc_malloc_usable_size)(void *);
+typedef int     (*type_libc_socket)(int, int, int);
+typedef int     (*type_libc_accept)(int, struct sockaddr*, socklen_t *);
+typedef int     (*type_libc_accept4)(int, struct sockaddr *, socklen_t *, int);
+typedef int     (*type_libc_close)(int);
 
 /* The (atomic) globals holding the pointer to the original libc implementation. */
 _Atomic type_libc_malloc g_libc_malloc;
 _Atomic type_libc_realloc g_libc_realloc;
 _Atomic type_libc_free g_libc_free;
+_Atomic type_libc_malloc_usable_size g_libc_malloc_usable_size;
 _Atomic type_libc_socket g_libc_socket;
 _Atomic type_libc_accept g_libc_accept;
 _Atomic type_libc_accept4 g_libc_accept4;
@@ -153,6 +156,13 @@ static void *recursive_realloc(void *ptr, size_t size) {
 static void recursive_free(void *ptr) {
     (void)ptr;
     abort();
+}
+
+// If malloc_usable_size is queried during dlsym handshake, we have nothing
+// useful to report — return 0. Reaching here is exceptional.
+static size_t recursive_malloc_usable_size(void *ptr) {
+    (void)ptr;
+    return 0;
 }
 
 static int recursive_socket(int domain, int type, int protocol) {
@@ -269,7 +279,9 @@ void replacement_free(void *user_ptr) {
     // Externally-allocated pointer (no header).
     if (is_recursive_malloc_block(user_ptr)) return;
     if (atomic_load_explicit(&g_counting_enabled, memory_order_relaxed)) {
-        count_free(malloc_usable_size(user_ptr));
+        size_t size;
+        CALL_LIBC_FUN_CAPTURE(size, malloc_usable_size, user_ptr);
+        count_free(size);
     }
     JUMP_INTO_LIBC_FUN(free, user_ptr);
 }
@@ -298,14 +310,18 @@ void *replacement_realloc(void *user_ptr, size_t new_size) {
         return write_header(new_raw, new_size);
     }
 
-    // External pointer; use libc bookkeeping.
-    size_t old_size = malloc_usable_size(user_ptr);
+    // External pointer; use libc bookkeeping. Route every malloc_usable_size
+    // call through CALL_LIBC_FUN_CAPTURE so we hit libc, not our override.
+    size_t old_size;
+    CALL_LIBC_FUN_CAPTURE(old_size, malloc_usable_size, user_ptr);
     void *new_ptr;
     CALL_LIBC_FUN_CAPTURE(new_ptr, realloc, user_ptr, new_size);
     if (!new_ptr) return NULL;
     if (counting) {
         count_free(old_size);
-        count_malloc(malloc_usable_size(new_ptr));
+        size_t new_usable;
+        CALL_LIBC_FUN_CAPTURE(new_usable, malloc_usable_size, new_ptr);
+        count_malloc(new_usable);
     }
     return new_ptr;
 }
@@ -351,13 +367,20 @@ int replacement_posix_memalign(void **memptr, size_t alignment, size_t size) {
 }
 
 // Size queries --------------------------------------------------------------
+//
+// External callers may pass our pointers to malloc_usable_size; libc would
+// see an offset address and return garbage from its chunk-header probe.
+// Override and route ours through the header. Internal calls go via
+// CALL_LIBC_FUN_CAPTURE (dlsym-cached), bypassing our override.
 
 size_t replacement_malloc_usable_size(void *user_ptr) {
     if (!user_ptr) return 0;
     if (malloc_interposer_is_ours(user_ptr)) {
         return malloc_interposer_header_for(user_ptr)->requested_size;
     }
-    return malloc_usable_size(user_ptr);
+    size_t size;
+    CALL_LIBC_FUN_CAPTURE(size, malloc_usable_size, user_ptr);
+    return size;
 }
 
 // Public symbol overrides ---------------------------------------------------
