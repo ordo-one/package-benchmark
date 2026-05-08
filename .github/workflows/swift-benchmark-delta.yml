@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   pull_request:
     branches: [ main ]
-  
+
 jobs:
   benchmark-delta:
     timeout-minutes: 30
@@ -15,7 +15,7 @@ jobs:
         os: [ubuntu-latest]
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
       - name: Homebrew Mac
