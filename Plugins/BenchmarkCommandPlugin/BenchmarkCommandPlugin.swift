@@ -13,6 +13,7 @@
 
 @preconcurrency import Foundation
 import PackagePlugin
+@preconcurrency import Foundation
 
 #if canImport(Darwin)
 @preconcurrency import Darwin
@@ -26,10 +27,29 @@ import PackagePlugin
 
 @available(macOS 13.0, *)
 @main struct BenchmarkCommandPlugin: CommandPlugin {
+    func writeToStderr(_ message: String) {
+        message.withCString { pointer in
+            _ = write(STDERR_FILENO, pointer, strlen(pointer))
+        }
+    }
+
     func withCStrings(_ strings: [String], scoped: ([UnsafeMutablePointer<CChar>?]) throws -> Void) rethrows {
         let cStrings = strings.map { strdup($0) }
         try scoped(cStrings + [nil])
         cStrings.forEach { free($0) }
+    }
+
+    func shouldEmitRuntimeInterposerWarning(outputFormat: OutputFormat, exportPath: String) -> Bool {
+        guard exportPath == "stdout" else {
+            return true
+        }
+
+        switch outputFormat {
+        case .text, .markdown:
+            return true
+        default:
+            return false
+        }
     }
 
     func performCommand(context: PluginContext, arguments: [String]) throws {
@@ -404,6 +424,10 @@ import PackagePlugin
 
         benchmarkTool = tool.path
         interposerLib = tool.path.removingLastComponent().appending(subpath: "libMallocInterposerC.so").string
+        #if os(Linux) && compiler(>=6.3)
+        let swiftRuntimeInterposerLib = tool.path.removingLastComponent()
+            .appending(subpath: "libSwiftRuntimeInterposerC.so").string
+        #endif
 
         let filteredTargets =
             swiftSourceModuleTargets
@@ -487,16 +511,24 @@ import PackagePlugin
 
             // On Linux we need to set LD_PRELOAD to get the malloc interposer working
             // while on Darwin this is done with DYLD interpose mechanism
-            #if os(Linux)
-            var environment = ProcessInfo.processInfo.environment
-            environment["LD_PRELOAD"] = interposerLib
+            #if os(Linux) && compiler(>=6.3)
+            if shouldEmitRuntimeInterposerWarning(outputFormat: outputFormat, exportPath: exportPath) {
+                writeToStderr(
+                    "\u{001B}[33mWarning: running with the Swift runtime interposer on Linux to avoid the Swift 6.3 runtime hook crash. See https://github.com/ordo-one/package-benchmark/issues/349\u{001B}[0m\n"
+                )
+            }
 
-            let envp = environment.map { "\($0.key)=\($0.value)" }.map { $0.withCString(strdup) } + [nil]
+            var environment = ProcessInfo.processInfo.environment
+            if let existingPreload = environment["LD_PRELOAD"], existingPreload.isEmpty == false {
+                environment["LD_PRELOAD"] = "\(swiftRuntimeInterposerLib):\(interposerLib):\(existingPreload)"
+            } else {
+                environment["LD_PRELOAD"] = "\(swiftRuntimeInterposerLib):\(interposerLib)"
+            }
+
+            let envp = environment.map { "\($0.key)=\($0.value)" }.compactMap { $0.withCString(strdup) } + [nil]
             defer {
                 for i in 0..<envp.count - 1 {
-                    if let ptr = envp[i] {
-                        free(ptr)
-                    }
+                    free(envp[i])
                 }
             }
 
