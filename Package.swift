@@ -26,8 +26,7 @@ var packageDependencies: [Package.Dependency] = [
 
 #if os(Linux) && compiler(>=6.3)
 packageDependencies += [
-    .package(path: "LocalPackages/SwiftRuntimeInterposerC"),
-    .package(path: "LocalPackages/SwiftRuntimeInterposerSwift"),
+    .package(url: "https://github.com/ordo-one/swift-runtime-interposer.git", .upToNextMajor(from: "1.0.0")),
 ]
 #endif
 
@@ -45,8 +44,8 @@ var benchmarkDependencies: [Target.Dependency] = [
 
 #if os(Linux) && compiler(>=6.3)
 benchmarkDependencies += [
-    .product(name: "SwiftRuntimeInterposerC", package: "SwiftRuntimeInterposerC", condition: .when(platforms: [.linux])),
-    .byNameItem(name: "SwiftRuntimeInterposerSwift", condition: .when(platforms: [.linux])),
+    .product(name: "SwiftRuntimeInterposerC", package: "swift-runtime-interposer", condition: .when(platforms: [.linux])),
+    .product(name: "SwiftRuntimeInterposerSwift", package: "swift-runtime-interposer", condition: .when(platforms: [.linux])),
 ]
 #endif
 
