@@ -39,8 +39,8 @@ set -euo pipefail
 PB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 BENCH_DIR="${PB_DIR}/Benchmarks"
 TARGET="MallocInterposerBenchmarks"
-TOOLCHAIN_OLD="${TOOLCHAIN_OLD:-6.2.2}"
-TOOLCHAIN_NEW="${TOOLCHAIN_NEW:-6.3-snapshot-2026-02-27}"
+TOOLCHAIN_OLD="${TOOLCHAIN_OLD:-6.2.4}"
+TOOLCHAIN_NEW="${TOOLCHAIN_NEW:-6.3}"
 BASELINE_OLD="jemalloc-${TOOLCHAIN_OLD}"
 BASELINE_NEW="interposer-${TOOLCHAIN_NEW}"
 
@@ -53,33 +53,36 @@ BASELINE_NEW="interposer-${TOOLCHAIN_NEW}"
 # no cache reuse — every run rebuilds from scratch.
 SCRATCH_SUFFIX=""
 if [[ "${FRESH:-0}" == "1" ]]; then
-    SCRATCH_SUFFIX="-fresh-$(date +%s)"
+  SCRATCH_SUFFIX="-fresh-$(date +%s)"
 fi
 SCRATCH_OLD="${BENCH_DIR}/.build-${TOOLCHAIN_OLD}${SCRATCH_SUFFIX}"
 SCRATCH_NEW="${BENCH_DIR}/.build-${TOOLCHAIN_NEW}${SCRATCH_SUFFIX}"
 
 step() { printf '\n\033[1;36m== %s\033[0m\n' "$*"; }
 warn() { printf '\033[33m!! %s\033[0m\n' "$*" >&2; }
-fail() { printf '\033[31m## %s\033[0m\n' "$*" >&2; exit 1; }
+fail() {
+  printf '\033[31m## %s\033[0m\n' "$*" >&2
+  exit 1
+}
 
-[[ -d "$BENCH_DIR/Benchmarks/MallocInterposer" ]] \
-    || fail "MallocInterposer benchmark dir missing — expected $BENCH_DIR/Benchmarks/MallocInterposer"
+[[ -d "$BENCH_DIR/Benchmarks/MallocInterposer" ]] ||
+  fail "MallocInterposer benchmark dir missing — expected $BENCH_DIR/Benchmarks/MallocInterposer"
 command -v swiftly >/dev/null || fail "swiftly required"
 
 # When FRESH=1, clean the throwaway scratch dirs on successful exit so they
 # don't accumulate. KEEP_FRESH=1 disables this if the user wants to inspect.
 if [[ "${FRESH:-0}" == "1" && "${KEEP_FRESH:-0}" != "1" ]]; then
-    cleanup_fresh() {
-        local rc=$?
-        if (( rc == 0 )); then
-            rm -rf "$SCRATCH_OLD" "$SCRATCH_NEW" 2>/dev/null || true
-        else
-            warn "Run failed (exit $rc); leaving fresh scratch dirs for inspection:"
-            warn "  $SCRATCH_OLD"
-            warn "  $SCRATCH_NEW"
-        fi
-    }
-    trap cleanup_fresh EXIT
+  cleanup_fresh() {
+    local rc=$?
+    if ((rc == 0)); then
+      rm -rf "$SCRATCH_OLD" "$SCRATCH_NEW" 2>/dev/null || true
+    else
+      warn "Run failed (exit $rc); leaving fresh scratch dirs for inspection:"
+      warn "  $SCRATCH_OLD"
+      warn "  $SCRATCH_NEW"
+    fi
+  }
+  trap cleanup_fresh EXIT
 fi
 
 cd "$BENCH_DIR"
@@ -87,60 +90,60 @@ cd "$BENCH_DIR"
 # Forward any positional args as --filter regexes.
 declare -a FILTER_ARGS=()
 for f in "$@"; do
-    FILTER_ARGS+=(--filter "$f")
+  FILTER_ARGS+=(--filter "$f")
 done
 
 # SwiftPM #9062 workaround: copy lib*-tool.dylib → lib*.dylib so the spawned
 # benchmark tool finds the interposer at the path it expects. Only relevant
 # on the interposer (6.3) run.
 fix_tool_dylibs() {
-    local search_dir="$1"
-    local copied=0
-    while IFS= read -r src; do
-        local dst="${src/-tool.dylib/.dylib}"
-        if [[ ! -f "$dst" || "$src" -nt "$dst" ]]; then
-            cp -p "$src" "$dst"
-            copied=$((copied + 1))
-        fi
-    done < <(find "$search_dir" -name "libMallocInterposer*-tool.dylib" 2>/dev/null)
-    if (( copied > 0 )); then
-        warn "Renamed $copied -tool.dylib → .dylib (SwiftPM #9062 workaround)"
+  local search_dir="$1"
+  local copied=0
+  while IFS= read -r src; do
+    local dst="${src/-tool.dylib/.dylib}"
+    if [[ ! -f "$dst" || "$src" -nt "$dst" ]]; then
+      cp -p "$src" "$dst"
+      copied=$((copied + 1))
     fi
+  done < <(find "$search_dir" -name "libMallocInterposer*-tool.dylib" 2>/dev/null)
+  if ((copied > 0)); then
+    warn "Renamed $copied -tool.dylib → .dylib (SwiftPM #9062 workaround)"
+  fi
 }
 
 run_jemalloc() {
-    step "Run 1: Swift $TOOLCHAIN_OLD (jemalloc) → baseline '$BASELINE_OLD'  [scratch: $SCRATCH_OLD]"
-    swiftly run +"$TOOLCHAIN_OLD" \
-        swift package \
-        --scratch-path "$SCRATCH_OLD" \
-        --allow-writing-to-package-directory benchmark \
-        baseline update "$BASELINE_OLD" \
-        --target "$TARGET" \
-        --quiet --no-progress \
-        "${FILTER_ARGS[@]}"
+  step "Run 1: Swift $TOOLCHAIN_OLD (jemalloc) → baseline '$BASELINE_OLD'  [scratch: $SCRATCH_OLD]"
+  swiftly run +"$TOOLCHAIN_OLD" \
+    swift package \
+    --scratch-path "$SCRATCH_OLD" \
+    --allow-writing-to-package-directory benchmark \
+    baseline update "$BASELINE_OLD" \
+    --target "$TARGET" \
+    --quiet --no-progress \
+    "${FILTER_ARGS[@]}"
 }
 
 run_interposer() {
-    step "Run 2: Swift $TOOLCHAIN_NEW (interposer) → baseline '$BASELINE_NEW'  [scratch: $SCRATCH_NEW]"
-    if ! swiftly run +"$TOOLCHAIN_NEW" \
-            swift package \
-            --scratch-path "$SCRATCH_NEW" \
-            --allow-writing-to-package-directory benchmark \
-            baseline update "$BASELINE_NEW" \
-            --target "$TARGET" \
-            --quiet --no-progress \
-            "${FILTER_ARGS[@]}"; then
-        warn "First attempt failed — applying SwiftPM #9062 workaround and retrying"
-        fix_tool_dylibs "$SCRATCH_NEW"
-        swiftly run +"$TOOLCHAIN_NEW" \
-            swift package \
-            --scratch-path "$SCRATCH_NEW" \
-            --allow-writing-to-package-directory benchmark \
-            baseline update "$BASELINE_NEW" \
-            --target "$TARGET" \
-            --quiet --no-progress \
-            "${FILTER_ARGS[@]}"
-    fi
+  step "Run 2: Swift $TOOLCHAIN_NEW (interposer) → baseline '$BASELINE_NEW'  [scratch: $SCRATCH_NEW]"
+  if ! swiftly run +"$TOOLCHAIN_NEW" \
+    swift package \
+    --scratch-path "$SCRATCH_NEW" \
+    --allow-writing-to-package-directory benchmark \
+    baseline update "$BASELINE_NEW" \
+    --target "$TARGET" \
+    --quiet --no-progress \
+    "${FILTER_ARGS[@]}"; then
+    warn "First attempt failed — applying SwiftPM #9062 workaround and retrying"
+    fix_tool_dylibs "$SCRATCH_NEW"
+    swiftly run +"$TOOLCHAIN_NEW" \
+      swift package \
+      --scratch-path "$SCRATCH_NEW" \
+      --allow-writing-to-package-directory benchmark \
+      baseline update "$BASELINE_NEW" \
+      --target "$TARGET" \
+      --quiet --no-progress \
+      "${FILTER_ARGS[@]}"
+  fi
 }
 
 run_jemalloc
@@ -148,7 +151,7 @@ run_interposer
 
 step "Comparison: $BASELINE_OLD  vs  $BASELINE_NEW"
 swiftly run +"$TOOLCHAIN_NEW" \
-    swift package \
-    --scratch-path "$SCRATCH_NEW" \
-    benchmark baseline compare "$BASELINE_OLD" "$BASELINE_NEW" \
-    --target "$TARGET"
+  swift package \
+  --scratch-path "$SCRATCH_NEW" \
+  benchmark baseline compare "$BASELINE_OLD" "$BASELINE_NEW" \
+  --target "$TARGET"
