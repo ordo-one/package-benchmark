@@ -11,6 +11,7 @@
 // 'Benchmark' plugin that is responsible for gathering command line arguments and then
 // Running the `BenchmarkTool` for each benchmark target.
 
+@preconcurrency import Foundation
 import PackagePlugin
 @preconcurrency import Foundation
 
@@ -172,6 +173,7 @@ import PackagePlugin
         let packageBenchmarkIdentifier = "package-benchmark"
         let benchmarkToolName = "BenchmarkTool"
         let benchmarkTool: PackagePlugin.Path // = try context.tool(named: benchmarkToolName)
+        let interposerLib: String
 
         var args: [String] = [
             benchmarkToolName,
@@ -386,10 +388,7 @@ import PackagePlugin
         }
 
         // Build the BenchmarkTool manually in release mode to work around https://github.com/apple/swift-package-manager/issues/7210
-        guard
-            let benchmarkToolModule = benchmarkToolModuleTargets.first(where: {
-                $0.kind == .executable && $0.name == benchmarkToolName
-            })
+        guard let benchmarkToolModule = benchmarkToolModuleTargets.first(where: { $0.kind == .executable && $0.name == benchmarkToolName })
         else {
             print("Benchmark failed to find the BenchmarkTool target.")
             throw MyError.buildFailed
@@ -424,6 +423,7 @@ import PackagePlugin
         }
 
         benchmarkTool = tool.path
+        interposerLib = tool.path.removingLastComponent().appending(subpath: "libMallocInterposerSwift.so").string
         #if os(Linux) && compiler(>=6.3)
         let swiftRuntimeInterposerLib = tool.path.removingLastComponent()
             .appending(subpath: "libSwiftRuntimeInterposerC.so").string
@@ -509,6 +509,8 @@ import PackagePlugin
                 return
             }
 
+            // On Linux we need to set LD_PRELOAD to get the malloc interposer working
+            // while on Darwin this is done with DYLD interpose mechanism
             #if os(Linux) && compiler(>=6.3)
             if shouldEmitRuntimeInterposerWarning(outputFormat: outputFormat, exportPath: exportPath) {
                 writeToStderr(
@@ -518,9 +520,9 @@ import PackagePlugin
 
             var environment = ProcessInfo.processInfo.environment
             if let existingPreload = environment["LD_PRELOAD"], existingPreload.isEmpty == false {
-                environment["LD_PRELOAD"] = "\(swiftRuntimeInterposerLib):\(existingPreload)"
+                environment["LD_PRELOAD"] = "\(swiftRuntimeInterposerLib):\(interposerLib):\(existingPreload)"
             } else {
-                environment["LD_PRELOAD"] = swiftRuntimeInterposerLib
+                environment["LD_PRELOAD"] = "\(swiftRuntimeInterposerLib):\(interposerLib)"
             }
 
             let envp = environment.map { "\($0.key)=\($0.value)" }.compactMap { $0.withCString(strdup) } + [nil]
